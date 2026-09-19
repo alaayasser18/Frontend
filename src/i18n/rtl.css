@@ -1,0 +1,85 @@
+/* Centralized Minimal Directional Rules for Arabic (RTL) */
+[dir="rtl"] {
+  direction: rtl;
+  text-align: right;
+}
+
+[dir="rtl"] .hero-side,
+[dir="rtl"] .form-side,
+[dir="rtl"] .title,
+[dir="rtl"] .subtitle,
+[dir="rtl"] .form-group,
+[dir="rtl"] .form-group label,
+[dir="rtl"] .quick-text,
+[dir="rtl"] .reset-password-card,
+[dir="rtl"] .reset-password-card h1,
+[dir="rtl"] .reset-password-description,
+[dir="rtl"] .password-field label,
+[dir="rtl"] .password-strength > span {
+  text-align: right;
+}
+
+[dir="rtl"] .reset-password-description {
+  direction: rtl;
+}
+
+[dir="rtl"] .subtitle .signup-link {
+  margin-left: 0;
+  margin-right: 3px;
+}
+
+[dir="rtl"] .input-wrapper .input-icon {
+  left: auto;
+  right: 16px;
+}
+
+[dir="rtl"] .input-wrapper .password-toggle {
+  right: auto;
+  left: 16px;
+}
+
+[dir="rtl"] .password-input-wrapper input {
+  padding: 0 16px 0 48px;
+}
+
+[dir="rtl"] .password-input-wrapper .password-toggle {
+  right: auto;
+  left: 14px;
+}
+
+[dir="rtl"] .quick-text {
+  margin-left: 0;
+  margin-right: 12px;
+}
+
+[dir="rtl"] .quick-signin .arrow {
+  transform: scaleX(-1);
+}
+
+[dir="rtl"] .resend-code button {
+  margin-left: 0;
+  margin-right: 5px;
+}
+
+/* Register Page RTL Support */
+[dir="rtl"] .register-form .form-group {
+  text-align: right;
+}
+
+[dir="rtl"] .register-form .input-wrapper input {
+  padding: 0 44px 0 15px;
+}
+
+[dir="rtl"] .register-form .password-group input {
+  padding: 0 44px 0 48px;
+}
+
+[dir="rtl"] .register-form .input-icon {
+  left: auto;
+  right: 15px;
+}
+
+[dir="rtl"] .register-form .password-toggle {
+  right: auto;
+  left: 12px;
+}

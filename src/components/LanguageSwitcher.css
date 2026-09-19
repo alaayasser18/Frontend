@@ -1,0 +1,145 @@
+.lang-switcher {
+  position: relative;
+  display: inline-block;
+  font-family: inherit;
+}
+
+.lang-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 38px;
+  padding: 0 14px;
+  background-color: #ffffff;
+  color: #10243a;
+  border: 1px solid #d3dce5;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+  transition: all 0.2s ease;
+}
+
+.lang-btn:hover {
+  background-color: #f8fafc;
+  border-color: #b9c7d5;
+}
+
+.lang-btn:focus-visible {
+  outline: 2px solid #243f5a;
+  outline-offset: 2px;
+}
+
+.globe-icon {
+  width: 16px;
+  height: 16px;
+  color: #5f7286;
+  flex-shrink: 0;
+}
+
+.lang-name {
+  line-height: 1;
+}
+
+.chevron-icon {
+  width: 14px;
+  height: 14px;
+  color: #718297;
+  transition: transform 0.2s ease;
+  flex-shrink: 0;
+}
+
+.chevron-icon.open {
+  transform: rotate(180deg);
+}
+
+.lang-dropdown {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  min-width: 140px;
+  background: #ffffff;
+  border: 1px solid #eaedf1;
+  border-radius: 10px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+  list-style: none;
+  padding: 6px;
+  margin: 0;
+  z-index: 1000;
+  animation: langFadeIn 0.15s ease-out;
+}
+
+[dir="rtl"] .lang-dropdown {
+  right: auto;
+  left: 0;
+}
+
+@keyframes langFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.lang-option {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  border: none;
+  background: transparent;
+  color: #243b53;
+  font-size: 14px;
+  font-weight: 500;
+  border-radius: 6px;
+  cursor: pointer;
+  text-align: inherit;
+  transition: background-color 0.15s ease;
+}
+
+.lang-option:hover {
+  background-color: #f1f5f9;
+}
+
+.lang-option.active {
+  color: #243f5a;
+  font-weight: 700;
+  background-color: #f8fafc;
+}
+
+.lang-check {
+  color: #243f5a;
+  font-size: 13px;
+  font-weight: bold;
+}
+
+/* Global positioning helper when used in Auth view */
+.auth-language-switcher-wrapper {
+  position: absolute;
+  top: 24px;
+  right: 32px;
+  z-index: 100;
+}
+
+[dir="rtl"] .auth-language-switcher-wrapper {
+  right: auto;
+  left: 32px;
+}
+
+@media (max-width: 640px) {
+  .auth-language-switcher-wrapper {
+    top: 14px;
+    right: 16px;
+  }
+
+  [dir="rtl"] .auth-language-switcher-wrapper {
+    right: auto;
+    left: 16px;
+  }
+}

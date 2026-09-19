@@ -1,0 +1,61 @@
+[dir="ltr"] .employee-sidebar .nav-item,
+[dir="rtl"] .employee-sidebar .nav-item {
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+[dir="ltr"] .employee-sidebar .nav-item.active::before,
+[dir="rtl"] .employee-sidebar .nav-item.active::before {
+    width: 6px;
+    border-radius: 999px;
+}
+
+[dir="rtl"] .employee-sidebar {
+    direction: rtl;
+    border-right: 0;
+    border-left: 1px solid #294861;
+}
+
+[dir="rtl"] .employee-sidebar .logo-area {
+    padding-left: 0;
+    padding-right: 14px;
+}
+
+[dir="rtl"] .employee-sidebar .nav-item.active::before {
+    left: auto;
+    right: 0;
+}
+
+[dir="rtl"] .employee-sidebar .badge {
+    margin-left: 0;
+    margin-right: auto;
+}
+
+[dir="rtl"] .employee-sidebar .ai-card>svg {
+    transform: scaleX(-1);
+}
+
+[dir="rtl"] .dashboard-container {
+    direction: rtl;
+}
+
+[dir="rtl"] .dashboard-container .main-content {
+    text-align: right;
+}
+
+[dir="rtl"] .dashboard-container .welcome-section,
+[dir="rtl"] .dashboard-container .checkin-card,
+[dir="rtl"] .dashboard-container .dash-card-header-flex,
+[dir="rtl"] .dashboard-container .history-header {
+    direction: rtl;
+}
+
+[dir="rtl"] .dashboard-container .history-table {
+    text-align: right;
+}
+
+[dir="rtl"] .dashboard-container .checkout-btn svg,
+[dir="rtl"] .dashboard-container .checkout-btn-full svg,
+[dir="rtl"] .dashboard-container .arrow-icon {
+    transform: scaleX(-1);
+}

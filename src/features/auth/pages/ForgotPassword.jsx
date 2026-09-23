@@ -3,14 +3,19 @@ import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import toast from "react-hot-toast";
 import { FiMail } from "react-icons/fi";
+
 import "../../../styles/auth/ForgotPassword.css";
 import MainAuthForm from "../components/MainAuthForm";
 import { useForgotPassword } from "../hooks/useForgotPassword";
+
 export default function ForgotPassword() {
   const { t } = useTranslation();
+
   const [email, setEmail] = useState("");
-  const forgotPasswordMutation = useForgotPassword();
+
   const navigate = useNavigate();
+
+  const forgotPasswordMutation = useForgotPassword();
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -22,13 +27,18 @@ export default function ForgotPassword() {
 
     forgotPasswordMutation.mutate(
       {
-        email,
+        email: email.trim(),
       },
       {
         onSuccess: (data) => {
           console.log("Forgot Password response:", data);
 
-          toast.success("OTP sent successfully!");
+          // Save email for OTP verification and resend
+          const resetEmail = data?.data?.email || email.trim();
+
+          sessionStorage.setItem("resetEmail", resetEmail);
+
+          toast.success(data?.message || "OTP sent successfully!");
 
           setTimeout(() => {
             navigate("/VerifyOTP");
@@ -69,6 +79,7 @@ export default function ForgotPassword() {
             />
           </div>
         </div>
+
         <button
           type="submit"
           className="sign-in"

@@ -2,19 +2,28 @@ import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import toast from "react-hot-toast";
+
 import "../../../styles/auth/VerifyOTP.css";
 import MainAuthForm from "../components/MainAuthForm";
-import { useVerifyEmail } from "../hooks/useVerifyEmail";
-export default function VerifyOTP() {
-  console.log("VERIFY OTP PAGE RENDERED");
 
+import { useVerifyEmail } from "../hooks/useVerifyEmail";
+import { useResendOTP } from "../hooks/useResendOTP";
+
+export default function VerifyOTP() {
   const { t } = useTranslation();
+
+  const navigate = useNavigate();
+
   const [otp, setOtp] = useState(["", "", "", "", "", ""]);
+
   const [timer, setTimer] = useState(60);
 
   const inputRefs = useRef([]);
-  const navigate = useNavigate();
+
   const verifyOTPMutation = useVerifyEmail();
+
+  const resendOTPMutation = useResendOTP();
+
   // Timer
   useEffect(() => {
     if (timer === 0) return;
@@ -26,11 +35,14 @@ export default function VerifyOTP() {
     return () => clearInterval(interval);
   }, [timer]);
 
-  // Handle OTP input
+  // OTP input
   const handleChange = (value, index) => {
-    if (!/^\d?$/.test(value)) return;
+    if (!/^\d?$/.test(value)) {
+      return;
+    }
 
     const newOtp = [...otp];
+
     newOtp[index] = value;
 
     setOtp(newOtp);
@@ -40,13 +52,14 @@ export default function VerifyOTP() {
     }
   };
 
-  // Handle backspace
+  // Backspace
   const handleKeyDown = (e, index) => {
     if (e.key === "Backspace" && !otp[index] && index > 0) {
       inputRefs.current[index - 1]?.focus();
     }
   };
 
+  // Verify OTP
   const handleVerify = (e) => {
     e.preventDefault();
 
@@ -57,15 +70,38 @@ export default function VerifyOTP() {
       return;
     }
 
+    // Get email saved from Forgot Password page
+    const email = sessionStorage.getItem("resetEmail");
+
+    if (!email) {
+      toast.error("Email not found. Please request a new OTP.");
+
+      navigate("/ForgotPassword");
+
+      return;
+    }
+
     verifyOTPMutation.mutate(
       {
+        email: email,
         otp: otpValue,
       },
       {
         onSuccess: (data) => {
           console.log("Verify OTP response:", data);
 
-          toast.success("Email verified successfully!");
+          const resetToken = data?.data?.reset_token;
+
+          if (!resetToken) {
+            toast.error("Reset token was not received.");
+
+            return;
+          }
+
+          // Save reset token for Reset Password page
+          sessionStorage.setItem("resetToken", resetToken);
+
+          toast.success(data?.message || "Email verified successfully!");
 
           setTimeout(() => {
             navigate("/ResetPassword");
@@ -84,13 +120,45 @@ export default function VerifyOTP() {
     );
   };
 
+  // Resend OTP
   const handleResend = () => {
-    setOtp(["", "", "", "", "", ""]);
-    setTimer(60);
+    const email = sessionStorage.getItem("resetEmail");
 
-    inputRefs.current[0]?.focus();
+    if (!email) {
+      toast.error("Email not found. Please request a new OTP.");
 
-    toast.success(t("auth.verifyOtp.resendSuccess"));
+      navigate("/ForgotPassword");
+
+      return;
+    }
+
+    resendOTPMutation.mutate(
+      {
+        email: email,
+      },
+      {
+        onSuccess: (data) => {
+          console.log("Resend OTP response:", data);
+
+          setOtp(["", "", "", "", "", ""]);
+
+          setTimer(60);
+
+          inputRefs.current[0]?.focus();
+
+          toast.success(data?.message || "OTP resent successfully.");
+        },
+
+        onError: (error) => {
+          console.log("Resend OTP error:", error);
+
+          toast.error(
+            error?.response?.data?.message ||
+              "Unable to resend OTP. Please try again.",
+          );
+        },
+      },
+    );
   };
 
   return (
@@ -111,7 +179,7 @@ export default function VerifyOTP() {
                 className="otp-input"
                 type="text"
                 inputMode="numeric"
-                maxLength="1"
+                maxLength={1}
                 value={digit}
                 onChange={(e) => handleChange(e.target.value, index)}
                 onKeyDown={(e) => handleKeyDown(e, index)}
@@ -120,8 +188,14 @@ export default function VerifyOTP() {
           </div>
         </div>
 
-        <button type="submit" className="sign-in">
-          {t("auth.verifyOtp.verifyButton")}
+        <button
+          type="submit"
+          className="sign-in"
+          disabled={verifyOTPMutation.isPending}
+        >
+          {verifyOTPMutation.isPending
+            ? "Verifying..."
+            : t("auth.verifyOtp.verifyButton")}
         </button>
       </form>
 
@@ -140,13 +214,14 @@ export default function VerifyOTP() {
             <span>{t("auth.verifyOtp.didntReceive")}</span>
 
             <button
-              type="submit"
+              type="button"
               className="verify-btn"
-              disabled={verifyOTPMutation.isPending}
+              onClick={handleResend}
+              disabled={resendOTPMutation.isPending}
             >
-              {verifyOTPMutation.isPending
-                ? "Verifying..."
-                : t("auth.verifyOTP.verify")}
+              {resendOTPMutation.isPending
+                ? "Sending..."
+                : t("auth.verifyOtp.resend")}
             </button>
           </>
         )}

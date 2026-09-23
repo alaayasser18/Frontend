@@ -9,13 +9,18 @@ const axiosInstance = axios.create({
   },
 });
 
-// Request interceptor: Attach Bearer token
+// Request interceptor: Attach Bearer token and Language
 axiosInstance.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem("token");
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
+    
+    // Attach current language for backend translations
+    const savedLanguage = localStorage.getItem("i18nextLng") || "en";
+    config.headers["Accept-Language"] = savedLanguage;
+    
     return config;
   },
   (error) => Promise.reject(error)

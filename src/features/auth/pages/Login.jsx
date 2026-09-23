@@ -51,7 +51,7 @@ const itemVariants = {
 };
 
 export default function Login() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
 
   const navigate = useNavigate();
 
@@ -79,21 +79,51 @@ export default function Login() {
   const handleSignIn = (e) => {
     e.preventDefault();
 
+    /* =========================
+       REQUIRED FIELDS
+    ========================= */
+
     if (!email.trim() || !password) {
-      toast.error(t("auth.login.emailPasswordRequired"));
+      toast.error(
+        t(
+          "auth.login.emailPasswordRequired",
+          "Please enter your email and password.",
+        ),
+      );
+
       return;
     }
 
+    /* =========================
+       CURRENT LANGUAGE
+    ========================= */
+
+    // Backend accepts only "ar" or "en"
+    const currentLanguage = i18n.language?.startsWith("ar") ? "ar" : "en";
+
+    console.log("=================================");
+    console.log("i18n.language:", i18n.language);
+    console.log("currentLanguage:", currentLanguage);
+    console.log("=================================");
+    /* =========================
+       LOGIN DATA
+    ========================= */
+
     const loginData = {
       email: email.trim(),
-      password: password,
+      password,
+      lang: currentLanguage,
     };
 
     console.log("Login data:", loginData);
 
+    /* =========================
+       LOGIN REQUEST
+    ========================= */
+
     loginMutation.mutate(loginData, {
       /* =========================
-         SUCCESS
+         SUCCESS - 200
       ========================= */
 
       onSuccess: (data) => {
@@ -109,12 +139,27 @@ export default function Login() {
         console.log("User:", user);
 
         /* =========================
+           MAKE SURE TOKEN EXISTS
+        ========================= */
+
+        if (!token) {
+          console.error("Login succeeded but no access token was returned.");
+
+          toast.error(
+            t(
+              "auth.login.tokenMissing",
+              "Login succeeded, but the access token was not received.",
+            ),
+          );
+
+          return;
+        }
+
+        /* =========================
            SAVE TOKEN
         ========================= */
 
-        if (token) {
-          localStorage.setItem("token", token);
-        }
+        localStorage.setItem("token", token);
 
         /* =========================
            SAVE USER
@@ -123,6 +168,12 @@ export default function Login() {
         if (user) {
           localStorage.setItem("user", JSON.stringify(user));
         }
+
+        /* =========================
+           SAVE LANGUAGE
+        ========================= */
+
+        localStorage.setItem("language", currentLanguage);
 
         /* =========================
            REMEMBER ME
@@ -145,11 +196,7 @@ export default function Login() {
            SUCCESS MESSAGE
         ========================= */
 
-        toast.success(
-          t("auth.login.signingInAlert", {
-            email: email.trim(),
-          }),
-        );
+        toast.success(t("auth.login.loginSuccess", "Logged in successfully."));
 
         /* =========================
            GO TO HOME
@@ -157,9 +204,9 @@ export default function Login() {
 
         console.log("Going to Home...");
 
-        navigate("/", { replace: true });
-
-        console.log("Current path after navigate:", window.location.pathname);
+        navigate("/", {
+          replace: true,
+        });
       },
 
       /* =========================
@@ -172,26 +219,95 @@ export default function Login() {
         console.log("=================================");
 
         console.log("Login error:", error);
-
+        console.log("Status:", error?.response?.status);
         console.log("Backend response:", error?.response?.data);
-
         console.log("Validation errors:", error?.response?.data?.errors);
 
-        const backendMessage = error?.response?.data?.message;
+        const status = error?.response?.status;
 
-        const validationErrors = error?.response?.data?.errors;
+        const responseData = error?.response?.data;
+
+        const backendMessage = responseData?.message;
+
+        const validationErrors = responseData?.errors;
 
         /* =========================
-           EMAIL VALIDATION ERROR
+           403
+           ACCOUNT INACTIVE
         ========================= */
 
-        if (validationErrors?.email?.length) {
-          toast.error(validationErrors.email[0]);
+        if (status === 403) {
+          toast.error(
+            backendMessage ||
+              t(
+                "auth.login.accountInactive",
+                "Your account is inactive. Please activate your account first.",
+              ),
+          );
+
           return;
         }
 
         /* =========================
-           BACKEND ERROR MESSAGE
+           422
+           VALIDATION / INVALID CREDENTIALS
+        ========================= */
+
+        if (status === 422) {
+          const emailError = validationErrors?.email?.[0];
+
+          if (emailError) {
+            toast.error(emailError);
+            return;
+          }
+
+          toast.error(
+            backendMessage ||
+              t(
+                "auth.login.invalidCredentials",
+                "These credentials do not match our records.",
+              ),
+          );
+
+          return;
+        }
+
+        /* =========================
+           429
+           TOO MANY REQUESTS
+        ========================= */
+
+        if (status === 429) {
+          toast.error(
+            backendMessage ||
+              t(
+                "auth.login.tooManyRequests",
+                "Too many login attempts. Please try again later.",
+              ),
+          );
+
+          return;
+        }
+
+        /* =========================
+           500
+           SERVER ERROR
+        ========================= */
+
+        if (status === 500) {
+          toast.error(
+            backendMessage ||
+              t(
+                "auth.login.serverError",
+                "Something went wrong on the server. Please try again later.",
+              ),
+          );
+
+          return;
+        }
+
+        /* =========================
+           OTHER BACKEND ERROR
         ========================= */
 
         if (backendMessage) {
@@ -203,7 +319,12 @@ export default function Login() {
            GENERIC ERROR
         ========================= */
 
-        toast.error("Something went wrong. Please try again.");
+        toast.error(
+          t(
+            "auth.login.errorGeneric",
+            "Something went wrong. Please try again.",
+          ),
+        );
       },
     });
   };
@@ -350,7 +471,9 @@ export default function Login() {
               duration: 0.2,
             }}
           >
-            {loginMutation.isPending ? "Signing in..." : t("auth.login.signIn")}
+            {loginMutation.isPending
+              ? t("auth.login.signingIn", "Signing in...")
+              : t("auth.login.signIn")}
           </motion.button>
         </motion.form>
 

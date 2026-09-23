@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const axiosInstance = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL || "http://127.0.0.1:8000/api",
+  baseURL: "https://hr-system.iptvdemo.serv5group.com/api",
 
   timeout: 15000,
 
@@ -11,7 +11,6 @@ const axiosInstance = axios.create({
   },
 });
 
-// Add token to requests
 axiosInstance.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem("token");
@@ -27,7 +26,6 @@ axiosInstance.interceptors.request.use(
   },
 );
 
-// Handle unauthorized requests
 axiosInstance.interceptors.response.use(
   (response) => response,
 
@@ -45,4 +43,3 @@ axiosInstance.interceptors.response.use(
 );
 
 export default axiosInstance;
-export { axiosInstance };

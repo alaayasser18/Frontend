@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { motion } from "framer-motion";
 
@@ -45,12 +45,13 @@ const itemVariants = {
 
 export default function Register() {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const registerMutation = useRegister();
 
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [contact, setContact] = useState("");
-  const [phone, setPhone] = useState(""); // حقل الهاتف المضاف حسب متطلبات الباك إيند
+  const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
 
@@ -106,33 +107,49 @@ export default function Register() {
       return;
     }
 
-    // إرسال البيانات بالصيغة المطابقة للـ Backend API (Scalar)
-    registerMutation.mutate(
-      {
-        name: `${firstName} ${lastName}`.trim(),
-        email: contact,
-        phone: phone || "+201234567890", // قيمة افتراضية أو من الـ state لو حابب تضيف input للهاتف
-        password,
-        password_confirmation: confirmPassword,
+    // Data sent to Backend
+    const registerData = {
+      name: `${firstName.trim()} ${lastName.trim()}`.trim(),
+      email: contact.trim(),
+      phone: phone.trim() || null,
+      password: password,
+      password_confirmation: confirmPassword,
+    };
+
+    console.log("Register data:", registerData);
+
+    registerMutation.mutate(registerData, {
+      onSuccess: (data) => {
+        console.log("Register response:", data);
+
+        // Show success message
+        setMessageKey("auth.register.successMessage");
+        setMessageType("success");
+
+        // Go to Login after 1.5 seconds
+        setTimeout(() => {
+          navigate("/login");
+        }, 1500);
       },
-      {
-        onSuccess: (data) => {
-          console.log("Register response:", data);
 
-          setMessageKey("auth.register.successMessage");
-          setMessageType("success");
-        },
+      onError: (error) => {
+        console.log("Register error:", error);
 
-        onError: (error) => {
-          console.log("Register error:", error);
+        console.log("Backend response:", error?.response?.data);
 
-          setMessageKey(
-            error?.response?.data?.message || "auth.register.errorGeneric",
-          );
-          setMessageType("error");
-        },
+        console.log("Validation errors:", error?.response?.data?.errors);
+
+        const backendMessage = error?.response?.data?.message;
+
+        if (backendMessage) {
+          setMessageKey(backendMessage);
+        } else {
+          setMessageKey("auth.register.errorGeneric");
+        }
+
+        setMessageType("error");
       },
-    );
+    });
   };
 
   return (
@@ -422,8 +439,14 @@ export default function Register() {
             {confirmPassword && password !== confirmPassword && (
               <motion.span
                 className="confirm-error"
-                initial={{ opacity: 0, y: -5 }}
-                animate={{ opacity: 1, y: 0 }}
+                initial={{
+                  opacity: 0,
+                  y: -5,
+                }}
+                animate={{
+                  opacity: 1,
+                  y: 0,
+                }}
               >
                 {t("auth.register.errorMismatch")}
               </motion.span>

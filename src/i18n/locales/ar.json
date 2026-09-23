@@ -137,7 +137,7 @@
       "errorRequired": "يرجى ملء جميع الحقول المطلوبة.",
       "errorRequirements": "يرجى التأكد من استيفاء كلمة المرور لجميع الشروط.",
       "errorMismatch": "كلمتا المرور غير متطابقتين.",
-      "successMessage": "تم إنشاء الحساب بنجاح لـ {{firstName}} {{lastName}}.",
+      "successMessage": "تم إنشاء الحساب بنجاح",
       "showPassword": "إظهار كلمة المرور",
       "hidePassword": "إخفاء كلمة المرور",
       "showConfirmPassword": "إظهار تأكيد كلمة المرور",

@@ -137,7 +137,7 @@
       "errorRequired": "Please fill in all required fields.",
       "errorRequirements": "Please make sure your password meets all requirements.",
       "errorMismatch": "Passwords do not match.",
-      "successMessage": "Account created successfully for {{firstName}} {{lastName}}.",
+      "successMessage": "Account created successfully.",
       "showPassword": "Show password",
       "hidePassword": "Hide password",
       "showConfirmPassword": "Show confirm password",

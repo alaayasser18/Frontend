@@ -23,6 +23,32 @@ const Reports = () => {
 
   const [toast, setToast] = useState(null);
 
+  // ==================== Motion Variants ====================
+
+  const containerVariants = {
+    hidden: {},
+    visible: {
+      transition: {
+        staggerChildren: 0.08,
+      },
+    },
+  };
+
+  const itemVariants = {
+    hidden: {
+      opacity: 0,
+      y: 14,
+    },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: {
+        duration: 0.35,
+        ease: "easeOut",
+      },
+    },
+  };
+
   // ==================== Date Range ====================
 
   const months = useMemo(
@@ -236,13 +262,11 @@ const Reports = () => {
 
     const pageWidth = doc.internal.pageSize.getWidth();
 
-    // Title
     doc.setFontSize(18);
     doc.setTextColor(28, 54, 79);
 
     doc.text(report.title, 20, 25);
 
-    // Description
     doc.setFontSize(11);
     doc.setTextColor(90, 110, 130);
 
@@ -253,12 +277,10 @@ const Reports = () => {
 
     doc.text(descriptionLines, 20, 38);
 
-    // Divider
     doc.setDrawColor(220, 229, 236);
 
     doc.line(20, 55, pageWidth - 20, 55);
 
-    // Report information
     doc.setFontSize(11);
     doc.setTextColor(28, 54, 79);
 
@@ -275,13 +297,11 @@ const Reports = () => {
 
     doc.text(`Generated: ${new Date().toLocaleString()}`, 20, 129);
 
-    // Status
     doc.setFontSize(11);
     doc.setTextColor(38, 132, 92);
 
     doc.text("Status: Exported successfully", 20, 150);
 
-    // Footer
     doc.setFontSize(9);
     doc.setTextColor(130, 145, 160);
 
@@ -300,7 +320,6 @@ const Reports = () => {
 
   const handleExport = (report) => {
     try {
-      // Export every format listed on the card.
       report.formats.forEach((format) => {
         if (format === "CSV") {
           exportCSV(report);
@@ -338,101 +357,84 @@ const Reports = () => {
 
   return (
     <>
-      <motion.section
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 0.35 }}
-        className={`w-full min-w-0 ${isArabic ? "text-right" : "text-left"}`}
+      <motion.div
         dir={isArabic ? "rtl" : "ltr"}
+        className="w-full space-y-6"
+        initial="hidden"
+        animate="visible"
+        variants={containerVariants}
       >
-        {/* ===================================================== */}
-        {/* PAGE HEADER */}
-        {/* ===================================================== */}
+        {/* ==================== HEADER ==================== */}
 
         <motion.div
-          initial={{
-            opacity: 0,
-            y: 8,
-          }}
-          animate={{
-            opacity: 1,
-            y: 0,
-          }}
-          transition={{
-            duration: 0.35,
-          }}
-          className="mb-[28px]"
+          variants={itemVariants}
+          className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between"
         >
-          <h1 className="text-[28px] font-bold leading-[34px] tracking-[-0.5px] text-[#1c364f] max-[760px]:text-[24px]">
-            {t("reports.title")}
-          </h1>
-
-          <p className="mt-[6px] text-[14px] leading-[22px] text-[#6f8ca8]">
-            {t("reports.subtitle")}
-          </p>
-        </motion.div>
-
-        {/* ===================================================== */}
-        {/* EXPORT COCKPIT */}
-        {/* ===================================================== */}
-
-        <motion.div
-          initial={{
-            opacity: 0,
-            y: 10,
-          }}
-          animate={{
-            opacity: 1,
-            y: 0,
-          }}
-          transition={{
-            duration: 0.4,
-            delay: 0.05,
-          }}
-          className="mb-[28px] rounded-[14px] border border-[#dbe5ed] bg-white px-[22px] py-[20px] shadow-[0_1px_3px_rgba(28,54,79,0.02)]"
-        >
-          {/* Cockpit Header */}
-
-          <div className="mb-[20px] flex items-center gap-[10px]">
-            <div className="flex h-[38px] w-[38px] shrink-0 items-center justify-center rounded-[10px] bg-[#edf3f8] text-[#315d79]">
-              <FiFileText size={18} strokeWidth={2} />
+          <div>
+            <div className="text-[11px] font-bold uppercase tracking-wider text-[#6b879f]">
+              HR / REPORTS
             </div>
 
-            <h2 className="text-[17px] font-bold leading-[21px] text-[#1c364f]">
-              {t("reports.exportCockpit")}
-            </h2>
+            <h1 className="mt-1 text-lg font-bold tracking-tight text-[#1e293b] md:text-[21px]">
+              {t("reports.title")}
+            </h1>
+
+            <p className="mt-1 text-sm font-normal text-[#64748b]">
+              {t("reports.subtitle")}
+            </p>
           </div>
+        </motion.div>
 
-          {/* ================================================= */}
-          {/* FILTERS */}
-          {/* ================================================= */}
+        {/* ==================== EXPORT COCKPIT ==================== */}
 
-          <div className="grid grid-cols-3 gap-[13px] max-[900px]:grid-cols-2 max-[600px]:grid-cols-1">
-            {/* ================= DATE RANGE ================= */}
+        <motion.section
+          variants={itemVariants}
+          className="rounded-2xl border border-[#e2e8f0]/80 bg-white p-5 shadow-[0_1px_3px_rgba(0,0,0,0.03)]"
+        >
+          {/* Section Header */}
+
+          <div className="mb-5 flex items-center gap-3">
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#eff6ff] text-[#3b82f6]">
+              <FiFileText className="h-4 w-4" />
+            </div>
 
             <div>
-              <label className="mb-[7px] block text-[12px] font-semibold leading-[16px] text-[#536273]">
+              <h2 className="text-base font-bold text-[#1e293b]">
+                {t("reports.exportCockpit")}
+              </h2>
+
+              <p className="mt-0.5 text-xs font-normal text-[#64748b]">
+                {isArabic
+                  ? "اختار الفلاتر المطلوبة قبل تصدير التقرير"
+                  : "Choose the required filters before exporting the report"}
+              </p>
+            </div>
+          </div>
+
+          {/* Filters */}
+
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+            {/* Date Range */}
+
+            <div>
+              <label className="mb-2 block text-xs font-semibold text-[#475569]">
                 {t("reports.dateRange")}
               </label>
 
-              <div className="relative h-[42px]">
-                {/* Calendar Icon */}
-
+              <div className="relative">
                 <div
-                  className={`pointer-events-none absolute top-0 z-[10] flex h-[42px] w-[42px] items-center justify-center text-[#7290aa] ${
+                  className={`pointer-events-none absolute top-0 z-10 flex h-10 w-10 items-center justify-center text-[#94a3b8] ${
                     isArabic ? "right-0" : "left-0"
                   }`}
                 >
-                  <FiCalendar size={15} strokeWidth={2} />
+                  <FiCalendar className="h-4 w-4" />
                 </div>
-
-                {/* Select */}
 
                 <select
                   value={selectedMonth}
                   onChange={(e) => setSelectedMonth(e.target.value)}
-                  className={`h-[42px] w-full appearance-none rounded-[9px] border border-[#d8e2ea] bg-white text-[13px] font-medium text-[#6283a2] outline-none transition focus:border-[#39749c] ${
-                    isArabic ? "pr-[42px] pl-[35px]" : "pl-[42px] pr-[35px]"
+                  className={`h-10 w-full appearance-none rounded-lg border border-[#e2e8f0] bg-white text-xs font-medium text-[#475569] outline-none transition focus:border-[#94a3b8] focus:ring-2 focus:ring-[#f1f5f9] ${
+                    isArabic ? "pr-10 pl-9" : "pl-10 pr-9"
                   }`}
                 >
                   {months.map((month) => (
@@ -442,31 +444,29 @@ const Reports = () => {
                   ))}
                 </select>
 
-                {/* Chevron */}
-
                 <div
-                  className={`pointer-events-none absolute top-0 z-[10] flex h-[42px] w-[36px] items-center justify-center text-[#64809a] ${
+                  className={`pointer-events-none absolute top-0 z-10 flex h-10 w-8 items-center justify-center text-[#94a3b8] ${
                     isArabic ? "left-0" : "right-0"
                   }`}
                 >
-                  <FiChevronDown size={15} strokeWidth={2} />
+                  <FiChevronDown className="h-4 w-4" />
                 </div>
               </div>
             </div>
 
-            {/* ================= DEPARTMENT ================= */}
+            {/* Department */}
 
             <div>
-              <label className="mb-[7px] block text-[12px] font-semibold leading-[16px] text-[#536273]">
+              <label className="mb-2 block text-xs font-semibold text-[#475569]">
                 {t("reports.department")}
               </label>
 
-              <div className="relative h-[42px]">
+              <div className="relative">
                 <select
                   value={department}
                   onChange={(e) => setDepartment(e.target.value)}
-                  className={`h-[42px] w-full appearance-none rounded-[9px] border border-[#d8e2ea] bg-white text-[13px] font-medium text-[#6283a2] outline-none transition focus:border-[#39749c] ${
-                    isArabic ? "pr-[13px] pl-[35px]" : "pl-[13px] pr-[35px]"
+                  className={`h-10 w-full appearance-none rounded-lg border border-[#e2e8f0] bg-white text-xs font-medium text-[#475569] outline-none transition focus:border-[#94a3b8] focus:ring-2 focus:ring-[#f1f5f9] ${
+                    isArabic ? "pr-3 pl-9" : "pl-3 pr-9"
                   }`}
                 >
                   {departments.map((item) => (
@@ -477,28 +477,28 @@ const Reports = () => {
                 </select>
 
                 <div
-                  className={`pointer-events-none absolute top-0 z-[10] flex h-[42px] w-[36px] items-center justify-center text-[#64809a] ${
+                  className={`pointer-events-none absolute top-0 z-10 flex h-10 w-8 items-center justify-center text-[#94a3b8] ${
                     isArabic ? "left-0" : "right-0"
                   }`}
                 >
-                  <FiChevronDown size={15} strokeWidth={2} />
+                  <FiChevronDown className="h-4 w-4" />
                 </div>
               </div>
             </div>
 
-            {/* ================= BRANCH ================= */}
+            {/* Branch */}
 
             <div>
-              <label className="mb-[7px] block text-[12px] font-semibold leading-[16px] text-[#536273]">
+              <label className="mb-2 block text-xs font-semibold text-[#475569]">
                 {t("reports.branch")}
               </label>
 
-              <div className="relative h-[42px]">
+              <div className="relative">
                 <select
                   value={branch}
                   onChange={(e) => setBranch(e.target.value)}
-                  className={`h-[42px] w-full appearance-none rounded-[9px] border border-[#d8e2ea] bg-white text-[13px] font-medium text-[#6283a2] outline-none transition focus:border-[#39749c] ${
-                    isArabic ? "pr-[13px] pl-[35px]" : "pl-[13px] pr-[35px]"
+                  className={`h-10 w-full appearance-none rounded-lg border border-[#e2e8f0] bg-white text-xs font-medium text-[#475569] outline-none transition focus:border-[#94a3b8] focus:ring-2 focus:ring-[#f1f5f9] ${
+                    isArabic ? "pr-3 pl-9" : "pl-3 pr-9"
                   }`}
                 >
                   {branches.map((item) => (
@@ -509,54 +509,42 @@ const Reports = () => {
                 </select>
 
                 <div
-                  className={`pointer-events-none absolute top-0 z-[10] flex h-[42px] w-[36px] items-center justify-center text-[#64809a] ${
+                  className={`pointer-events-none absolute top-0 z-10 flex h-10 w-8 items-center justify-center text-[#94a3b8] ${
                     isArabic ? "left-0" : "right-0"
                   }`}
                 >
-                  <FiChevronDown size={15} strokeWidth={2} />
+                  <FiChevronDown className="h-4 w-4" />
                 </div>
               </div>
             </div>
           </div>
-        </motion.div>
+        </motion.section>
 
-        {/* ===================================================== */}
-        {/* REPORT CARDS */}
-        {/* ===================================================== */}
+        {/* ==================== REPORTS ==================== */}
 
-        <div className="grid grid-cols-2 gap-[16px] max-[900px]:grid-cols-1">
-          {reports.map((report, index) => (
+        <motion.div
+          variants={containerVariants}
+          className="grid grid-cols-1 gap-5 md:grid-cols-2"
+        >
+          {reports.map((report) => (
             <motion.article
               key={report.id}
-              initial={{
-                opacity: 0,
-                y: 14,
-              }}
-              animate={{
-                opacity: 1,
-                y: 0,
-              }}
-              transition={{
-                duration: 0.35,
-                delay: 0.12 + index * 0.07,
-              }}
-              whileHover={{
-                y: -1,
-              }}
-              className="flex min-h-[194px] flex-col rounded-[14px] border border-[#dce5ec] bg-white px-[21px] py-[21px] shadow-[0_1px_4px_rgba(28,54,79,0.018)]"
+              variants={itemVariants}
+              whileHover={{ y: -4 }}
+              className="flex min-h-[205px] flex-col rounded-2xl border border-[#e2e8f0]/80 bg-white p-5 shadow-[0_1px_3px_rgba(0,0,0,0.03)] transition-shadow duration-200 hover:shadow-md"
             >
-              {/* CARD TOP */}
+              {/* Card Header */}
 
-              <div className="flex items-start justify-between gap-[12px]">
-                <div className="flex h-[38px] w-[38px] items-center justify-center rounded-[10px] bg-[#edf4f8] text-[#47718f]">
-                  <FiFileText size={18} strokeWidth={2} />
+              <div className="flex items-start justify-between gap-4">
+                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#eff6ff] text-[#3b82f6]">
+                  <FiFileText className="h-4 w-4" />
                 </div>
 
-                <div className="flex items-center gap-[5px]">
+                <div className="flex flex-wrap items-center justify-end gap-1.5">
                   {report.formats.map((format) => (
                     <span
                       key={format}
-                      className="rounded-full bg-[#eaf2f7] px-[10px] py-[5px] text-[10px] font-bold leading-[12px] text-[#315d79]"
+                      className="rounded-full bg-[#f1f5f9] px-2.5 py-1 text-[10px] font-bold text-[#64748b]"
                     >
                       {format}
                     </span>
@@ -564,42 +552,38 @@ const Reports = () => {
                 </div>
               </div>
 
-              {/* CARD CONTENT */}
+              {/* Content */}
 
-              <div className="mt-[19px] flex-1">
-                <h3 className="text-[16px] font-bold leading-[21px] text-[#1d3b58]">
+              <div className="mt-4 flex-1">
+                <h3 className="text-sm font-bold text-[#1e293b]">
                   {report.title}
                 </h3>
 
-                <p className="mt-[7px] max-w-[570px] text-[12px] leading-[20px] text-[#6685a2]">
+                <p className="mt-1.5 text-xs font-normal leading-5 text-[#64748b]">
                   {report.description}
                 </p>
               </div>
 
-              {/* CARD BUTTON */}
+              {/* Action */}
 
-              <div className="mt-[14px]">
+              <div className="mt-5 border-t border-[#f1f5f9] pt-4">
                 <motion.button
                   type="button"
                   onClick={() => handleExport(report)}
-                  whileTap={{
-                    scale: 0.98,
-                  }}
-                  className="inline-flex h-[36px] items-center gap-[7px] rounded-[8px] border border-[#d6e1e8] bg-white px-[12px] text-[12px] font-semibold text-[#315d79] transition-all duration-200 hover:border-[#bfd0dc] hover:bg-[#f8fafb]"
+                  whileTap={{ scale: 0.98 }}
+                  className="inline-flex items-center gap-2 rounded-lg bg-[#243B53] px-4 py-2.5 text-xs font-semibold text-white transition hover:bg-[#1c2f42]"
                 >
-                  <FiDownload size={14} />
+                  <FiDownload className="h-4 w-4" />
 
                   {t("reports.exportReport")}
                 </motion.button>
               </div>
             </motion.article>
           ))}
-        </div>
-      </motion.section>
+        </motion.div>
+      </motion.div>
 
-      {/* ===================================================== */}
-      {/* SUCCESS / ERROR TOAST */}
-      {/* ===================================================== */}
+      {/* ==================== TOAST ==================== */}
 
       <AnimatePresence>
         {toast && (
@@ -621,31 +605,32 @@ const Reports = () => {
             }}
             transition={{
               duration: 0.25,
+              ease: "easeOut",
             }}
-            className={`fixed bottom-[28px] z-[9999] flex min-h-[52px] max-w-[380px] items-center gap-[10px] rounded-[10px] border bg-white px-[15px] py-[11px] shadow-[0_8px_30px_rgba(28,54,79,0.12)] ${
-              isArabic ? "left-[28px]" : "right-[28px]"
+            className={`fixed bottom-6 z-[9999] flex min-h-[52px] max-w-[380px] items-center gap-3 rounded-xl border bg-white px-4 py-3 shadow-xl ${
+              isArabic ? "left-6" : "right-6"
             } ${
-              toast.type === "success" ? "border-[#cfe8dc]" : "border-[#f0d2d2]"
+              toast.type === "success" ? "border-[#d1fae5]" : "border-[#fecaca]"
             }`}
             dir={isArabic ? "rtl" : "ltr"}
           >
             <div
-              className={`flex h-[30px] w-[30px] shrink-0 items-center justify-center rounded-full ${
+              className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full ${
                 toast.type === "success"
-                  ? "bg-[#e9f7ef] text-[#26845c]"
-                  : "bg-[#fff0f0] text-[#c94b4b]"
+                  ? "bg-[#ecfdf5] text-[#10b981]"
+                  : "bg-[#fef2f2] text-[#ef4444]"
               }`}
             >
               {toast.type === "success" ? (
-                <FiCheckCircle size={17} strokeWidth={2} />
+                <FiCheckCircle className="h-4 w-4" />
               ) : (
-                <FiX size={17} strokeWidth={2} />
+                <FiX className="h-4 w-4" />
               )}
             </div>
 
             <span
-              className={`flex-1 text-[12px] font-semibold leading-[18px] ${
-                toast.type === "success" ? "text-[#276d50]" : "text-[#a33d3d]"
+              className={`flex-1 text-xs font-semibold leading-5 ${
+                toast.type === "success" ? "text-[#047857]" : "text-[#b91c1c]"
               }`}
             >
               {toast.message}
@@ -654,9 +639,9 @@ const Reports = () => {
             <button
               type="button"
               onClick={() => setToast(null)}
-              className="flex h-[26px] w-[26px] shrink-0 items-center justify-center rounded-[6px] text-[#8ba0b1] transition hover:bg-[#f5f7f9] hover:text-[#536273]"
+              className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-[#94a3b8] transition hover:bg-[#f8fafc] hover:text-[#475569]"
             >
-              <FiX size={14} />
+              <FiX className="h-4 w-4" />
             </button>
           </motion.div>
         )}

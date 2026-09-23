@@ -7,13 +7,13 @@ import toast from "react-hot-toast";
 import { FiSearch, FiPlus, FiMoreHorizontal, FiX } from "react-icons/fi";
 
 const rowVariants = {
-  hidden: { opacity: 0, y: 8 },
+  hidden: { opacity: 0, y: 6 },
   visible: { opacity: 1, y: 0 },
 };
 
 const tableStagger = {
   hidden: {},
-  visible: { transition: { staggerChildren: 0.05 } },
+  visible: { transition: { staggerChildren: 0.04 } },
 };
 
 const TEAM_MEMBERS = [
@@ -62,9 +62,10 @@ const TASKS_SEED = [
   },
 ];
 
+// ألوان متطابقة مع درجات الـ UI بالصورة الأولى
 const PRIORITY_STYLES = {
-  urgent: "bg-[#fef2f2] text-[#dc2626]",
-  high: "bg-[#fef9c3] text-[#a16207]",
+  urgent: "bg-[#fef2f2] text-[#ef4444]",
+  high: "bg-[#fefce8] text-[#eab308]",
   normal: "bg-[#eff6ff] text-[#3b82f6]",
 };
 
@@ -102,12 +103,10 @@ const TaskManagement = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [activeFilter, setActiveFilter] = useState("all");
 
-  // Assignee filter, e.g. set by the Dashboard's "Rebalance Tasks" button
   const [assigneeFilter, setAssigneeFilter] = useState(
     () => location.state?.assigneeFilter ?? null,
   );
 
-  // Reassign menu ({ taskId, top, left | right }) rendered in a portal so table overflow can't clip it
   const [reassignMenu, setReassignMenu] = useState(null);
   const menuRef = useRef(null);
 
@@ -116,21 +115,18 @@ const TaskManagement = () => {
   const [assignTo, setAssignTo] = useState(TEAM_MEMBERS[0].id);
   const [taskDetails, setTaskDetails] = useState("");
 
-  // Consume the navigation state once so refresh / back doesn't re-apply it
   useEffect(() => {
     if (location.state?.assigneeFilter) {
       navigate(location.pathname, { replace: true, state: null });
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Close the reassign menu on outside click, Escape, scroll or resize
   useEffect(() => {
     if (!reassignMenu) return undefined;
     const close = () => setReassignMenu(null);
     const onMouseDown = (e) => {
       if (menuRef.current?.contains(e.target)) return;
-      if (e.target.closest?.("[data-reassign-trigger]")) return; // trigger handles its own toggle
+      if (e.target.closest?.("[data-reassign-trigger]")) return;
       close();
     };
     const onKeyDown = (e) => {
@@ -151,10 +147,8 @@ const TaskManagement = () => {
   const filteredTasks = tasks.filter((task) => {
     const matchesFilter = activeFilter === "all" || task.status === activeFilter;
     const matchesAssignee = !assigneeFilter || assigneeFilter.includes(task.assigneeKey);
-    const taskName = t(`managerTasks.${task.nameKey}`);
-    const matchesSearch = taskName
-      .toLowerCase()
-      .includes(searchQuery.toLowerCase());
+    const name = t(`managerTasks.${task.nameKey}`, task.nameKey);
+    const matchesSearch = name.toLowerCase().includes(searchQuery.toLowerCase());
     return matchesFilter && matchesAssignee && matchesSearch;
   });
 
@@ -194,7 +188,6 @@ const TaskManagement = () => {
     handleCloseModal();
   };
 
-  /* ------------------------------ Reassign ------------------------------ */
   const showToast = (message) => {
     toast.custom(
       (toastItem) => (
@@ -206,7 +199,7 @@ const TaskManagement = () => {
               : { opacity: 0, y: 12, scale: 0.96 }
           }
           transition={{ duration: 0.2, ease: "easeOut" }}
-          className="bg-[#243B53] text-white text-sm font-semibold px-4 py-3 rounded-lg shadow-lg"
+          className="bg-[#102a43] text-white text-sm font-semibold px-4 py-3 rounded-lg shadow-lg"
         >
           {message}
         </motion.div>
@@ -247,13 +240,16 @@ const TaskManagement = () => {
   const menuTask = reassignMenu ? tasks.find((task) => task.id === reassignMenu.taskId) : null;
 
   return (
-    <div className="w-full space-y-6">
-      {/* Page Header */}
+    <div className="w-full space-y-6 pb-12 font-sans">
+      {/* 1. Breadcrumb + Header */}
       <div>
-        <h1 className="text-2xl md:text-[28px] font-bold text-[#1e293b] tracking-tight">
+        <p className="text-[11px] font-bold tracking-wider text-[#6b879f] uppercase">
+          {t("managerTasks.breadcrumb", "MANAGER PORTAL / TASK MANAGEMENT")}
+        </p>
+        <h1 className="text-lg md:text-[21px] font-bold text-[#1e293b] tracking-tight mt-1">
           {t("managerTasks.title", "Task Management")}
         </h1>
-        <p className="text-sm text-[#64748b] mt-1 font-normal">
+        <p className="text-sm text-[#829ab1] mt-1 font-normal">
           {t(
             "managerTasks.subtitle",
             "Keep your team aligned, supported, and moving forward.",
@@ -261,50 +257,49 @@ const TaskManagement = () => {
         </p>
       </div>
 
-      {/* Search + Assign Button */}
+      {/* 2. Search + Assign Button */}
       <div className="flex items-center justify-between gap-4">
-        <div className="relative max-w-sm w-full">
-          <span className="absolute inset-y-0 left-3.5 rtl:left-auto rtl:right-3.5 flex items-center pointer-events-none">
-            <FiSearch className="w-4 h-4 text-[#94a3b8]" />
+        <div className="relative max-w-md w-full">
+          <span className="absolute inset-y-0 left-3.5 rtl:left-auto rtl:right-3.5 flex items-center pointer-events-none text-[#9fb3c8]">
+            <FiSearch className="w-4 h-4" />
           </span>
           <input
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder={t("managerTasks.searchPlaceholder", "Search tasks...")}
-            className="w-full rounded-lg border border-[#e2e8f0] bg-white py-2.5 pl-10 pr-4 rtl:pl-4 rtl:pr-10 text-sm text-[#1e293b] placeholder:text-[#94a3b8] focus:outline-none focus:ring-2 focus:ring-[#486581]/30"
+            className="w-full rounded-xl border border-[#d9e2ec] bg-white py-2.5 pl-10 pr-4 rtl:pl-4 rtl:pr-10 text-sm text-[#102a43] placeholder:text-[#9fb3c8] focus:outline-none focus:border-[#486581] focus:ring-1 focus:ring-[#486581] transition shadow-[0_1px_2px_rgba(0,0,0,0.02)]"
           />
         </div>
 
         <button
           type="button"
           onClick={() => setIsModalOpen(true)}
-          className="flex items-center gap-2 rounded-lg bg-[#243B53] px-4 py-2.5 text-sm font-semibold text-white hover:bg-[#1c2f42] transition shrink-0"
+          className="flex items-center gap-2 rounded-xl bg-[#102a43] px-5 py-2.5 text-sm font-semibold text-white hover:bg-[#1f3a56] transition shrink-0 shadow-sm"
         >
           <FiPlus className="w-4 h-4" />
           {t("managerTasks.assignNewTask", "Assign New Task")}
         </button>
       </div>
 
-      {/* Filter Pills */}
+      {/* 3. Filter Pills */}
       <div className="flex items-center gap-2.5 flex-wrap">
         {FILTERS.map((filter) => (
           <motion.button
             key={filter.id}
-            whileTap={{ scale: 0.96 }}
+            whileTap={{ scale: 0.97 }}
             type="button"
             onClick={() => setActiveFilter(filter.id)}
-            className={`rounded-full px-4 py-2 text-sm font-semibold transition ${
+            className={`rounded-full px-5 py-2 text-sm font-medium transition ${
               activeFilter === filter.id
-                ? "bg-[#243B53] text-white"
-                : "bg-white border border-[#e2e8f0] text-[#475569] hover:bg-[#f8fafc]"
+                ? "bg-[#102a43] text-white"
+                : "bg-white border border-[#d9e2ec] text-[#627d98] hover:bg-[#f8fafc]"
             }`}
           >
             {t(`managerTasks.${filter.labelKey}`)}
           </motion.button>
         ))}
 
-        {/* Active assignee filter (from Dashboard "Rebalance Tasks"); click to clear */}
         {assigneeFilter && (
           <motion.button
             initial={{ opacity: 0, scale: 0.96 }}
@@ -313,8 +308,7 @@ const TaskManagement = () => {
             whileTap={{ scale: 0.96 }}
             type="button"
             onClick={() => setAssigneeFilter(null)}
-            aria-label={t("managerTasks.clearFilter")}
-            className="inline-flex items-center gap-2 rounded-full border border-[#243B53] bg-white px-4 py-2 text-sm font-semibold text-[#243B53] transition hover:bg-[#f8fafc]"
+            className="inline-flex items-center gap-2 rounded-full border border-[#102a43] bg-white px-4 py-2 text-sm font-semibold text-[#102a43] transition hover:bg-[#f8fafc]"
           >
             {t("managerTasks.filteredBy", { names: assigneeFilterLabel })}
             <FiX className="w-3.5 h-3.5" />
@@ -322,18 +316,18 @@ const TaskManagement = () => {
         )}
       </div>
 
-      {/* Tasks Table */}
-      <div className="bg-white rounded-2xl border border-[#e2e8f0]/80 shadow-[0_1px_3px_rgba(0,0,0,0.03)] overflow-hidden">
+      {/* 4. Table Card */}
+      <div className="bg-white rounded-2xl border border-[#e2e8f0] shadow-[0_1px_3px_rgba(0,0,0,0.02)] overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="w-full text-left rtl:text-right">
+          <table className="w-full text-left rtl:text-right border-collapse">
             <thead>
-              <tr className="bg-[#f8fafc] text-[11px] font-bold tracking-wider text-[#94a3b8]">
-                <th className="py-3.5 px-6">{t("managerTasks.colTaskName", "TASK NAME")}</th>
-                <th className="py-3.5 px-4">{t("managerTasks.colAssignee", "ASSIGNEE")}</th>
-                <th className="py-3.5 px-4">{t("managerTasks.colDueDate", "DUE DATE")}</th>
-                <th className="py-3.5 px-4">{t("managerTasks.colPriority", "PRIORITY")}</th>
-                <th className="py-3.5 px-4">{t("managerTasks.colProgress", "PROGRESS")}</th>
-                <th className="py-3.5 px-4 w-10"></th>
+              <tr className="bg-[#f8fafc]/60 border-b border-[#f1f5f9] text-[11px] font-bold tracking-wider text-[#94a3b8]">
+                <th className="py-4 px-6">{t("managerTasks.colTaskName", "TASK NAME")}</th>
+                <th className="py-4 px-6">{t("managerTasks.colAssignee", "ASSIGNEE")}</th>
+                <th className="py-4 px-6">{t("managerTasks.colDueDate", "DUE DATE")}</th>
+                <th className="py-4 px-6">{t("managerTasks.colPriority", "PRIORITY")}</th>
+                <th className="py-4 px-6">{t("managerTasks.colProgress", "PROGRESS")}</th>
+                <th className="py-4 px-6 w-12 text-center"></th>
               </tr>
             </thead>
             <motion.tbody
@@ -357,47 +351,59 @@ const TaskManagement = () => {
                     key={task.id}
                     variants={rowVariants}
                     transition={{ duration: 0.2, ease: "easeOut" }}
+                    className="hover:bg-[#f8fafc]/40 transition"
                   >
-                    <td className="py-4 px-6">
-                      <p className="text-sm font-bold text-[#1e293b]">{taskDisplayName}</p>
+                    {/* Task Name */}
+                    <td className="py-5 px-6">
+                      <p className="text-sm font-semibold text-[#1e293b]">{taskDisplayName}</p>
                     </td>
-                    <td className="py-4 px-4">
-                      <div className="flex items-center gap-2.5">
-                        <div className="flex size-8 items-center justify-center rounded-full bg-[#e0e7ff] text-xs font-bold text-[#4338ca]">
+
+                    {/* Assignee */}
+                    <td className="py-5 px-6">
+                      <div className="flex items-center gap-3">
+                        <div className="flex size-7 items-center justify-center rounded-full bg-[#e0e7ff] text-[11px] font-bold text-[#4338ca]">
                           {getInitials(assigneeName)}
                         </div>
-                        <span className="text-sm text-[#334155]">{assigneeName}</span>
+                        <span className="text-sm font-medium text-[#334155]">{assigneeName}</span>
                       </div>
                     </td>
-                    <td className="py-4 px-4 text-sm text-[#64748b]">{dueDate}</td>
-                    <td className="py-4 px-4">
+
+                    {/* Due Date */}
+                    <td className="py-5 px-6 text-sm text-[#64748b]">{dueDate}</td>
+
+                    {/* Priority */}
+                    <td className="py-5 px-6">
                       <span
-                        className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold ${PRIORITY_STYLES[task.priority]}`}
+                        className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold ${PRIORITY_STYLES[task.priority]}`}
                       >
                         {t(`managerTasks.${PRIORITY_LABEL_KEYS[task.priority]}`)}
                       </span>
                     </td>
-                    <td className="py-4 px-4">
-                      <div className="flex items-center gap-2.5">
-                        <div className="w-24 bg-[#f1f5f9] h-1.5 rounded-full overflow-hidden">
+
+                    {/* Progress */}
+                    <td className="py-5 px-6">
+                      <div className="flex items-center gap-3">
+                        <div className="w-28 bg-[#f1f5f9] h-2 rounded-full overflow-hidden">
                           <div
-                            className="h-full rounded-full bg-[#1f7a52]"
+                            className="h-full rounded-full bg-[#10b981]"
                             style={{ width: `${task.progress}%` }}
                           />
                         </div>
-                        <span className="text-xs font-medium text-[#475569] w-9 shrink-0">
+                        <span className="text-xs font-semibold text-[#475569] w-8 shrink-0">
                           {task.progress}%
                         </span>
                       </div>
                     </td>
-                    <td className="py-4 px-4">
+
+                    {/* Action */}
+                    <td className="py-5 px-6 text-center">
                       <button
                         type="button"
                         data-reassign-trigger
                         onClick={(e) => openReassignMenu(e, task)}
                         aria-haspopup="menu"
                         aria-expanded={reassignMenu?.taskId === task.id}
-                        className="text-[#94a3b8] hover:text-[#1e293b] transition"
+                        className="text-[#94a3b8] hover:text-[#1e293b] transition p-1"
                         aria-label={t("managerTasks.reassignTask")}
                       >
                         <FiMoreHorizontal className="w-4 h-4" />
@@ -411,7 +417,7 @@ const TaskManagement = () => {
         </div>
       </div>
 
-      {/* Reassign menu (portaled so the table's overflow can't clip it) */}
+      {/* Reassign Menu Portal */}
       {createPortal(
         <AnimatePresence>
           {reassignMenu && menuTask && (
@@ -469,13 +475,13 @@ const TaskManagement = () => {
               className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl"
             >
               <div className="flex items-center justify-between mb-6">
-                <h3 className="text-lg font-bold text-[#1e293b]">
+                <h3 className="text-lg font-bold text-[#102a43]">
                   {t("managerTasks.assignNewTask", "Assign New Task")}
                 </h3>
                 <button
                   type="button"
                   onClick={handleCloseModal}
-                  className="text-[#94a3b8] hover:text-[#1e293b] transition"
+                  className="text-[#94a3b8] hover:text-[#102a43] transition"
                   aria-label="Close"
                 >
                   <FiX className="w-5 h-5" />
@@ -489,7 +495,7 @@ const TaskManagement = () => {
                     value={taskName}
                     onChange={(e) => setTaskName(e.target.value)}
                     placeholder={t("managerTasks.taskNamePlaceholder", "Task name")}
-                    className="w-full rounded-lg border border-[#e2e8f0] px-3.5 py-2.5 text-sm text-[#1e293b] placeholder:text-[#94a3b8] focus:outline-none focus:ring-2 focus:ring-[#486581]/30"
+                    className="w-full rounded-xl border border-[#d9e2ec] px-3.5 py-2.5 text-sm text-[#102a43] placeholder:text-[#94a3b8] focus:outline-none focus:ring-2 focus:ring-[#486581]/30"
                   />
                 </div>
 
@@ -497,7 +503,7 @@ const TaskManagement = () => {
                   <select
                     value={assignTo}
                     onChange={(e) => setAssignTo(e.target.value)}
-                    className="w-full rounded-lg border border-[#e2e8f0] px-3.5 py-2.5 text-sm text-[#1e293b] focus:outline-none focus:ring-2 focus:ring-[#486581]/30"
+                    className="w-full rounded-xl border border-[#d9e2ec] px-3.5 py-2.5 text-sm text-[#102a43] focus:outline-none focus:ring-2 focus:ring-[#486581]/30"
                   >
                     {TEAM_MEMBERS.map((member) => (
                       <option key={member.id} value={member.id}>
@@ -516,17 +522,17 @@ const TaskManagement = () => {
                     onChange={(e) => setTaskDetails(e.target.value)}
                     placeholder={t("managerTasks.taskDetailsPlaceholder", "Task details")}
                     rows={3}
-                    className="w-full rounded-lg border border-[#e2e8f0] px-3.5 py-2.5 text-sm text-[#1e293b] placeholder:text-[#94a3b8] focus:outline-none focus:ring-2 focus:ring-[#486581]/30 resize-none"
+                    className="w-full rounded-xl border border-[#d9e2ec] px-3.5 py-2.5 text-sm text-[#102a43] placeholder:text-[#94a3b8] focus:outline-none focus:ring-2 focus:ring-[#486581]/30 resize-none"
                   />
                 </div>
               </div>
 
               <motion.button
-                whileHover={{ scale: 1.02 }}
+                whileHover={{ scale: 1.01 }}
                 whileTap={{ scale: 0.98 }}
                 type="button"
                 onClick={handleCreateTask}
-                className="mt-6 w-full rounded-lg bg-[#243B53] px-4 py-3 text-sm font-semibold text-white hover:bg-[#1c2f42] transition"
+                className="mt-6 w-full rounded-xl bg-[#102a43] px-4 py-3 text-sm font-semibold text-white hover:bg-[#1f3a56] transition shadow-sm"
               >
                 {t("managerTasks.createTask", "Create Task")}
               </motion.button>

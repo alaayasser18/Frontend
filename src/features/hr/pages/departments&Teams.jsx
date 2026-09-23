@@ -12,6 +12,131 @@ import {
   FiLayers,
 } from "react-icons/fi";
 
+const content = {
+  en: {
+    title: "Departments & Teams",
+    subtitle: "Manage organizational structure, leaders, and workstreams.",
+    createBtn: "Create Department",
+    searchPlaceholder: "Search departments...",
+
+    headPrefix: "Head: ",
+    headcountLabel: "Headcount",
+    activeProjectsLabel: "Active projects",
+
+    manageMembersBtn: "Manage Members",
+    transferEmployeeBtn: "Transfer Employee",
+
+    totalDepartments: "Total Departments",
+    totalEmployees: "Total Employees",
+    totalProjects: "Active Projects",
+    avgAttendance: "Avg. Attendance",
+
+    modalTitle: "Create Department",
+    detailsLabel: "Department Name",
+    detailsPlaceholder: "Enter department name",
+    ownerLabel: "Department Head / Owner",
+    ownerPlaceholder: "Enter leader name",
+
+    cancelBtn: "Cancel",
+    saveBtn: "Save changes",
+
+    successTitle: "Saved successfully",
+    successSubtitle: "The new department has been added successfully.",
+    doneBtn: "Done",
+
+    engineeringName: "Engineering",
+    mariamHead: "Mariam Hassan",
+
+    peopleName: "People & Culture",
+    sarahHead: "Sarah Ahmed",
+
+    salesName: "Sales",
+    omarHead: "Omar Khaled",
+
+    logisticsName: "Logistics",
+    karimHead: "Karim Ashraf",
+
+    att94: "94% attendance",
+    att97: "97% attendance",
+    att91: "91% attendance",
+    att89: "89% attendance",
+
+    noResults: "No departments found",
+    results: "results",
+
+    membersTitle: "Department Members",
+    membersSubtitle: "Overview of current active headcount and capacity.",
+    closeBtn: "Close",
+
+    transferTitle: "Transfer Employee",
+    transferSubtitle:
+      "Select an employee and transfer them to this department.",
+    employeePlaceholder: "Select employee",
+    transferBtn: "Transfer Employee",
+  },
+
+  ar: {
+    title: "الأقسام والفرق",
+    subtitle: "إدارة الهيكل التنظيمي، القادة، ومسارات العمل.",
+    createBtn: "إنشاء قسم",
+    searchPlaceholder: "بحث عن الأقسام...",
+
+    headPrefix: "رئيس القسم: ",
+    headcountLabel: "عدد الموظفين",
+    activeProjectsLabel: "المشاريع النشطة",
+
+    manageMembersBtn: "إدارة الأعضاء",
+    transferEmployeeBtn: "نقل موظف",
+
+    totalDepartments: "إجمالي الأقسام",
+    totalEmployees: "إجمالي الموظفين",
+    totalProjects: "المشاريع النشطة",
+    avgAttendance: "متوسط الحضور",
+
+    modalTitle: "إنشاء قسم جديد",
+    detailsLabel: "اسم القسم",
+    detailsPlaceholder: "أدخل اسم القسم",
+    ownerLabel: "رئيس القسم / المسؤول",
+    ownerPlaceholder: "أدخل اسم المسؤول",
+
+    cancelBtn: "إلغاء",
+    saveBtn: "حفظ التغييرات",
+
+    successTitle: "تم الحفظ بنجاح",
+    successSubtitle: "تمت إضافة القسم الجديد بنجاح.",
+    doneBtn: "تم",
+
+    engineeringName: "الهندسة",
+    mariamHead: "مريم حسن",
+
+    peopleName: "الأفراد والثقافة",
+    sarahHead: "سارة أحمد",
+
+    salesName: "المبيعات",
+    omarHead: "عمر خالد",
+
+    logisticsName: "اللوجستيات",
+    karimHead: "كريم أشرف",
+
+    att94: "نسبة الحضور 94%",
+    att97: "نسبة الحضور 97%",
+    att91: "نسبة الحضور 91%",
+    att89: "نسبة الحضور 89%",
+
+    noResults: "لم يتم العثور على أقسام",
+    results: "نتائج",
+
+    membersTitle: "أعضاء القسم",
+    membersSubtitle: "نظرة عامة على عدد الموظفين والسعة الحالية للقسم.",
+    closeBtn: "إغلاق",
+
+    transferTitle: "نقل موظف",
+    transferSubtitle: "اختر موظفًا لنقله إلى هذا القسم.",
+    employeePlaceholder: "اختر الموظف",
+    transferBtn: "نقل الموظف",
+  },
+};
+
 const pageVariants = {
   hidden: { opacity: 0, y: 16 },
   visible: {
@@ -55,134 +180,7 @@ const modalVariants = {
 
 export default function DepartmentsAndTeams() {
   const { i18n } = useTranslation();
-
   const isArabic = i18n.language?.startsWith("ar");
-
-  const content = {
-    en: {
-      title: "Departments & Teams",
-      subtitle: "Manage organizational structure, leaders, and workstreams.",
-      createBtn: "Create Department",
-      searchPlaceholder: "Search departments",
-
-      headPrefix: "Head: ",
-      headcountLabel: "Headcount",
-      activeProjectsLabel: "Active projects",
-
-      manageMembersBtn: "Manage Members",
-      transferEmployeeBtn: "Transfer Employee",
-
-      totalDepartments: "Total Departments",
-      totalEmployees: "Total Employees",
-      totalProjects: "Active Projects",
-      avgAttendance: "Avg. Attendance",
-
-      modalTitle: "Create workflow record",
-      detailsLabel: "Details",
-      detailsPlaceholder: "Department name",
-      ownerLabel: "Owner",
-      ownerPlaceholder: "Department owner",
-
-      cancelBtn: "Cancel",
-      saveBtn: "Save changes",
-
-      successTitle: "Saved successfully",
-      successSubtitle: "The new department has been added successfully.",
-      doneBtn: "Done",
-
-      engineeringName: "Engineering",
-      mariamHead: "Mariam Hassan",
-
-      peopleName: "People & Culture",
-      sarahHead: "Sarah Ahmed",
-
-      salesName: "Sales",
-      omarHead: "Omar Khaled",
-
-      logisticsName: "Logistics",
-      karimHead: "Karim Ashraf",
-
-      att94: "94% attendance",
-      att97: "97% attendance",
-      att91: "91% attendance",
-      att89: "89% attendance",
-
-      noResults: "No departments found",
-      results: "results",
-
-      membersTitle: "Manage Members",
-      membersSubtitle: "Manage department members and employees.",
-      closeBtn: "Close",
-
-      transferTitle: "Transfer Employee",
-      transferSubtitle:
-        "Select an employee and transfer them to this department.",
-      employeePlaceholder: "Select employee",
-      transferBtn: "Transfer",
-    },
-
-    ar: {
-      title: "الأقسام والفرق",
-      subtitle: "إدارة الهيكل التنظيمي، القادة، ومسارات العمل.",
-      createBtn: "إنشاء قسم",
-      searchPlaceholder: "بحث عن الأقسام",
-
-      headPrefix: "رئيس القسم: ",
-      headcountLabel: "عدد الموظفين",
-      activeProjectsLabel: "المشاريع النشطة",
-
-      manageMembersBtn: "إدارة الأعضاء",
-      transferEmployeeBtn: "نقل موظف",
-
-      totalDepartments: "إجمالي الأقسام",
-      totalEmployees: "إجمالي الموظفين",
-      totalProjects: "المشاريع النشطة",
-      avgAttendance: "متوسط الحضور",
-
-      modalTitle: "إنشاء سجل عمل",
-      detailsLabel: "التفاصيل",
-      detailsPlaceholder: "اسم القسم",
-      ownerLabel: "المسؤول",
-      ownerPlaceholder: "مسؤول القسم",
-
-      cancelBtn: "إلغاء",
-      saveBtn: "حفظ التغييرات",
-
-      successTitle: "تم الحفظ بنجاح",
-      successSubtitle: "تمت إضافة القسم الجديد بنجاح.",
-      doneBtn: "تم",
-
-      engineeringName: "الهندسة",
-      mariamHead: "مريم حسن",
-
-      peopleName: "الأفراد والثقافة",
-      sarahHead: "سارة أحمد",
-
-      salesName: "المبيعات",
-      omarHead: "عمر خالد",
-
-      logisticsName: "اللوجستيات",
-      karimHead: "كريم أشرف",
-
-      att94: "نسبة الحضور 94%",
-      att97: "نسبة الحضور 97%",
-      att91: "نسبة الحضور 91%",
-      att89: "نسبة الحضور 89%",
-
-      noResults: "لم يتم العثور على أقسام",
-      results: "نتائج",
-
-      membersTitle: "إدارة الأعضاء",
-      membersSubtitle: "إدارة أعضاء وموظفي القسم.",
-      closeBtn: "إغلاق",
-
-      transferTitle: "نقل موظف",
-      transferSubtitle: "اختر موظفًا لنقله إلى هذا القسم.",
-      employeePlaceholder: "اختر الموظف",
-      transferBtn: "نقل الموظف",
-    },
-  };
-
   const t = content[isArabic ? "ar" : "en"];
 
   const [departments, setDepartments] = useState([
@@ -239,39 +237,39 @@ export default function DepartmentsAndTeams() {
 
     return departments.filter((dept) => {
       const name = dept.nameKey ? t[dept.nameKey] : dept.customName || "";
-
       const head = dept.headKey ? t[dept.headKey] : dept.customHead || "";
 
       return (
         name.toLowerCase().includes(query) || head.toLowerCase().includes(query)
       );
     });
-  }, [departments, searchTerm, isArabic]);
+  }, [departments, searchTerm, isArabic, t]);
 
-  const totalEmployees = departments.reduce(
-    (sum, dept) => sum + dept.headcount,
-    0,
+  const totalEmployees = useMemo(
+    () => departments.reduce((sum, dept) => sum + dept.headcount, 0),
+    [departments],
   );
 
-  const totalProjects = departments.reduce(
-    (sum, dept) => sum + dept.activeProjects,
-    0,
+  const totalProjects = useMemo(
+    () => departments.reduce((sum, dept) => sum + dept.activeProjects, 0),
+    [departments],
   );
 
-  const averageAttendance =
-    departments.length > 0
-      ? Math.round(
-          departments.reduce((sum, dept) => {
-            const attendanceText = dept.attendanceKey
-              ? t[dept.attendanceKey]
-              : dept.customAttendance || "";
+  const averageAttendance = useMemo(() => {
+    if (departments.length === 0) return 0;
 
-            const match = attendanceText.match(/\d+/);
+    const sumAttendance = departments.reduce((sum, dept) => {
+      const attendanceText = dept.attendanceKey
+        ? t[dept.attendanceKey]
+        : dept.customAttendance || "";
 
-            return sum + (match ? Number(match[0]) : 0);
-          }, 0) / departments.length,
-        )
-      : 0;
+      const match = attendanceText.match(/\d+/);
+
+      return sum + (match ? Number(match[0]) : 0);
+    }, 0);
+
+    return Math.round(sumAttendance / departments.length);
+  }, [departments, t]);
 
   const handleCreateDepartment = () => {
     setDetails("");
@@ -296,8 +294,8 @@ export default function DepartmentsAndTeams() {
       attendanceKey: null,
       customAttendance: isArabic ? "نسبة الحضور 90%" : "90% attendance",
 
-      headcount: 10,
-      activeProjects: 3,
+      headcount: 1,
+      activeProjects: 0,
     };
 
     setDepartments((prev) => [newDept, ...prev]);
@@ -332,285 +330,336 @@ export default function DepartmentsAndTeams() {
   const handleTransfer = (e) => {
     e.preventDefault();
 
-    if (!selectedEmployee) return;
+    if (!selectedEmployee || !transferModal) return;
+
+    setDepartments((prev) =>
+      prev.map((dept) =>
+        dept.id === transferModal.id
+          ? { ...dept, headcount: dept.headcount + 1 }
+          : dept,
+      ),
+    );
 
     closeTransferModal();
   };
 
   return (
-    <div dir={isArabic ? "rtl" : "ltr"} className="w-full min-w-0">
+    <motion.div
+      dir={isArabic ? "rtl" : "ltr"}
+      className="w-full space-y-6"
+      initial="hidden"
+      animate="visible"
+      variants={containerVariants}
+    >
+      {/* ==================== Header ==================== */}
       <motion.div
-        variants={pageVariants}
-        initial="hidden"
-        animate="visible"
-        className="w-full"
+        variants={itemVariants}
+        className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between"
       >
-        {/* Header */}
-        <div className="mb-8">
-          <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
-            <div>
-              <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-[#1b2a47]">
-                {t.title}
-              </h1>
+        <div className="min-w-0">
+          <p className="text-[11px] font-bold tracking-wider text-[#6b879f] uppercase">
+            {isArabic
+              ? "الموارد البشرية / الأقسام والفرق"
+              : "HR Portal / Departments & Teams"}
+          </p>
 
-              <p className="mt-2 text-sm sm:text-base text-slate-500">
-                {t.subtitle}
-              </p>
-            </div>
+          <h1 className="mt-1 text-lg font-bold tracking-tight text-[#1e293b] md:text-[21px]">
+            {t.title}
+          </h1>
 
-            {/* Search + Create */}
-            <div
-              id="pxd88a"
-              className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full lg:w-auto"
-            >
-              <div className="relative w-full sm:w-64">
-                <div
-                  className={`absolute inset-y-0 flex items-center pointer-events-none ${
-                    isArabic ? "right-0 pr-3.5" : "left-0 pl-3.5"
-                  }`}
-                >
-                  <FiSearch size={17} className="text-slate-400" />
-                </div>
-
-                <input
-                  type="text"
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  placeholder={t.searchPlaceholder}
-                  className={`w-full py-2.5 rounded-xl border border-slate-200 bg-white text-sm text-slate-700 outline-none transition-all focus:border-violet-400 focus:ring-4 focus:ring-violet-100 ${
-                    isArabic ? "pr-10 pl-4" : "pl-10 pr-4"
-                  }`}
-                />
-              </div>
-
-              <motion.button
-                type="button"
-                id="29d17n"
-                onClick={handleCreateDepartment}
-                whileHover={{ y: -1 }}
-                whileTap={{ scale: 0.98 }}
-                className="flex items-center justify-center gap-2 bg-[#1b2a47] hover:bg-[#152138] text-white px-5 py-2.5 rounded-xl text-sm font-semibold shadow-sm transition-all whitespace-nowrap"
-              >
-                <FiPlus size={17} />
-                {t.createBtn}
-              </motion.button>
-            </div>
-          </div>
-        </div>
-
-        {/* Stats */}
-        <motion.div
-          variants={containerVariants}
-          initial="hidden"
-          animate="visible"
-          className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 mb-7"
-        >
-          <motion.div
-            variants={itemVariants}
-            className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm"
-          >
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-xs font-semibold text-slate-400">
-                  {t.totalDepartments}
-                </p>
-
-                <p className="mt-2 text-2xl font-bold text-[#1b2a47]">
-                  {departments.length}
-                </p>
-              </div>
-
-              <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-violet-50 text-violet-600">
-                <FiLayers size={20} />
-              </div>
-            </div>
-          </motion.div>
-
-          <motion.div
-            variants={itemVariants}
-            className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm"
-          >
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-xs font-semibold text-slate-400">
-                  {t.totalEmployees}
-                </p>
-
-                <p className="mt-2 text-2xl font-bold text-[#1b2a47]">
-                  {totalEmployees}
-                </p>
-              </div>
-
-              <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-blue-50 text-blue-600">
-                <FiUsers size={20} />
-              </div>
-            </div>
-          </motion.div>
-
-          <motion.div
-            variants={itemVariants}
-            className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm"
-          >
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-xs font-semibold text-slate-400">
-                  {t.totalProjects}
-                </p>
-
-                <p className="mt-2 text-2xl font-bold text-[#1b2a47]">
-                  {totalProjects}
-                </p>
-              </div>
-
-              <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-amber-50 text-amber-600">
-                <FiBriefcase size={20} />
-              </div>
-            </div>
-          </motion.div>
-
-          <motion.div
-            variants={itemVariants}
-            className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm"
-          >
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-xs font-semibold text-slate-400">
-                  {t.avgAttendance}
-                </p>
-
-                <p className="mt-2 text-2xl font-bold text-[#1b2a47]">
-                  {averageAttendance}%
-                </p>
-              </div>
-
-              <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600">
-                <FiActivity size={20} />
-              </div>
-            </div>
-          </motion.div>
-        </motion.div>
-
-        {/* Results Header */}
-        <div className="mb-4 flex items-center justify-between">
-          <p className="text-sm font-semibold text-slate-600">
-            {filteredDepartments.length} {t.results}
+          <p className="mt-1 text-sm font-normal text-[#64748b]">
+            {t.subtitle}
           </p>
         </div>
 
-        {/* Departments */}
-        {filteredDepartments.length > 0 ? (
-          <motion.div
-            variants={containerVariants}
-            initial="hidden"
-            animate="visible"
-            className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-5"
+        {/* Search + Create */}
+        <div className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row sm:items-center">
+          <div className="relative w-full sm:w-72">
+            <div
+              className={`pointer-events-none absolute inset-y-0 flex items-center ${
+                isArabic ? "right-0 pr-3.5" : "left-0 pl-3.5"
+              }`}
+            >
+              <FiSearch size={16} className="text-[#94a3b8]" />
+            </div>
+
+            <input
+              type="text"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              placeholder={t.searchPlaceholder}
+              className={`w-full rounded-lg border border-[#e2e8f0] bg-white py-2.5 text-xs text-[#334155] outline-none transition-all placeholder:text-[#94a3b8] focus:border-[#94a3b8] focus:ring-2 focus:ring-[#f1f5f9] sm:text-sm ${
+                isArabic ? "pr-9 pl-3" : "pl-9 pr-3"
+              }`}
+            />
+          </div>
+
+          <motion.button
+            type="button"
+            onClick={handleCreateDepartment}
+            whileHover={{ y: -2, scale: 1.02 }}
+            whileTap={{ scale: 0.97 }}
+            transition={{ duration: 0.2 }}
+            className="flex shrink-0 items-center justify-center gap-2 rounded-lg bg-[#243B53] px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-[#1c2f42]"
           >
-            {filteredDepartments.map((department) => {
-              const departmentName = department.nameKey
-                ? t[department.nameKey]
-                : department.customName;
+            <FiPlus className="h-4 w-4" />
+            <span>{t.createBtn}</span>
+          </motion.button>
+        </div>
+      </motion.div>
 
-              const departmentHead = department.headKey
-                ? t[department.headKey]
-                : department.customHead;
+      {/* ==================== 4 Stat Cards ==================== */}
+      <motion.div
+        variants={containerVariants}
+        className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4"
+      >
+        {/* Total Departments */}
+        <motion.div
+          variants={itemVariants}
+          whileHover={{
+            y: -4,
+            transition: { duration: 0.2, ease: "easeOut" },
+          }}
+          className="flex flex-col justify-between rounded-2xl border border-[#e2e8f0]/80 bg-white p-5 shadow-[0_1px_3px_rgba(0,0,0,0.03)] transition-shadow duration-200 hover:shadow-md"
+        >
+          <div className="flex items-center justify-between gap-3">
+            <p className="text-[11px] font-bold uppercase tracking-wider text-[#94a3b8]">
+              {t.totalDepartments}
+            </p>
 
-              const attendance = department.attendanceKey
-                ? t[department.attendanceKey]
-                : department.customAttendance;
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#f5f3ff] text-[#8b5cf6]">
+              <FiLayers className="h-[18px] w-[18px]" />
+            </div>
+          </div>
 
-              return (
-                <motion.div
-                  key={department.id}
-                  variants={itemVariants}
-                  whileHover={{ y: -4 }}
-                  className="group rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition-shadow hover:shadow-lg"
-                >
+          <div className="mt-2">
+            <p className="text-[27px] font-bold tracking-tight text-[#0f172a]">
+              {departments.length}
+            </p>
+
+            <p className="mt-1 text-xs font-normal text-[#64748b]">
+              {t.totalDepartments}
+            </p>
+          </div>
+        </motion.div>
+
+        {/* Total Employees */}
+        <motion.div
+          variants={itemVariants}
+          whileHover={{
+            y: -4,
+            transition: { duration: 0.2, ease: "easeOut" },
+          }}
+          className="flex flex-col justify-between rounded-2xl border border-[#e2e8f0]/80 bg-white p-5 shadow-[0_1px_3px_rgba(0,0,0,0.03)] transition-shadow duration-200 hover:shadow-md"
+        >
+          <div className="flex items-center justify-between gap-3">
+            <p className="text-[11px] font-bold uppercase tracking-wider text-[#94a3b8]">
+              {t.totalEmployees}
+            </p>
+
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#eff6ff] text-[#3b82f6]">
+              <FiUsers className="h-[18px] w-[18px]" />
+            </div>
+          </div>
+
+          <div className="mt-2">
+            <p className="text-[27px] font-bold tracking-tight text-[#0f172a]">
+              {totalEmployees}
+            </p>
+
+            <p className="mt-1 text-xs font-normal text-[#64748b]">
+              {t.totalEmployees}
+            </p>
+          </div>
+        </motion.div>
+
+        {/* Active Projects */}
+        <motion.div
+          variants={itemVariants}
+          whileHover={{
+            y: -4,
+            transition: { duration: 0.2, ease: "easeOut" },
+          }}
+          className="flex flex-col justify-between rounded-2xl border border-[#e2e8f0]/80 bg-white p-5 shadow-[0_1px_3px_rgba(0,0,0,0.03)] transition-shadow duration-200 hover:shadow-md"
+        >
+          <div className="flex items-center justify-between gap-3">
+            <p className="text-[11px] font-bold uppercase tracking-wider text-[#94a3b8]">
+              {t.totalProjects}
+            </p>
+
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#fff7ed] text-[#f97316]">
+              <FiBriefcase className="h-[18px] w-[18px]" />
+            </div>
+          </div>
+
+          <div className="mt-2">
+            <p className="text-[27px] font-bold tracking-tight text-[#0f172a]">
+              {totalProjects}
+            </p>
+
+            <p className="mt-1 text-xs font-normal text-[#64748b]">
+              {t.totalProjects}
+            </p>
+          </div>
+        </motion.div>
+
+        {/* Attendance */}
+        <motion.div
+          variants={itemVariants}
+          whileHover={{
+            y: -4,
+            transition: { duration: 0.2, ease: "easeOut" },
+          }}
+          className="flex flex-col justify-between rounded-2xl border border-[#e2e8f0]/80 bg-white p-5 shadow-[0_1px_3px_rgba(0,0,0,0.03)] transition-shadow duration-200 hover:shadow-md"
+        >
+          <div className="flex items-center justify-between gap-3">
+            <p className="text-[11px] font-bold uppercase tracking-wider text-[#94a3b8]">
+              {t.avgAttendance}
+            </p>
+
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#ecfdf5] text-[#10b981]">
+              <FiActivity className="h-[18px] w-[18px]" />
+            </div>
+          </div>
+
+          <div className="mt-2">
+            <p className="text-[27px] font-bold tracking-tight text-[#0f172a]">
+              {averageAttendance}%
+            </p>
+
+            <p className="mt-1 text-xs font-normal text-[#64748b]">
+              {t.avgAttendance}
+            </p>
+          </div>
+        </motion.div>
+      </motion.div>
+
+      {/* ==================== Results Header ==================== */}
+      <motion.div variants={itemVariants}>
+        <p className="text-xs font-normal text-[#64748b]">
+          {filteredDepartments.length} {t.results}
+        </p>
+      </motion.div>
+
+      {/* ==================== Departments ==================== */}
+      {filteredDepartments.length > 0 ? (
+        <motion.div
+          variants={containerVariants}
+          className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
+        >
+          {filteredDepartments.map((department) => {
+            const departmentName = department.nameKey
+              ? t[department.nameKey]
+              : department.customName;
+
+            const departmentHead = department.headKey
+              ? t[department.headKey]
+              : department.customHead;
+
+            const attendance = department.attendanceKey
+              ? t[department.attendanceKey]
+              : department.customAttendance;
+
+            return (
+              <motion.div
+                key={department.id}
+                variants={itemVariants}
+                whileHover={{
+                  y: -4,
+                  transition: { duration: 0.2, ease: "easeOut" },
+                }}
+                className="group flex flex-col justify-between rounded-2xl border border-[#e2e8f0]/80 bg-white p-5 shadow-[0_1px_3px_rgba(0,0,0,0.03)] transition-shadow duration-200 hover:shadow-md"
+              >
+                <div>
                   {/* Card Top */}
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0">
-                      <div className="mb-3 flex h-11 w-11 items-center justify-center rounded-xl bg-violet-50 text-violet-600">
-                        <FiBriefcase size={20} />
+                      <div className="mb-3 flex h-9 w-9 items-center justify-center rounded-xl bg-[#f5f3ff] text-[#8b5cf6]">
+                        <FiBriefcase className="h-[18px] w-[18px]" />
                       </div>
 
-                      <h3 className="truncate text-lg font-bold text-[#1b2a47]">
+                      <h3 className="truncate text-sm font-bold text-[#1e293b] sm:text-base">
                         {departmentName}
                       </h3>
 
-                      <p className="mt-1 truncate text-xs text-slate-500">
+                      <p className="mt-1 truncate text-xs text-[#64748b]">
                         {t.headPrefix}
                         {departmentHead}
                       </p>
                     </div>
 
-                    <span className="shrink-0 rounded-full bg-emerald-50 px-2.5 py-1 text-[11px] font-bold text-emerald-600">
+                    <span className="shrink-0 rounded-full bg-[#ecfdf5] px-2.5 py-1 text-[10px] font-bold text-[#16a34a] sm:text-xs">
                       {attendance}
                     </span>
                   </div>
 
                   {/* Metrics */}
                   <div className="mt-5 grid grid-cols-2 gap-3">
-                    <div className="rounded-xl bg-slate-50 p-3">
-                      <p className="text-[11px] font-medium text-slate-400">
+                    <div className="rounded-xl bg-[#f8fafc] p-3">
+                      <p className="text-[10px] font-bold uppercase tracking-wide text-[#94a3b8] sm:text-xs">
                         {t.headcountLabel}
                       </p>
 
-                      <p className="mt-1 text-lg font-bold text-[#1b2a47]">
+                      <p className="mt-1 text-base font-bold text-[#0f172a]">
                         {department.headcount}
                       </p>
                     </div>
 
-                    <div className="rounded-xl bg-slate-50 p-3">
-                      <p className="text-[11px] font-medium text-slate-400">
+                    <div className="rounded-xl bg-[#f8fafc] p-3">
+                      <p className="text-[10px] font-bold uppercase tracking-wide text-[#94a3b8] sm:text-xs">
                         {t.activeProjectsLabel}
                       </p>
 
-                      <p className="mt-1 text-lg font-bold text-[#1b2a47]">
+                      <p className="mt-1 text-base font-bold text-[#0f172a]">
                         {department.activeProjects}
                       </p>
                     </div>
                   </div>
+                </div>
 
-                  {/* Actions */}
-                  <div className="space-y-2 mt-5">
-                    <motion.button
-                      type="button"
-                      onClick={() => openMembersModal(department)}
-                      whileHover={{ scale: 1.015 }}
-                      whileTap={{ scale: 0.98 }}
-                      className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-[#1b2a47] text-white hover:bg-[#152138] text-xs font-bold transition-colors shadow-sm"
-                    >
-                      <FiUsers size={15} />
-                      {t.manageMembersBtn}
-                    </motion.button>
+                {/* Actions */}
+                <div className="mt-5 space-y-2 border-t border-[#f1f5f9] pt-4">
+                  <motion.button
+                    type="button"
+                    onClick={() => openMembersModal(department)}
+                    whileHover={{ y: -1 }}
+                    whileTap={{ scale: 0.98 }}
+                    className="flex w-full items-center justify-center gap-2 rounded-lg bg-[#243B53] px-3 py-2.5 text-xs font-semibold text-white transition hover:bg-[#1c2f42]"
+                  >
+                    <FiUsers className="h-3.5 w-3.5" />
+                    {t.manageMembersBtn}
+                  </motion.button>
 
-                    <motion.button
-                      type="button"
-                      onClick={() => openTransferModal(department)}
-                      whileHover={{ y: -1 }}
-                      whileTap={{ scale: 0.98 }}
-                      className="w-full py-2.5 px-4 rounded-xl border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 text-xs font-semibold transition-colors shadow-xs"
-                    >
-                      {t.transferEmployeeBtn}
-                    </motion.button>
-                  </div>
-                </motion.div>
-              );
-            })}
-          </motion.div>
-        ) : (
-          <div className="rounded-2xl border border-dashed border-slate-300 bg-white py-16 text-center">
-            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-slate-100 text-slate-400">
-              <FiSearch size={20} />
-            </div>
-
-            <p className="mt-4 text-sm font-semibold text-slate-600">
-              {t.noResults}
-            </p>
+                  <motion.button
+                    type="button"
+                    onClick={() => openTransferModal(department)}
+                    whileHover={{ y: -1 }}
+                    whileTap={{ scale: 0.98 }}
+                    className="w-full rounded-lg border border-[#e2e8f0] bg-white px-3 py-2.5 text-xs font-semibold text-[#475569] transition hover:bg-[#f8fafc]"
+                  >
+                    {t.transferEmployeeBtn}
+                  </motion.button>
+                </div>
+              </motion.div>
+            );
+          })}
+        </motion.div>
+      ) : (
+        <motion.div
+          variants={itemVariants}
+          className="rounded-2xl border border-dashed border-[#cbd5e1] bg-white py-12 text-center"
+        >
+          <div className="mx-auto flex h-10 w-10 items-center justify-center rounded-full bg-[#f8fafc] text-[#94a3b8]">
+            <FiSearch className="h-[18px] w-[18px]" />
           </div>
-        )}
-      </motion.div>
 
-      {/* Create Department Modal */}
+          <p className="mt-3 text-xs font-semibold text-[#64748b] sm:text-sm">
+            {t.noResults}
+          </p>
+        </motion.div>
+      )}
+
+      {/* ==================== Create Department Modal ==================== */}
       <AnimatePresence>
         {isModalOpen && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
@@ -619,7 +668,7 @@ export default function DepartmentsAndTeams() {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={closeCreateModal}
-              className="absolute inset-0 bg-[#0f172a]/50 backdrop-blur-sm"
+              className="absolute inset-0 bg-[#0f172a]/40 backdrop-blur-[2px]"
             />
 
             <motion.div
@@ -627,17 +676,17 @@ export default function DepartmentsAndTeams() {
               initial="hidden"
               animate="visible"
               exit="exit"
-              className="relative z-10 w-full max-w-md overflow-hidden rounded-2xl bg-white shadow-2xl"
+              className="relative z-10 w-full max-w-md overflow-hidden rounded-2xl border border-[#e2e8f0]/80 bg-white shadow-xl"
             >
               {!isSuccess ? (
                 <>
-                  <div className="flex items-center justify-between border-b border-slate-100 px-6 py-5">
+                  <div className="flex items-center justify-between border-b border-[#f1f5f9] px-6 py-5">
                     <div>
-                      <h2 className="text-lg font-bold text-[#1b2a47]">
+                      <h2 className="text-base font-bold text-[#1e293b]">
                         {t.modalTitle}
                       </h2>
 
-                      <p className="mt-1 text-xs text-slate-400">
+                      <p className="mt-1 text-xs text-[#64748b]">
                         {t.subtitle}
                       </p>
                     </div>
@@ -645,16 +694,16 @@ export default function DepartmentsAndTeams() {
                     <button
                       type="button"
                       onClick={closeCreateModal}
-                      className="flex h-9 w-9 items-center justify-center rounded-xl text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"
+                      className="flex h-8 w-8 items-center justify-center rounded-lg text-[#94a3b8] transition hover:bg-[#f8fafc] hover:text-[#475569]"
                     >
-                      <FiX size={18} />
+                      <FiX className="h-4 w-4" />
                     </button>
                   </div>
 
                   <form onSubmit={handleSaveDepartment} className="p-6">
                     <div className="space-y-5">
                       <div>
-                        <label className="mb-2 block text-xs font-bold text-slate-600">
+                        <label className="mb-1.5 block text-xs font-semibold text-[#475569]">
                           {t.detailsLabel}
                         </label>
 
@@ -664,12 +713,12 @@ export default function DepartmentsAndTeams() {
                           onChange={(e) => setDetails(e.target.value)}
                           placeholder={t.detailsPlaceholder}
                           autoFocus
-                          className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700 outline-none transition focus:border-violet-400 focus:ring-4 focus:ring-violet-100"
+                          className="w-full rounded-lg border border-[#e2e8f0] bg-white px-3 py-2.5 text-xs text-[#334155] outline-none transition focus:border-[#94a3b8] focus:ring-2 focus:ring-[#f1f5f9] sm:text-sm"
                         />
                       </div>
 
                       <div>
-                        <label className="mb-2 block text-xs font-bold text-slate-600">
+                        <label className="mb-1.5 block text-xs font-semibold text-[#475569]">
                           {t.ownerLabel}
                         </label>
 
@@ -678,16 +727,16 @@ export default function DepartmentsAndTeams() {
                           value={owner}
                           onChange={(e) => setOwner(e.target.value)}
                           placeholder={t.ownerPlaceholder}
-                          className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700 outline-none transition focus:border-violet-400 focus:ring-4 focus:ring-violet-100"
+                          className="w-full rounded-lg border border-[#e2e8f0] bg-white px-3 py-2.5 text-xs text-[#334155] outline-none transition focus:border-[#94a3b8] focus:ring-2 focus:ring-[#f1f5f9] sm:text-sm"
                         />
                       </div>
                     </div>
 
-                    <div className="mt-7 flex gap-3">
+                    <div className="mt-6 flex gap-3">
                       <button
                         type="button"
                         onClick={closeCreateModal}
-                        className="flex-1 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-600 transition hover:bg-slate-50"
+                        className="flex-1 rounded-lg border border-[#e2e8f0] bg-white px-4 py-2.5 text-xs font-semibold text-[#64748b] transition hover:bg-[#f8fafc] sm:text-sm"
                       >
                         {t.cancelBtn}
                       </button>
@@ -695,7 +744,7 @@ export default function DepartmentsAndTeams() {
                       <button
                         type="submit"
                         disabled={!details.trim()}
-                        className="flex-1 rounded-xl bg-[#1b2a47] px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-[#152138] disabled:cursor-not-allowed disabled:opacity-50"
+                        className="flex-1 rounded-lg bg-[#243B53] px-4 py-2.5 text-xs font-semibold text-white transition hover:bg-[#1c2f42] disabled:cursor-not-allowed disabled:opacity-50 sm:text-sm"
                       >
                         {t.saveBtn}
                       </button>
@@ -703,27 +752,27 @@ export default function DepartmentsAndTeams() {
                   </form>
                 </>
               ) : (
-                <div className="px-6 py-10 text-center">
+                <div className="px-6 py-9 text-center">
                   <motion.div
                     initial={{ scale: 0.7, opacity: 0 }}
                     animate={{ scale: 1, opacity: 1 }}
-                    className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-emerald-50 text-emerald-600"
+                    className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-[#ecfdf5] text-[#10b981]"
                   >
-                    <FiCheck size={30} />
+                    <FiCheck className="h-[26px] w-[26px]" />
                   </motion.div>
 
-                  <h2 className="mt-5 text-xl font-bold text-[#1b2a47]">
+                  <h2 className="mt-4 text-base font-bold text-[#1e293b] sm:text-lg">
                     {t.successTitle}
                   </h2>
 
-                  <p className="mx-auto mt-2 max-w-xs text-sm leading-6 text-slate-500">
+                  <p className="mx-auto mt-1 max-w-xs text-xs text-[#64748b] sm:text-sm">
                     {t.successSubtitle}
                   </p>
 
                   <button
                     type="button"
                     onClick={closeCreateModal}
-                    className="mt-7 w-full rounded-xl bg-[#1b2a47] px-4 py-3 text-sm font-semibold text-white transition hover:bg-[#152138]"
+                    className="mt-6 w-full rounded-lg bg-[#243B53] px-4 py-2.5 text-xs font-semibold text-white transition hover:bg-[#1c2f42] sm:text-sm"
                   >
                     {t.doneBtn}
                   </button>
@@ -734,7 +783,7 @@ export default function DepartmentsAndTeams() {
         )}
       </AnimatePresence>
 
-      {/* Manage Members Modal */}
+      {/* ==================== Manage Members Modal ==================== */}
       <AnimatePresence>
         {membersModal && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
@@ -743,7 +792,7 @@ export default function DepartmentsAndTeams() {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={closeMembersModal}
-              className="absolute inset-0 bg-[#0f172a]/50 backdrop-blur-sm"
+              className="absolute inset-0 bg-[#0f172a]/40 backdrop-blur-[2px]"
             />
 
             <motion.div
@@ -751,19 +800,19 @@ export default function DepartmentsAndTeams() {
               initial="hidden"
               animate="visible"
               exit="exit"
-              className="relative z-10 w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl"
+              className="relative z-10 w-full max-w-md rounded-2xl border border-[#e2e8f0]/80 bg-white p-6 shadow-xl"
             >
               <div className="flex items-start justify-between gap-4">
                 <div>
-                  <div className="mb-3 flex h-11 w-11 items-center justify-center rounded-xl bg-violet-50 text-violet-600">
-                    <FiUsers size={20} />
+                  <div className="mb-3 flex h-9 w-9 items-center justify-center rounded-xl bg-[#eff6ff] text-[#3b82f6]">
+                    <FiUsers className="h-[18px] w-[18px]" />
                   </div>
 
-                  <h2 className="text-lg font-bold text-[#1b2a47]">
+                  <h2 className="text-base font-bold text-[#1e293b]">
                     {t.membersTitle}
                   </h2>
 
-                  <p className="mt-1 text-sm text-slate-500">
+                  <p className="mt-1 text-xs text-[#64748b] sm:text-sm">
                     {membersModal.nameKey
                       ? t[membersModal.nameKey]
                       : membersModal.customName}
@@ -773,26 +822,24 @@ export default function DepartmentsAndTeams() {
                 <button
                   type="button"
                   onClick={closeMembersModal}
-                  className="flex h-9 w-9 items-center justify-center rounded-xl text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"
+                  className="flex h-8 w-8 items-center justify-center rounded-lg text-[#94a3b8] transition hover:bg-[#f8fafc] hover:text-[#475569]"
                 >
-                  <FiX size={18} />
+                  <FiX className="h-4 w-4" />
                 </button>
               </div>
 
-              <div className="mt-6 rounded-xl bg-slate-50 p-4">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-slate-500">
-                    {t.headcountLabel}
-                  </span>
+              <div className="mt-5 rounded-xl bg-[#f8fafc] p-4">
+                <div className="flex items-center justify-between text-xs sm:text-sm">
+                  <span className="text-[#64748b]">{t.headcountLabel}</span>
 
-                  <span className="font-bold text-[#1b2a47]">
+                  <span className="font-bold text-[#0f172a]">
                     {membersModal.headcount}
                   </span>
                 </div>
 
-                <div className="mt-3 h-2 overflow-hidden rounded-full bg-slate-200">
+                <div className="mt-3 h-2 overflow-hidden rounded-full bg-[#e2e8f0]">
                   <div
-                    className="h-full rounded-full bg-violet-500"
+                    className="h-full rounded-full bg-[#8b5cf6]"
                     style={{
                       width: `${Math.min(membersModal.headcount * 2, 100)}%`,
                     }}
@@ -800,14 +847,14 @@ export default function DepartmentsAndTeams() {
                 </div>
               </div>
 
-              <p className="mt-4 text-sm leading-6 text-slate-500">
+              <p className="mt-4 text-xs text-[#64748b] sm:text-sm">
                 {t.membersSubtitle}
               </p>
 
               <button
                 type="button"
                 onClick={closeMembersModal}
-                className="mt-6 w-full rounded-xl bg-[#1b2a47] px-4 py-3 text-sm font-semibold text-white transition hover:bg-[#152138]"
+                className="mt-6 w-full rounded-lg bg-[#243B53] px-4 py-2.5 text-xs font-semibold text-white transition hover:bg-[#1c2f42] sm:text-sm"
               >
                 {t.closeBtn}
               </button>
@@ -816,7 +863,7 @@ export default function DepartmentsAndTeams() {
         )}
       </AnimatePresence>
 
-      {/* Transfer Employee Modal */}
+      {/* ==================== Transfer Employee Modal ==================== */}
       <AnimatePresence>
         {transferModal && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
@@ -825,7 +872,7 @@ export default function DepartmentsAndTeams() {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={closeTransferModal}
-              className="absolute inset-0 bg-[#0f172a]/50 backdrop-blur-sm"
+              className="absolute inset-0 bg-[#0f172a]/40 backdrop-blur-[2px]"
             />
 
             <motion.div
@@ -833,19 +880,19 @@ export default function DepartmentsAndTeams() {
               initial="hidden"
               animate="visible"
               exit="exit"
-              className="relative z-10 w-full max-w-md rounded-2xl bg-white shadow-2xl"
+              className="relative z-10 w-full max-w-md overflow-hidden rounded-2xl border border-[#e2e8f0]/80 bg-white shadow-xl"
             >
-              <div className="flex items-start justify-between border-b border-slate-100 px-6 py-5">
+              <div className="flex items-start justify-between border-b border-[#f1f5f9] px-6 py-5">
                 <div>
-                  <div className="mb-3 flex h-11 w-11 items-center justify-center rounded-xl bg-blue-50 text-blue-600">
-                    <FiUsers size={20} />
+                  <div className="mb-3 flex h-9 w-9 items-center justify-center rounded-xl bg-[#eff6ff] text-[#3b82f6]">
+                    <FiUsers className="h-[18px] w-[18px]" />
                   </div>
 
-                  <h2 className="text-lg font-bold text-[#1b2a47]">
+                  <h2 className="text-base font-bold text-[#1e293b]">
                     {t.transferTitle}
                   </h2>
 
-                  <p className="mt-1 text-sm text-slate-500">
+                  <p className="mt-1 text-xs text-[#64748b] sm:text-sm">
                     {transferModal.nameKey
                       ? t[transferModal.nameKey]
                       : transferModal.customName}
@@ -855,25 +902,25 @@ export default function DepartmentsAndTeams() {
                 <button
                   type="button"
                   onClick={closeTransferModal}
-                  className="flex h-9 w-9 items-center justify-center rounded-xl text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"
+                  className="flex h-8 w-8 items-center justify-center rounded-lg text-[#94a3b8] transition hover:bg-[#f8fafc] hover:text-[#475569]"
                 >
-                  <FiX size={18} />
+                  <FiX className="h-4 w-4" />
                 </button>
               </div>
 
               <form onSubmit={handleTransfer} className="p-6">
-                <p className="mb-5 text-sm leading-6 text-slate-500">
+                <p className="mb-5 text-xs text-[#64748b] sm:text-sm">
                   {t.transferSubtitle}
                 </p>
 
-                <label className="mb-2 block text-xs font-bold text-slate-600">
+                <label className="mb-1.5 block text-xs font-semibold text-[#475569]">
                   {t.employeePlaceholder}
                 </label>
 
                 <select
                   value={selectedEmployee}
                   onChange={(e) => setSelectedEmployee(e.target.value)}
-                  className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700 outline-none transition focus:border-violet-400 focus:ring-4 focus:ring-violet-100"
+                  className="w-full rounded-lg border border-[#e2e8f0] bg-white px-3 py-2.5 text-xs text-[#334155] outline-none transition focus:border-[#94a3b8] focus:ring-2 focus:ring-[#f1f5f9] sm:text-sm"
                 >
                   <option value="">{t.employeePlaceholder}</option>
 
@@ -894,7 +941,7 @@ export default function DepartmentsAndTeams() {
                   <button
                     type="button"
                     onClick={closeTransferModal}
-                    className="flex-1 rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-600 transition hover:bg-slate-50"
+                    className="flex-1 rounded-lg border border-[#e2e8f0] bg-white px-4 py-2.5 text-xs font-semibold text-[#64748b] transition hover:bg-[#f8fafc] sm:text-sm"
                   >
                     {t.cancelBtn}
                   </button>
@@ -902,7 +949,7 @@ export default function DepartmentsAndTeams() {
                   <button
                     type="submit"
                     disabled={!selectedEmployee}
-                    className="flex-1 rounded-xl bg-[#1b2a47] px-4 py-3 text-sm font-semibold text-white transition hover:bg-[#152138] disabled:cursor-not-allowed disabled:opacity-50"
+                    className="flex-1 rounded-lg bg-[#243B53] px-4 py-2.5 text-xs font-semibold text-white transition hover:bg-[#1c2f42] disabled:cursor-not-allowed disabled:opacity-50 sm:text-sm"
                   >
                     {t.transferBtn}
                   </button>
@@ -912,6 +959,6 @@ export default function DepartmentsAndTeams() {
           </div>
         )}
       </AnimatePresence>
-    </div>
+    </motion.div>
   );
 }

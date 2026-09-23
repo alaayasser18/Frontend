@@ -4,40 +4,40 @@ import { useTranslation } from "react-i18next";
 import { AnimatePresence, motion } from "framer-motion";
 import { FiX } from "react-icons/fi";
 
-/* -------------------------------------------------------------------------- */
-/*  Animation vocabulary (same as TeamDashboard)                              */
-/* -------------------------------------------------------------------------- */
 const fadeUp = {
-  hidden: { opacity: 0, y: 10 },
+  hidden: { opacity: 0, y: 6 },
   visible: { opacity: 1, y: 0 },
 };
 
 const staggerContainer = {
   hidden: {},
-  visible: { transition: { staggerChildren: 0.08 } },
+  visible: { transition: { staggerChildren: 0.05 } },
 };
 
-/* -------------------------------------------------------------------------- */
-/*  Data                                                                      */
-/* -------------------------------------------------------------------------- */
-// nameKey points at the existing `managerTasks.*` member-name translations
 const INITIAL_MEMBERS = [
-  { id: "youssef", nameKey: "youssefLotfy", status: "submitted", rating: 4.2 },
-  { id: "karim", nameKey: "karimAshraf", status: "inProgress", rating: null },
-  { id: "salma", nameKey: "salmaNabil", status: "notStarted", rating: null },
-  { id: "omar", nameKey: "omarFathy", status: "notStarted", rating: null },
+  { id: "youssef", nameKey: "youssefLotfy", defaultName: "Youssef Lotfy", status: "submitted", rating: 4.2 },
+  { id: "karim", nameKey: "karimAshraf", defaultName: "Karim Ashraf", status: "inProgress", rating: null },
+  { id: "salma", nameKey: "salmaNabil", defaultName: "Salma Nabil", status: "notStarted", rating: null },
+  { id: "omar", nameKey: "omarFathy", defaultName: "Omar Fathy", status: "notStarted", rating: null },
 ];
 
+// ألوان مطابقة تماماً لتصميم الـ UI
 const STATUS_STYLES = {
-  submitted: "bg-[#e3f8f1] text-[#147d64]",
-  inProgress: "bg-[#fff3c4] text-[#975a16]",
-  notStarted: "bg-[#e8f0f7] text-[#486581]",
+  submitted: "bg-[#ecfdf5] text-[#059669]",
+  inProgress: "bg-[#fefce8] text-[#d97706]",
+  notStarted: "bg-[#f1f5f9] text-[#64748b]",
 };
 
 const STATUS_KEYS = {
   submitted: "managerEvaluations.statusSubmitted",
   inProgress: "managerEvaluations.statusInProgress",
   notStarted: "managerEvaluations.statusNotStarted",
+};
+
+const STATUS_DEFAULTS = {
+  submitted: "Submitted",
+  inProgress: "In Progress",
+  notStarted: "Not Started",
 };
 
 const MIN_SCORE = 1;
@@ -47,15 +47,10 @@ const THUMB_SIZE = 16;
 
 const formatRating = (value) => (Number.isInteger(value) ? String(value) : value.toFixed(1));
 
-/**
- * Mock AI draft generator (frontend only).
- * Replace the body with the real AI call when the backend is available; keep the
- * signature ({ name, score, t }) => Promise<string>.
- */
 const generateEvaluationDraft = ({ name, score, t }) =>
   new Promise((resolve) => {
     const band = score >= 4 ? "High" : score === 3 ? "Mid" : "Low";
-    setTimeout(() => resolve(t(`managerEvaluations.draft${band}`, { name })), 900);
+    setTimeout(() => resolve(t(`managerEvaluations.draft${band}`, { name, defaultValue: `Strong performance across key milestones this quarter.` })), 900);
   });
 
 const SparklesIcon = ({ className }) => (
@@ -78,7 +73,7 @@ const SparklesIcon = ({ className }) => (
 );
 
 /* -------------------------------------------------------------------------- */
-/*  Evaluate Employee modal (part of the Team Evaluations page)               */
+/*  Evaluate Employee Modal                                                   */
 /* -------------------------------------------------------------------------- */
 const EvaluateEmployeeModal = ({ member, onClose, onSave }) => {
   const { t, i18n } = useTranslation();
@@ -96,7 +91,6 @@ const EvaluateEmployeeModal = ({ member, onClose, onSave }) => {
     };
   }, []);
 
-  // Esc to close + lock background scroll while open
   useEffect(() => {
     const onKeyDown = (e) => {
       if (e.key === "Escape") onClose();
@@ -116,7 +110,7 @@ const EvaluateEmployeeModal = ({ member, onClose, onSave }) => {
     try {
       const firstName = member.name.trim().split(/\s+/)[0];
       const draft = await generateEvaluationDraft({ name: firstName, score, t });
-      if (isMounted.current) setFeedback(draft); // remains fully editable
+      if (isMounted.current) setFeedback(draft);
     } finally {
       if (isMounted.current) setIsGenerating(false);
     }
@@ -124,18 +118,17 @@ const EvaluateEmployeeModal = ({ member, onClose, onSave }) => {
 
   const handleSave = () => onSave({ id: member.id, score, feedback: feedback.trim() });
 
-  // Slider track: filled up to thumb center, dark for the rest (flips in RTL)
   const fraction = (score - MIN_SCORE) / (MAX_SCORE - MIN_SCORE);
   const stop = `calc(${THUMB_SIZE / 2}px + ${fraction} * (100% - ${THUMB_SIZE}px))`;
-  const trackBackground = `linear-gradient(${isRtl ? "to left" : "to right"}, #99c8ff ${stop}, #3b3b3b ${stop})`;
+  const trackBackground = `linear-gradient(${isRtl ? "to left" : "to right"}, #3b82f6 ${stop}, #e2e8f0 ${stop})`;
 
   return (
     <motion.div
-      className="fixed inset-0 z-[100] flex items-center justify-center overflow-y-auto bg-[#243b53]/[0.66] p-4"
+      className="fixed inset-0 z-[100] flex items-center justify-center overflow-y-auto bg-slate-900/40 p-4"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      transition={{ duration: 0.2, ease: "easeOut" }}
+      transition={{ duration: 0.15 }}
       onMouseDown={(e) => {
         if (e.target === e.currentTarget) onClose();
       }}
@@ -144,40 +137,38 @@ const EvaluateEmployeeModal = ({ member, onClose, onSave }) => {
         role="dialog"
         aria-modal="true"
         aria-labelledby="evaluate-employee-title"
-        className="w-full max-w-[576px] rounded-3xl bg-white p-[27px] shadow-[0_24px_60px_rgba(15,30,50,0.28)]"
-        initial={{ opacity: 0, y: 12, scale: 0.98 }}
+        className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl"
+        initial={{ opacity: 0, y: 8, scale: 0.96 }}
         animate={{ opacity: 1, y: 0, scale: 1 }}
-        exit={{ opacity: 0, y: 8, scale: 0.98 }}
+        exit={{ opacity: 0, y: 8, scale: 0.96 }}
         transition={{ duration: 0.2, ease: "easeOut" }}
       >
-        {/* Title row */}
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between mb-5">
           <h2
             id="evaluate-employee-title"
-            className="text-[22px] font-bold leading-8 text-[#243b53]"
+            className="text-lg font-bold text-[#102a43]"
           >
-            {t("managerEvaluations.evaluateEmployee")}
-            <span className="sr-only"> — {member.name}</span>
+            {t("managerEvaluations.evaluateEmployee", "Evaluate Employee")}
+            <span className="text-sm font-normal text-[#64748b] block mt-0.5">{member.name}</span>
           </h2>
           <button
             type="button"
             onClick={onClose}
-            aria-label={t("common.close")}
-            className="-m-1 flex items-center justify-center p-1 text-[#243b53] transition hover:text-[#486581]"
+            aria-label={t("common.close", "Close")}
+            className="text-[#94a3b8] hover:text-[#102a43] transition p-1"
           >
             <FiX className="h-5 w-5" />
           </button>
         </div>
 
-        {/* Overall score */}
         <label
           htmlFor="overall-score"
-          className="mt-[23px] block text-sm font-bold text-[#243b53]"
+          className="block text-sm font-semibold text-[#102a43] mb-2"
         >
-          {t("managerEvaluations.overallScore", { score })}
+          {t("managerEvaluations.overallScore", { score, defaultValue: `Overall score: ${score} / 5` })}
         </label>
 
-        <div className="relative mt-4 h-4">
+        <div className="relative my-4 h-4">
           <div
             aria-hidden="true"
             className="absolute inset-x-0 top-1/2 h-2 -translate-y-1/2 rounded-full"
@@ -193,45 +184,40 @@ const EvaluateEmployeeModal = ({ member, onClose, onSave }) => {
             onChange={(e) => setScore(Number(e.target.value))}
             className="relative m-0 h-4 w-full cursor-pointer appearance-none bg-transparent focus:outline-none
               [&::-webkit-slider-runnable-track]:bg-transparent
-              [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:border-0 [&::-webkit-slider-thumb]:bg-[#99c8ff]
+              [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:border-0 [&::-webkit-slider-thumb]:bg-[#2563eb] [&::-webkit-slider-thumb]:shadow-md
               [&::-moz-range-track]:bg-transparent
-              [&::-moz-range-thumb]:h-4 [&::-moz-range-thumb]:w-4 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:border-0 [&::-moz-range-thumb]:bg-[#99c8ff]"
+              [&::-moz-range-thumb]:h-4 [&::-moz-range-thumb]:w-4 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:border-0 [&::-moz-range-thumb]:bg-[#2563eb]"
           />
         </div>
 
-        {/* Generate with AI */}
         <motion.button
           type="button"
           onClick={handleGenerate}
           disabled={isGenerating}
-          aria-busy={isGenerating}
           whileHover={isGenerating ? undefined : { scale: 1.01 }}
           whileTap={isGenerating ? undefined : { scale: 0.99 }}
-          className="mt-[29px] flex h-[47px] w-full items-center justify-center gap-2 rounded-xl border border-[#bcccdc] bg-white text-base text-[#486581] transition-colors hover:bg-[#f5f7f8] disabled:cursor-wait disabled:opacity-70"
+          className="mt-4 flex h-10 w-full items-center justify-center gap-2 rounded-xl border border-[#d9e2ec] bg-white text-xs font-semibold text-[#486581] transition hover:bg-[#f8fafc] disabled:opacity-60"
         >
-          <SparklesIcon className={`h-[18px] w-[18px] ${isGenerating ? "animate-pulse" : ""}`} />
-          {t("managerEvaluations.generateDraft")}
+          <SparklesIcon className={`h-4 w-4 text-[#3b82f6] ${isGenerating ? "animate-pulse" : ""}`} />
+          {t("managerEvaluations.generateDraft", "Generate Draft with AI")}
         </motion.button>
 
-        {/* Qualitative feedback: AI draft lands here, always editable / can be typed manually */}
         <textarea
           value={feedback}
           onChange={(e) => setFeedback(e.target.value)}
-          placeholder={t("managerEvaluations.feedbackPlaceholder")}
-          aria-label={t("managerEvaluations.feedbackPlaceholder")}
-          autoFocus
-          className="mt-6 block h-[126px] w-full resize-y rounded-xl border border-white bg-white px-[14px] py-3 text-base leading-[27px] text-[#243b53] placeholder:text-[#243b53]/50 focus:outline focus:outline-2 focus:outline-offset-2 focus:outline-[#486581]"
+          placeholder={t("managerEvaluations.feedbackPlaceholder", "Add qualitative feedback and key highlights...")}
+          rows={4}
+          className="mt-4 block w-full resize-none rounded-xl border border-[#d9e2ec] px-3.5 py-2.5 text-sm text-[#102a43] placeholder:text-[#9fb3c8] focus:outline-none focus:ring-2 focus:ring-[#486581]/30"
         />
 
-        {/* Save */}
         <motion.button
           type="button"
           onClick={handleSave}
           whileHover={{ scale: 1.01 }}
           whileTap={{ scale: 0.99 }}
-          className="mt-[29px] h-[54px] w-full rounded-xl bg-[#243b53] text-base text-white transition-colors hover:bg-[#1c2f42]"
+          className="mt-5 h-11 w-full rounded-xl bg-[#102a43] text-sm font-semibold text-white transition hover:bg-[#1f3a56] shadow-sm"
         >
-          {t("managerEvaluations.saveEvaluation")}
+          {t("managerEvaluations.saveEvaluation", "Save Evaluation")}
         </motion.button>
       </motion.div>
     </motion.div>
@@ -239,28 +225,29 @@ const EvaluateEmployeeModal = ({ member, onClose, onSave }) => {
 };
 
 /* -------------------------------------------------------------------------- */
-/*  Team Evaluations page                                                     */
+/*  Team Evaluations Page                                                     */
 /* -------------------------------------------------------------------------- */
 const TeamEvaluations = () => {
   const { t } = useTranslation();
   const [members, setMembers] = useState(INITIAL_MEMBERS);
   const [evaluatingId, setEvaluatingId] = useState(null);
-  const [toast, setToast] = useState(null); // timestamp id of the visible toast, or null
+  const [toast, setToast] = useState(null);
 
-  // Auto-dismiss the toast (restarts if a new one is triggered)
   useEffect(() => {
     if (!toast) return undefined;
     const timer = setTimeout(() => setToast(null), 3000);
     return () => clearTimeout(timer);
   }, [toast]);
 
-  const getName = useCallback((nameKey) => t(`managerTasks.${nameKey}`), [t]);
+  const getName = useCallback(
+    (member) => t(`managerTasks.${member.nameKey}`, member.defaultName || ""),
+    [t]
+  );
   const closeModal = useCallback(() => setEvaluatingId(null), []);
 
   const handleSave = useCallback(({ id, score }) => {
-    // TODO: persist score + feedback through the real API when available
     setMembers((prev) =>
-      prev.map((m) => (m.id === id ? { ...m, status: "submitted", rating: score } : m)),
+      prev.map((m) => (m.id === id ? { ...m, status: "submitted", rating: score } : m))
     );
     setEvaluatingId(null);
     setToast(Date.now());
@@ -268,155 +255,160 @@ const TeamEvaluations = () => {
 
   const evaluating = members.find((m) => m.id === evaluatingId);
 
-  const thClass =
-    "px-[22px] py-[18px] text-xs font-bold uppercase tracking-wider text-[#829ab1] text-left rtl:text-right";
-
   return (
     <>
       <motion.div
         initial="hidden"
         animate="visible"
         variants={staggerContainer}
-        className="w-full space-y-6"
+        className="w-full space-y-6 pb-12 font-sans"
       >
-        {/* Page Header */}
+        {/* 1. Breadcrumb + Header */}
+        <motion.div variants={fadeUp} transition={{ duration: 0.2, ease: "easeOut" }}>
+          <p className="text-[11px] font-bold tracking-wider text-[#6b879f] uppercase">
+            {t("portal.managerPortal", "MANAGER PORTAL")} / {t("portal.teamEvaluations", "TEAM EVALUATIONS")}
+          </p>
+          <h1 className="text-lg md:text-[21px] font-bold text-[#1e293b] tracking-tight mt-1">
+            {t("portal.teamEvaluations", "Team Evaluations")}
+          </h1>
+          <p className="text-sm text-[#829ab1] mt-1 font-normal">
+            {t(
+              "managerDashboard.subtitle",
+              "Keep your team aligned, supported, and moving forward."
+            )}
+          </p>
+        </motion.div>
+
+        {/* 2. Active Evaluation Cycle Card */}
         <motion.div
           variants={fadeUp}
           transition={{ duration: 0.25, ease: "easeOut" }}
-          className="pb-2"
+          className="relative flex items-center justify-between rounded-2xl border border-[#e2e8f0] bg-white p-6 shadow-[0_1px_3px_rgba(0,0,0,0.02)] overflow-hidden"
         >
-          <p className="text-[13px] font-bold uppercase tracking-[0.06em] text-[#6b879f]">
-            {t("portal.managerPortal")} / {t("portal.teamEvaluations")}
-          </p>
-          <h1 className="mt-[11px] text-[28px] font-bold leading-[1.2] text-[#243b53]">
-            {t("portal.teamEvaluations")}
-          </h1>
-          <p className="mt-[3px] text-[15px] text-[#627d98]">{t("managerDashboard.subtitle")}</p>
-        </motion.div>
+          {/* Green left border accent matching design */}
+          <div className="absolute inset-y-0 left-0 w-1 bg-[#10b981] rtl:left-auto rtl:right-0" />
 
-        {/* Active Evaluation Cycle */}
-        <motion.div
-          variants={fadeUp}
-          transition={{ duration: 0.3, ease: "easeOut" }}
-          className="flex items-end justify-between rounded-[20px] border border-[#d9e2ec] border-l-[3px] border-l-[#2f855a] bg-white p-6 shadow-[0_2px_6px_rgba(36,59,83,0.08)] rtl:border-l rtl:border-l-[#d9e2ec] rtl:border-r-[3px] rtl:border-r-[#2f855a]"
-        >
           <div>
-            <p className="text-xs font-bold uppercase leading-[18px] tracking-wider text-[#147d64]">
-              {t("managerEvaluations.activeCycle")}
+            <p className="text-[11px] font-bold uppercase tracking-wider text-[#059669]">
+              {t("managerEvaluations.activeCycle", "ACTIVE EVALUATION CYCLE")}
             </p>
-            <h2 className="mt-1.5 text-[22px] font-bold leading-8 text-[#243b53]">
-              {t("managerEvaluations.cycleName")}
+            <h2 className="mt-1 text-xl font-bold text-[#102a43]">
+              {t("managerEvaluations.cycleName", "Q3 2026 Cycle")}
             </h2>
           </div>
-          <span className="rounded-full bg-[#e3f8f1] px-3 py-1 text-[13px] font-bold leading-[18px] text-[#147d64]">
-            {t("managerEvaluations.closesIn", { days: 12 })}
+
+          <span className="rounded-full bg-[#ecfdf5] px-3.5 py-1 text-xs font-semibold text-[#059669]">
+            {t("managerEvaluations.closesIn", { days: 12, defaultValue: "Closes in 12 days" })}
           </span>
         </motion.div>
 
-        {/* Team table */}
+        {/* 3. Team Table Card (Edge-to-edge layout) */}
         <motion.div
           variants={fadeUp}
-          transition={{ duration: 0.3, ease: "easeOut", delay: 0.05 }}
-          className="rounded-[20px] border border-[#d9e2ec] bg-white p-6 shadow-[0_2px_6px_rgba(36,59,83,0.08)]"
+          transition={{ duration: 0.25, ease: "easeOut", delay: 0.05 }}
+          className="rounded-2xl border border-[#e2e8f0] bg-white shadow-[0_1px_3px_rgba(0,0,0,0.02)] overflow-hidden"
         >
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[760px] table-fixed border-collapse">
-              <colgroup>
-                <col style={{ width: "18%" }} />
-                <col style={{ width: "22%" }} />
-                <col style={{ width: "19%" }} />
-                <col style={{ width: "17%" }} />
-                <col style={{ width: "24%" }} />
-              </colgroup>
+            <table className="w-full text-left rtl:text-right border-collapse">
               <thead>
-                <tr className="border-b border-[#e6eef3] bg-[#f5f7f8]">
-                  <th className={thClass}>{t("managerEvaluations.colTeamMember")}</th>
-                  <th className={thClass}>{t("managerEvaluations.colRole")}</th>
-                  <th className={thClass}>{t("managerEvaluations.colReviewStatus")}</th>
-                  <th className={thClass}>{t("managerEvaluations.colLastRating")}</th>
-                  <th className={thClass}>
-                    <span className="sr-only">{t("common.actions")}</span>
+                <tr className="bg-[#f8fafc]/60 border-b border-[#f1f5f9] text-[11px] font-bold tracking-wider text-[#94a3b8]">
+                  <th className="py-4 px-6">{t("managerEvaluations.colTeamMember", "TEAM MEMBER")}</th>
+                  <th className="py-4 px-6">{t("managerEvaluations.colRole", "ROLE")}</th>
+                  <th className="py-4 px-6">{t("managerEvaluations.colReviewStatus", "REVIEW STATUS")}</th>
+                  <th className="py-4 px-6">{t("managerEvaluations.colLastRating", "LAST RATING")}</th>
+                  <th className="py-4 px-6 text-right rtl:text-left">
+                    <span className="sr-only">{t("common.actions", "Actions")}</span>
                   </th>
                 </tr>
               </thead>
 
-              <motion.tbody variants={staggerContainer}>
+              <tbody className="divide-y divide-[#f1f5f9]">
                 {members.map((member) => (
-                  <motion.tr
+                  <tr
                     key={member.id}
-                    variants={fadeUp}
-                    transition={{ duration: 0.2, ease: "easeOut" }}
-                    className="border-b border-[#e6eef3] last:border-b-0"
+                    className="hover:bg-[#f8fafc]/40 transition"
                   >
-                    <td className="px-[22px] py-4 text-left align-middle text-[15px] font-bold text-[#243b53] rtl:text-right">
-                      {getName(member.nameKey)}
+                    {/* Team Member */}
+                    <td className="py-5 px-6 text-sm font-semibold text-[#1e293b]">
+                      {getName(member)}
                     </td>
-                    <td className="px-[22px] py-4 text-left align-middle text-[15px] text-[#627d98] rtl:text-right">
-                      {t("managerEvaluations.roleSoftwareEngineer")}
+
+                    {/* Role */}
+                    <td className="py-5 px-6 text-sm text-[#64748b]">
+                      {t("managerEvaluations.roleSoftwareEngineer", "Software Engineer")}
                     </td>
-                    <td className="px-[22px] py-4 text-left align-middle rtl:text-right">
+
+                    {/* Review Status Badge */}
+                    <td className="py-5 px-6">
                       <span
-                        className={`inline-flex rounded-full px-3 py-1 text-[13px] font-bold leading-[18px] ${STATUS_STYLES[member.status]}`}
+                        className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold ${STATUS_STYLES[member.status]}`}
                       >
-                        {t(STATUS_KEYS[member.status])}
+                        {t(STATUS_KEYS[member.status], STATUS_DEFAULTS[member.status])}
                       </span>
                     </td>
-                    <td className="px-[22px] py-4 text-left align-middle text-[15px] text-[#243b53] rtl:text-right">
+
+                    {/* Last Rating */}
+                    <td className="py-5 px-6 text-sm text-[#475569]">
                       {member.rating == null ? (
-                        "—"
+                        <span className="text-[#94a3b8] font-normal">—</span>
                       ) : (
-                        <span dir="ltr">{formatRating(member.rating)} / 5</span>
+                        <span dir="ltr" className="font-medium">
+                          {formatRating(member.rating)} / 5
+                        </span>
                       )}
                     </td>
-                    <td className="px-[22px] py-4 text-left align-middle rtl:text-right">
+
+                    {/* Action Button */}
+                    <td className="py-5 px-6 text-right rtl:text-left">
                       <button
                         type="button"
                         onClick={() => setEvaluatingId(member.id)}
-                        className="text-[15px] text-[#147d64] transition hover:underline"
+                        className="text-xs font-semibold text-[#059669] hover:text-[#047857] transition"
                       >
-                        + {t("managerEvaluations.evaluateEmployee")}
+                        + {t("managerEvaluations.evaluateEmployee", "Evaluate Employee")}
                       </button>
                     </td>
-                  </motion.tr>
+                  </tr>
                 ))}
-              </motion.tbody>
+              </tbody>
             </table>
           </div>
         </motion.div>
       </motion.div>
 
-      {/* Portaled to <body> so the page's animated transform can't trap `position: fixed` */}
+      {/* Evaluate Modal Portal */}
       {createPortal(
-        <>
-          <AnimatePresence>
-            {evaluating && (
-              <EvaluateEmployeeModal
-                key={evaluating.id}
-                member={{ id: evaluating.id, name: getName(evaluating.nameKey) }}
-                onClose={closeModal}
-                onSave={handleSave}
-              />
-            )}
-          </AnimatePresence>
+        <AnimatePresence>
+          {evaluating && (
+            <EvaluateEmployeeModal
+              key={evaluating.id}
+              member={{ id: evaluating.id, name: getName(evaluating) }}
+              onClose={closeModal}
+              onSave={handleSave}
+            />
+          )}
+        </AnimatePresence>,
+        document.body,
+      )}
 
-          {/* Toast: bottom-right, subtle */}
-          <AnimatePresence>
-            {toast && (
-              <motion.div
-                key={toast}
-                role="status"
-                aria-live="polite"
-                initial={{ opacity: 0, y: 12 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: 8 }}
-                transition={{ duration: 0.2, ease: "easeOut" }}
-                className="fixed bottom-6 right-6 z-[110] max-w-[calc(100vw-3rem)] rounded-xl bg-[#243b53] px-5 py-4 text-[15px] font-bold text-white shadow-[0_8px_20px_rgba(36,59,83,0.25)]"
-              >
-                {t("managerEvaluations.toastSaved")}
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </>,
+      {/* Toast Notification */}
+      {createPortal(
+        <AnimatePresence>
+          {toast && (
+            <motion.div
+              key={toast}
+              role="status"
+              aria-live="polite"
+              initial={{ opacity: 0, y: 12, scale: 0.96 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 12, scale: 0.96 }}
+              transition={{ duration: 0.2, ease: "easeOut" }}
+              className="fixed bottom-6 right-6 z-[110] rounded-xl bg-[#102a43] px-4 py-3 text-sm font-semibold text-white shadow-lg"
+            >
+              {t("managerEvaluations.toastSaved", "Evaluation saved successfully")}
+            </motion.div>
+          )}
+        </AnimatePresence>,
         document.body,
       )}
     </>

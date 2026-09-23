@@ -206,6 +206,16 @@
       "underReview": "Under Review",
       "completed": "Completed"
     },
+    "employeeTasks": {
+      "t1Title": "Q2 Operations efficiency report",
+      "t1Date": "Due Jun 12, 2026",
+      "t2Title": "Vendor onboarding checklist revamp",
+      "t2Date": "Due Jun 15, 2026",
+      "t3Title": "Customer insights synthesis",
+      "t3Date": "Due Jun 18, 2026",
+      "newTaskUpdate": "New task update",
+      "submitReview": "Submit for review"
+    },
     "priority": {
       "high": "High priority",
       "medium": "Medium priority",
@@ -349,7 +359,9 @@
     "score": "Score",
     "improvementPlan": "Improvement Plan",
     "metrics": "Metrics",
-    "operations": "Operations"
+    "operations": "Operations",
+    "exportSuccessTitle": "Export successful",
+    "exportSuccessMessage": "Performance configuration exported successfully."
   },
   "aiInsights": {
     "title": "AI Insights",
@@ -398,55 +410,43 @@
   "reports": {
     "title": "Reports",
     "subtitle": "Export organized workforce reports for leadership, audit trails, and review.",
-
     "generateReport": "Generate Report",
     "exportPdf": "Export as PDF",
     "exportExcel": "Export as Excel",
-
     "monthlyAttendance": "Monthly Attendance Report",
     "payrollSummary": "Payroll Summary",
-
     "exportCockpit": "Export Center",
     "exportDescription": "Select the range and filters, then choose the report to export.",
     "dateRange": "Date range",
-
     "from": "From",
     "to": "To",
     "department": "Department",
     "branch": "Branch",
-
     "september2026": "01 September – 30 September 2026",
     "august2026": "01 August – 31 August 2026",
     "july2026": "01 July – 31 July 2026",
     "june2026": "01 June – 31 June 2026",
-
     "allDepartments": "All Departments",
     "engineering": "Engineering",
     "sales": "Sales",
-
     "allBranches": "Cairo Headquarters",
     "cairoHq": "Cairo Headquarters",
     "alexandriaHub": "Alexandria Hub",
-
     "availableReports": "Available Reports",
     "reportCount": "Reports",
     "exportReport": "Export Report",
-
     "attendance": {
       "title": "Monthly Attendance & Late Arrival Summary",
       "description": "Attendance exceptions, punctuality trends, and branch performance comparison."
     },
-
     "payroll": {
       "title": "Payroll Register & Payslip Records",
       "description": "Total compensation, deductions, and payslip submission status."
     },
-
     "leave": {
       "title": "Leave Balance & Usage Audit",
       "description": "Entitlements, usage, carryover, and supporting documentation."
     },
-
     "skills": {
       "title": "AI Skills Gap & Workforce Review",
       "description": "Explainable skills coverage and workforce action recommendations."
@@ -1027,7 +1027,14 @@
     "employee": "Employee",
     "manager": "Manager",
     "hrManager": "HR Manager",
-    "administrator": "Administrator"
+    "administrator": "Administrator",
+    "exportSuccessTitle": "Export successful",
+    "exportSuccessMessage": "Dashboard report exported successfully.",
+    "refreshSuccessTitle": "Data refreshed",
+    "refreshSuccessMessage": "Dashboard data has been refreshed successfully.",
+    "refreshing": "Refreshing data...",
+    "rangeUpdatedTitle": "Range updated",
+    "rangeUpdatedMessage": "User growth range updated successfully."
   },
   "branchesPage": {
     "breadcrumbApp": "WiseWork",
@@ -1049,7 +1056,15 @@
     "geofenceRadiusLabel": "Geofence radius (meters)",
     "cancel": "Cancel",
     "toggleGpsAriaLabel": "Toggle GPS enforcement for {{name}}",
-    "closeModal": "Close modal"
+    "closeModal": "Close modal",
+    "exportSuccessTitle": "Export successful",
+    "exportSuccessMessage": "Branches configuration exported successfully.",
+    "branchAddedToastTitle": "Branch added",
+    "branchAddedToastMessage": "The new branch was added successfully.",
+    "gpsEnabledToastTitle": "GPS enabled",
+    "gpsEnabledToastMessage": "GPS enforcement has been enabled for {{name}}.",
+    "gpsDisabledToastTitle": "GPS disabled",
+    "gpsDisabledToastMessage": "GPS enforcement has been disabled for {{name}}."
   },
   "usersPage": {
     "title": "Users",
@@ -1077,7 +1092,9 @@
     "role": "Role",
     "department": "Department",
     "cancel": "Cancel",
-    "createUser": "Create user"
+    "createUser": "Create user",
+    "exportSuccessTitle": "Export successful",
+    "exportSuccessMessage": "User configuration exported successfully."
   },
   "auditLogs": {
     "title": "Audit Logs",
@@ -1085,7 +1102,6 @@
     "breadcrumbAdmin": "Administration",
     "breadcrumbApp": "WiseWork",
     "exportConfig": "Export configuration",
-    "exportSuccess": "Audit log configuration exported successfully.",
     "cardTitle": "Audit logs",
     "cardSubtitle": "Review administrative actions and system events.",
     "searchPlaceholder": "Search logs...",
@@ -1094,6 +1110,7 @@
     "filterWarning": "Warning",
     "filterInfo": "Info",
     "colAction": "ACTION",
+    "exportSuccess": "Activity log exported successfully.",
     "colActor": "ACTOR",
     "colTimestamp": "TIMESTAMP",
     "colSeverity": "SEVERITY",

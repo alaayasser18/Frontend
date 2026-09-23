@@ -1,489 +1,212 @@
 import { motion } from "framer-motion";
 import { useTranslation } from "react-i18next";
 
+const fadeUp = {
+  hidden: { opacity: 0, y: 8 },
+  visible: { opacity: 1, y: 0 },
+};
+
+const staggerContainer = {
+  hidden: {},
+  visible: { transition: { staggerChildren: 0.06 } },
+};
+
 const PerformanceAnalytics = () => {
   const { t } = useTranslation();
 
   // =====================================================
-  // DEPARTMENT COMPETENCIES
-  // Same color for all competencies
+  // 1. DEPARTMENT COMPETENCIES (القيم والألوان من الـ UI بدقة)
   // =====================================================
-
   const competencies = [
     {
       id: 1,
-      name: t("managerPerformanceAnalytics.competencies.technicalExecution"),
-      value: 88,
+      nameKey: "technicalExecution",
+      defaultName: "Technical execution",
+      value: 82,
     },
     {
       id: 2,
-      name: t("managerPerformanceAnalytics.competencies.communication"),
-      value: 76,
+      nameKey: "communication",
+      defaultName: "Communication",
+      value: 74,
     },
     {
       id: 3,
-      name: t("managerPerformanceAnalytics.competencies.ownership"),
-      value: 67,
+      nameKey: "ownership",
+      defaultName: "Ownership",
+      value: 68,
     },
     {
       id: 4,
-      name: t("managerPerformanceAnalytics.competencies.mentorship"),
-      value: 54,
+      nameKey: "mentorship",
+      defaultName: "Mentorship",
+      value: 56,
     },
   ];
 
   // =====================================================
-  // TEAM PERFORMANCE
+  // 2. TEAM PERFORMANCE (مطابقة للـ UI: نص velocity وتقييم أخضر)
   // =====================================================
-
   const teamPerformance = [
     {
       id: 1,
-      name: "Youssef Lotfy",
-      velocity: 91,
-      rating: 4.7,
+      nameKey: "youssefLotfy",
+      defaultName: "Youssef Lotfy",
+      velocity: 88,
+      rating: 4.6,
     },
     {
       id: 2,
-      name: "Karim Ashraf",
-      velocity: 84,
+      nameKey: "karimAshraf",
+      defaultName: "Karim Ashraf",
+      velocity: 83,
       rating: 4.4,
     },
     {
       id: 3,
-      name: "Salma Nabil",
-      velocity: 76,
+      nameKey: "salmaNabil",
+      defaultName: "Salma Nabil",
+      velocity: 78,
       rating: 4.2,
     },
     {
       id: 4,
-      name: "Omar Fathy",
-      velocity: 68,
+      nameKey: "omarFathy",
+      defaultName: "Omar Fathy",
+      velocity: 73,
       rating: 4.0,
     },
   ];
 
-  // =====================================================
-  // VELOCITY COLORS BASED ON PERCENTAGE
-  // =====================================================
-
-  const getVelocityColor = (value) => {
-    if (value >= 85) {
-      return {
-        color: "#3FA77A",
-        background: "#E8F6F0",
-      };
-    }
-
-    if (value >= 75) {
-      return {
-        color: "#4F83A8",
-        background: "#EAF2F7",
-      };
-    }
-
-    if (value >= 65) {
-      return {
-        color: "#D99A3D",
-        background: "#FBF3E5",
-      };
-    }
-
-    return {
-      color: "#8B78B8",
-      background: "#F1EEF8",
-    };
-  };
-
   return (
-    <div className="w-full">
+    <motion.div
+      initial="hidden"
+      animate="visible"
+      variants={staggerContainer}
+      className="w-full space-y-6 pb-12 font-sans"
+    >
       {/* =====================================================
           PAGE HEADER
       ====================================================== */}
-
-      <motion.div
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.35 }}
-        className="mb-7"
-      >
-        {/* Breadcrumb */}
-
-        <div
-          className="
-            mb-3
-            text-[12px]
-            font-bold
-            uppercase
-            tracking-[1px]
-            text-[#7190aa]
-          "
-        >
-          {t("managerPerformanceAnalytics.breadcrumb")}
-        </div>
-
-        {/* Title */}
-
-        <h1
-          className="
-            text-[28px]
-            font-bold
-            leading-tight
-            text-[#1c364f]
-            max-[760px]:text-[24px]
-          "
-        >
-          {t("managerPerformanceAnalytics.title")}
+      <motion.div variants={fadeUp} transition={{ duration: 0.2, ease: "easeOut" }}>
+        <p className="text-[11px] font-bold tracking-wider text-[#6b879f] uppercase">
+          {t("portal.managerPortal", "MANAGER PORTAL")} / {t("portal.performanceAnalytics", "PERFORMANCE ANALYTICS")}
+        </p>
+        <h1 className="text-lg md:text-[21px] font-bold text-[#1e293b] tracking-tight mt-1">
+          {t("portal.performanceAnalytics", "Performance Analytics")}
         </h1>
-
-        {/* Subtitle */}
-
-        <p
-          className="
-            mt-2
-            text-[15px]
-            leading-6
-            text-[#6b849a]
-          "
-        >
-          {t("managerPerformanceAnalytics.subtitle")}
+        <p className="text-sm text-[#829ab1] mt-1 font-normal">
+          {t(
+            "managerDashboard.subtitle",
+            "Keep your team aligned, supported, and moving forward."
+          )}
         </p>
       </motion.div>
 
       {/* =====================================================
-          ANALYTICS CARDS
+          ANALYTICS CARDS GRID
       ====================================================== */}
-
-      <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
-        {/* ===================================================
-            LEFT CARD
-            DEPARTMENT COMPETENCY DISTRIBUTION
-        ==================================================== */}
-
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+        {/* ---------------------------------------------------
+            LEFT CARD: DEPARTMENT COMPETENCY DISTRIBUTION
+        ---------------------------------------------------- */}
         <motion.section
-          initial={{
-            opacity: 0,
-            y: 14,
-          }}
-          animate={{
-            opacity: 1,
-            y: 0,
-          }}
-          transition={{
-            duration: 0.4,
-            delay: 0.08,
-          }}
-          className="
-            rounded-[16px]
-            border
-            border-[#dce5eb]
-            bg-white
-            p-[24px]
-            shadow-[0_2px_8px_rgba(28,54,79,0.06)]
-          "
+          variants={fadeUp}
+          transition={{ duration: 0.25, ease: "easeOut" }}
+          className="rounded-2xl border border-[#e2e8f0] bg-white p-6 shadow-[0_1px_3px_rgba(0,0,0,0.02)]"
         >
-          {/* Card Title */}
+          <h2 className="text-base font-bold text-[#102a43] mb-6">
+            {t(
+              "managerPerformanceAnalytics.departmentCompetencyDistribution",
+              "Department competency distribution"
+            )}
+          </h2>
 
-          <div className="mb-7">
-            <h2
-              className="
-                text-[18px]
-                font-bold
-                text-[#1c364f]
-              "
-            >
-              {t(
-                "managerPerformanceAnalytics.departmentCompetencyDistribution",
-              )}
-            </h2>
-          </div>
+          <div className="space-y-5">
+            {competencies.map((competency, index) => {
+              const label = t(
+                `managerPerformanceAnalytics.competencies.${competency.nameKey}`,
+                competency.defaultName
+              );
 
-          {/* Competencies */}
+              return (
+                <div key={competency.id} className="space-y-2">
+                  <div className="flex items-center justify-between text-xs md:text-sm">
+                    <span className="font-medium text-[#334155]">{label}</span>
+                    <span className="font-bold text-[#102a43]">{competency.value}%</span>
+                  </div>
 
-          <div className="space-y-6">
-            {competencies.map((competency, index) => (
-              <motion.div
-                key={competency.id}
-                initial={{
-                  opacity: 0,
-                  y: 8,
-                }}
-                animate={{
-                  opacity: 1,
-                  y: 0,
-                }}
-                transition={{
-                  duration: 0.3,
-                  delay: 0.15 + index * 0.07,
-                }}
-              >
-                {/* Label + Percentage */}
-
-                <div className="mb-2 flex items-center justify-between gap-4">
-                  <span
-                    className="
-                      text-[14px]
-                      font-semibold
-                      text-[#3d5b73]
-                    "
-                  >
-                    {competency.name}
-                  </span>
-
-                  <span
-                    className="
-                      text-[14px]
-                      font-bold
-                      text-[#1c364f]
-                    "
-                  >
-                    {competency.value}%
-                  </span>
+                  {/* Progress Bar matching UI Navy */}
+                  <div className="h-2 w-full overflow-hidden rounded-full bg-[#f1f5f9]">
+                    <motion.div
+                      initial={{ width: 0 }}
+                      animate={{ width: `${competency.value}%` }}
+                      transition={{
+                        duration: 0.6,
+                        ease: "easeOut",
+                        delay: 0.15 + index * 0.05,
+                      }}
+                      className="h-full rounded-full bg-[#334e68]"
+                    />
+                  </div>
                 </div>
-
-                {/* Progress Background */}
-
-                <div
-                  className="
-                    h-[9px]
-                    w-full
-                    overflow-hidden
-                    rounded-full
-                    bg-[#EAF2F7]
-                  "
-                >
-                  {/* SAME BLUE COLOR FOR ALL */}
-
-                  <motion.div
-                    initial={{
-                      width: 0,
-                    }}
-                    animate={{
-                      width: `${competency.value}%`,
-                    }}
-                    transition={{
-                      duration: 0.9,
-                      delay: 0.25 + index * 0.08,
-                      ease: "easeOut",
-                    }}
-                    className="
-                      h-full
-                      rounded-full
-                      bg-[#4F83A8]
-                    "
-                  />
-                </div>
-              </motion.div>
-            ))}
+              );
+            })}
           </div>
         </motion.section>
 
-        {/* ===================================================
-            RIGHT CARD
-            TEAM PERFORMANCE INDEX
-        ==================================================== */}
-
+        {/* ---------------------------------------------------
+            RIGHT CARD: TEAM PERFORMANCE INDEX (Exact UI match)
+        ---------------------------------------------------- */}
         <motion.section
-          initial={{
-            opacity: 0,
-            y: 14,
-          }}
-          animate={{
-            opacity: 1,
-            y: 0,
-          }}
-          transition={{
-            duration: 0.4,
-            delay: 0.16,
-          }}
-          className="
-            rounded-[16px]
-            border
-            border-[#dce5eb]
-            bg-white
-            p-[24px]
-            shadow-[0_2px_8px_rgba(28,54,79,0.06)]
-          "
+          variants={fadeUp}
+          transition={{ duration: 0.25, ease: "easeOut", delay: 0.05 }}
+          className="rounded-2xl border border-[#e2e8f0] bg-white p-6 shadow-[0_1px_3px_rgba(0,0,0,0.02)]"
         >
-          {/* Card Title */}
+          <h2 className="text-base font-bold text-[#102a43] mb-6">
+            {t(
+              "managerPerformanceAnalytics.teamPerformanceIndex",
+              "Team Performance Index"
+            )}
+          </h2>
 
-          <div className="mb-5">
-            <h2
-              className="
-                text-[18px]
-                font-bold
-                text-[#1c364f]
-              "
-            >
-              {t("managerPerformanceAnalytics.teamPerformanceIndex")}
-            </h2>
-          </div>
+          {/* Simple, clean rows matching design */}
+          <div className="divide-y divide-[#f8fafc]">
+            {teamPerformance.map((member) => {
+              const memberName = t(`managerTasks.${member.nameKey}`, member.defaultName);
 
-          {/* Table */}
+              return (
+                <div
+                  key={member.id}
+                  className="flex items-center justify-between py-4 first:pt-0 last:pb-0"
+                >
+                  {/* Name */}
+                  <div className="w-1/3">
+                    <p className="text-xs md:text-sm font-semibold text-[#1e293b]">
+                      {memberName}
+                    </p>
+                  </div>
 
-          <div className="overflow-x-auto">
-            <div className="min-w-[500px]">
-              {/* Table Header */}
+                  {/* Velocity text */}
+                  <div className="w-1/3 text-center">
+                    <span className="text-xs md:text-sm text-[#64748b]">
+                      {member.velocity}% {t("managerPerformanceAnalytics.velocity", "velocity")}
+                    </span>
+                  </div>
 
-              <div
-                className="
-                  grid
-                  grid-cols-[1.6fr_1fr_.8fr]
-                  items-center
-                  gap-4
-                  rounded-[8px]
-                  bg-[#f4f7f9]
-                  px-[16px]
-                  py-[13px]
-                  text-[10px]
-                  font-bold
-                  uppercase
-                  tracking-[0.5px]
-                  text-[#7893aa]
-                "
-              >
-                <div>{t("managerPerformanceAnalytics.table.member")}</div>
-
-                <div>{t("managerPerformanceAnalytics.table.velocity")}</div>
-
-                <div>{t("managerPerformanceAnalytics.table.rating")}</div>
-              </div>
-
-              {/* Table Rows */}
-
-              <div className="mt-1">
-                {teamPerformance.map((member, index) => {
-                  const velocityStyle = getVelocityColor(member.velocity);
-
-                  return (
-                    <motion.div
-                      key={member.id}
-                      initial={{
-                        opacity: 0,
-                        y: 8,
-                      }}
-                      animate={{
-                        opacity: 1,
-                        y: 0,
-                      }}
-                      transition={{
-                        duration: 0.28,
-                        delay: 0.22 + index * 0.06,
-                      }}
-                      className="
-                        grid
-                        grid-cols-[1.6fr_1fr_.8fr]
-                        items-center
-                        gap-4
-                        border-b
-                        border-[#edf1f4]
-                        px-[16px]
-                        py-[17px]
-                        last:border-b-0
-                      "
-                    >
-                      {/* Member */}
-
-                      <div>
-                        <p
-                          className="
-                            text-[13px]
-                            font-bold
-                            text-[#1c364f]
-                          "
-                        >
-                          {member.name}
-                        </p>
-                      </div>
-
-                      {/* Velocity */}
-
-                      <div className="flex items-center gap-2">
-                        {/* Velocity Background */}
-
-                        <div
-                          className="
-                            h-[7px]
-                            min-w-[45px]
-                            flex-1
-                            overflow-hidden
-                            rounded-full
-                          "
-                          style={{
-                            backgroundColor: velocityStyle.background,
-                          }}
-                        >
-                          {/* Velocity Progress */}
-
-                          <motion.div
-                            initial={{
-                              width: 0,
-                            }}
-                            animate={{
-                              width: `${member.velocity}%`,
-                            }}
-                            transition={{
-                              duration: 0.8,
-                              delay: 0.3 + index * 0.08,
-                              ease: "easeOut",
-                            }}
-                            className="
-                              h-full
-                              rounded-full
-                            "
-                            style={{
-                              backgroundColor: velocityStyle.color,
-                            }}
-                          />
-                        </div>
-
-                        {/* Velocity Percentage */}
-
-                        <span
-                          className="
-                            w-[34px]
-                            text-right
-                            text-[12px]
-                            font-bold
-                          "
-                          style={{
-                            color: velocityStyle.color,
-                          }}
-                        >
-                          {member.velocity}%
-                        </span>
-                      </div>
-
-                      {/* Rating */}
-
-                      <div>
-                        <span
-                          className="
-                            inline-flex
-                            min-w-[48px]
-                            items-center
-                            justify-center
-                            rounded-full
-                            bg-[#edf4f7]
-                            px-2
-                            py-[6px]
-                            text-[12px]
-                            font-bold
-                            text-[#527492]
-                          "
-                        >
-                          {member.rating.toFixed(1)}/5
-                        </span>
-                      </div>
-                    </motion.div>
-                  );
-                })}
-              </div>
-            </div>
+                  {/* Rating text in Green */}
+                  <div className="w-1/3 text-right rtl:text-left">
+                    <span className="text-xs md:text-sm font-bold text-[#059669]">
+                      {member.rating.toFixed(1)}/5
+                    </span>
+                  </div>
+                </div>
+              );
+            })}
           </div>
         </motion.section>
       </div>
-    </div>
+    </motion.div>
   );
 };
 

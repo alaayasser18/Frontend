@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Plus, X, BookOpen, Download } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 
 /* =====================================================
    DATA
@@ -22,10 +23,63 @@ const initialPolicies = [
 ];
 
 /* =====================================================
+   MOTION
+===================================================== */
+
+const containerVariants = {
+  hidden: {},
+  visible: {
+    transition: {
+      staggerChildren: 0.08,
+    },
+  },
+};
+
+const itemVariants = {
+  hidden: {
+    opacity: 0,
+    y: 14,
+  },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: {
+      duration: 0.35,
+      ease: "easeOut",
+    },
+  },
+};
+
+const modalVariants = {
+  hidden: {
+    opacity: 0,
+    scale: 0.94,
+    y: 20,
+  },
+  visible: {
+    opacity: 1,
+    scale: 1,
+    y: 0,
+    transition: {
+      duration: 0.25,
+      ease: "easeOut",
+    },
+  },
+  exit: {
+    opacity: 0,
+    scale: 0.96,
+    y: 10,
+    transition: {
+      duration: 0.18,
+    },
+  },
+};
+
+/* =====================================================
    POLICY CARD
 ===================================================== */
 
-function PolicyCard({ policy, index, onEdit }) {
+function PolicyCard({ policy, onEdit }) {
   const { t } = useTranslation();
 
   const isTranslatedPolicy = Boolean(policy.translationKey);
@@ -47,28 +101,27 @@ function PolicyCard({ policy, index, onEdit }) {
     : policy.version;
 
   return (
-    <div
+    <motion.div
+      variants={itemVariants}
+      whileHover={{ y: -4 }}
       className="
         group
-        rounded-xl
+        rounded-2xl
         border
-        border-[#D9E2EC]
+        border-[#e2e8f0]/80
         bg-white
-        p-6
-        opacity-0
-        animate-[policyCardIn_0.55s_ease-out_forwards]
-        transition-all
-        duration-300
-        hover:-translate-y-1
-        hover:shadow-[0_10px_25px_rgba(36,59,83,0.08)]
+        p-5
+        shadow-[0_1px_3px_rgba(0,0,0,0.03)]
+        transition-shadow
+        duration-200
+        hover:shadow-md
       "
-      style={{ animationDelay: `${index * 120}ms` }}
     >
       {/* =====================================================
           ICON + STATUS
       ===================================================== */}
 
-      <div className="flex items-start justify-between">
+      <div className="flex items-start justify-between gap-4">
         <div
           className="
             flex
@@ -76,38 +129,28 @@ function PolicyCard({ policy, index, onEdit }) {
             w-9
             items-center
             justify-center
-            rounded-lg
-            bg-[#F5F7F8]
-            text-[#486581]
-            transition-all
-            duration-300
-            group-hover:-translate-y-0.5
+            rounded-xl
+            bg-[#eff6ff]
+            text-[#3b82f6]
+            transition
+            duration-200
             group-hover:scale-105
           "
         >
-          <BookOpen
-            className="
-              h-4
-              w-4
-              transition-transform
-              duration-300
-              group-hover:rotate-[-5deg]
-            "
-          />
+          <BookOpen className="h-4 w-4" />
         </div>
 
         <span
           className="
             rounded-full
-            bg-[#5B8C6A]/10
+            border
+            border-[#a7f3d0]
+            bg-[#ecfdf5]
             px-3
             py-1
-            text-xs
-            font-medium
-            text-[#5B8C6A]
-            transition-all
-            duration-300
-            group-hover:bg-[#5B8C6A]/15
+            text-[11px]
+            font-bold
+            text-[#047857]
           "
         >
           {t("hrCompanyPolicies.aiSynced")}
@@ -118,18 +161,7 @@ function PolicyCard({ policy, index, onEdit }) {
           TITLE
       ===================================================== */}
 
-      <h3
-        className="
-          mt-4
-          font-['Manrope']
-          text-[16px]
-          font-semibold
-          text-[#202B33]
-          transition-colors
-          duration-300
-          group-hover:text-[#243B53]
-        "
-      >
+      <h3 className="mt-4 text-base font-bold tracking-tight text-[#1e293b]">
         {title}
       </h3>
 
@@ -137,7 +169,7 @@ function PolicyCard({ policy, index, onEdit }) {
           DESCRIPTION
       ===================================================== */}
 
-      <p className="mt-1 text-sm leading-relaxed text-[#6B7785]">
+      <p className="mt-1 text-sm font-normal leading-6 text-[#64748b]">
         {description}
       </p>
 
@@ -145,23 +177,23 @@ function PolicyCard({ policy, index, onEdit }) {
           POLICY DETAILS
       ===================================================== */}
 
-      <div className="mt-5 grid grid-cols-2 gap-4 border-t border-[#D9E2EC] pt-4">
-        <div>
-          <p className="text-xs text-[#6B7785]">
+      <div className="mt-5 grid grid-cols-2 gap-4 border-t border-[#f1f5f9] pt-4">
+        <div className="rounded-xl bg-[#f8fafc] p-3">
+          <p className="text-[11px] font-bold uppercase tracking-wider text-[#94a3b8]">
             {t("hrCompanyPolicies.effectiveDate")}
           </p>
 
-          <p className="mt-0.5 text-sm font-medium text-[#202B33]">
+          <p className="mt-1 text-xs font-semibold text-[#1e293b]">
             {effectiveDate}
           </p>
         </div>
 
-        <div>
-          <p className="text-xs text-[#6B7785]">
+        <div className="rounded-xl bg-[#f8fafc] p-3">
+          <p className="text-[11px] font-bold uppercase tracking-wider text-[#94a3b8]">
             {t("hrCompanyPolicies.document")}
           </p>
 
-          <p className="mt-0.5 text-sm font-medium text-[#202B33]">{version}</p>
+          <p className="mt-1 text-xs font-semibold text-[#1e293b]">{version}</p>
         </div>
       </div>
 
@@ -169,27 +201,24 @@ function PolicyCard({ policy, index, onEdit }) {
           ACTIONS
       ===================================================== */}
 
-      <div className="mt-4 flex items-center justify-between">
+      <div className="mt-5 flex items-center justify-between gap-3 border-t border-[#f1f5f9] pt-4">
         {/* EDIT */}
 
         <button
           type="button"
           onClick={() => onEdit(policy)}
           className="
-            rounded-md
+            rounded-lg
             border
-            border-[#D9E2EC]
+            border-[#e2e8f0]
+            bg-white
             px-3
-            py-1.5
-            text-sm
-            font-medium
-            text-[#202B33]
-            transition-all
-            duration-300
-            hover:-translate-y-[1px]
-            hover:bg-[#F5F7F8]
-            hover:shadow-sm
-            active:translate-y-0
+            py-2
+            text-xs
+            font-semibold
+            text-[#475569]
+            transition
+            hover:bg-[#f8fafc]
           "
         >
           {t("hrCompanyPolicies.editDocument")}
@@ -200,32 +229,26 @@ function PolicyCard({ policy, index, onEdit }) {
         <button
           type="button"
           className="
-            flex
+            inline-flex
             items-center
             gap-1.5
-            text-sm
-            font-medium
-            text-[#486581]
-            transition-all
-            duration-300
-            hover:-translate-y-[1px]
+            rounded-lg
+            px-2
+            py-2
+            text-xs
+            font-semibold
+            text-[#475569]
+            transition
+            hover:bg-[#f8fafc]
             hover:text-[#243B53]
           "
         >
-          <Download
-            className="
-              h-3.5
-              w-3.5
-              transition-transform
-              duration-300
-              group-hover:translate-y-[1px]
-            "
-          />
+          <Download className="h-3.5 w-3.5" />
 
           {t("hrCompanyPolicies.downloadPdf")}
         </button>
       </div>
-    </div>
+    </motion.div>
   );
 }
 
@@ -261,9 +284,7 @@ function AddPolicyModal({ onClose, onSave, editingPolicy }) {
   };
 
   const [title, setTitle] = useState(getInitialTitle());
-
   const [effectiveDate, setEffectiveDate] = useState(getInitialEffectiveDate());
-
   const [owner, setOwner] = useState(editingPolicy?.owner || "");
 
   const isEditing = Boolean(editingPolicy);
@@ -283,7 +304,7 @@ function AddPolicyModal({ onClose, onSave, editingPolicy }) {
   };
 
   return (
-    <div
+    <motion.div
       className="
         fixed
         inset-0
@@ -291,56 +312,73 @@ function AddPolicyModal({ onClose, onSave, editingPolicy }) {
         flex
         items-center
         justify-center
-        bg-[#202B33]/40
-        px-4
-        animate-[modalOverlayIn_0.2s_ease-out]
+        bg-[#0f172a]/40
+        p-4
+        backdrop-blur-[2px]
       "
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
     >
-      <div
+      <motion.div
+        variants={modalVariants}
+        initial="hidden"
+        animate="visible"
+        exit="exit"
         className="
           w-full
-          max-w-md
-          rounded-xl
+          max-w-xl
+          overflow-hidden
+          rounded-2xl
+          border
+          border-[#e2e8f0]/80
           bg-white
-          p-6
           shadow-xl
-          animate-[modalIn_0.3s_ease-out]
         "
       >
         {/* =====================================================
             MODAL HEADER
         ===================================================== */}
 
-        <div className="flex items-center justify-between">
-          <h2
-            className="
-              font-['Manrope']
-              text-lg
-              font-semibold
-              text-[#202B33]
-            "
-          >
-            {isEditing
-              ? t("hrCompanyPolicies.editPolicyDocument")
-              : t("hrCompanyPolicies.addPolicyDocument")}
-          </h2>
+        <div
+          className="
+            flex
+            items-center
+            justify-between
+            border-b
+            border-[#f1f5f9]
+            px-5
+            py-4
+          "
+        >
+          <div>
+            <h2 className="text-base font-bold text-[#1e293b]">
+              {isEditing
+                ? t("hrCompanyPolicies.editPolicyDocument")
+                : t("hrCompanyPolicies.addPolicyDocument")}
+            </h2>
+
+            <p className="mt-1 text-xs text-[#64748b]">
+              {isEditing
+                ? t("hrCompanyPolicies.editDocument")
+                : t("hrCompanyPolicies.addPolicyDocument")}
+            </p>
+          </div>
 
           <button
             type="button"
             onClick={onClose}
             className="
-              rounded-md
-              p-1
-              text-[#6B7785]
-              transition-all
-              duration-200
-              hover:bg-[#F5F7F8]
-              hover:text-[#202B33]
-              hover:rotate-90
+              rounded-lg
+              p-2
+              text-[#94a3b8]
+              transition
+              hover:bg-[#f8fafc]
+              hover:text-[#475569]
             "
             aria-label="Close"
           >
-            <X className="h-5 w-5" />
+            <X className="h-4 w-4" />
           </button>
         </div>
 
@@ -348,79 +386,79 @@ function AddPolicyModal({ onClose, onSave, editingPolicy }) {
             FORM
         ===================================================== */}
 
-        <div className="mt-5 grid grid-cols-2 gap-4">
-          {/* POLICY TITLE */}
+        <div className="space-y-5 p-5">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            {/* POLICY TITLE */}
 
-          <div>
-            <label className="text-sm font-medium text-[#202B33]">
-              {t("hrCompanyPolicies.policyTitle")}
-            </label>
+            <div>
+              <label className="text-[11px] font-bold uppercase tracking-wider text-[#64748b]">
+                {t("hrCompanyPolicies.policyTitle")}
+              </label>
 
-            <input
-              type="text"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              placeholder={t("hrCompanyPolicies.policyTitlePlaceholder")}
-              className="
-                mt-1.5
-                w-full
-                rounded-md
-                border
-                border-[#D9E2EC]
-                px-3
-                py-2
-                text-sm
-                text-[#202B33]
-                placeholder:text-[#6B7785]/70
-                transition-all
-                duration-200
-                focus:border-[#486581]
-                focus:outline-none
-                focus:ring-1
-                focus:ring-[#486581]
-                focus:shadow-[0_0_0_3px_rgba(72,101,129,0.08)]
-              "
-            />
-          </div>
+              <input
+                type="text"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                placeholder={t("hrCompanyPolicies.policyTitlePlaceholder")}
+                className="
+                  mt-1.5
+                  w-full
+                  rounded-lg
+                  border
+                  border-[#e2e8f0]
+                  bg-white
+                  px-3
+                  py-2.5
+                  text-xs
+                  text-[#1e293b]
+                  outline-none
+                  transition
+                  placeholder:text-[#94a3b8]
+                  focus:border-[#94a3b8]
+                  focus:ring-2
+                  focus:ring-[#f1f5f9]
+                "
+              />
+            </div>
 
-          {/* EFFECTIVE DATE */}
+            {/* EFFECTIVE DATE */}
 
-          <div>
-            <label className="text-sm font-medium text-[#202B33]">
-              {t("hrCompanyPolicies.effectiveDateLabel")}
-            </label>
+            <div>
+              <label className="text-[11px] font-bold uppercase tracking-wider text-[#64748b]">
+                {t("hrCompanyPolicies.effectiveDateLabel")}
+              </label>
 
-            <input
-              type="text"
-              value={effectiveDate}
-              onChange={(e) => setEffectiveDate(e.target.value)}
-              placeholder={t("hrCompanyPolicies.effectiveDatePlaceholder")}
-              className="
-                mt-1.5
-                w-full
-                rounded-md
-                border
-                border-[#D9E2EC]
-                px-3
-                py-2
-                text-sm
-                text-[#202B33]
-                placeholder:text-[#6B7785]/70
-                transition-all
-                duration-200
-                focus:border-[#486581]
-                focus:outline-none
-                focus:ring-1
-                focus:ring-[#486581]
-                focus:shadow-[0_0_0_3px_rgba(72,101,129,0.08)]
-              "
-            />
+              <input
+                type="text"
+                value={effectiveDate}
+                onChange={(e) => setEffectiveDate(e.target.value)}
+                placeholder={t("hrCompanyPolicies.effectiveDatePlaceholder")}
+                className="
+                  mt-1.5
+                  w-full
+                  rounded-lg
+                  border
+                  border-[#e2e8f0]
+                  bg-white
+                  px-3
+                  py-2.5
+                  text-xs
+                  text-[#1e293b]
+                  outline-none
+                  transition
+                  placeholder:text-[#94a3b8]
+                  focus:border-[#94a3b8]
+                  focus:ring-2
+                  focus:ring-[#f1f5f9]
+                "
+              />
+            </div>
           </div>
 
           {/* OWNER */}
 
-          <div className="col-span-2">
-            <label className="text-sm font-medium text-[#202B33]">
+          <div>
+            <label className="text-[11px] font-bold uppercase tracking-wider text-[#64748b]">
               {t("hrCompanyPolicies.owner")}
             </label>
 
@@ -432,86 +470,70 @@ function AddPolicyModal({ onClose, onSave, editingPolicy }) {
               className="
                 mt-1.5
                 w-full
-                rounded-md
+                rounded-lg
                 border
-                border-[#D9E2EC]
+                border-[#e2e8f0]
+                bg-white
                 px-3
-                py-2
-                text-sm
-                text-[#202B33]
-                placeholder:text-[#6B7785]/70
-                transition-all
-                duration-200
-                focus:border-[#486581]
-                focus:outline-none
-                focus:ring-1
-                focus:ring-[#486581]
-                focus:shadow-[0_0_0_3px_rgba(72,101,129,0.08)]
+                py-2.5
+                text-xs
+                text-[#1e293b]
+                outline-none
+                transition
+                placeholder:text-[#94a3b8]
+                focus:border-[#94a3b8]
+                focus:ring-2
+                focus:ring-[#f1f5f9]
               "
             />
           </div>
+
+          {/* =====================================================
+              MODAL BUTTONS
+          ===================================================== */}
+
+          <div className="flex justify-end gap-3 border-t border-[#f1f5f9] pt-4">
+            <button
+              type="button"
+              onClick={onClose}
+              className="
+                rounded-lg
+                border
+                border-[#e2e8f0]
+                bg-white
+                px-4
+                py-2.5
+                text-xs
+                font-semibold
+                text-[#475569]
+                transition
+                hover:bg-[#f8fafc]
+              "
+            >
+              {t("hrCompanyPolicies.cancel")}
+            </button>
+
+            <button
+              type="button"
+              onClick={handleSave}
+              className="
+                rounded-lg
+                bg-[#243B53]
+                px-4
+                py-2.5
+                text-xs
+                font-semibold
+                text-white
+                transition
+                hover:bg-[#1c2f42]
+              "
+            >
+              {t("hrCompanyPolicies.saveChanges")}
+            </button>
+          </div>
         </div>
-
-        {/* =====================================================
-            MODAL BUTTONS
-        ===================================================== */}
-
-        <div className="mt-6 flex justify-end gap-3">
-          {/* CANCEL */}
-
-          <button
-            type="button"
-            onClick={onClose}
-            className="
-              rounded-md
-              border
-              border-[#D9E2EC]
-              px-4
-              py-2
-              text-sm
-              font-medium
-              text-[#202B33]
-              transition-all
-              duration-300
-              hover:-translate-y-[1px]
-              hover:bg-[#F5F7F8]
-              hover:shadow-sm
-              active:translate-y-0
-            "
-          >
-            {t("hrCompanyPolicies.cancel")}
-          </button>
-
-          {/* SAVE */}
-
-          <button
-            type="button"
-            onClick={handleSave}
-            className="
-              rounded-md
-              bg-[#243B53]
-              px-4
-              py-2
-              text-sm
-              font-medium
-              text-white
-              shadow-sm
-              transition-all
-              duration-300
-              hover:-translate-y-[1px]
-              hover:bg-[#1c2f43]
-              hover:shadow-[0_6px_15px_rgba(36,59,83,0.18)]
-              active:translate-y-0
-              active:scale-[0.98]
-            "
-          >
-            {isEditing
-              ? t("hrCompanyPolicies.saveChanges")
-              : t("hrCompanyPolicies.saveChanges")}
-          </button>
-        </div>
-      </div>
-    </div>
+      </motion.div>
+    </motion.div>
   );
 }
 
@@ -520,13 +542,14 @@ function AddPolicyModal({ onClose, onSave, editingPolicy }) {
 ===================================================== */
 
 export default function CompanyPolicies() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+
+  const isArabic = i18n.language === "ar";
 
   const [policies, setPolicies] = useState(initialPolicies);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  // Policy currently being edited
   const [editingPolicy, setEditingPolicy] = useState(null);
 
   /* =====================================================
@@ -562,15 +585,10 @@ export default function CompanyPolicies() {
           policy.id === editingPolicy.id
             ? {
                 ...policy,
-
-                // Convert translated policy into editable local data
                 translationKey: undefined,
-
                 title,
-
                 effectiveDate:
                   effectiveDate || t("hrCompanyPolicies.emptyDate"),
-
                 description: owner
                   ? t("hrCompanyPolicies.ownedBy", {
                       owner,
@@ -593,202 +611,120 @@ export default function CompanyPolicies() {
         ...prev,
         {
           id: `${title.toLowerCase().replace(/\s+/g, "-")}-${prev.length}`,
-
           title,
-
           description: owner
             ? t("hrCompanyPolicies.ownedBy", {
                 owner,
               })
             : "",
-
           effectiveDate: effectiveDate || t("hrCompanyPolicies.emptyDate"),
-
           version: t("hrCompanyPolicies.newVersion"),
         },
       ]);
     }
 
-    // Close modal
     setIsModalOpen(false);
-
-    // Clear editing state
     setEditingPolicy(null);
   };
 
   return (
-    <div
-      className="
-        w-full
-        min-w-0
-        animate-[pageFadeIn_0.45s_ease-out]
-      "
-    >
-      {/* =====================================================
-          PAGE HEADER
-      ===================================================== */}
-
-      <div
-        className="
-          mb-6
-          flex
-          items-start
-          justify-between
-          opacity-0
-          animate-[headerIn_0.5s_ease-out_forwards]
-        "
+    <>
+      <motion.div
+        dir={isArabic ? "rtl" : "ltr"}
+        className="w-full space-y-6"
+        initial="hidden"
+        animate="visible"
+        variants={containerVariants}
       >
-        <div>
-          <h1
-            className="
-              font-['Manrope']
-              text-2xl
-              font-bold
-              text-[#202B33]
-            "
-          >
-            {t("hrCompanyPolicies.title")}
-          </h1>
-
-          <p className="mt-1 text-sm text-[#6B7785]">
-            {t("hrCompanyPolicies.subtitle")}
-          </p>
-        </div>
-
         {/* =====================================================
-            ADD POLICY BUTTON
+            PAGE HEADER
         ===================================================== */}
 
-        <button
-          type="button"
-          onClick={handleAddPolicy}
+        <motion.header
+          variants={itemVariants}
           className="
-            group
             flex
-            items-center
-            gap-2
-            rounded-lg
-            bg-[#243B53]
-            px-4
-            py-2.5
-            text-sm
-            font-medium
-            text-white
-            shadow-sm
-            transition-all
-            duration-300
-            hover:-translate-y-[2px]
-            hover:bg-[#1c2f43]
-            hover:shadow-[0_8px_20px_rgba(36,59,83,0.18)]
-            active:translate-y-0
-            active:scale-[0.98]
+            flex-col
+            gap-4
+            sm:flex-row
+            sm:items-start
+            sm:justify-between
           "
         >
-          <Plus
+          <div>
+            <p className="text-[11px] font-bold uppercase tracking-wider text-[#6b879f]">
+              HR / COMPANY POLICIES
+            </p>
+
+            <h1 className="mt-1 text-lg font-bold tracking-tight text-[#1e293b] md:text-[21px]">
+              {t("hrCompanyPolicies.title")}
+            </h1>
+
+            <p className="mt-1 text-sm font-normal text-[#64748b]">
+              {t("hrCompanyPolicies.subtitle")}
+            </p>
+          </div>
+
+          {/* ADD POLICY */}
+
+          <button
+            type="button"
+            onClick={handleAddPolicy}
             className="
-              h-4
-              w-4
-              transition-transform
-              duration-300
-              group-hover:rotate-90
+              inline-flex
+              items-center
+              gap-2
+              rounded-lg
+              bg-[#243B53]
+              px-4
+              py-2.5
+              text-sm
+              font-semibold
+              text-white
+              transition
+              hover:bg-[#1c2f42]
             "
-          />
+          >
+            <Plus className="h-4 w-4" />
 
-          <span>{t("hrCompanyPolicies.addPolicyDocument")}</span>
-        </button>
-      </div>
+            <span>{t("hrCompanyPolicies.addPolicyDocument")}</span>
+          </button>
+        </motion.header>
 
-      {/* =====================================================
-          POLICY CARDS
-      ===================================================== */}
+        {/* =====================================================
+            POLICY CARDS
+        ===================================================== */}
 
-      <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-        {policies.map((policy, index) => (
-          <PolicyCard
-            key={policy.id}
-            policy={policy}
-            index={index}
-            onEdit={handleEditPolicy}
-          />
-        ))}
-      </div>
+        <motion.div
+          variants={containerVariants}
+          className="grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3"
+        >
+          {policies.map((policy) => (
+            <PolicyCard
+              key={policy.id}
+              policy={policy}
+              onEdit={handleEditPolicy}
+            />
+          ))}
+        </motion.div>
+      </motion.div>
 
       {/* =====================================================
           ADD / EDIT MODAL
       ===================================================== */}
 
-      {isModalOpen && (
-        <AddPolicyModal
-          onClose={() => {
-            setIsModalOpen(false);
-            setEditingPolicy(null);
-          }}
-          onSave={handleSavePolicy}
-          editingPolicy={editingPolicy}
-        />
-      )}
-
-      {/* =====================================================
-          ANIMATIONS
-      ===================================================== */}
-
-      <style>{`
-        @keyframes pageFadeIn {
-          from {
-            opacity: 0;
-          }
-
-          to {
-            opacity: 1;
-          }
-        }
-
-        @keyframes headerIn {
-          from {
-            opacity: 0;
-            transform: translateY(-12px);
-          }
-
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
-
-        @keyframes policyCardIn {
-          from {
-            opacity: 0;
-            transform: translateY(18px);
-          }
-
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
-
-        @keyframes modalOverlayIn {
-          from {
-            opacity: 0;
-          }
-
-          to {
-            opacity: 1;
-          }
-        }
-
-        @keyframes modalIn {
-          from {
-            opacity: 0;
-            transform: translateY(12px) scale(0.97);
-          }
-
-          to {
-            opacity: 1;
-            transform: translateY(0) scale(1);
-          }
-        }
-      `}</style>
-    </div>
+      <AnimatePresence>
+        {isModalOpen && (
+          <AddPolicyModal
+            onClose={() => {
+              setIsModalOpen(false);
+              setEditingPolicy(null);
+            }}
+            onSave={handleSavePolicy}
+            editingPolicy={editingPolicy}
+          />
+        )}
+      </AnimatePresence>
+    </>
   );
 }

@@ -140,13 +140,13 @@ export default function AIAssistant() {
   };
 
   return (
-    <div className="w-full max-w-[1400px] mx-auto box-border font-sans p-2 sm:p-4 md:p-6 text-[#102a43]">
+    <div className="w-full max-w-[1400px] mx-auto box-border font-sans text-[#102a43]">
       {/* =====================================================
           HEADER
       ===================================================== */}
       <div className="mb-6">
         {/* Top Tag */}
-        <span className="text-[11px] font-bold tracking-[0.08em] text-[#0f766e] uppercase block mb-1">
+        <span className="text-[11px] font-bold tracking-[0.08em] text-[#5b8c6a] uppercase block mb-1">
           {t("aiAssistant.tag")}
         </span>
 

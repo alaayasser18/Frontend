@@ -206,7 +206,7 @@ const Performance = () => {
 
             {/* Subtitle */}
 
-            <p className="mt-2 text-[13px] text-[#627d98]">
+            <p className="mt-1 text-[13px] text-[#627d98]">
               {t(
                 "employeePerformance.subtitle",
                 "A clear view of your progress and goals.",

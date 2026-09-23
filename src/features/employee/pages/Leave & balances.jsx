@@ -1,18 +1,32 @@
 import { useState, useRef, useMemo } from "react";
 import { useTranslation } from "react-i18next";
+import { motion, AnimatePresence } from "framer-motion";
 import toast from "react-hot-toast";
 import {
-  LuCalendar,
-  LuPaperclip,
-  LuArrowRight,
-  LuArrowLeft,
-  LuX,
-  LuChevronDown,
-  LuChevronLeft,
-  LuChevronRight,
-  LuCheck,
-  LuFileText,
-} from "react-icons/lu";
+  FiCalendar,
+  FiPaperclip,
+  FiArrowRight,
+  FiArrowLeft,
+  FiX,
+  FiChevronDown,
+  FiChevronLeft,
+  FiChevronRight,
+  FiCheck,
+  FiFileText,
+} from "react-icons/fi";
+
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: { staggerChildren: 0.07, delayChildren: 0.05 },
+  },
+};
+
+const itemVariants = {
+  hidden: { opacity: 0, y: 10 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.35, ease: "easeOut" } },
+};
 
 export default function LeaveBalances() {
   const { t, i18n } = useTranslation();
@@ -38,10 +52,8 @@ export default function LeaveBalances() {
       day: 14,
       monthEn: "MAY",
       monthAr: "مايو",
-      fullDateEn: "May 14",
-      fullDateAr: "14 مايو",
-      daysCount: 1,
-      duration: "fullDay",
+      fullDateEn: "May 14 · 1 day",
+      fullDateAr: "14 مايو · يوم واحد",
       status: "Approved",
     },
   ]);
@@ -55,6 +67,7 @@ export default function LeaveBalances() {
   const [endDate, setEndDate] = useState("2026-06-24");
   const [reason, setReason] = useState("");
   const [attachedFile, setAttachedFile] = useState(null);
+  const [isSubmittedSuccess, setIsSubmittedSuccess] = useState(false);
   const fileInputRef = useRef(null);
 
   // ==========================================
@@ -88,7 +101,7 @@ export default function LeaveBalances() {
     e.preventDefault();
 
     if (!startDate || !endDate || !reason.trim()) {
-      toast.error(t("leaveBalances.toastFillRequired"));
+      toast.error(t("leaveBalances.toastFillRequired", "Please fill in all required fields"));
       return;
     }
 
@@ -96,28 +109,25 @@ export default function LeaveBalances() {
     const end = new Date(endDate);
 
     if (end < start) {
-      toast.error(t("leaveBalances.toastInvalidDates"));
+      toast.error(t("leaveBalances.toastInvalidDates", "End date must be after start date"));
       return;
     }
 
-    // Calculate requested days
     let daysCount = 1;
     if (duration === "halfDayMorning" || duration === "halfDayEvening") {
       daysCount = 0.5;
     } else {
       const diffTime = Math.abs(end - start);
-      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
-      daysCount = diffDays;
+      daysCount = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
     }
 
-    // Check balance if applicable
-    if (balances[leaveType]) {
-      if (balances[leaveType].remaining < daysCount) {
-        toast.error(t("leaveBalances.toastInsufficientBalance"));
-        return;
-      }
+    if (balances[leaveType] && balances[leaveType].remaining < daysCount) {
+      toast.error(t("leaveBalances.toastInsufficientBalance", "Insufficient leave balance"));
+      return;
+    }
 
-      // Deduct balance
+    // Deduct balance
+    if (balances[leaveType]) {
       setBalances((prev) => ({
         ...prev,
         [leaveType]: {
@@ -127,7 +137,6 @@ export default function LeaveBalances() {
       }));
     }
 
-    // Month & Day formatting for recent requests badge
     const monthNamesEn = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"];
     const monthNamesAr = ["يناير", "فبراير", "مارس", "أبريل", "مايو", "يونيو", "يوليو", "أغسطس", "سبتمبر", "أكتوبر", "نوفمبر", "ديسمبر"];
     const startDay = start.getDate();
@@ -140,28 +149,29 @@ export default function LeaveBalances() {
       day: startDay,
       monthEn: monthNamesEn[monthIndex],
       monthAr: monthNamesAr[monthIndex],
-      fullDateEn: `${monthNamesEn[monthIndex]} ${startDay}${daysCount > 1 ? ` - ${end.getDate()}` : ""}`,
-      fullDateAr: `${startDay} ${monthNamesAr[monthIndex]}${daysCount > 1 ? ` - ${end.getDate()}` : ""}`,
-      daysCount: daysCount,
-      duration: duration,
+      fullDateEn: `Jun 22 – Jun 24 · ${daysCount} days`,
+      fullDateAr: `22 يونيو – 24 يونيو · ${daysCount} أيام`,
       status: "Pending",
       reason: reason.trim(),
     };
 
     setRecentRequests((prev) => [newRequest, ...prev]);
-    toast.success(t("leaveBalances.toastSubmitted"));
 
-    // Reset Form
+    // Toast العادي المحفوظ + حالة تحول الزر في الـ UI
+    toast.success(t("leaveBalances.toastSubmitted", "Leave request submitted successfully!"));
+    setIsSubmittedSuccess(true);
+
+    setTimeout(() => {
+      setIsSubmittedSuccess(false);
+    }, 3500);
+
+    // Reset fields
     setReason("");
     setAttachedFile(null);
-    if (fileInputRef.current) {
-      fileInputRef.current.value = "";
-    }
+    if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
-  // ==========================================
-  // Calendar Days Calculation
-  // ==========================================
+  // Calendar Days
   const calendarDays = useMemo(() => {
     const year = calendarMonth.getFullYear();
     const month = calendarMonth.getMonth();
@@ -188,263 +198,265 @@ export default function LeaveBalances() {
   ];
 
   return (
-    <div className="w-full max-w-[1400px] mx-auto box-border font-sans p-2 sm:p-4 md:p-6 text-[#102a43]">
-      {/* =====================================================
-          HEADER
-      ===================================================== */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-7 gap-4">
+    <motion.div
+      variants={containerVariants}
+      initial="hidden"
+      animate="visible"
+      className="w-full space-y-6 pb-12 font-sans"
+    >
+      {/* 1. Header */}
+      <motion.div
+        variants={itemVariants}
+        className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4"
+      >
         <div>
-          {/* Time Off Category Badge */}
-          <span className="text-[11px] font-bold tracking-[0.08em] text-[#0f766e] uppercase block mb-1">
-            {t("leaveBalances.timeOffTag")}
+          <span className="text-[11px] font-bold tracking-wider text-[#5b8c6a] uppercase mb-1 block">
+            {t("leaveBalances.timeOffTag", "TIME OFF")}
           </span>
-
-          {/* Title */}
-          <h1 className="text-[26px] sm:text-[30px] font-extrabold text-[#102a43] tracking-tight leading-tight">
-            {t("leaveBalances.title")}
+          <h1 className="text-2xl md:text-[28px] font-bold text-[#102a43] tracking-tight">
+            {t("leaveBalances.title", "Leave & balances")}
           </h1>
-
-          {/* Subtitle */}
-          <p className="text-[13px] sm:text-[14px] text-[#627d98] mt-1">
-            {t("leaveBalances.subtitle")}
+          <p className="text-sm text-[#829ab1] mt-1 font-normal">
+            {t("leaveBalances.subtitle", "Plan time away and keep track of your remaining allowance.")}
           </p>
         </div>
 
-        {/* View Calendar Button */}
-        <button
+        <motion.button
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.98 }}
           type="button"
           onClick={() => setIsCalendarOpen(true)}
-          className="bg-white border border-[#d9e2ec] hover:border-[#9fb3c8] hover:bg-[#f8fafc] text-[#334e68] text-[13px] font-semibold px-4 py-2.5 rounded-lg shadow-xs flex items-center gap-2 transition-all cursor-pointer"
+          className="inline-flex items-center gap-2 rounded-xl border border-[#d9e2ec] bg-white px-4 py-2.5 text-xs font-semibold text-[#102a43] hover:bg-[#f8fafc] transition shadow-sm shrink-0 self-start sm:self-auto"
         >
-          <LuCalendar className="text-[#627d98] text-[16px]" />
-          <span>{t("leaveBalances.viewCalendar")}</span>
-        </button>
-      </div>
+          <FiCalendar className="w-4 h-4 text-[#64748b]" />
+          <span>{t("leaveBalances.viewCalendar", "View calendar")}</span>
+        </motion.button>
+      </motion.div>
 
-      {/* =====================================================
-          BALANCE CARDS (3 COLUMNS)
-      ===================================================== */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mb-7">
+      {/* 2. Balance Cards Grid (3 Columns) */}
+      <motion.div variants={itemVariants} className="grid grid-cols-1 md:grid-cols-3 gap-5">
         {/* Card 1: Annual Leave */}
-        <div className="bg-white rounded-xl border border-[#e2e8f0] p-5 shadow-xs flex flex-col justify-between hover:border-[#cbd5e1] transition-all">
-          <div className="flex justify-between items-center mb-4">
-            <span className="text-[11px] font-bold text-[#829ab1] tracking-wider uppercase">
-              {t("leaveBalances.annualLeave")}
+        <motion.div
+          whileHover={{ y: -2 }}
+          className="rounded-2xl border border-[#e2e8f0] bg-white p-6 shadow-[0_1px_3px_rgba(0,0,0,0.02)] flex flex-col justify-between"
+        >
+          <div className="flex items-center justify-between mb-3">
+            <span className="text-[11px] font-bold text-[#94a3b8] tracking-wider uppercase">
+              {t("leaveBalances.annualLeave", "ANNUAL LEAVE")}
             </span>
-            <LuCalendar className="text-[#9fb3c8] text-[17px]" />
+            <FiCalendar className="w-4 h-4 text-[#cbd5e1]" />
           </div>
 
-          <div className="my-2">
+          <div>
             <div className="flex items-baseline gap-1.5">
-              <span className="text-[30px] font-bold text-[#102a43] leading-none">
+              <span className="text-2xl md:text-3xl font-bold text-[#102a43] leading-none">
                 {balances.annual.remaining}
               </span>
-              <span className="text-[14px] font-normal text-[#627d98]">
-                / {balances.annual.total} {t("leaveBalances.days")}
+              <span className="text-xs text-[#829ab1]">
+                / {balances.annual.total} {t("leaveBalances.days", "days")}
               </span>
             </div>
 
-            {/* Blue Progress Bar */}
-            <div className="w-full bg-[#edf2f7] h-[5px] rounded-full mt-3 overflow-hidden">
-              <div
-                className="bg-[#486581] h-full rounded-full transition-all duration-500"
-                style={{
+            <div className="w-full bg-[#f1f5f9] h-1.5 rounded-full mt-3 overflow-hidden">
+              <motion.div
+                initial={{ width: 0 }}
+                animate={{
                   width: `${Math.min(100, (balances.annual.remaining / balances.annual.total) * 100)}%`,
                 }}
+                transition={{ duration: 0.8, ease: "easeOut" }}
+                className="bg-[#486581] h-full rounded-full"
               />
             </div>
           </div>
 
-          <span className="text-[11px] font-bold tracking-wider text-[#829ab1] uppercase mt-2">
-            {t("leaveBalances.daysRemaining", { count: balances.annual.remaining })}
+          <span className="text-[11px] font-bold tracking-wider text-[#94a3b8] uppercase mt-3 block">
+            {balances.annual.remaining} {t("leaveBalances.daysRemainingText", "DAYS REMAINING")}
           </span>
-        </div>
+        </motion.div>
 
         {/* Card 2: Casual Leave */}
-        <div className="bg-white rounded-xl border border-[#e2e8f0] p-5 shadow-xs flex flex-col justify-between hover:border-[#cbd5e1] transition-all">
-          <div className="flex justify-between items-center mb-4">
-            <span className="text-[11px] font-bold text-[#829ab1] tracking-wider uppercase">
-              {t("leaveBalances.casualLeave")}
+        <motion.div
+          whileHover={{ y: -2 }}
+          className="rounded-2xl border border-[#e2e8f0] bg-white p-6 shadow-[0_1px_3px_rgba(0,0,0,0.02)] flex flex-col justify-between"
+        >
+          <div className="flex items-center justify-between mb-3">
+            <span className="text-[11px] font-bold text-[#94a3b8] tracking-wider uppercase">
+              {t("leaveBalances.casualLeave", "CASUAL LEAVE")}
             </span>
-            <LuCalendar className="text-[#9fb3c8] text-[17px]" />
+            <FiCalendar className="w-4 h-4 text-[#cbd5e1]" />
           </div>
 
-          <div className="my-2">
+          <div>
             <div className="flex items-baseline gap-1.5">
-              <span className="text-[30px] font-bold text-[#102a43] leading-none">
+              <span className="text-2xl md:text-3xl font-bold text-[#102a43] leading-none">
                 {balances.casual.remaining}
               </span>
-              <span className="text-[14px] font-normal text-[#627d98]">
-                / {balances.casual.total} {t("leaveBalances.days")}
+              <span className="text-xs text-[#829ab1]">
+                / {balances.casual.total} {t("leaveBalances.days", "days")}
               </span>
             </div>
 
-            {/* Amber/Mustard Progress Bar */}
-            <div className="w-full bg-[#edf2f7] h-[5px] rounded-full mt-3 overflow-hidden">
-              <div
-                className="bg-[#b7791f] h-full rounded-full transition-all duration-500"
-                style={{
+            <div className="w-full bg-[#f1f5f9] h-1.5 rounded-full mt-3 overflow-hidden">
+              <motion.div
+                initial={{ width: 0 }}
+                animate={{
                   width: `${Math.min(100, (balances.casual.remaining / balances.casual.total) * 100)}%`,
                 }}
+                transition={{ duration: 0.8, ease: "easeOut", delay: 0.1 }}
+                className="bg-[#d97706] h-full rounded-full"
               />
             </div>
           </div>
 
-          <span className="text-[11px] font-bold tracking-wider text-[#829ab1] uppercase mt-2">
-            {t("leaveBalances.daysRemaining", { count: balances.casual.remaining })}
+          <span className="text-[11px] font-bold tracking-wider text-[#94a3b8] uppercase mt-3 block">
+            {balances.casual.remaining} {t("leaveBalances.daysRemainingText", "DAYS REMAINING")}
           </span>
-        </div>
+        </motion.div>
 
         {/* Card 3: Sick Leave */}
-        <div className="bg-white rounded-xl border border-[#e2e8f0] p-5 shadow-xs flex flex-col justify-between hover:border-[#cbd5e1] transition-all">
-          <div className="flex justify-between items-center mb-4">
-            <span className="text-[11px] font-bold text-[#829ab1] tracking-wider uppercase">
-              {t("leaveBalances.sickLeave")}
+        <motion.div
+          whileHover={{ y: -2 }}
+          className="rounded-2xl border border-[#e2e8f0] bg-white p-6 shadow-[0_1px_3px_rgba(0,0,0,0.02)] flex flex-col justify-between"
+        >
+          <div className="flex items-center justify-between mb-3">
+            <span className="text-[11px] font-bold text-[#94a3b8] tracking-wider uppercase">
+              {t("leaveBalances.sickLeave", "SICK LEAVE")}
             </span>
-            <LuCalendar className="text-[#9fb3c8] text-[17px]" />
+            <FiCalendar className="w-4 h-4 text-[#cbd5e1]" />
           </div>
 
-          <div className="my-2">
+          <div>
             <div className="flex items-baseline gap-1.5">
-              <span className="text-[30px] font-bold text-[#102a43] leading-none">
+              <span className="text-2xl md:text-3xl font-bold text-[#102a43] leading-none">
                 {balances.sick.remaining}
               </span>
-              <span className="text-[14px] font-normal text-[#627d98]">
-                / {balances.sick.total} {t("leaveBalances.days")}
+              <span className="text-xs text-[#829ab1]">
+                / {balances.sick.total} {t("leaveBalances.days", "days")}
               </span>
             </div>
 
-            {/* Forest Green Progress Bar */}
-            <div className="w-full bg-[#edf2f7] h-[5px] rounded-full mt-3 overflow-hidden">
-              <div
-                className="bg-[#2f6a4f] h-full rounded-full transition-all duration-500"
-                style={{
+            <div className="w-full bg-[#f1f5f9] h-1.5 rounded-full mt-3 overflow-hidden">
+              <motion.div
+                initial={{ width: 0 }}
+                animate={{
                   width: `${Math.min(100, (balances.sick.remaining / balances.sick.total) * 100)}%`,
                 }}
+                transition={{ duration: 0.8, ease: "easeOut", delay: 0.2 }}
+                className="bg-[#059669] h-full rounded-full"
               />
             </div>
           </div>
 
-          <span className="text-[11px] font-bold tracking-wider text-[#829ab1] uppercase mt-2">
-            {t("leaveBalances.daysRemaining", { count: balances.sick.remaining })}
+          <span className="text-[11px] font-bold tracking-wider text-[#94a3b8] uppercase mt-3 block">
+            {balances.sick.remaining} {t("leaveBalances.daysRemainingText", "DAYS REMAINING")}
           </span>
-        </div>
-      </div>
+        </motion.div>
+      </motion.div>
 
-      {/* =====================================================
-          MAIN SECTION (REQUEST LEAVE FORM & RECENT REQUESTS)
-      ===================================================== */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-        {/* ==========================================
-            LEFT COLUMN: REQUEST LEAVE FORM (8 COLS)
-        ========================================== */}
-        <div className="lg:col-span-8 bg-white rounded-xl border border-[#e2e8f0] p-6 sm:p-7 shadow-xs">
-          {/* Card Title & Icon */}
-          <div className="flex justify-between items-start mb-6">
+      {/* 3. Main Section: Request Leave Form + Recent Requests */}
+      <motion.div variants={itemVariants} className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+        {/* Left Column: Request Leave Form (8 cols) */}
+        <div className="lg:col-span-8 rounded-2xl border border-[#e2e8f0] bg-white p-6 md:p-7 shadow-[0_1px_3px_rgba(0,0,0,0.02)]">
+          <div className="flex items-start justify-between mb-6">
             <div>
-              <h2 className="text-[19px] font-bold text-[#102a43] leading-tight">
-                {t("leaveBalances.requestLeave")}
+              <h2 className="text-base md:text-lg font-bold text-[#102a43]">
+                {t("leaveBalances.requestLeave", "Request leave")}
               </h2>
-              <p className="text-[13px] text-[#627d98] mt-1">
-                {t("leaveBalances.requestSubtitle")}
+              <p className="text-xs text-[#829ab1] mt-0.5">
+                {t("leaveBalances.requestSubtitle", "Submit a request for manager approval.")}
               </p>
             </div>
-            <LuCalendar className="text-[#9fb3c8] text-[18px]" />
+            <FiCalendar className="w-4 h-4 text-[#cbd5e1]" />
           </div>
 
-          {/* Form */}
-          <form onSubmit={handleSubmitRequest}>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5 mb-5">
-              {/* Field 1: Leave Type */}
+          <form onSubmit={handleSubmitRequest} className="space-y-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {/* Leave Type */}
               <div>
-                <label className="text-[12px] font-semibold text-[#334e68] mb-1.5 block">
-                  {t("leaveBalances.leaveType")}
+                <label className="text-xs font-semibold text-[#64748b] mb-1.5 block">
+                  {t("leaveBalances.leaveType", "Leave type")}
                 </label>
                 <div className="relative">
                   <select
                     value={leaveType}
                     onChange={(e) => setLeaveType(e.target.value)}
-                    className="w-full h-[42px] px-3.5 bg-white border border-[#d9e2ec] rounded-lg text-[13px] text-[#102a43] font-medium appearance-none focus:outline-none focus:border-[#486581] focus:ring-1 focus:ring-[#486581] transition-all cursor-pointer"
+                    className="w-full h-10 px-3.5 bg-white border border-[#d9e2ec] rounded-xl text-xs text-[#102a43] font-medium appearance-none focus:outline-none focus:border-[#486581] focus:ring-1 focus:ring-[#486581] transition cursor-pointer"
                   >
-                    <option value="annual">{t("leaveBalances.annual")}</option>
-                    <option value="casual">{t("leaveBalances.casual")}</option>
-                    <option value="sick">{t("leaveBalances.sick")}</option>
-                    <option value="unpaid">{t("leaveBalances.unpaid")}</option>
+                    <option value="annual">{t("leaveBalances.annual", "Annual leave")}</option>
+                    <option value="casual">{t("leaveBalances.casual", "Casual leave")}</option>
+                    <option value="sick">{t("leaveBalances.sick", "Sick leave")}</option>
+                    <option value="unpaid">{t("leaveBalances.unpaid", "Unpaid leave")}</option>
                   </select>
-                  <LuChevronDown
-                    className={`absolute ${isRtl ? "left-3.5" : "right-3.5"} top-1/2 -translate-y-1/2 text-[#627d98] pointer-events-none text-[15px]`}
+                  <FiChevronDown
+                    className={`absolute ${isRtl ? "left-3.5" : "right-3.5"} top-1/2 -translate-y-1/2 text-[#64748b] pointer-events-none w-4 h-4`}
                   />
                 </div>
               </div>
 
-              {/* Field 2: Duration */}
+              {/* Duration */}
               <div>
-                <label className="text-[12px] font-semibold text-[#334e68] mb-1.5 block">
-                  {t("leaveBalances.duration")}
+                <label className="text-xs font-semibold text-[#64748b] mb-1.5 block">
+                  {t("leaveBalances.duration", "Duration")}
                 </label>
                 <div className="relative">
                   <select
                     value={duration}
                     onChange={(e) => setDuration(e.target.value)}
-                    className="w-full h-[42px] px-3.5 bg-white border border-[#d9e2ec] rounded-lg text-[13px] text-[#102a43] font-medium appearance-none focus:outline-none focus:border-[#486581] focus:ring-1 focus:ring-[#486581] transition-all cursor-pointer"
+                    className="w-full h-10 px-3.5 bg-white border border-[#d9e2ec] rounded-xl text-xs text-[#102a43] font-medium appearance-none focus:outline-none focus:border-[#486581] focus:ring-1 focus:ring-[#486581] transition cursor-pointer"
                   >
-                    <option value="fullDay">{t("leaveBalances.fullDay")}</option>
-                    <option value="halfDayMorning">{t("leaveBalances.halfDayMorning")}</option>
-                    <option value="halfDayEvening">{t("leaveBalances.halfDayEvening")}</option>
+                    <option value="fullDay">{t("leaveBalances.fullDay", "Full day")}</option>
+                    <option value="halfDayMorning">{t("leaveBalances.halfDayMorning", "Half day (Morning)")}</option>
+                    <option value="halfDayEvening">{t("leaveBalances.halfDayEvening", "Half day (Evening)")}</option>
                   </select>
-                  <LuChevronDown
-                    className={`absolute ${isRtl ? "left-3.5" : "right-3.5"} top-1/2 -translate-y-1/2 text-[#627d98] pointer-events-none text-[15px]`}
+                  <FiChevronDown
+                    className={`absolute ${isRtl ? "left-3.5" : "right-3.5"} top-1/2 -translate-y-1/2 text-[#64748b] pointer-events-none w-4 h-4`}
                   />
                 </div>
               </div>
 
-              {/* Field 3: Start Date */}
+              {/* Start Date */}
               <div>
-                <label className="text-[12px] font-semibold text-[#334e68] mb-1.5 block">
-                  {t("leaveBalances.startDate")}
+                <label className="text-xs font-semibold text-[#64748b] mb-1.5 block">
+                  {t("leaveBalances.startDate", "Start date")}
                 </label>
-                <div className="relative">
-                  <input
-                    type="date"
-                    value={startDate}
-                    onChange={(e) => setStartDate(e.target.value)}
-                    className="w-full h-[42px] px-3.5 bg-white border border-[#d9e2ec] rounded-lg text-[13px] text-[#102a43] font-medium focus:outline-none focus:border-[#486581] focus:ring-1 focus:ring-[#486581] transition-all"
-                  />
-                </div>
+                <input
+                  type="date"
+                  value={startDate}
+                  onChange={(e) => setStartDate(e.target.value)}
+                  className="w-full h-10 px-3.5 bg-white border border-[#d9e2ec] rounded-xl text-xs text-[#102a43] font-medium focus:outline-none focus:border-[#486581] focus:ring-1 focus:ring-[#486581] transition"
+                />
               </div>
 
-              {/* Field 4: End Date */}
+              {/* End Date */}
               <div>
-                <label className="text-[12px] font-semibold text-[#334e68] mb-1.5 block">
-                  {t("leaveBalances.endDate")}
+                <label className="text-xs font-semibold text-[#64748b] mb-1.5 block">
+                  {t("leaveBalances.endDate", "End date")}
                 </label>
-                <div className="relative">
-                  <input
-                    type="date"
-                    value={endDate}
-                    onChange={(e) => setEndDate(e.target.value)}
-                    className="w-full h-[42px] px-3.5 bg-white border border-[#d9e2ec] rounded-lg text-[13px] text-[#102a43] font-medium focus:outline-none focus:border-[#486581] focus:ring-1 focus:ring-[#486581] transition-all"
-                  />
-                </div>
+                <input
+                  type="date"
+                  value={endDate}
+                  onChange={(e) => setEndDate(e.target.value)}
+                  className="w-full h-10 px-3.5 bg-white border border-[#d9e2ec] rounded-xl text-xs text-[#102a43] font-medium focus:outline-none focus:border-[#486581] focus:ring-1 focus:ring-[#486581] transition"
+                />
               </div>
             </div>
 
-            {/* Field 5: Reason */}
-            <div className="mb-4">
-              <label className="text-[12px] font-semibold text-[#334e68] mb-1.5 block">
-                {t("leaveBalances.reason")}
+            {/* Reason */}
+            <div>
+              <label className="text-xs font-semibold text-[#64748b] mb-1.5 block">
+                {t("leaveBalances.reason", "Reason")}
               </label>
               <textarea
                 value={reason}
                 onChange={(e) => setReason(e.target.value)}
-                placeholder={t("leaveBalances.reasonPlaceholder")}
-                rows={4}
-                className="w-full p-3.5 bg-white border border-[#d9e2ec] rounded-lg text-[13px] text-[#102a43] placeholder-[#9fb3c8] focus:outline-none focus:border-[#486581] focus:ring-1 focus:ring-[#486581] transition-all resize-y min-h-[110px]"
+                placeholder={t("leaveBalances.reasonPlaceholder", "Add a reason for your request...")}
+                rows={3}
+                className="w-full p-3.5 bg-white border border-[#d9e2ec] rounded-xl text-xs text-[#102a43] placeholder-[#94a3b8] focus:outline-none focus:border-[#486581] focus:ring-1 focus:ring-[#486581] transition resize-none"
               />
             </div>
 
-            {/* Field 6: Attach Supporting Document (Dashed Box) */}
-            <div className="mb-6">
+            {/* Attach Document (Dashed Box) */}
+            <div>
               <input
                 ref={fileInputRef}
                 type="file"
@@ -453,23 +465,23 @@ export default function LeaveBalances() {
               />
               <div
                 onClick={() => fileInputRef.current?.click()}
-                className="w-full border border-dashed border-[#bcccdc] hover:border-[#627d98] rounded-lg p-3.5 bg-[#fbfcfd] hover:bg-[#f8fafc] transition-colors cursor-pointer flex items-center justify-between"
+                className="w-full border border-dashed border-[#cbd5e1] hover:border-[#64748b] rounded-xl p-3 bg-[#fbfcfd] hover:bg-[#f8fafc] transition cursor-pointer flex items-center justify-between"
               >
-                <div className="flex items-center gap-2.5">
-                  <LuPaperclip className="text-[#627d98] text-[16px] rotate-45" />
+                <div className="flex items-center gap-2">
+                  <FiPaperclip className="text-[#64748b] w-4 h-4" />
                   {attachedFile ? (
                     <div className="flex items-center gap-2">
-                      <LuFileText className="text-[#0f766e] text-[15px]" />
-                      <span className="text-[13px] font-medium text-[#102a43]">
+                      <FiFileText className="text-[#059669] w-4 h-4" />
+                      <span className="text-xs font-medium text-[#102a43]">
                         {attachedFile.name}
                       </span>
-                      <span className="text-[11px] text-[#829ab1]">
+                      <span className="text-[10px] text-[#94a3b8]">
                         ({(attachedFile.size / 1024).toFixed(1)} KB)
                       </span>
                     </div>
                   ) : (
-                    <span className="text-[13px] font-medium text-[#334e68]">
-                      {t("leaveBalances.attachDocument")}
+                    <span className="text-xs font-medium text-[#64748b]">
+                      {t("leaveBalances.attachDocument", "Attach supporting document")}
                     </span>
                   )}
                 </div>
@@ -478,158 +490,147 @@ export default function LeaveBalances() {
                   <button
                     type="button"
                     onClick={handleRemoveFile}
-                    className="text-[#9fb3c8] hover:text-[#e12d39] p-1 transition-colors"
-                    title={t("leaveBalances.removeDocument")}
+                    className="text-[#94a3b8] hover:text-[#dc2626] p-1 transition"
                   >
-                    <LuX className="text-[16px]" />
+                    <FiX className="w-4 h-4" />
                   </button>
                 )}
               </div>
             </div>
 
-            {/* Submit Button */}
-            <div>
-              <button
+            {/* Submit Button (Animated State transition) */}
+            <div className="pt-2">
+              <motion.button
+                whileHover={{ scale: 1.01 }}
+                whileTap={{ scale: 0.98 }}
                 type="submit"
-                className="px-6 py-2.5 bg-[#102a43] hover:bg-[#243b53] active:scale-[0.98] text-white text-[13px] font-semibold rounded-lg shadow-sm flex items-center gap-2 transition-all cursor-pointer"
+                className="px-5 py-2.5 bg-[#102a43] hover:bg-[#1a3857] text-white text-xs font-semibold rounded-xl shadow-sm flex items-center gap-2 transition cursor-pointer"
               >
-                <span>{t("leaveBalances.submitRequest")}</span>
-                {isRtl ? (
-                  <LuArrowLeft className="text-[15px]" />
+                {isSubmittedSuccess ? (
+                  <>
+                    <FiCheck className="w-4 h-4 text-[#4ade80]" />
+                    <span>{t("leaveBalances.requestSubmitted", "Request submitted")}</span>
+                  </>
                 ) : (
-                  <LuArrowRight className="text-[15px]" />
+                  <>
+                    <span>{t("leaveBalances.submitRequest", "Submit request")}</span>
+                    {isRtl ? <FiArrowLeft className="w-3.5 h-3.5" /> : <FiArrowRight className="w-3.5 h-3.5" />}
+                  </>
                 )}
-              </button>
+              </motion.button>
             </div>
           </form>
         </div>
 
-        {/* ==========================================
-            RIGHT COLUMN: RECENT REQUESTS (4 COLS)
-        ========================================== */}
-        <div className="lg:col-span-4 bg-white rounded-xl border border-[#e2e8f0] p-6 sm:p-7 shadow-xs">
-          {/* Header */}
+        {/* Right Column: Recent Requests (4 cols) */}
+        <div className="lg:col-span-4 rounded-2xl border border-[#e2e8f0] bg-white p-6 shadow-[0_1px_3px_rgba(0,0,0,0.02)]">
           <div className="mb-5">
-            <h2 className="text-[18px] font-bold text-[#102a43] leading-tight">
-              {t("leaveBalances.recentRequests")}
+            <h2 className="text-base font-bold text-[#102a43]">
+              {t("leaveBalances.recentRequests", "Recent requests")}
             </h2>
-            <p className="text-[13px] text-[#627d98] mt-1">
-              {t("leaveBalances.recentSubtitle")}
+            <p className="text-xs text-[#829ab1] mt-0.5">
+              {t("leaveBalances.recentSubtitle", "Your latest time-off activity.")}
             </p>
           </div>
 
-          {/* Requests List */}
           <div className="space-y-3">
-            {recentRequests.length === 0 ? (
-              <div className="text-center py-8 text-[13px] text-[#829ab1]">
-                {t("leaveBalances.noRecentRequests")}
-              </div>
-            ) : (
-              recentRequests.map((req) => {
-                const isApproved = req.status === "Approved";
-                const isPending = req.status === "Pending";
-
-                return (
-                  <div
-                    key={req.id}
-                    className="flex items-center justify-between p-3 rounded-lg border border-[#f0f4f8] hover:bg-[#f8fafc] transition-colors gap-3"
-                  >
-                    {/* Left side: Date Badge + Info */}
-                    <div className="flex items-center gap-3">
-                      {/* Date Badge */}
-                      <div className="w-[46px] h-[46px] rounded-lg bg-[#e6f4ea] text-[#137333] flex flex-col items-center justify-center font-bold flex-shrink-0">
-                        <span className="text-[15px] leading-none">{req.day}</span>
-                        <span className="text-[9px] tracking-wide uppercase leading-tight mt-0.5">
-                          {isRtl ? req.monthAr : req.monthEn}
-                        </span>
-                      </div>
-
-                      {/* Info */}
-                      <div>
-                        <h3 className="text-[13px] font-bold text-[#102a43] leading-tight">
-                          {t(`leaveBalances.${req.typeLabelKey}`, req.type)}
-                        </h3>
-                        <p className="text-[11.5px] text-[#627d98] mt-0.5">
-                          {isRtl ? req.fullDateAr : req.fullDateEn} ·{" "}
-                          {req.daysCount}{" "}
-                          {req.daysCount === 1
-                            ? t("leaveBalances.day")
-                            : t("leaveBalances.daysPlural")}
-                        </p>
-                      </div>
+            <AnimatePresence initial={false}>
+              {recentRequests.map((req) => (
+                <motion.div
+                  key={req.id}
+                  initial={{ opacity: 0, y: -10, scale: 0.98 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.95 }}
+                  transition={{ duration: 0.25, ease: "easeOut" }}
+                  className="flex items-center justify-between p-3 rounded-xl border border-[#f1f5f9] hover:bg-[#f8fafc] transition gap-3"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="w-11 h-11 rounded-xl bg-[#ecfdf5] text-[#059669] flex flex-col items-center justify-center font-bold shrink-0">
+                      <span className="text-sm leading-none">{req.day}</span>
+                      <span className="text-[9px] tracking-wide uppercase leading-tight mt-0.5">
+                        {isRtl ? req.monthAr : req.monthEn}
+                      </span>
                     </div>
 
-                    {/* Right side: Status Pill */}
                     <div>
-                      {isApproved && (
-                        <span className="inline-block bg-[#e6f4ea] text-[#137333] text-[11px] font-semibold px-2.5 py-0.5 rounded-full">
-                          {t("leaveBalances.statusApproved")}
-                        </span>
-                      )}
-                      {isPending && (
-                        <span className="inline-block bg-[#fef3c7] text-[#92400e] text-[11px] font-semibold px-2.5 py-0.5 rounded-full">
-                          {t("leaveBalances.statusPending")}
-                        </span>
-                      )}
-                      {!isApproved && !isPending && (
-                        <span className="inline-block bg-[#fee2e2] text-[#991b1b] text-[11px] font-semibold px-2.5 py-0.5 rounded-full">
-                          {t("leaveBalances.statusRejected")}
-                        </span>
-                      )}
+                      <h3 className="text-xs font-bold text-[#102a43] capitalize">
+                        {req.type} leave
+                      </h3>
+                      <p className="text-[11px] text-[#64748b] mt-0.5">
+                        {isRtl ? req.fullDateAr : req.fullDateEn}
+                      </p>
                     </div>
                   </div>
-                );
-              })
-            )}
+
+                  <div>
+                    {req.status === "Approved" && (
+                      <span className="inline-block bg-[#ecfdf5] text-[#059669] text-xs font-medium px-2.5 py-0.5 rounded-full">
+                        {t("leaveBalances.statusApproved", "Approved")}
+                      </span>
+                    )}
+                    {req.status === "Pending" && (
+                      <span className="inline-block bg-[#fefce8] text-[#d97706] text-xs font-medium px-2.5 py-0.5 rounded-full">
+                        {t("leaveBalances.statusPending", "Pending")}
+                      </span>
+                    )}
+                  </div>
+                </motion.div>
+              ))}
+            </AnimatePresence>
           </div>
         </div>
-      </div>
+      </motion.div>
 
-      {/* =====================================================
-          CALENDAR MODAL
-      ===================================================== */}
-      {isCalendarOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#102a43]/50 backdrop-blur-xs transition-opacity">
-          <div className="bg-white rounded-2xl shadow-xl w-full max-w-[620px] border border-[#e2e8f0] overflow-hidden">
-            {/* Modal Header */}
-            <div className="flex items-center justify-between p-5 border-b border-[#edf2f7]">
-              <div>
-                <h3 className="text-[18px] font-bold text-[#102a43]">
-                  {t("leaveBalances.calendarModalTitle")}
-                </h3>
-                <p className="text-[12px] text-[#627d98] mt-0.5">
-                  {t("leaveBalances.calendarModalSubtitle")}
-                </p>
+      {/* 4. Calendar Modal */}
+      <AnimatePresence>
+        {isCalendarOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setIsCalendarOpen(false)}
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm"
+          >
+            <motion.div
+              initial={{ opacity: 0, scale: 0.96, y: 12 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.96, y: 12 }}
+              transition={{ duration: 0.2 }}
+              onClick={(e) => e.stopPropagation()}
+              className="bg-white rounded-2xl shadow-2xl w-full max-w-lg border border-[#e2e8f0] overflow-hidden p-6"
+            >
+              {/* Modal Header */}
+              <div className="flex items-center justify-between pb-4 border-b border-[#f1f5f9]">
+                <div>
+                  <h3 className="text-base font-bold text-[#102a43]">
+                    {t("leaveBalances.calendarModalTitle", "Leave Calendar")}
+                  </h3>
+                  <p className="text-xs text-[#829ab1] mt-0.5">
+                    {t("leaveBalances.calendarModalSubtitle", "Overview of your scheduled time off.")}
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setIsCalendarOpen(false)}
+                  className="rounded-lg p-1 text-[#94a3b8] hover:bg-[#f1f5f9] hover:text-[#102a43] transition"
+                >
+                  <FiX className="w-5 h-5" />
+                </button>
               </div>
-              <button
-                type="button"
-                onClick={() => setIsCalendarOpen(false)}
-                className="w-8 h-8 rounded-lg flex items-center justify-center text-[#627d98] hover:text-[#102a43] hover:bg-[#f0f4f8] transition-colors"
-              >
-                <LuX className="text-[18px]" />
-              </button>
-            </div>
 
-            {/* Calendar Controls */}
-            <div className="p-5">
-              <div className="flex items-center justify-between mb-4">
+              {/* Month Controls */}
+              <div className="flex items-center justify-between py-4">
                 <button
                   type="button"
                   onClick={() =>
-                    setCalendarMonth(
-                      new Date(
-                        calendarMonth.getFullYear(),
-                        calendarMonth.getMonth() - 1,
-                        1
-                      )
-                    )
+                    setCalendarMonth(new Date(calendarMonth.getFullYear(), calendarMonth.getMonth() - 1, 1))
                   }
-                  className="w-8 h-8 rounded-lg border border-[#d9e2ec] flex items-center justify-center hover:bg-[#f8fafc] text-[#334e68]"
+                  className="w-8 h-8 rounded-lg border border-[#e2e8f0] flex items-center justify-center text-[#64748b] hover:bg-[#f8fafc] transition"
                 >
-                  {isRtl ? <LuChevronRight /> : <LuChevronLeft />}
+                  {isRtl ? <FiChevronRight /> : <FiChevronLeft />}
                 </button>
 
-                <h4 className="text-[15px] font-bold text-[#102a43]">
+                <h4 className="text-sm font-bold text-[#102a43]">
                   {isRtl
                     ? `${monthNamesLongAr[calendarMonth.getMonth()]} ${calendarMonth.getFullYear()}`
                     : `${monthNamesLongEn[calendarMonth.getMonth()]} ${calendarMonth.getFullYear()}`}
@@ -638,22 +639,16 @@ export default function LeaveBalances() {
                 <button
                   type="button"
                   onClick={() =>
-                    setCalendarMonth(
-                      new Date(
-                        calendarMonth.getFullYear(),
-                        calendarMonth.getMonth() + 1,
-                        1
-                      )
-                    )
+                    setCalendarMonth(new Date(calendarMonth.getFullYear(), calendarMonth.getMonth() + 1, 1))
                   }
-                  className="w-8 h-8 rounded-lg border border-[#d9e2ec] flex items-center justify-center hover:bg-[#f8fafc] text-[#334e68]"
+                  className="w-8 h-8 rounded-lg border border-[#e2e8f0] flex items-center justify-center text-[#64748b] hover:bg-[#f8fafc] transition"
                 >
-                  {isRtl ? <LuChevronLeft /> : <LuChevronRight />}
+                  {isRtl ? <FiChevronLeft /> : <FiChevronRight />}
                 </button>
               </div>
 
-              {/* Day names header */}
-              <div className="grid grid-cols-7 text-center text-[11px] font-bold text-[#829ab1] uppercase tracking-wider mb-2">
+              {/* Weekdays */}
+              <div className="grid grid-cols-7 text-center text-[11px] font-bold text-[#94a3b8] uppercase tracking-wider mb-2">
                 <span>{isRtl ? "أحد" : "Sun"}</span>
                 <span>{isRtl ? "إثن" : "Mon"}</span>
                 <span>{isRtl ? "ثلا" : "Tue"}</span>
@@ -667,70 +662,54 @@ export default function LeaveBalances() {
               <div className="grid grid-cols-7 gap-1">
                 {calendarDays.map((item, idx) => {
                   if (!item.isCurrentMonth) {
-                    return (
-                      <div
-                        key={`empty-${idx}`}
-                        className="h-10 rounded-md bg-[#f8fafc]/50"
-                      />
-                    );
+                    return <div key={`empty-${idx}`} className="h-9 rounded-lg" />;
                   }
 
-                  const isCasualLeaveDay =
-                    calendarMonth.getMonth() === 4 && item.day === 14;
-                  const isScheduledAnnual =
-                    calendarMonth.getMonth() === 5 &&
-                    item.day >= 22 &&
-                    item.day <= 24;
+                  const isCasualLeaveDay = calendarMonth.getMonth() === 4 && item.day === 14;
+                  const isScheduledAnnual = calendarMonth.getMonth() === 5 && item.day >= 22 && item.day <= 24;
 
                   return (
                     <div
                       key={`day-${item.day}`}
-                      className={`h-10 rounded-lg flex flex-col items-center justify-center text-[13px] font-semibold relative transition-colors ${
+                      className={`h-9 rounded-lg flex flex-col items-center justify-center text-xs font-semibold relative transition ${
                         isCasualLeaveDay
-                          ? "bg-[#e6f4ea] text-[#137333] font-bold border border-[#b7eb8f]"
+                          ? "bg-[#ecfdf5] text-[#059669] font-bold border border-[#a7f3d0]"
                           : isScheduledAnnual
-                          ? "bg-[#e8f1fa] text-[#1d4ed8] font-bold border border-[#bfdbfe]"
-                          : "text-[#334e68] hover:bg-[#f0f4f8]"
+                          ? "bg-[#eff6ff] text-[#2563eb] font-bold border border-[#bfdbfe]"
+                          : "text-[#334155] hover:bg-[#f8fafc]"
                       }`}
                     >
                       <span>{item.day}</span>
-                      {isCasualLeaveDay && (
-                        <span className="w-1.5 h-1.5 rounded-full bg-[#137333] absolute bottom-1" />
-                      )}
-                      {isScheduledAnnual && (
-                        <span className="w-1.5 h-1.5 rounded-full bg-[#1d4ed8] absolute bottom-1" />
-                      )}
                     </div>
                   );
                 })}
               </div>
 
-              {/* Legend */}
-              <div className="flex flex-wrap items-center gap-4 mt-6 pt-4 border-t border-[#edf2f7] text-[12px] text-[#627d98]">
-                <div className="flex items-center gap-1.5">
-                  <span className="w-3 h-3 rounded-full bg-[#e6f4ea] border border-[#b7eb8f]" />
-                  <span>{t("leaveBalances.casualLeave")} (14 May)</span>
+              {/* Footer */}
+              <div className="flex items-center justify-between pt-4 mt-4 border-t border-[#f1f5f9]">
+                <div className="flex items-center gap-3 text-xs text-[#64748b]">
+                  <div className="flex items-center gap-1.5">
+                    <span className="w-2.5 h-2.5 rounded-full bg-[#ecfdf5] border border-[#a7f3d0]" />
+                    <span>Casual</span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <span className="w-2.5 h-2.5 rounded-full bg-[#eff6ff] border border-[#bfdbfe]" />
+                    <span>Annual</span>
+                  </div>
                 </div>
-                <div className="flex items-center gap-1.5">
-                  <span className="w-3 h-3 rounded-full bg-[#e8f1fa] border border-[#bfdbfe]" />
-                  <span>{t("leaveBalances.calendarLegendUpcoming")}</span>
-                </div>
-              </div>
-            </div>
 
-            {/* Modal Footer */}
-            <div className="flex justify-end p-4 bg-[#f8fafc] border-t border-[#edf2f7]">
-              <button
-                type="button"
-                onClick={() => setIsCalendarOpen(false)}
-                className="px-4 py-2 bg-[#102a43] text-white text-[13px] font-semibold rounded-lg hover:bg-[#243b53] transition-colors"
-              >
-                {t("leaveBalances.close")}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
+                <button
+                  type="button"
+                  onClick={() => setIsCalendarOpen(false)}
+                  className="px-4 py-2 bg-[#102a43] text-white text-xs font-semibold rounded-xl hover:bg-[#1a3857] transition"
+                >
+                  {t("leaveBalances.close", "Close")}
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </motion.div>
   );
 }

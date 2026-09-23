@@ -2,32 +2,28 @@ import { useTranslation } from "react-i18next";
 import { motion } from "framer-motion";
 import { FiCheck } from "react-icons/fi";
 
-/* -------------------------------------------------------------------------- */
-/*  Animation vocabulary (same as the other Manager pages)                    */
-/* -------------------------------------------------------------------------- */
 const fadeUp = {
-  hidden: { opacity: 0, y: 10 },
+  hidden: { opacity: 0, y: 8 },
   visible: { opacity: 1, y: 0 },
 };
 
 const staggerContainer = {
   hidden: {},
-  visible: { transition: { staggerChildren: 0.08 } },
+  visible: { transition: { staggerChildren: 0.06 } },
 };
 
-/* -------------------------------------------------------------------------- */
-/*  Data (leadKey points at the existing `managerTasks.*` member names)       */
-/* -------------------------------------------------------------------------- */
 const GOALS = [
   {
     id: "crashFree",
     status: "onTrack",
     progress: 78,
     titleKey: "goalCrashFreeTitle",
+    defaultTitle: "Achieve 98% Crash-free Sessions",
     leadKey: "karimAshraf",
+    defaultLead: "Karim Ashraf",
     items: [
-      { id: "android", labelKey: "itemAndroidCrash", done: true },
-      { id: "ios", labelKey: "itemIosCrash", done: true },
+      { id: "android", labelKey: "itemAndroidCrash", defaultLabel: "Android crash rate below 1.5%", done: true },
+      { id: "ios", labelKey: "itemIosCrash", defaultLabel: "iOS crash rate below 1.5%", done: true },
     ],
   },
   {
@@ -35,32 +31,34 @@ const GOALS = [
     status: "atRisk",
     progress: 54,
     titleKey: "goalApiLatencyTitle",
+    defaultTitle: "Reduce API p95 latency to 200ms",
     leadKey: "youssefLotfy",
+    defaultLead: "Youssef Lotfy",
     items: [
-      { id: "profile", labelKey: "itemProfileEndpoints", done: true },
-      { id: "caching", labelKey: "itemShipCaching", done: false },
+      { id: "profile", labelKey: "itemProfileEndpoints", defaultLabel: "Profile top 20 endpoints", done: true },
+      { id: "caching", labelKey: "itemShipCaching", defaultLabel: "Ship caching layer", done: false },
     ],
   },
 ];
 
-const STATUS_STYLES = {
+// ألوان مطابقة للتصميم بدقة
+const STATUS_CONFIG = {
   onTrack: {
     labelKey: "managerGoals.statusOnTrack",
-    badge: "bg-[#e3f8f1] text-[#147d64]",
-    percent: "text-[#147d64]",
-    bar: "bg-[#2f855a]",
+    defaultLabel: "On track",
+    badge: "bg-[#ecfdf5] text-[#059669]",
+    percent: "text-[#059669]",
+    bar: "bg-[#10b981]",
   },
   atRisk: {
     labelKey: "managerGoals.statusAtRisk",
-    badge: "bg-[#fff3c4] text-[#975a16]",
-    percent: "text-[#d69e2e]",
-    bar: "bg-[#d69e2e]",
+    defaultLabel: "At risk",
+    badge: "bg-[#fefce8] text-[#d97706]",
+    percent: "text-[#d97706]",
+    bar: "bg-[#d97706]",
   },
 };
 
-/* -------------------------------------------------------------------------- */
-/*  Page                                                                      */
-/* -------------------------------------------------------------------------- */
 const TeamGoals = () => {
   const { t } = useTranslation();
 
@@ -69,97 +67,98 @@ const TeamGoals = () => {
       initial="hidden"
       animate="visible"
       variants={staggerContainer}
-      className="w-full space-y-6"
+      className="w-full space-y-6 pb-12 font-sans"
     >
-      {/* Page Header */}
-      <motion.div
-        variants={fadeUp}
-        transition={{ duration: 0.25, ease: "easeOut" }}
-        className="pb-2"
-      >
-        <p className="text-[13px] font-bold uppercase tracking-[0.06em] text-[#6b879f]">
-          {t("portal.managerPortal")} / {t("portal.teamGoalsOkrs")}
+      {/* 1. Breadcrumb + Page Header */}
+      <motion.div variants={fadeUp} transition={{ duration: 0.2, ease: "easeOut" }}>
+        <p className="text-[11px] font-bold tracking-wider text-[#6b879f] uppercase mb-1.5">
+          {t("portal.managerPortal", "MANAGER PORTAL")} / {t("portal.teamGoalsOkrs", "TEAM GOALS & OKRS")}
         </p>
-        <h1 className="mt-[11px] text-[28px] font-bold leading-[1.2] text-[#243b53]">
-          {t("portal.teamGoalsOkrs")}
+        <h1 className="text-lg md:text-[21px] font-bold text-[#1e293b] tracking-tight mt-1">
+          {t("portal.teamGoalsOkrs", "Team Goals & OKRs")}
         </h1>
-        <p className="mt-[3px] text-[15px] text-[#627d98]">{t("managerDashboard.subtitle")}</p>
+        <p className="text-sm text-[#829ab1] mt-1 font-normal">
+          {t(
+            "managerDashboard.subtitle",
+            "Keep your team aligned, supported, and moving forward."
+          )}
+        </p>
       </motion.div>
 
-      {/* Goal cards */}
+      {/* 2. Goal Cards Grid */}
       <motion.div variants={staggerContainer} className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         {GOALS.map((goal, index) => {
-          const styles = STATUS_STYLES[goal.status];
-          const title = t(`managerGoals.${goal.titleKey}`);
+          const config = STATUS_CONFIG[goal.status];
+          const title = t(`managerGoals.${goal.titleKey}`, goal.defaultTitle);
+          const leadName = t(`managerTasks.${goal.leadKey}`, goal.defaultLead);
 
           return (
             <motion.article
               key={goal.id}
               variants={fadeUp}
-              transition={{ duration: 0.3, ease: "easeOut", delay: index * 0.05 }}
-              className="rounded-[20px] border border-[#d9e2ec] bg-white p-6 pb-[22px] shadow-[0_2px_6px_rgba(36,59,83,0.08)]"
+              transition={{ duration: 0.25, ease: "easeOut", delay: index * 0.05 }}
+              className="rounded-2xl border border-[#e2e8f0] bg-white p-6 shadow-[0_1px_3px_rgba(0,0,0,0.02)] flex flex-col justify-between"
             >
-              {/* Status + percentage */}
-              <div className="flex items-start justify-between">
-                <span
-                  className={`inline-flex rounded-full px-[11px] py-[3px] text-xs font-bold leading-[17px] ${styles.badge}`}
-                >
-                  {t(styles.labelKey)}
-                </span>
-                <span dir="ltr" className={`text-[15px] font-bold leading-[18px] ${styles.percent}`}>
-                  {goal.progress}%
-                </span>
-              </div>
-
-              {/* Title + lead */}
-              <h2 className="mt-[23px] text-[19px] font-bold leading-7 text-[#243b53]">{title}</h2>
-              <p className="mt-1.5 text-[15px] text-[#627d98]">
-                {t("managerGoals.lead", { name: t(`managerTasks.${goal.leadKey}`) })}
-              </p>
-
-              {/* Progress bar */}
-              <div
-                role="progressbar"
-                aria-label={title}
-                aria-valuemin={0}
-                aria-valuemax={100}
-                aria-valuenow={goal.progress}
-                className="mt-[23px] h-[9px] w-full overflow-hidden rounded-full bg-[#e6eef3]"
-              >
-                <motion.div
-                  className={`h-full rounded-full ${styles.bar}`}
-                  initial={{ width: 0 }}
-                  animate={{ width: `${goal.progress}%` }}
-                  transition={{ duration: 0.7, ease: "easeOut", delay: 0.25 + index * 0.05 }}
-                />
-              </div>
-
-              {/* Key results */}
-              <motion.ul
-                variants={staggerContainer}
-                className="mt-[21.5px] flex flex-col gap-[13px]"
-              >
-                {goal.items.map((item) => (
-                  <motion.li
-                    key={item.id}
-                    variants={fadeUp}
-                    transition={{ duration: 0.2, ease: "easeOut" }}
-                    className="flex items-start gap-2 text-[15px] text-[#243b53]"
+              <div>
+                {/* Header: Status Pill + Percentage */}
+                <div className="flex items-center justify-between">
+                  <span
+                    className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold ${config.badge}`}
                   >
-                    <span className="mt-[5px] flex h-[18px] w-[18px] shrink-0 items-center justify-center">
+                    {t(config.labelKey, config.defaultLabel)}
+                  </span>
+                  <span dir="ltr" className={`text-sm font-bold ${config.percent}`}>
+                    {goal.progress}%
+                  </span>
+                </div>
+
+                {/* Title + Lead */}
+                <h2 className="mt-4 text-base md:text-lg font-bold text-[#102a43]">
+                  {title}
+                </h2>
+                <p className="mt-1 text-xs text-[#64748b]">
+                  {t("managerGoals.lead", { name: leadName, defaultValue: `Lead: ${leadName}` })}
+                </p>
+
+                {/* Progress Bar */}
+                <div
+                  role="progressbar"
+                  aria-label={title}
+                  aria-valuemin={0}
+                  aria-valuemax={100}
+                  aria-valuenow={goal.progress}
+                  className="mt-4 h-2 w-full overflow-hidden rounded-full bg-[#f1f5f9]"
+                >
+                  <motion.div
+                    className={`h-full rounded-full ${config.bar}`}
+                    initial={{ width: 0 }}
+                    animate={{ width: `${goal.progress}%` }}
+                    transition={{ duration: 0.6, ease: "easeOut", delay: 0.2 + index * 0.05 }}
+                  />
+                </div>
+              </div>
+
+              {/* Key Results Checklist */}
+              <ul className="mt-6 space-y-2.5">
+                {goal.items.map((item) => (
+                  <li
+                    key={item.id}
+                    className="flex items-center gap-2.5 text-xs md:text-sm text-[#475569]"
+                  >
+                    <span className="flex h-4 w-4 shrink-0 items-center justify-center">
                       {item.done ? (
-                        <FiCheck className="h-[18px] w-[18px] text-[#2f855a]" aria-hidden="true" />
+                        <FiCheck className="h-4 w-4 text-[#10b981]" aria-hidden="true" />
                       ) : (
                         <span
                           aria-hidden="true"
-                          className="block h-[18px] w-[18px] rounded-full border-2 border-[#d69e2e]"
+                          className="h-3.5 w-3.5 rounded-full border-2 border-[#d97706]"
                         />
                       )}
                     </span>
-                    <span>{t(`managerGoals.${item.labelKey}`)}</span>
-                  </motion.li>
+                    <span>{t(`managerGoals.${item.labelKey}`, item.defaultLabel)}</span>
+                  </li>
                 ))}
-              </motion.ul>
+              </ul>
             </motion.article>
           );
         })}

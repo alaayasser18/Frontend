@@ -3,526 +3,193 @@ import { AnimatePresence, motion } from "framer-motion";
 import { useTranslation } from "react-i18next";
 import { FiCalendar } from "react-icons/fi";
 
+const fadeUp = {
+  hidden: { opacity: 0, y: 8 },
+  visible: { opacity: 1, y: 0 },
+};
+
+const staggerContainer = {
+  hidden: {},
+  visible: { transition: { staggerChildren: 0.04 } },
+};
+
+const INITIAL_REQUESTS = [
+  {
+    id: 1,
+    name: "Nour Adel",
+    leaveTypeKey: "annual",
+    defaultLeaveType: "Annual",
+    dates: "Sep 23 - Sep 25",
+    days: 3,
+    reasonKey: "familyTrip",
+    defaultReason: "Family trip",
+    status: "pending",
+  },
+  {
+    id: 2,
+    name: "Omar Fathy",
+    leaveTypeKey: "sick",
+    defaultLeaveType: "Sick",
+    dates: "Sep 19",
+    days: 1,
+    reasonKey: "medicalAppointment",
+    defaultReason: "Medical appointment",
+    status: "pending",
+  },
+];
+
 const TeamLeaveApprovals = () => {
-  const { t, i18n } = useTranslation();
-
-  const [requests, setRequests] = useState([
-    {
-      id: 1,
-      name: "Nour Adel",
-      initials: "NA",
-      role: "softwareEngineer",
-      leaveType: "annual",
-      startDate: "2026-09-23",
-      endDate: "2026-09-25",
-      days: 3,
-      reason: "familyTrip",
-      status: "pending",
-    },
-    {
-      id: 2,
-      name: "Omar Fathy",
-      initials: "OF",
-      role: "backendDeveloper",
-      leaveType: "sick",
-      startDate: "2026-09-19",
-      endDate: "2026-09-19",
-      days: 1,
-      reason: "medicalAppointment",
-      status: "pending",
-    },
-    {
-      id: 3,
-      name: "Karim Ashraf",
-      initials: "KA",
-      role: "backendDeveloper",
-      leaveType: "annual",
-      startDate: "2026-09-22",
-      endDate: "2026-09-27",
-      days: 6,
-      reason: "personalTime",
-      status: "pending",
-    },
-    {
-      id: 4,
-      name: "Salma Nabil",
-      initials: "SN",
-      role: "qaEngineer",
-      leaveType: "annual",
-      startDate: "2026-09-25",
-      endDate: "2026-09-29",
-      days: 5,
-      reason: "personalTime",
-      status: "pending",
-    },
-    {
-      id: 5,
-      name: "Salma Nabil",
-      initials: "SN",
-      role: "frontendDeveloper",
-      leaveType: "sick",
-      startDate: "2026-09-30",
-      endDate: "2026-10-01",
-      days: 2,
-      reason: "personalAppointment",
-      status: "pending",
-    },
-  ]);
-
-  // ----------------------------------------
-  // DATE FORMAT
-  // ----------------------------------------
-
-  const formatDate = (date) => {
-    return new Intl.DateTimeFormat(
-      i18n.language === "ar" ? "ar-EG" : "en-US",
-      {
-        month: "short",
-        day: "numeric",
-      }
-    ).format(new Date(`${date}T00:00:00`));
-  };
-
-  const formatDateRange = (request) => {
-    const start = formatDate(request.startDate);
-
-    if (request.startDate === request.endDate) {
-      return start;
-    }
-
-    return `${start} - ${formatDate(request.endDate)}`;
-  };
-
-  // ----------------------------------------
-  // APPROVE / DECLINE
-  // ----------------------------------------
+  const { t } = useTranslation();
+  const [requests, setRequests] = useState(INITIAL_REQUESTS);
 
   const handleDecision = (id, status) => {
     setRequests((current) =>
       current.map((request) =>
-        request.id === id
-          ? {
-              ...request,
-              status,
-            }
-          : request
+        request.id === id ? { ...request, status } : request
       )
     );
   };
 
   return (
-    <div className="w-full">
+    <motion.div
+      initial="hidden"
+      animate="visible"
+      variants={staggerContainer}
+      className="w-full space-y-6 pb-12 font-sans"
+    >
       {/* ======================================
-          PAGE HEADER
+          1. BREADCRUMB + PAGE HEADER
       ====================================== */}
-
-      <motion.div
-        initial={{
-          opacity: 0,
-          y: 8,
-        }}
-        animate={{
-          opacity: 1,
-          y: 0,
-        }}
-        transition={{
-          duration: 0.35,
-        }}
-        className="mb-7"
-      >
-        {/* Breadcrumb */}
-
-        <div className="mb-3 text-[13px] font-bold uppercase tracking-[1px] text-[#6485a4]">
-          {t("managerLeave.breadcrumb")}
-        </div>
-
-        {/* Title */}
-
-        <h1
-          className="
-            text-[28px]
-            font-bold
-            leading-tight
-            text-[#1c364f]
-            max-[760px]:text-[24px]
-          "
-        >
-          {t("managerLeave.title")}
+      <motion.div variants={fadeUp} transition={{ duration: 0.2, ease: "easeOut" }}>
+        <p className="text-[11px] font-bold tracking-wider text-[#6b879f] uppercase">
+          {t("managerLeave.breadcrumb", "MANAGER PORTAL / TEAM LEAVE APPROVALS")}
+        </p>
+        <h1 className="text-lg md:text-[21px] font-bold text-[#1e293b] tracking-tight mt-1">
+          {t("managerLeave.title", "Team Leave Approvals")}
         </h1>
-
-        {/* Subtitle */}
-
-        <p className="mt-2 text-[15px] text-[#64809d]">
-          {t("managerLeave.subtitle")}
+        <p className="text-sm text-[#829ab1] mt-1 font-normal">
+          {t(
+            "managerLeave.subtitle",
+            "Keep your team aligned, supported, and moving forward."
+          )}
         </p>
       </motion.div>
 
       {/* ======================================
-          MAIN CARD
+          2. LEAVE APPROVALS TABLE CARD
       ====================================== */}
-
-      <motion.section
-        initial={{
-          opacity: 0,
-          y: 14,
-        }}
-        animate={{
-          opacity: 1,
-          y: 0,
-        }}
-        transition={{
-          duration: 0.4,
-          delay: 0.08,
-        }}
-        className="
-          overflow-hidden
-          rounded-[16px]
-          border
-          border-[#d6e0e7]
-          bg-white
-          p-[21px]
-          shadow-[0_1px_3px_rgba(28,54,79,0.08)]
-        "
+      <motion.div
+        variants={fadeUp}
+        transition={{ duration: 0.25, ease: "easeOut" }}
+        className="rounded-2xl border border-[#e2e8f0] bg-white shadow-[0_1px_3px_rgba(0,0,0,0.02)] overflow-hidden"
       >
-        {/* ======================================
-            TABLE
-        ====================================== */}
-
         <div className="overflow-x-auto">
-          <div className="min-w-[850px]">
+          <table className="w-full text-left rtl:text-right border-collapse">
+            <thead>
+              <tr className="bg-[#f8fafc]/60 border-b border-[#f1f5f9] text-[11px] font-bold tracking-wider text-[#94a3b8]">
+                <th className="py-4 px-6">{t("managerLeave.table.member", "MEMBER")}</th>
+                <th className="py-4 px-6">{t("managerLeave.table.leaveType", "LEAVE TYPE")}</th>
+                <th className="py-4 px-6">{t("managerLeave.table.dates", "DATES")}</th>
+                <th className="py-4 px-6">{t("managerLeave.table.days", "DAYS")}</th>
+                <th className="py-4 px-6">{t("managerLeave.table.reason", "REASON")}</th>
+                <th className="py-4 px-6 text-right rtl:text-left">
+                  <span className="sr-only">{t("common.actions", "Actions")}</span>
+                </th>
+              </tr>
+            </thead>
 
-            {/* TABLE HEADER */}
+            <tbody className="divide-y divide-[#f1f5f9]">
+              {requests.map((request) => (
+                <tr
+                  key={request.id}
+                  className="hover:bg-[#f8fafc]/40 transition"
+                >
+                  {/* Member Name */}
+                  <td className="py-5 px-6 text-sm font-semibold text-[#102a43]">
+                    {request.name}
+                  </td>
 
-            <div
-              className="
-                grid
-                grid-cols-[1.35fr_1fr_1.1fr_.6fr_1.45fr_1.05fr]
-                items-center
-                gap-4
-                rounded-t-[2px]
-                bg-[#f3f6f8]
-                px-[22px]
-                py-[17px]
-                text-[11px]
-                font-bold
-                uppercase
-                tracking-[0.4px]
-                text-[#7893aa]
-              "
-            >
-              <div>Member</div>
+                  {/* Leave Type */}
+                  <td className="py-5 px-6 text-sm text-[#475569]">
+                    {t(
+                      `managerLeave.leaveTypes.${request.leaveTypeKey}`,
+                      request.defaultLeaveType
+                    )}
+                  </td>
 
-              <div>Leave Type</div>
+                  {/* Dates */}
+                  <td className="py-5 px-6 text-sm text-[#475569]">
+                    {request.dates}
+                  </td>
 
-              <div>Dates</div>
+                  {/* Days */}
+                  <td className="py-5 px-6 text-sm text-[#475569]">
+                    {request.days}
+                  </td>
 
-              <div>Days</div>
+                  {/* Reason */}
+                  <td className="py-5 px-6 text-sm text-[#475569]">
+                    {t(
+                      `managerLeave.reasons.${request.reasonKey}`,
+                      request.defaultReason
+                    )}
+                  </td>
 
-              <div>Reason</div>
-
-              {/* Actions column has no title */}
-
-              <div></div>
-            </div>
-
-            {/* ======================================
-                TABLE BODY
-            ====================================== */}
-
-            <div>
-              <AnimatePresence initial={false}>
-                {requests.map((request, index) => (
-                  <motion.div
-                    key={request.id}
-                    layout
-                    initial={{
-                      opacity: 0,
-                      y: 8,
-                    }}
-                    animate={{
-                      opacity: 1,
-                      y: 0,
-                    }}
-                    exit={{
-                      opacity: 0,
-                      x: -15,
-                      height: 0,
-                      overflow: "hidden",
-                    }}
-                    transition={{
-                      duration: 0.25,
-                      delay: index * 0.04,
-                    }}
-                    className="
-                      grid
-                      grid-cols-[1.35fr_1fr_1.1fr_.6fr_1.45fr_1.05fr]
-                      items-center
-                      gap-4
-                      border-b
-                      border-[#e7edf1]
-                      px-[22px]
-                      py-[18px]
-                      text-[13px]
-                    "
-                  >
-                    {/* ==================================
-                        MEMBER
-                    ================================== */}
-
-                    <div className="flex min-w-0 items-center gap-3">
-                      <motion.div
-                        whileHover={{
-                          scale: 1.05,
-                        }}
-                        transition={{
-                          duration: 0.15,
-                        }}
-                        className="
-                          flex
-                          h-[34px]
-                          w-[34px]
-                          shrink-0
-                          items-center
-                          justify-center
-                          rounded-full
-                          bg-[#edf2f5]
-                          text-[10px]
-                          font-bold
-                          text-[#496983]
-                        "
-                      >
-                        {request.initials}
-                      </motion.div>
-
-                      <div className="min-w-0">
-                        <p
-                          className="
-                            truncate
-                            font-bold
-                            text-[#17344f]
-                          "
+                  {/* Actions / Status */}
+                  <td className="py-5 px-6 text-right rtl:text-left whitespace-nowrap">
+                    {request.status === "pending" ? (
+                      <div className="inline-flex items-center gap-4">
+                        <button
+                          type="button"
+                          onClick={() => handleDecision(request.id, "approved")}
+                          className="text-xs font-semibold text-[#059669] hover:text-[#047857] transition"
                         >
-                          {request.name}
-                        </p>
-
-                        <p
-                          className="
-                            mt-[3px]
-                            truncate
-                            text-[11px]
-                            text-[#8aa0b3]
-                          "
+                          {t("managerLeave.actions.approve", "Approve")}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleDecision(request.id, "rejected")}
+                          className="text-xs font-semibold text-[#dc2626] hover:text-[#b91c1c] transition"
                         >
-                          {t(
-                            `managerLeave.roles.${request.role}`
-                          )}
-                        </p>
+                          {t("managerLeave.actions.decline", "Decline")}
+                        </button>
                       </div>
-                    </div>
-
-                    {/* ==================================
-                        LEAVE TYPE
-                    ================================== */}
-
-                    <div className="text-[#36536d]">
-                      {t(
-                        `managerLeave.leaveTypes.${request.leaveType}`
-                      )}
-                    </div>
-
-                    {/* ==================================
-                        DATES
-                    ================================== */}
-
-                    <div className="text-[#36536d]">
-                      {formatDateRange(request)}
-                    </div>
-
-                    {/* ==================================
-                        DAYS
-                    ================================== */}
-
-                    <div className="text-[#36536d]">
-                      {request.days}
-                    </div>
-
-                    {/* ==================================
-                        REASON
-                    ================================== */}
-
-                    <div className="text-[#36536d]">
-                      {t(
-                        `managerLeave.reasons.${request.reason}`
-                      )}
-                    </div>
-
-                    {/* ==================================
-                        ACTIONS
-                    ================================== */}
-
-                    <div>
-                      {request.status === "pending" ? (
-                        <div className="flex items-center gap-3">
-                          {/* APPROVE */}
-
-                          <motion.button
-                            type="button"
-                            whileHover={{
-                              y: -1,
-                            }}
-                            whileTap={{
-                              scale: 0.96,
-                            }}
-                            onClick={() =>
-                              handleDecision(
-                                request.id,
-                                "approved"
-                              )
-                            }
-                            className="
-                              text-[13px]
-                              font-medium
-                              text-[#15926c]
-                              transition-colors
-                              hover:text-[#0d7053]
-                            "
-                          >
-                            {t(
-                              "managerLeave.actions.approve"
-                            )}
-                          </motion.button>
-
-                          {/* DECLINE */}
-
-                          <motion.button
-                            type="button"
-                            whileHover={{
-                              y: -1,
-                            }}
-                            whileTap={{
-                              scale: 0.96,
-                            }}
-                            onClick={() =>
-                              handleDecision(
-                                request.id,
-                                "rejected"
-                              )
-                            }
-                            className="
-                              text-[13px]
-                              font-medium
-                              text-[#e34b50]
-                              transition-colors
-                              hover:text-[#c7363c]
-                            "
-                          >
-                            {t(
-                              "managerLeave.actions.reject"
-                            )}
-                          </motion.button>
-                        </div>
-                      ) : (
-                        <motion.span
-                          initial={{
-                            opacity: 0,
-                            scale: 0.95,
-                          }}
-                          animate={{
-                            opacity: 1,
-                            scale: 1,
-                          }}
-                          className={`
-                            inline-flex
-                            items-center
-                            rounded-full
-                            px-3
-                            py-[5px]
-                            text-[11px]
-                            font-semibold
-
-                            ${
-                              request.status ===
-                              "approved"
-                                ? "bg-[#e8f6f0] text-[#15926c]"
-                                : "bg-[#fff0f0] text-[#d74b50]"
-                            }
-                          `}
-                        >
-                          {request.status === "approved"
-                            ? t("leaves.approved")
-                            : t("leaves.rejected")}
-                        </motion.span>
-                      )}
-                    </div>
-                  </motion.div>
-                ))}
-              </AnimatePresence>
-            </div>
-          </div>
+                    ) : (
+                      <span
+                        className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold ${
+                          request.status === "approved"
+                            ? "bg-[#ecfdf5] text-[#059669]"
+                            : "bg-[#fef2f2] text-[#ef4444]"
+                        }`}
+                      >
+                        {request.status === "approved"
+                          ? t("managerLeave.statusApproved", "Approved")
+                          : t("managerLeave.statusDeclined", "Declined")}
+                      </span>
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
 
-        {/* ======================================
-            EMPTY STATE
-        ====================================== */}
-
+        {/* Empty State */}
         {requests.length === 0 && (
-          <motion.div
-            initial={{
-              opacity: 0,
-              y: 8,
-            }}
-            animate={{
-              opacity: 1,
-              y: 0,
-            }}
-            className="
-              flex
-              min-h-[220px]
-              flex-col
-              items-center
-              justify-center
-              text-center
-            "
-          >
-            <div
-              className="
-                flex
-                h-11
-                w-11
-                items-center
-                justify-center
-                rounded-full
-                bg-[#eef3f6]
-                text-[#5f7d98]
-              "
-            >
-              <FiCalendar size={19} />
+          <div className="flex min-h-[200px] flex-col items-center justify-center p-8 text-center">
+            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#f1f5f9] text-[#64748b]">
+              <FiCalendar size={18} />
             </div>
-
-            <h3
-              className="
-                mt-3
-                text-[15px]
-                font-bold
-                text-[#1c364f]
-              "
-            >
-              {t("managerLeave.empty.title")}
+            <h3 className="mt-3 text-sm font-semibold text-[#102a43]">
+              {t("managerLeave.empty.title", "No leave requests pending")}
             </h3>
-
-            <p
-              className="
-                mt-1
-                text-[12px]
-                text-[#7890a6]
-              "
-            >
-              {t("managerLeave.empty.description")}
+            <p className="mt-1 text-xs text-[#94a3b8]">
+              {t("managerLeave.empty.description", "All team leave requests have been reviewed.")}
             </p>
-          </motion.div>
+          </div>
         )}
-      </motion.section>
-    </div>
+      </motion.div>
+    </motion.div>
   );
 };
 

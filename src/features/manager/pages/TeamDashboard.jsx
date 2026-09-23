@@ -51,7 +51,11 @@ const TeamDashboard = () => {
     >
       {/* Page Header */}
       <motion.div variants={fadeUp} transition={{ duration: 0.25, ease: "easeOut" }}>
-        <h1 className="text-2xl md:text-[28px] font-bold text-[#1e293b] tracking-tight">
+        {/* Breadcrumb — was missing before, matches the UI design */}
+        <p className="text-[11px] font-bold tracking-wider text-[#6b879f] uppercase">
+          {t("managerDashboard.breadcrumb", "Manager Portal / Team Dashboard")}
+        </p>
+        <h1 className="text-lg md:text-[21px] font-bold text-[#1e293b] tracking-tight mt-1">
           {t("managerDashboard.title", "Team Dashboard")}
         </h1>
         <p className="text-sm text-[#64748b] mt-1 font-normal">
@@ -75,7 +79,7 @@ const TeamDashboard = () => {
           <p className="text-[11px] font-bold tracking-wider text-[#94a3b8] uppercase">
             {t("managerDashboard.directReports", "Direct Reports")}
           </p>
-          <p className="text-3xl font-bold text-[#0f172a] mt-2 tracking-tight">8</p>
+          <p className="text-[27px] font-bold text-[#0f172a] mt-2 tracking-tight">8</p>
           <p className="text-xs text-[#64748b] mt-1">
             {t("managerDashboard.directReportsNote", "+1 since last month")}
           </p>
@@ -89,7 +93,7 @@ const TeamDashboard = () => {
           <p className="text-[11px] font-bold tracking-wider text-[#94a3b8] uppercase">
             {t("managerDashboard.activeTasks", "Active Tasks")}
           </p>
-          <p className="text-3xl font-bold text-[#0f172a] mt-2 tracking-tight">14</p>
+          <p className="text-[27px] font-bold text-[#0f172a] mt-2 tracking-tight">14</p>
           <p className="text-xs text-[#64748b] mt-1">
             {t("managerDashboard.activeTasksNote", "Across 8 team members")}
           </p>
@@ -103,7 +107,7 @@ const TeamDashboard = () => {
           <p className="text-[11px] font-bold tracking-wider text-[#94a3b8] uppercase">
             {t("managerDashboard.pendingSubmissions", "Pending Submissions")}
           </p>
-          <p className="text-3xl font-bold text-[#0f172a] mt-2 tracking-tight">3</p>
+          <p className="text-[27px] font-bold text-[#0f172a] mt-2 tracking-tight">3</p>
           <p className="text-xs text-[#64748b] mt-1">
             {t("managerDashboard.pendingSubmissionsNote", "Require your review")}
           </p>
@@ -117,7 +121,7 @@ const TeamDashboard = () => {
           <p className="text-[11px] font-bold tracking-wider text-[#94a3b8] uppercase">
             {t("managerDashboard.attendanceToday", "Attendance Today")}
           </p>
-          <p className="text-3xl font-bold text-[#0f172a] mt-2 tracking-tight">7/8</p>
+          <p className="text-[27px] font-bold text-[#0f172a] mt-2 tracking-tight">7/8</p>
           <p className="text-xs text-[#64748b] mt-1">
             {t("managerDashboard.attendanceTodayNote", "One late check-in")}
           </p>

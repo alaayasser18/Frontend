@@ -1,335 +1,731 @@
-import React, { useState } from 'react';
-import { useTranslation } from 'react-i18next';
+import React, { useState } from "react";
+import { useTranslation } from "react-i18next";
+import { motion, AnimatePresence } from "framer-motion";
+import { FiZap, FiDownload, FiX, FiCheck, FiDollarSign } from "react-icons/fi";
+
+const pageVariants = {
+  hidden: { opacity: 0, y: 16 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.45, ease: "easeOut" },
+  },
+};
+
+const containerVariants = {
+  hidden: {},
+  visible: {
+    transition: {
+      staggerChildren: 0.08,
+    },
+  },
+};
+
+const itemVariants = {
+  hidden: { opacity: 0, y: 14 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: {
+      duration: 0.35,
+      ease: "easeOut",
+    },
+  },
+};
+
+const modalVariants = {
+  hidden: {
+    opacity: 0,
+    scale: 0.94,
+    y: 20,
+  },
+  visible: {
+    opacity: 1,
+    scale: 1,
+    y: 0,
+    transition: {
+      duration: 0.25,
+      ease: "easeOut",
+    },
+  },
+  exit: {
+    opacity: 0,
+    scale: 0.96,
+    y: 10,
+    transition: {
+      duration: 0.18,
+    },
+  },
+};
 
 export default function Payroll() {
-    const { i18n } = useTranslation();
-    const currentLang = i18n.language || 'en';
-    const isArabic = currentLang?.startsWith('ar');
+  const { i18n } = useTranslation();
 
-    const [isModalOpen, setIsModalOpen] = useState(false);
-    const [isSuccess, setIsSuccess] = useState(false);
-    
-    const [workflowDetails, setWorkflowDetails] = useState('');
-    const [workflowOwner, setWorkflowOwner] = useState('');
+  const currentLang = i18n.language || "en";
+  const isArabic = currentLang?.startsWith("ar");
 
-    const content = {
-        en: {
-            title: "Payroll",
-            subtitle: "Monthly compensation execution center.",
-            runBtn: "Finalize & Run Payroll",
-            badgeText: "September 2026 · Ready",
-            formulaText: "Net Salary = Basic Salary + Bonuses - Deductions - Loan Installments",
-            totalPayoutLabel: "total net payout",
-            tableTitle: "Payslips",
-            colEmployee: "EMPLOYEE",
-            colBasicPay: "BASIC PAY",
-            colBonuses: "BONUSES (+)",
-            colDeductions: "DEDUCTIONS (-)",
-            colAdvance: "ADVANCE (-)",
-            colNetPayout: "NET PAYOUT",
-            colStatus: "STATUS",
-            colAction: "ACTION",
-            statusReady: "Ready",
-            statusPending: "Pending Approval",
-            generatePdf: "Generate PDF",
-            modalTitle: "Create workflow record",
-            labelDetails: "Details",
-            placeholderDetails: "Details",
-            labelOwner: "Owner",
-            placeholderOwner: "Owner",
-            cancelBtn: "Cancel",
-            saveBtn: "Save changes",
-            successTitle: "Payroll executed successfully",
-            doneBtn: "Done"
-        },
-        ar: {
-            title: "كشوف المرتبات",
-            subtitle: "مركز تنفيذ التعويضات الشهرية.",
-            runBtn: "إنهاء وتشغيل الرواتب",
-            badgeText: "سبتمبر 2026 · جاهز",
-            formulaText: "الراتب الصافي = الراتب الأساسي + المكافآت - الاستقطاعات - أقساط السلف",
-            totalPayoutLabel: "إجمالي الصافي المستحق",
-            tableTitle: "قسائم الرواتب",
-            colEmployee: "الموظف",
-            colBasicPay: "الراتب الأساسي",
-            colBonuses: "المكافآت (+)",
-            colDeductions: "الاستقطاعات (-)",
-            colAdvance: "السلف (-)",
-            colNetPayout: "الصافي المستحق",
-            colStatus: "الحالة",
-            colAction: "الإجراء",
-            statusReady: "جاهز",
-            statusPending: "قيد الموافقة",
-            generatePdf: "إنشاء PDF",
-            modalTitle: "إنشاء سجل سير العمل",
-            labelDetails: "التفاصيل",
-            placeholderDetails: "التفاصيل",
-            labelOwner: "المالك",
-            placeholderOwner: "المالك",
-            cancelBtn: "إلغاء",
-            saveBtn: "حفظ التغييرات",
-            successTitle: "تم تنفيذ كشوف الرواتب بنجاح",
-            doneBtn: "تم"
-        }
-    };
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isSuccess, setIsSuccess] = useState(false);
 
-    const t = isArabic ? content.ar : content.en;
+  const [workflowDetails, setWorkflowDetails] = useState("");
+  const [workflowOwner, setWorkflowOwner] = useState("");
 
-    const handleSaveWorkflow = (e) => {
-        e.preventDefault();
-        setIsSuccess(true);
-    };
+  const content = {
+    en: {
+      title: "Payroll",
+      subtitle: "Monthly compensation execution center.",
+      runBtn: "Finalize & Run Payroll",
+      badgeText: "September 2026 · Ready",
+      formulaText:
+        "Net Salary = Basic Salary + Bonuses - Deductions - Loan Installments",
+      totalPayoutLabel: "total net payout",
 
-    const handleCloseModal = () => {
-        setIsModalOpen(false);
-        setIsSuccess(false);
-        setWorkflowDetails('');
-        setWorkflowOwner('');
-    };
+      tableTitle: "Payslips",
 
-    return (
-        <div 
-            className="min-h-screen bg-slate-50 p-0 m-0 font-sans relative w-full space-y-6"
-            dir={isArabic ? 'rtl' : 'ltr'}
-        >
-            {/* Header Section */}
-            <header className="flex flex-col md:flex-row justify-between items-start md:items-center bg-transparent py-2 px-1">
-                <div>
-                    <h1 className="text-2xl md:text-3xl font-bold text-slate-900 tracking-tight">
-                        {t.title}
-                    </h1>
-                    <p className="text-sm text-slate-500 mt-1">
-                        {t.subtitle}
-                    </p>
-                </div>
-                
-                <div className="flex items-center gap-4 mt-4 md:mt-0">
-                    <button 
-                        onClick={() => { setIsModalOpen(true); setIsSuccess(false); }}
-                        className="inline-flex items-center gap-1.5 bg-[#1b2a47] hover:bg-[#152138] text-white px-3.5 py-1.5 rounded-lg text-xs font-medium shadow-xs transition-all w-auto whitespace-nowrap"
-                    >
-                        <svg className="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
-                        </svg>
-                        <span>{t.runBtn}</span>
-                    </button>
-                </div>
-            </header>
+      colEmployee: "EMPLOYEE",
+      colBasicPay: "BASIC PAY",
+      colBonuses: "BONUSES (+)",
+      colDeductions: "DEDUCTIONS (-)",
+      colAdvance: "ADVANCE (-)",
+      colNetPayout: "NET PAYOUT",
+      colStatus: "STATUS",
+      colAction: "ACTION",
 
-            {/* Top Summary Banner Card */}
-            <div className="bg-[#f2f9f5] p-6 rounded-2xl shadow-xs border border-[#d8ebe1] relative flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
-                <div className="space-y-3">
-                    <div className="inline-block bg-[#e1f3ea] text-[#1b4d32] border border-[#c5e6d4] px-3 py-1 rounded-full text-xs font-semibold">
-                        {t.badgeText}
-                    </div>
-                    <p className="text-sm md:text-base font-semibold text-[#1b4d32]">
-                        {t.formulaText}
-                    </p>
-                </div>
-                {/* تم تصغير الفونت سايز بتاع الرقم هنا */}
-                <div className="flex items-baseline gap-2 self-end md:self-center">
-                    <span className="text-lg md:text-xl font-bold text-[#1b4d32]">$184,500</span>
-                    <span className="text-xs text-[#527963] font-medium">{t.totalPayoutLabel}</span>
-                </div>
-            </div>
+      statusReady: "Ready",
+      statusPending: "Pending Approval",
+      generatePdf: "Generate PDF",
 
-            {/* Payslips Table Section */}
-            <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-                <div className="p-6 border-b border-slate-100">
-                    <h2 className="text-base font-bold text-slate-900">{t.tableTitle}</h2>
-                </div>
+      modalTitle: "Create workflow record",
+      labelDetails: "Details",
+      placeholderDetails: "Details",
+      labelOwner: "Owner",
+      placeholderOwner: "Owner",
+      cancelBtn: "Cancel",
+      saveBtn: "Save changes",
+      successTitle: "Payroll executed successfully",
+      doneBtn: "Done",
+    },
 
-                <div className="overflow-x-auto">
-                    <table className={`w-full ${isArabic ? 'text-right' : 'text-left'} border-collapse`}>
-                        <thead>
-                            <tr className="border-b border-slate-100 text-slate-400 text-[11px] font-bold tracking-wider">
-                                <th className="p-5">{t.colEmployee}</th>
-                                <th className="p-5">{t.colBasicPay}</th>
-                                <th className="p-5">{t.colBonuses}</th>
-                                <th className="p-5">{t.colDeductions}</th>
-                                <th className="p-5">{t.colAdvance}</th>
-                                <th className="p-5">{t.colNetPayout}</th>
-                                <th className="p-5">{t.colStatus}</th>
-                                <th className={`p-5 ${isArabic ? 'text-left' : 'text-right'}`}>{t.colAction}</th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-slate-100 text-sm text-slate-700">
-                            {/* Row 1 */}
-                            <tr className="hover:bg-slate-50/50 transition-colors">
-                                <td className="p-5 font-semibold text-slate-900">Youssef Lotfy</td>
-                                <td className="p-5 text-slate-600">$3,200</td>
-                                <td className="p-5 text-slate-600">+$250</td>
-                                <td className="p-5 text-slate-600">-$0</td>
-                                <td className="p-5 text-slate-600">-$0</td>
-                                <td className="p-5 font-bold text-slate-900">$3,450</td>
-                                <td className="p-5">
-                                    <span className="inline-block bg-emerald-50 text-emerald-700 border border-emerald-200/60 px-3 py-1 rounded-full text-xs font-semibold">
-                                        {t.statusReady}
-                                    </span>
-                                </td>
-                                <td className={`p-5 ${isArabic ? 'text-left' : 'text-right'}`}>
-                                    <button className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-slate-200 text-slate-700 font-medium text-xs hover:bg-slate-50 transition-colors">
-                                        <svg className="w-3.5 h-3.5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                                        </svg>
-                                        <span>{t.generatePdf}</span>
-                                    </button>
-                                </td>
-                            </tr>
-                            {/* Row 2 */}
-                            <tr className="hover:bg-slate-50/50 transition-colors">
-                                <td className="p-5 font-semibold text-slate-900">Mariam Hassan</td>
-                                <td className="p-5 text-slate-600">$4,100</td>
-                                <td className="p-5 text-slate-600">+$0</td>
-                                <td className="p-5 text-slate-600">-$75</td>
-                                <td className="p-5 text-slate-600">-$0</td>
-                                <td className="p-5 font-bold text-slate-900">$4,025</td>
-                                <td className="p-5">
-                                    <span className="inline-block bg-amber-50 text-amber-800 border border-amber-200/60 px-3 py-1 rounded-full text-xs font-semibold">
-                                        {t.statusPending}
-                                    </span>
-                                </td>
-                                <td className={`p-5 ${isArabic ? 'text-left' : 'text-right'}`}>
-                                    <button className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-slate-200 text-slate-700 font-medium text-xs hover:bg-slate-50 transition-colors">
-                                        <svg className="w-3.5 h-3.5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                                        </svg>
-                                        <span>{t.generatePdf}</span>
-                                    </button>
-                                </td>
-                            </tr>
-                            {/* Row 3 */}
-                            <tr className="hover:bg-slate-50/50 transition-colors">
-                                <td className="p-5 font-semibold text-slate-900">Omar Khaled</td>
-                                <td className="p-5 text-slate-600">$2,800</td>
-                                <td className="p-5 text-slate-600">+$0</td>
-                                <td className="p-5 text-slate-600">-$0</td>
-                                <td className="p-5 text-slate-600">-$400</td>
-                                <td className="p-5 font-bold text-slate-900">$2,400</td>
-                                <td className="p-5">
-                                    <span className="inline-block bg-emerald-50 text-emerald-700 border border-emerald-200/60 px-3 py-1 rounded-full text-xs font-semibold">
-                                        {t.statusReady}
-                                    </span>
-                                </td>
-                                <td className={`p-5 ${isArabic ? 'text-left' : 'text-right'}`}>
-                                    <button className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-slate-200 text-slate-700 font-medium text-xs hover:bg-slate-50 transition-colors">
-                                        <svg className="w-3.5 h-3.5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                                        </svg>
-                                        <span>{t.generatePdf}</span>
-                                    </button>
-                                </td>
-                            </tr>
-                            {/* Row 4 */}
-                            <tr className="hover:bg-slate-50/50 transition-colors">
-                                <td className="p-5 font-semibold text-slate-900">Nour Adel</td>
-                                <td className="p-5 text-slate-600">$3,600</td>
-                                <td className="p-5 text-slate-600">+$0</td>
-                                <td className="p-5 text-slate-600">-$0</td>
-                                <td className="p-5 text-slate-600">-$0</td>
-                                <td className="p-5 font-bold text-slate-900">$3,600</td>
-                                <td className="p-5">
-                                    <span className="inline-block bg-emerald-50 text-emerald-700 border border-emerald-200/60 px-3 py-1 rounded-full text-xs font-semibold">
-                                        {t.statusReady}
-                                    </span>
-                                </td>
-                                <td className={`p-5 ${isArabic ? 'text-left' : 'text-right'}` }>
-                                    <button className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-slate-200 text-slate-700 font-medium text-xs hover:bg-slate-50 transition-colors">
-                                        <svg className="w-3.5 h-3.5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                                        </svg>
-                                        <span>{t.generatePdf}</span>
-                                    </button>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
+    ar: {
+      title: "كشوف المرتبات",
+      subtitle: "مركز تنفيذ التعويضات الشهرية.",
+      runBtn: "إنهاء وتشغيل الرواتب",
+      badgeText: "سبتمبر 2026 · جاهز",
+      formulaText:
+        "الراتب الصافي = الراتب الأساسي + المكافآت - الاستقطاعات - أقساط السلف",
+      totalPayoutLabel: "إجمالي الصافي المستحق",
 
-            {/* Modal / Popup Form */}
-            {isModalOpen && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-xs p-4">
-                    <div className="bg-white rounded-2xl shadow-xl border border-slate-100 w-full max-w-xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
-                        
-                        {!isSuccess ? (
-                            <>
-                                {/* Modal Header */}
-                                <div className="flex justify-between items-center px-6 py-5 border-b border-slate-100">
-                                    <h3 className="text-lg font-bold text-slate-900">{t.modalTitle}</h3>
-                                    <button 
-                                        onClick={handleCloseModal}
-                                        className="text-slate-400 hover:text-slate-600 transition-colors p-1 rounded-lg hover:bg-slate-100"
-                                    >
-                                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
-                                        </svg>
-                                    </button>
-                                </div>
+      tableTitle: "قسائم الرواتب",
 
-                                {/* Modal Body */}
-                                <div className="p-6 grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                    <div className="space-y-1.5">
-                                        <label className="block text-xs font-semibold text-slate-700">{t.labelDetails}</label>
-                                        <input 
-                                            type="text"
-                                            value={workflowDetails}
-                                            onChange={(e) => setWorkflowDetails(e.target.value)}
-                                            placeholder={t.placeholderDetails}
-                                            className="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:border-slate-400 transition-colors"
-                                        />
-                                    </div>
-                                    <div className="space-y-1.5">
-                                        <label className="block text-xs font-semibold text-slate-700">{t.labelOwner}</label>
-                                        <input 
-                                            type="text"
-                                            value={workflowOwner}
-                                            onChange={(e) => setWorkflowOwner(e.target.value)}
-                                            placeholder={t.placeholderOwner}
-                                            className="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:border-slate-400 transition-colors"
-                                        />
-                                    </div>
-                                </div>
+      colEmployee: "الموظف",
+      colBasicPay: "الراتب الأساسي",
+      colBonuses: "المكافآت (+)",
+      colDeductions: "الاستقطاعات (-)",
+      colAdvance: "السلف (-)",
+      colNetPayout: "الصافي المستحق",
+      colStatus: "الحالة",
+      colAction: "الإجراء",
 
-                                {/* Modal Footer Buttons */}
-                                <div className="flex justify-end items-center gap-3 px-6 py-4 border-t border-slate-100 bg-white">
-                                    <button 
-                                        type="button"
-                                        onClick={handleCloseModal}
-                                        className="px-5 py-2.5 rounded-xl border border-slate-200 text-slate-700 font-semibold text-xs hover:bg-slate-50 transition-colors"
-                                    >
-                                        {t.cancelBtn}
-                                    </button>
-                                    <button 
-                                        type="button"
-                                        onClick={handleSaveWorkflow}
-                                        className="px-5 py-2.5 rounded-xl bg-[#1b2a47] hover:bg-[#152138] text-white font-semibold text-xs shadow-sm transition-all"
-                                    >
-                                        {t.saveBtn}
-                                    </button>
-                                </div>
-                            </>
-                        ) : (
-                            /* Success View */
-                            <div className="p-10 text-center flex flex-col items-center justify-center space-y-6">
-                                <div className="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto shadow-inner">
-                                    <svg className="w-8 h-8 stroke-[3]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7" />
-                                    </svg>
-                                </div>
-                                <h3 className="text-xl font-bold text-slate-900">{t.successTitle}</h3>
-                                <button 
-                                    onClick={handleCloseModal}
-                                    className="px-8 py-2.5 rounded-xl bg-[#1b2a47] hover:bg-[#152138] text-white font-semibold text-xs shadow-md transition-all w-full max-w-[180px]"
-                                >
-                                    {t.doneBtn}
-                                </button>
-                            </div>
-                        )}
+      statusReady: "جاهز",
+      statusPending: "قيد الموافقة",
+      generatePdf: "إنشاء PDF",
 
-                    </div>
-                </div>
-            )}
+      modalTitle: "إنشاء سجل سير العمل",
+      labelDetails: "التفاصيل",
+      placeholderDetails: "التفاصيل",
+      labelOwner: "المالك",
+      placeholderOwner: "المالك",
+      cancelBtn: "إلغاء",
+      saveBtn: "حفظ التغييرات",
+      successTitle: "تم تنفيذ كشوف الرواتب بنجاح",
+      doneBtn: "تم",
+    },
+  };
+
+  const t = isArabic ? content.ar : content.en;
+
+  const handleSaveWorkflow = (e) => {
+    e.preventDefault();
+    setIsSuccess(true);
+  };
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    setIsSuccess(false);
+    setWorkflowDetails("");
+    setWorkflowOwner("");
+  };
+
+  return (
+    <motion.div
+      dir={isArabic ? "rtl" : "ltr"}
+      className="w-full space-y-6"
+      initial="hidden"
+      animate="visible"
+      variants={containerVariants}
+    >
+      {/* ================= HEADER ================= */}
+      <motion.div
+        variants={pageVariants}
+        className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between"
+      >
+        <div>
+          <p className="text-[11px] font-bold tracking-wider text-[#6b879f] uppercase">
+            HR Management
+          </p>
+
+          <h1 className="mt-1 text-lg font-bold tracking-tight text-[#1e293b] md:text-[21px]">
+            {t.title}
+          </h1>
+
+          <p className="mt-1 text-sm font-normal text-[#64748b]">
+            {t.subtitle}
+          </p>
         </div>
-    );
+
+        <button
+          onClick={() => {
+            setIsModalOpen(true);
+            setIsSuccess(false);
+          }}
+          className="flex items-center justify-center gap-2 rounded-lg bg-[#243B53] px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-[#1c2f42]"
+        >
+          <FiZap size={15} />
+          {t.runBtn}
+        </button>
+      </motion.div>
+
+      {/* ================= SUMMARY CARD ================= */}
+      <motion.div
+        variants={itemVariants}
+        className="rounded-2xl border border-[#e2e8f0]/80 bg-white p-5 shadow-[0_1px_3px_rgba(0,0,0,0.03)] transition-shadow duration-200 hover:shadow-md"
+      >
+        <div className="flex flex-col gap-5 md:flex-row md:items-center md:justify-between">
+          <div className="space-y-3">
+            {/* Status Badge */}
+            <span
+              className="
+                inline-flex
+                items-center
+                gap-1.5
+                rounded-full
+                border border-[#d1fae5]
+                bg-[#ecfdf5]
+                px-3
+                py-1
+                text-xs
+                font-semibold
+                text-[#059669]
+              "
+            >
+              <span className="h-1.5 w-1.5 rounded-full bg-[#10b981]" />
+              {t.badgeText}
+            </span>
+
+            {/* Formula */}
+            <div className="flex items-start gap-3">
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#eff6ff] text-[#3b82f6]">
+                <FiDollarSign size={17} />
+              </div>
+
+              <p className="max-w-3xl text-sm font-semibold leading-6 text-[#1e293b]">
+                {t.formulaText}
+              </p>
+            </div>
+          </div>
+
+          {/* Total */}
+          <div className="rounded-xl bg-[#f8fafc] px-5 py-4 md:min-w-[220px]">
+            <p className="text-[11px] font-bold tracking-wider text-[#94a3b8] uppercase">
+              {t.totalPayoutLabel}
+            </p>
+
+            <p className="mt-1 text-[27px] font-bold tracking-tight text-[#0f172a]">
+              $184,500
+            </p>
+          </div>
+        </div>
+      </motion.div>
+
+      {/* ================= PAYSLIPS ================= */}
+      <motion.div
+        variants={itemVariants}
+        className="overflow-hidden rounded-2xl border border-[#e2e8f0]/80 bg-white shadow-[0_1px_3px_rgba(0,0,0,0.03)]"
+      >
+        {/* Section Header */}
+        <div className="flex items-center gap-3 border-b border-[#f1f5f9] p-5">
+          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#eff6ff] text-[#3b82f6]">
+            <FiDollarSign size={17} />
+          </div>
+
+          <h2 className="text-base font-bold text-[#1e293b]">{t.tableTitle}</h2>
+        </div>
+
+        {/* Table */}
+        <div className="overflow-x-auto">
+          <table
+            className={`w-full min-w-[1050px] border-collapse ${
+              isArabic ? "text-right" : "text-left"
+            }`}
+          >
+            <thead>
+              <tr className="border-b border-[#f1f5f9]">
+                <th className="p-5 text-[11px] font-bold tracking-wider text-[#94a3b8] uppercase">
+                  {t.colEmployee}
+                </th>
+
+                <th className="p-5 text-[11px] font-bold tracking-wider text-[#94a3b8] uppercase">
+                  {t.colBasicPay}
+                </th>
+
+                <th className="p-5 text-[11px] font-bold tracking-wider text-[#94a3b8] uppercase">
+                  {t.colBonuses}
+                </th>
+
+                <th className="p-5 text-[11px] font-bold tracking-wider text-[#94a3b8] uppercase">
+                  {t.colDeductions}
+                </th>
+
+                <th className="p-5 text-[11px] font-bold tracking-wider text-[#94a3b8] uppercase">
+                  {t.colAdvance}
+                </th>
+
+                <th className="p-5 text-[11px] font-bold tracking-wider text-[#94a3b8] uppercase">
+                  {t.colNetPayout}
+                </th>
+
+                <th className="p-5 text-[11px] font-bold tracking-wider text-[#94a3b8] uppercase">
+                  {t.colStatus}
+                </th>
+
+                <th
+                  className={`p-5 text-[11px] font-bold tracking-wider text-[#94a3b8] uppercase ${
+                    isArabic ? "text-left" : "text-right"
+                  }`}
+                >
+                  {t.colAction}
+                </th>
+              </tr>
+            </thead>
+
+            <tbody className="text-sm">
+              {/* ================= ROW 1 ================= */}
+              <tr className="border-b border-[#f1f5f9] transition hover:bg-[#f8fafc]">
+                <td className="p-5 font-bold text-[#1e293b]">Youssef Lotfy</td>
+
+                <td className="p-5 text-[#475569]">$3,200</td>
+
+                <td className="p-5 text-[#475569]">+$250</td>
+
+                <td className="p-5 text-[#64748b]">-$0</td>
+
+                <td className="p-5 text-[#64748b]">-$0</td>
+
+                <td className="p-5 font-bold text-[#0f172a]">$3,450</td>
+
+                <td className="p-5">
+                  <span
+                    className="
+                      inline-flex
+                      items-center
+                      gap-1.5
+                      rounded-full
+                      border border-[#d1fae5]
+                      bg-[#ecfdf5]
+                      px-3
+                      py-1
+                      text-xs
+                      font-semibold
+                      text-[#059669]
+                    "
+                  >
+                    <span className="h-1.5 w-1.5 rounded-full bg-[#10b981]" />
+                    {t.statusReady}
+                  </span>
+                </td>
+
+                <td className={`p-5 ${isArabic ? "text-left" : "text-right"}`}>
+                  <button
+                    className="
+                      inline-flex
+                      items-center
+                      gap-1.5
+                      rounded-lg
+                      border border-[#e2e8f0]
+                      bg-white
+                      px-3.5
+                      py-2
+                      text-xs
+                      font-semibold
+                      text-[#475569]
+                      transition
+                      hover:bg-[#f8fafc]
+                    "
+                  >
+                    <FiDownload size={13} />
+                    {t.generatePdf}
+                  </button>
+                </td>
+              </tr>
+
+              {/* ================= ROW 2 ================= */}
+              <tr className="border-b border-[#f1f5f9] transition hover:bg-[#f8fafc]">
+                <td className="p-5 font-bold text-[#1e293b]">Mariam Hassan</td>
+
+                <td className="p-5 text-[#475569]">$4,100</td>
+
+                <td className="p-5 text-[#475569]">+$0</td>
+
+                <td className="p-5 text-[#475569]">-$75</td>
+
+                <td className="p-5 text-[#64748b]">-$0</td>
+
+                <td className="p-5 font-bold text-[#0f172a]">$4,025</td>
+
+                <td className="p-5">
+                  <span
+                    className="
+                      inline-flex
+                      items-center
+                      gap-1.5
+                      rounded-full
+                      border border-[#fed7aa]
+                      bg-[#fff7ed]
+                      px-3
+                      py-1
+                      text-xs
+                      font-semibold
+                      text-[#c2410c]
+                    "
+                  >
+                    <span className="h-1.5 w-1.5 rounded-full bg-[#f97316]" />
+                    {t.statusPending}
+                  </span>
+                </td>
+
+                <td className={`p-5 ${isArabic ? "text-left" : "text-right"}`}>
+                  <button
+                    className="
+                      inline-flex
+                      items-center
+                      gap-1.5
+                      rounded-lg
+                      border border-[#e2e8f0]
+                      bg-white
+                      px-3.5
+                      py-2
+                      text-xs
+                      font-semibold
+                      text-[#475569]
+                      transition
+                      hover:bg-[#f8fafc]
+                    "
+                  >
+                    <FiDownload size={13} />
+                    {t.generatePdf}
+                  </button>
+                </td>
+              </tr>
+
+              {/* ================= ROW 3 ================= */}
+              <tr className="border-b border-[#f1f5f9] transition hover:bg-[#f8fafc]">
+                <td className="p-5 font-bold text-[#1e293b]">Omar Khaled</td>
+
+                <td className="p-5 text-[#475569]">$2,800</td>
+
+                <td className="p-5 text-[#475569]">+$0</td>
+
+                <td className="p-5 text-[#64748b]">-$0</td>
+
+                <td className="p-5 text-[#475569]">-$400</td>
+
+                <td className="p-5 font-bold text-[#0f172a]">$2,400</td>
+
+                <td className="p-5">
+                  <span
+                    className="
+                      inline-flex
+                      items-center
+                      gap-1.5
+                      rounded-full
+                      border border-[#d1fae5]
+                      bg-[#ecfdf5]
+                      px-3
+                      py-1
+                      text-xs
+                      font-semibold
+                      text-[#059669]
+                    "
+                  >
+                    <span className="h-1.5 w-1.5 rounded-full bg-[#10b981]" />
+                    {t.statusReady}
+                  </span>
+                </td>
+
+                <td className={`p-5 ${isArabic ? "text-left" : "text-right"}`}>
+                  <button
+                    className="
+                      inline-flex
+                      items-center
+                      gap-1.5
+                      rounded-lg
+                      border border-[#e2e8f0]
+                      bg-white
+                      px-3.5
+                      py-2
+                      text-xs
+                      font-semibold
+                      text-[#475569]
+                      transition
+                      hover:bg-[#f8fafc]
+                    "
+                  >
+                    <FiDownload size={13} />
+                    {t.generatePdf}
+                  </button>
+                </td>
+              </tr>
+
+              {/* ================= ROW 4 ================= */}
+              <tr className="transition hover:bg-[#f8fafc]">
+                <td className="p-5 font-bold text-[#1e293b]">Nour Adel</td>
+
+                <td className="p-5 text-[#475569]">$3,600</td>
+
+                <td className="p-5 text-[#475569]">+$0</td>
+
+                <td className="p-5 text-[#64748b]">-$0</td>
+
+                <td className="p-5 text-[#64748b]">-$0</td>
+
+                <td className="p-5 font-bold text-[#0f172a]">$3,600</td>
+
+                <td className="p-5">
+                  <span
+                    className="
+                      inline-flex
+                      items-center
+                      gap-1.5
+                      rounded-full
+                      border border-[#d1fae5]
+                      bg-[#ecfdf5]
+                      px-3
+                      py-1
+                      text-xs
+                      font-semibold
+                      text-[#059669]
+                    "
+                  >
+                    <span className="h-1.5 w-1.5 rounded-full bg-[#10b981]" />
+                    {t.statusReady}
+                  </span>
+                </td>
+
+                <td className={`p-5 ${isArabic ? "text-left" : "text-right"}`}>
+                  <button
+                    className="
+                      inline-flex
+                      items-center
+                      gap-1.5
+                      rounded-lg
+                      border border-[#e2e8f0]
+                      bg-white
+                      px-3.5
+                      py-2
+                      text-xs
+                      font-semibold
+                      text-[#475569]
+                      transition
+                      hover:bg-[#f8fafc]
+                    "
+                  >
+                    <FiDownload size={13} />
+                    {t.generatePdf}
+                  </button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </motion.div>
+
+      {/* ================= MODAL ================= */}
+      <AnimatePresence>
+        {isModalOpen && (
+          <motion.div
+            className="fixed inset-0 z-50 flex items-center justify-center bg-[#0f172a]/40 p-4 backdrop-blur-[2px]"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+          >
+            <motion.div
+              variants={modalVariants}
+              initial="hidden"
+              animate="visible"
+              exit="exit"
+              className="w-full max-w-xl overflow-hidden rounded-2xl border border-[#e2e8f0]/80 bg-white shadow-xl"
+            >
+              {!isSuccess ? (
+                <>
+                  {/* Modal Header */}
+                  <div className="flex items-center justify-between border-b border-[#f1f5f9] px-6 py-5">
+                    <div>
+                      <h3 className="text-base font-bold text-[#1e293b]">
+                        {t.modalTitle}
+                      </h3>
+
+                      <p className="mt-1 text-xs text-[#64748b] sm:text-sm">
+                        {t.runBtn}
+                      </p>
+                    </div>
+
+                    <button
+                      onClick={handleCloseModal}
+                      className="rounded-lg p-2 text-[#94a3b8] transition hover:bg-[#f8fafc] hover:text-[#475569]"
+                    >
+                      <FiX size={18} />
+                    </button>
+                  </div>
+
+                  {/* Modal Body */}
+                  <div className="grid grid-cols-1 gap-5 p-6 sm:grid-cols-2">
+                    {/* Details */}
+                    <div>
+                      <label className="mb-2 block text-[11px] font-bold tracking-wider text-[#64748b] uppercase">
+                        {t.labelDetails}
+                      </label>
+
+                      <input
+                        type="text"
+                        value={workflowDetails}
+                        onChange={(e) => setWorkflowDetails(e.target.value)}
+                        placeholder={t.placeholderDetails}
+                        className="
+                          w-full
+                          rounded-lg
+                          border border-[#e2e8f0]
+                          bg-white
+                          px-3
+                          py-2.5
+                          text-xs
+                          text-[#475569]
+                          outline-none
+                          transition
+                          placeholder:text-[#94a3b8]
+                          focus:border-[#94a3b8]
+                          focus:ring-2
+                          focus:ring-[#f1f5f9]
+                        "
+                      />
+                    </div>
+
+                    {/* Owner */}
+                    <div>
+                      <label className="mb-2 block text-[11px] font-bold tracking-wider text-[#64748b] uppercase">
+                        {t.labelOwner}
+                      </label>
+
+                      <input
+                        type="text"
+                        value={workflowOwner}
+                        onChange={(e) => setWorkflowOwner(e.target.value)}
+                        placeholder={t.placeholderOwner}
+                        className="
+                          w-full
+                          rounded-lg
+                          border border-[#e2e8f0]
+                          bg-white
+                          px-3
+                          py-2.5
+                          text-xs
+                          text-[#475569]
+                          outline-none
+                          transition
+                          placeholder:text-[#94a3b8]
+                          focus:border-[#94a3b8]
+                          focus:ring-2
+                          focus:ring-[#f1f5f9]
+                        "
+                      />
+                    </div>
+                  </div>
+
+                  {/* Modal Footer */}
+                  <div className="flex items-center justify-end gap-2 border-t border-[#f1f5f9] px-6 py-4">
+                    <button
+                      type="button"
+                      onClick={handleCloseModal}
+                      className="
+                        rounded-lg
+                        border border-[#e2e8f0]
+                        bg-white
+                        px-4
+                        py-2.5
+                        text-xs
+                        font-semibold
+                        text-[#475569]
+                        transition
+                        hover:bg-[#f8fafc]
+                      "
+                    >
+                      {t.cancelBtn}
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={handleSaveWorkflow}
+                      className="
+                        rounded-lg
+                        bg-[#243B53]
+                        px-4
+                        py-2.5
+                        text-xs
+                        font-semibold
+                        text-white
+                        transition
+                        hover:bg-[#1c2f42]
+                      "
+                    >
+                      {t.saveBtn}
+                    </button>
+                  </div>
+                </>
+              ) : (
+                /* ================= SUCCESS ================= */
+                <div className="flex flex-col items-center justify-center p-10 text-center">
+                  <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-[#ecfdf5] text-[#10b981]">
+                    <FiCheck size={26} strokeWidth={2.5} />
+                  </div>
+
+                  <h3 className="mt-5 text-base font-bold text-[#1e293b]">
+                    {t.successTitle}
+                  </h3>
+
+                  <button
+                    onClick={handleCloseModal}
+                    className="
+                      mt-6
+                      w-full
+                      max-w-[180px]
+                      rounded-lg
+                      bg-[#243B53]
+                      px-4
+                      py-2.5
+                      text-sm
+                      font-semibold
+                      text-white
+                      transition
+                      hover:bg-[#1c2f42]
+                    "
+                  >
+                    {t.doneBtn}
+                  </button>
+                </div>
+              )}
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </motion.div>
+  );
 }

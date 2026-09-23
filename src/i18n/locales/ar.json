@@ -206,6 +206,16 @@
       "underReview": "قيد المراجعة",
       "completed": "مكتملة"
     },
+    "employeeTasks": {
+      "t1Title": "تقرير كفاءة العمليات للربع الثاني",
+      "t1Date": "موعد التسليم: 12 يونيو 2026",
+      "t2Title": "تطوير قائمة تأهيل وتدريب الموردين",
+      "t2Date": "موعد التسليم: 15 يونيو 2026",
+      "t3Title": "تحليل واستخلاص رؤى العملاء",
+      "t3Date": "موعد التسليم: 18 يونيو 2026",
+      "newTaskUpdate": "تحديث مهمة جديدة",
+      "submitReview": "إرسال للمراجعة"
+    },
     "priority": {
       "high": "أولوية عالية",
       "medium": "أولوية متوسطة",
@@ -349,7 +359,9 @@
     "score": "النتيجة",
     "improvementPlan": "خطة التحسين",
     "metrics": "المقاييس",
-    "operations": "العمليات"
+    "operations": "العمليات",
+    "exportSuccessTitle": "تم التصدير بنجاح",
+    "exportSuccessMessage": "تم تصدير إعدادات الأداء بنجاح."
   },
   "aiInsights": {
     "title": "رؤى الذكاء الاصطناعي",
@@ -398,55 +410,43 @@
   "reports": {
     "title": "التقارير",
     "subtitle": "تصدير تقارير القوى العاملة المنظمة للقيادة ومسارات التدقيق والمراجعة.",
-
     "generateReport": "إنشاء تقرير",
     "exportPdf": "تصدير بصيغة PDF",
     "exportExcel": "تصدير بصيغة Excel",
-
     "monthlyAttendance": "تقرير الحضور الشهري",
     "payrollSummary": "ملخص الرواتب",
-
     "exportCockpit": "مركز تصدير التقارير",
     "exportDescription": "حدد النطاق والفلاتر ثم اختر التقرير المطلوب تصديره.",
     "dateRange": "النطاق الزمني",
-
     "from": "من",
     "to": "إلى",
     "department": "القسم",
     "branch": "الفرع",
-
     "september2026": "01 سبتمبر – 30 سبتمبر 2026",
     "august2026": "01 أغسطس – 31 أغسطس 2026",
     "july2026": "01 يوليو – 31 يوليو 2026",
     "june2026": "01 يونيو – 31 يونيو 2026",
-
     "allDepartments": "كل الأقسام",
     "engineering": "الهندسة",
     "sales": "المبيعات",
-
     "allBranches": "كل الفروع",
     "cairoHq": "مقر القاهرة الرئيسي",
     "alexandriaHub": "مركز الإسكندرية",
-
     "availableReports": "التقارير المتاحة",
     "reportCount": "تقارير",
     "exportReport": "تصدير التقرير",
-
     "attendance": {
       "title": "ملخص الحضور والتأخير الشهري",
       "description": "استثناءات الحضور، واتجاهات الالتزام بالمواعيد، ومقارنة أداء الفروع."
     },
-
     "payroll": {
       "title": "سجل الرواتب وكشوف المرتبات",
       "description": "إجمالي التعويضات، والخصومات، وحالة إرسال كشوف المرتبات."
     },
-
     "leave": {
       "title": "تدقيق أرصدة واستخدام الإجازات",
       "description": "الاستحقاقات، والاستخدام، والترحيل، والمستندات الداعمة."
     },
-
     "skills": {
       "title": "مراجعة فجوات المهارات والقوى العاملة بالذكاء الاصطناعي",
       "description": "تغطية المهارات القابلة للتفسير والتوصيات المتعلقة بإجراءات القوى العاملة."
@@ -1027,7 +1027,14 @@
     "employee": "موظف",
     "manager": "مدير",
     "hrManager": "مدير موارد بشرية",
-    "administrator": "مسؤول النظام"
+    "administrator": "مسؤول النظام",
+    "exportSuccessTitle": "تم التصدير بنجاح",
+    "exportSuccessMessage": "تم تصدير تقرير لوحة التحكم بنجاح.",
+    "refreshSuccessTitle": "تم تحديث البيانات",
+    "refreshSuccessMessage": "تم تحديث بيانات لوحة التحكم بنجاح.",
+    "refreshing": "جاري تحديث البيانات...",
+    "rangeUpdatedTitle": "تم تحديث النطاق",
+    "rangeUpdatedMessage": "تم تحديث نطاق نمو المستخدمين بنجاح."
   },
   "branchesPage": {
     "breadcrumbApp": "WiseWork",
@@ -1049,7 +1056,15 @@
     "geofenceRadiusLabel": "نطاق السياج الجغرافي (بالمتر)",
     "cancel": "إلغاء",
     "toggleGpsAriaLabel": "تبديل فرض تحديد الموقع للفرع {{name}}",
-    "closeModal": "إغلاق النافذة"
+    "closeModal": "إغلاق النافذة",
+    "exportSuccessTitle": "تم التصدير بنجاح",
+    "exportSuccessMessage": "تم تصدير إعدادات الفروع بنجاح.",
+    "branchAddedToastTitle": "تمت إضافة الفرع",
+    "branchAddedToastMessage": "تمت إضافة الفرع الجديد بنجاح.",
+    "gpsEnabledToastTitle": "تم تفعيل GPS",
+    "gpsEnabledToastMessage": "تم تفعيل نظام تحديد الموقع للفرع {{name}}.",
+    "gpsDisabledToastTitle": "تم تعطيل GPS",
+    "gpsDisabledToastMessage": "تم تعطيل نظام تحديد الموقع للفرع {{name}}."
   },
   "usersPage": {
     "title": "المستخدمون",
@@ -1077,7 +1092,9 @@
     "role": "الدور",
     "department": "القسم",
     "cancel": "إلغاء",
-    "createUser": "إنشاء المستخدم"
+    "createUser": "إنشاء المستخدم",
+    "exportSuccessTitle": "تم التصدير بنجاح",
+    "exportSuccessMessage": "تم تصدير إعدادات المستخدمين بنجاح."
   },
   "auditLogs": {
     "title": "سجلات التدقيق",
@@ -1085,7 +1102,6 @@
     "breadcrumbAdmin": "الإدارة",
     "breadcrumbApp": "WiseWork",
     "exportConfig": "تصدير التكوين",
-    "exportSuccess": "تم تصدير إعدادات السجل بنجاح.",
     "cardTitle": "سجلات التدقيق",
     "cardSubtitle": "مراجعة الإجراءات الإدارية وأحداث النظام.",
     "searchPlaceholder": "البحث في السجلات...",
@@ -1094,6 +1110,7 @@
     "filterWarning": "تحذير",
     "filterInfo": "معلومات",
     "colAction": "الإجراء",
+    "exportSuccess": "تم تصدير سجل النشاط بنجاح.",
     "colActor": "المنفذ",
     "colTimestamp": "الوقت والتاريخ",
     "colSeverity": "مستوى الأهمية",
@@ -1504,38 +1521,28 @@
     "live": "مباشر",
     "export": "تصدير",
     "viewLive": "المتابعة المباشرة",
-
     "presentToday": "الحاضرون اليوم",
     "acrossAllBranches": "في جميع الفروع",
-
     "lateArrivals": "حالات التأخير",
     "gracePeriod": "فترة سماح 15 دقيقة",
-
     "unexcusedAbsences": "غياب بدون عذر",
     "requiresFollowUp": "يتطلب المتابعة",
-
     "approvedLeave": "الإجازات المعتمدة",
     "today": "اليوم",
-
     "policyLabel": "سياسة الحضور والانصراف",
     "policyText": "فترة السماح البالغة 15 دقيقة مفعّلة. يتم وضع علامة تلقائية على حالات التأخير لمراجعتها ضمن كشوف الرواتب.",
     "viewPolicy": "عرض السياسة",
-
     "searchPlaceholder": "ابحث عن موظف أو رقم الموظف...",
     "allBranches": "جميع الفروع",
     "allShifts": "جميع الورديات",
-
     "branchCairo": "المقر الرئيسي - القاهرة",
     "branchAlex": "الإسكندرية",
     "branchGiza": "الجيزة",
-
     "shiftMorning": "الفترة الصباحية 9–5",
     "shiftEvening": "الفترة المسائية 2–10",
-
     "tableTitle": "سجل الورديات والالتزام بالمواعيد",
     "tableSubtitle": "سجلات حضور الموظفين بشكل مباشر لليوم الحالي.",
     "more": "المزيد",
-
     "colEmployee": "الموظف",
     "colBranch": "الفرع",
     "colShift": "الوردية",
@@ -1546,23 +1553,18 @@
     "colMode": "طريقة التسجيل",
     "colStatus": "الحالة",
     "colAction": "الإجراء",
-
     "modeGPS": "GPS",
     "modeGeofenced": "ضمن نطاق الموقع",
     "modeBiometric": "بصمة حيوية",
     "modeDevice": "جهاز معتمد",
-
     "statusPresent": "حاضر",
     "statusLate": "متأخر",
     "statusAbsent": "غائب",
-
     "manualAdjustment": "تعديل يدوي",
-
     "emp1Name": "يوسف لطفي",
     "emp2Name": "مريم حسن",
     "emp3Name": "أحمد سمير",
     "emp4Name": "نور عادل",
-
     "noResults": "لا توجد سجلات حضور",
     "noResultsDescription": "جرّب تغيير البحث أو معايير التصفية.",
     "showingResults": "عرض {{count}} سجلات",
@@ -1572,15 +1574,12 @@
     "title": "طلبات الإجازات",
     "subtitle": "مراجعة طلبات إجازات الموظفين والموافقة عليها وتوثيق القرارات.",
     "export": "تصدير قائمة الطلبات",
-
     "stats": {
       "pending": "4 طلبات قيد المراجعة",
       "approved": "12 تمت الموافقة عليها هذا الشهر",
       "rejected": "2 مرفوضة"
     },
-
     "queue": "طلبات الموافقة",
-
     "table": {
       "employee": "الموظف",
       "roleDepartment": "الوظيفة / القسم",
@@ -1590,17 +1589,14 @@
       "reason": "السبب والمرفق",
       "actions": "الإجراءات"
     },
-
     "categories": {
       "annual": "سنوية",
       "emergency": "طارئة",
       "medical": "مرضية"
     },
-
     "viewReason": "عرض السبب.pdf",
     "approve": "موافقة",
     "reject": "رفض مع ملاحظة",
-
     "requestsEmployees": {
       "mariam": {
         "name": "مريم حسن",
@@ -1625,7 +1621,6 @@
       }
     }
   },
-
   "employees": {
     "title": "الموظفون",
     "subtitle": "إدارة سجلات الموظفين والأدوار وخطوط التقارير.",
@@ -1634,7 +1629,6 @@
     "search": "البحث بالاسم أو الرقم التعريفي أو الوظيفة أو القسم",
     "viewProfile": "عرض الملف الشخصي",
     "noResults": "لم يتم العثور على موظفين.",
-
     "table": {
       "employee": "الموظف",
       "role": "الوظيفة",
@@ -1643,14 +1637,12 @@
       "status": "الحالة",
       "action": "الإجراء"
     },
-
     "status": {
       "present": "حاضر",
       "late": "متأخر",
       "onLeave": "في إجازة",
       "absent": "غائب"
     },
-
     "data": {
       "youssef": {
         "name": "يوسف لطفي",
@@ -1683,7 +1675,6 @@
         "branch": "فرع الإسكندرية"
       }
     },
-
     "form": {
       "subtitle": "أدخل بيانات الموظف أدناه.",
       "name": "اسم الموظف",
@@ -1698,22 +1689,18 @@
       "status": "الحالة"
     }
   },
-
   "departments": {
     "title": "الأقسام والفرق",
     "subtitle": "إدارة الهيكل التنظيمي والقادة ومسارات العمل.",
     "badge": "الهيكل التنظيمي",
     "search": "البحث في الأقسام",
     "createDepartment": "إنشاء قسم",
-
     "attendance": "حضور",
     "head": "المسؤول",
     "headcount": "عدد الموظفين",
     "activeProjects": "المشاريع النشطة",
-
     "manageMembers": "إدارة الأعضاء",
     "transferEmployee": "نقل موظف",
-
     "transferTitle": "نقل موظف",
     "transferSubtitle": "اختر الموظف والقسم الجديد الذي سيتم نقله إليه.",
     "transferFrom": "النقل من",
@@ -1724,18 +1711,14 @@
     "newDepartment": "القسم الجديد",
     "selectDepartment": "اختر القسم",
     "confirmTransfer": "نقل الموظف",
-
     "remove": "حذف القسم",
     "close": "إغلاق",
-
     "noResults": "لم يتم العثور على أقسام.",
     "noResultsSubtitle": "حاول تعديل البحث والمحاولة مرة أخرى.",
-
     "messages": {
       "created": "تم إنشاء القسم بنجاح.",
       "removed": "تم حذف القسم بنجاح."
     },
-
     "employees": {
       "youssef": "يوسف لطفي",
       "mariam": "مريم حسن",
@@ -1743,7 +1726,6 @@
       "nour": "نور عادل",
       "karim": "كريم أشرف"
     },
-
     "form": {
       "subtitle": "أدخل بيانات القسم أدناه.",
       "name": "اسم القسم",
@@ -1754,7 +1736,6 @@
       "descriptionPlaceholder": "وصف القسم",
       "color": "اللون"
     },
-
     "colors": {
       "blue": "أزرق",
       "purple": "بنفسجي",
@@ -1763,7 +1744,6 @@
       "orange": "برتقالي",
       "green": "أخضر"
     },
-
     "data": {
       "engineering": {
         "name": "الهندسة",
@@ -1797,7 +1777,6 @@
       }
     }
   },
-
   "managerDashboard": {
     "title": "لوحة تحكم الفريق",
     "subtitle": "حافظ على توافق فريقك ودعمه واستمراره في التقدم.",

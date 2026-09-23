@@ -9,10 +9,11 @@ import {
 } from "react-icons/fi";
 import toast from "react-hot-toast";
 import { useTranslation } from "react-i18next";
+import { motion, AnimatePresence } from "framer-motion";
 
 const EvaluationsGoals = () => {
   const { t, i18n } = useTranslation();
-  const isArabic = i18n.language?.startsWith("ar");
+  const isArabic = i18n.language?.toLowerCase().startsWith("ar");
 
   const [isModalOpen, setIsModalOpen] = useState(false);
 
@@ -56,367 +57,540 @@ const EvaluationsGoals = () => {
   };
 
   return (
-    <div
+    <motion.div
       dir={isArabic ? "rtl" : "ltr"}
-      className="w-full min-w-0 text-[#243b53]"
+      className="w-full min-w-0 space-y-6 overflow-x-hidden"
+      initial={{ opacity: 0, y: 16 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{
+        duration: 0.45,
+        ease: "easeOut",
+      }}
     >
-      <div className="w-full min-w-0">
-        {/* Header */}
-        <div className="mb-[26px] flex items-start justify-between">
-          <div className="animate-[fadeIn_0.4s_ease-out]">
-            <p className="mb-[7px] text-[11px] font-semibold uppercase tracking-[1.4px] text-[#6b7785]">
-              {t("hrEvaluationsGoals.eyebrow")}
-            </p>
+      {/* Header */}
+      <motion.div
+        initial={{ opacity: 0, y: 14 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.35 }}
+        className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between"
+      >
+        <div className="min-w-0">
+          <p className="text-[11px] font-bold uppercase tracking-wider text-[#6b879f]">
+            {t("hrEvaluationsGoals.eyebrow")}
+          </p>
 
-            <h1 className="text-[26px] font-semibold tracking-[-0.4px] text-[#243b53]">
-              {t("hrEvaluationsGoals.title")}
-            </h1>
+          <h1 className="mt-1 text-lg font-bold tracking-tight text-[#1e293b] md:text-[21px]">
+            {t("hrEvaluationsGoals.title")}
+          </h1>
 
-            <p className="mt-[7px] text-[14px] text-[#6b7785]">
-              {t("hrEvaluationsGoals.subtitle")}
+          <p className="mt-1 text-sm font-normal text-[#64748b]">
+            {t("hrEvaluationsGoals.subtitle")}
+          </p>
+        </div>
+
+        <motion.button
+          type="button"
+          onClick={() => setIsModalOpen(true)}
+          whileHover={{
+            y: -2,
+            scale: 1.02,
+          }}
+          whileTap={{
+            scale: 0.97,
+          }}
+          transition={{ duration: 0.2 }}
+          className="flex shrink-0 items-center justify-center gap-2 rounded-lg bg-[#243B53] px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-[#1c2f42]"
+        >
+          <FiPlus className="h-4 w-4" />
+
+          {t("hrEvaluationsGoals.launchReviewCycle")}
+        </motion.button>
+      </motion.div>
+
+      {/* Active Review Cycle */}
+      <motion.div
+        initial={{ opacity: 0, y: 14 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{
+          duration: 0.4,
+          delay: 0.08,
+        }}
+        className="rounded-2xl border border-[#e2e8f0]/80 bg-white p-5 shadow-[0_1px_3px_rgba(0,0,0,0.03)] transition-shadow duration-200 hover:shadow-md sm:p-6"
+      >
+        <div className="mb-6 flex items-start justify-between gap-4">
+          <div className="min-w-0">
+            <div className="mb-2 flex items-center gap-2">
+              <span className="h-2 w-2 animate-pulse rounded-full bg-[#10b981]" />
+
+              <span className="text-[11px] font-bold uppercase tracking-wider text-[#059669]">
+                {t("hrEvaluationsGoals.activeCycle")}
+              </span>
+            </div>
+
+            <h2 className="text-base font-bold text-[#1e293b] sm:text-lg">
+              {t("hrEvaluationsGoals.activeCycleTitle")}
+            </h2>
+
+            <p className="mt-1 text-xs text-[#64748b] sm:text-sm">
+              {t("hrEvaluationsGoals.activeCycleDate")}
             </p>
           </div>
 
-          <button
-            onClick={() => setIsModalOpen(true)}
-            className="flex h-[46px] items-center gap-[8px] rounded-[7px] bg-[#243b53] px-[18px] text-[13px] font-medium text-white transition-all duration-200 hover:bg-[#486581] hover:-translate-y-[1px]"
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#eff6ff] text-[#3b82f6]">
+            <FiTrendingUp className="h-[18px] w-[18px]" />
+          </div>
+        </div>
+
+        {/* Progress */}
+        <div className="mb-6">
+          <div className="mb-2 flex items-center justify-between gap-4">
+            <span className="text-xs font-semibold text-[#64748b]">
+              {t("hrEvaluationsGoals.completion")}
+            </span>
+
+            <span className="text-sm font-bold text-[#1e293b]">68%</span>
+          </div>
+
+          <div className="h-2 overflow-hidden rounded-full bg-[#e2e8f0]">
+            <motion.div
+              initial={{ width: 0 }}
+              animate={{ width: "68%" }}
+              transition={{
+                duration: 0.9,
+                ease: "easeOut",
+              }}
+              className="h-full rounded-full bg-[#10b981]"
+            />
+          </div>
+        </div>
+
+        {/* Stats */}
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+          <motion.div
+            whileHover={{
+              y: -3,
+              transition: { duration: 0.2 },
+            }}
+            className="rounded-xl border border-[#e2e8f0] bg-[#f8fafc] p-4"
           >
-            <FiPlus size={17} />
-            {t("hrEvaluationsGoals.launchReviewCycle")}
-          </button>
-        </div>
+            <div className="mb-2 flex items-center gap-2 text-[#10b981]">
+              <FiCheckCircle className="h-4 w-4" />
 
-        {/* Active Review Cycle */}
-        <div className="mb-[22px] animate-[fadeInUp_0.45s_ease-out] rounded-[11px] border border-[#d9e2ec] bg-white p-[22px]">
-          <div className="mb-[20px] flex items-start justify-between">
-            <div>
-              <div className="mb-[7px] flex items-center gap-[7px]">
-                <span className="h-[7px] w-[7px] animate-pulse rounded-full bg-[#3f7d5a]" />
-
-                <span className="text-[11px] font-semibold uppercase tracking-[1.2px] text-[#3f7d5a]">
-                  {t("hrEvaluationsGoals.activeCycle")}
-                </span>
-              </div>
-
-              <h2 className="text-[17px] font-semibold text-[#243b53]">
-                {t("hrEvaluationsGoals.activeCycleTitle")}
-              </h2>
-
-              <p className="mt-[5px] text-[13px] text-[#6b7785]">
-                {t("hrEvaluationsGoals.activeCycleDate")}
-              </p>
-            </div>
-
-            <div className="flex h-[42px] w-[42px] items-center justify-center rounded-[8px] bg-[#f5f7f8] text-[#486581] transition-transform duration-300 hover:scale-105">
-              <FiTrendingUp size={19} />
-            </div>
-          </div>
-
-          {/* Progress */}
-          <div className="mb-[20px]">
-            <div className="mb-[8px] flex items-center justify-between">
-              <span className="text-[12px] font-medium text-[#6b7785]">
-                {t("hrEvaluationsGoals.completion")}
-              </span>
-
-              <span
-                className={`text-[13px] font-semibold text-[#243b53] ${
-                  isArabic ? "text-left" : "text-right"
-                }`}
-              >
-                68%
+              <span className="text-xs font-semibold">
+                {t("hrEvaluationsGoals.completed")}
               </span>
             </div>
 
-            <div className="h-[8px] overflow-hidden rounded-full bg-[#d9e2ec]">
-              <div className="h-full w-[68%] origin-left animate-[progress_1s_ease-out] rounded-full bg-[#3f7d5a]" />
-            </div>
-          </div>
+            <p className="text-xl font-bold tracking-tight text-[#0f172a]">
+              57
+            </p>
+          </motion.div>
 
-          {/* Stats */}
-          <div className="grid grid-cols-3 gap-[14px]">
-            <div className="rounded-[8px] border border-[#d9e2ec] bg-[#f5f7f8] p-[14px] transition-all duration-200 hover:-translate-y-[2px] hover:shadow-sm">
-              <div className="mb-[8px] flex items-center gap-[8px] text-[#3f7d5a]">
-                <FiCheckCircle size={16} />
+          <motion.div
+            whileHover={{
+              y: -3,
+              transition: { duration: 0.2 },
+            }}
+            className="rounded-xl border border-[#e2e8f0] bg-[#f8fafc] p-4"
+          >
+            <div className="mb-2 flex items-center gap-2 text-[#f97316]">
+              <FiClock className="h-4 w-4" />
 
-                <span className="text-[12px] font-medium">
-                  {t("hrEvaluationsGoals.completed")}
-                </span>
-              </div>
-
-              <p className="text-[13px] font-semibold text-[#243b53]">57</p>
-            </div>
-
-            <div className="rounded-[8px] border border-[#d9e2ec] bg-[#f5f7f8] p-[14px] transition-all duration-200 hover:-translate-y-[2px] hover:shadow-sm">
-              <div className="mb-[8px] flex items-center gap-[8px] text-[#c58b2a]">
-                <FiClock size={16} />
-
-                <span className="text-[12px] font-medium">
-                  {t("hrEvaluationsGoals.pending")}
-                </span>
-              </div>
-
-              <p className="text-[13px] font-semibold text-[#243b53]">26</p>
+              <span className="text-xs font-semibold">
+                {t("hrEvaluationsGoals.pending")}
+              </span>
             </div>
 
-            <div className="rounded-[8px] border border-[#d9e2ec] bg-[#f5f7f8] p-[14px] transition-all duration-200 hover:-translate-y-[2px] hover:shadow-sm">
-              <div className="mb-[8px] flex items-center gap-[8px] text-[#486581]">
-                <FiUsers size={16} />
+            <p className="text-xl font-bold tracking-tight text-[#0f172a]">
+              26
+            </p>
+          </motion.div>
 
-                <span className="text-[12px] font-medium">
-                  {t("hrEvaluationsGoals.employees")}
-                </span>
-              </div>
+          <motion.div
+            whileHover={{
+              y: -3,
+              transition: { duration: 0.2 },
+            }}
+            className="rounded-xl border border-[#e2e8f0] bg-[#f8fafc] p-4"
+          >
+            <div className="mb-2 flex items-center gap-2 text-[#3b82f6]">
+              <FiUsers className="h-4 w-4" />
 
-              <p className="text-[13px] font-semibold text-[#243b53]">4</p>
+              <span className="text-xs font-semibold">
+                {t("hrEvaluationsGoals.employees")}
+              </span>
             </div>
-          </div>
+
+            <p className="text-xl font-bold tracking-tight text-[#0f172a]">4</p>
+          </motion.div>
         </div>
+      </motion.div>
 
-        {/* Department Manager Review Completion */}
-        <div className="animate-[fadeInUp_0.55s_ease-out] rounded-[11px] border border-[#d9e2ec] bg-white p-[22px]">
-          <div className="mb-[20px]">
-            <h2 className="text-[15px] font-bold text-[#243b53]">
+      {/* Department Manager Review Completion */}
+      <motion.div
+        initial={{ opacity: 0, y: 14 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{
+          duration: 0.4,
+          delay: 0.16,
+        }}
+        className="w-full overflow-hidden rounded-2xl border border-[#e2e8f0]/80 bg-white shadow-[0_1px_3px_rgba(0,0,0,0.03)]"
+      >
+        <div className="flex items-center justify-between border-b border-[#f1f5f9] px-5 py-5 sm:px-6">
+          <div>
+            <h2 className="text-base font-bold text-[#1e293b] sm:text-lg">
               {t("hrEvaluationsGoals.departmentManagerReviewCompletion")}
             </h2>
 
-            <p className="mt-[5px] text-[13px] text-[#6b7785]">
+            <p className="mt-1 text-xs text-[#64748b] sm:text-sm">
               {t("hrEvaluationsGoals.departmentManagerReviewSubtitle")}
             </p>
           </div>
 
-          <div className="overflow-x-auto">
-            <table className="w-full border-collapse">
-              <thead>
-                <tr className="border-b border-[#d9e2ec]">
-                  <th
-                    className={`pb-[12px] text-[11px] font-semibold uppercase tracking-[0.7px] text-[#6b7785] ${
-                      isArabic ? "text-right" : "text-left"
-                    }`}
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#eff6ff] text-[#3b82f6]">
+            <FiUsers className="h-[18px] w-[18px]" />
+          </div>
+        </div>
+
+        {/* Desktop Table */}
+        <div className="hidden w-full lg:block">
+          <table className="w-full border-collapse">
+            <thead>
+              <tr className="bg-[#f8fafc]">
+                <th
+                  className={`px-5 py-4 text-[10px] font-bold uppercase tracking-wider text-[#94a3b8] sm:text-[11px] ${
+                    isArabic ? "text-right" : "text-left"
+                  }`}
+                >
+                  {t("hrEvaluationsGoals.department")}
+                </th>
+
+                <th
+                  className={`px-4 py-4 text-[10px] font-bold uppercase tracking-wider text-[#94a3b8] sm:text-[11px] ${
+                    isArabic ? "text-right" : "text-left"
+                  }`}
+                >
+                  {t("hrEvaluationsGoals.manager")}
+                </th>
+
+                <th className="px-4 py-4 text-center text-[10px] font-bold uppercase tracking-wider text-[#94a3b8] sm:text-[11px]">
+                  {t("hrEvaluationsGoals.progress")}
+                </th>
+
+                <th className="px-4 py-4 text-center text-[10px] font-bold uppercase tracking-wider text-[#94a3b8] sm:text-[11px]">
+                  {t("hrEvaluationsGoals.status")}
+                </th>
+
+                <th
+                  className={`px-4 py-4 text-[10px] font-bold uppercase tracking-wider text-[#94a3b8] sm:text-[11px] ${
+                    isArabic ? "text-left" : "text-right"
+                  }`}
+                >
+                  {t("hrEvaluationsGoals.sendReminder")}
+                </th>
+              </tr>
+            </thead>
+
+            <tbody>
+              {departments.map((item, index) => {
+                const completion = Math.round(
+                  (item.completed / item.total) * 100,
+                );
+
+                const departmentName = t(
+                  `hrEvaluationsGoals.${item.departmentKey}`,
+                );
+
+                const managerName = t(`hrEvaluationsGoals.${item.managerKey}`);
+
+                return (
+                  <motion.tr
+                    key={item.departmentKey}
+                    initial={{
+                      opacity: 0,
+                      y: 10,
+                    }}
+                    animate={{
+                      opacity: 1,
+                      y: 0,
+                    }}
+                    transition={{
+                      duration: 0.35,
+                      delay: index * 0.07,
+                    }}
+                    className="border-t border-[#f1f5f9] transition-colors hover:bg-[#fafbfc]"
                   >
-                    {t("hrEvaluationsGoals.department")}
-                  </th>
-
-                  <th
-                    className={`pb-[12px] text-[11px] font-semibold uppercase tracking-[0.7px] text-[#6b7785] ${
-                      isArabic ? "text-right" : "text-left"
-                    }`}
-                  >
-                    {t("hrEvaluationsGoals.manager")}
-                  </th>
-
-                  <th className="pb-[12px] text-center text-[11px] font-semibold uppercase tracking-[0.7px] text-[#6b7785]">
-                    {t("hrEvaluationsGoals.progress")}
-                  </th>
-
-                  <th className="pb-[12px] text-center text-[11px] font-semibold uppercase tracking-[0.7px] text-[#6b7785]">
-                    {t("hrEvaluationsGoals.status")}
-                  </th>
-
-                  <th
-                    className={`pb-[12px] text-[11px] font-semibold uppercase tracking-[0.7px] text-[#6b7785] ${
-                      isArabic ? "text-left" : "text-right"
-                    }`}
-                  >
-                    {t("hrEvaluationsGoals.sendReminder")}
-                  </th>
-                </tr>
-              </thead>
-
-              <tbody>
-                {departments.map((item, index) => {
-                  const completion = Math.round(
-                    (item.completed / item.total) * 100,
-                  );
-
-                  const departmentName = t(
-                    `hrEvaluationsGoals.${item.departmentKey}`,
-                  );
-
-                  const managerName = t(
-                    `hrEvaluationsGoals.${item.managerKey}`,
-                  );
-
-                  return (
-                    <tr
-                      key={item.departmentKey}
-                      className="border-b border-[#d9e2ec] last:border-b-0 animate-[fadeInUp_0.4s_ease-out]"
-                      style={{
-                        animationDelay: `${index * 0.08}s`,
-                        animationFillMode: "both",
-                      }}
+                    <td
+                      className={`px-5 py-5 text-sm font-bold text-[#1e293b] ${
+                        isArabic ? "text-right" : "text-left"
+                      }`}
                     >
-                      <td
-                        className={`py-[16px] text-[13px] font-medium text-[#243b53] ${
-                          isArabic ? "text-right" : "text-left"
-                        }`}
-                      >
-                        {departmentName}
-                      </td>
+                      {departmentName}
+                    </td>
 
-                      <td
-                        className={`py-[16px] text-[13px] text-[#6b7785] ${
-                          isArabic ? "text-right" : "text-left"
-                        }`}
-                      >
-                        {managerName}
-                      </td>
+                    <td
+                      className={`px-4 py-5 text-sm text-[#64748b] ${
+                        isArabic ? "text-right" : "text-left"
+                      }`}
+                    >
+                      {managerName}
+                    </td>
 
-                      <td className="py-[16px] text-center">
-                        <span className="text-[13px] font-semibold text-[#243b53]">
+                    <td className="px-4 py-5 text-center">
+                      <div className="flex items-center justify-center gap-3">
+                        <div className="hidden h-1.5 w-20 overflow-hidden rounded-full bg-[#e2e8f0] xl:block">
+                          <div
+                            className="h-full rounded-full bg-[#3b82f6]"
+                            style={{
+                              width: `${completion}%`,
+                            }}
+                          />
+                        </div>
+
+                        <span className="text-sm font-bold text-[#1e293b]">
                           {completion}%
                         </span>
-                      </td>
+                      </div>
+                    </td>
 
-                      <td className="py-[16px] text-center">
-                        {item.overdue > 0 ? (
-                          <span className="inline-flex items-center justify-center gap-[6px] text-[12px] font-semibold text-[#b44a4a]">
-                            <span className="h-[7px] w-[7px] rounded-full bg-[#b44a4a]" />
-                            {item.overdue} {t("hrEvaluationsGoals.overdue")}
-                          </span>
-                        ) : (
-                          <span className="inline-flex items-center justify-center gap-[6px] text-[12px] font-semibold text-[#3f7d5a]">
-                            <span className="h-[7px] w-[7px] rounded-full bg-[#3f7d5a]" />
-                            {t("hrEvaluationsGoals.onTrack")}
-                          </span>
-                        )}
-                      </td>
+                    <td className="px-4 py-5 text-center">
+                      {item.overdue > 0 ? (
+                        <span className="inline-flex items-center justify-center gap-1.5 rounded-full bg-[#fef2f2] px-2.5 py-1.5 text-[10px] font-bold text-[#dc2626] sm:text-xs">
+                          <span className="h-1.5 w-1.5 rounded-full bg-[#ef4444]" />
+                          {item.overdue} {t("hrEvaluationsGoals.overdue")}
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center justify-center gap-1.5 rounded-full bg-[#ecfdf5] px-2.5 py-1.5 text-[10px] font-bold text-[#15803d] sm:text-xs">
+                          <span className="h-1.5 w-1.5 rounded-full bg-[#10b981]" />
 
-                      <td
-                        className={`py-[16px] ${
-                          isArabic ? "text-left" : "text-right"
-                        }`}
+                          {t("hrEvaluationsGoals.onTrack")}
+                        </span>
+                      )}
+                    </td>
+
+                    <td
+                      className={`px-4 py-5 ${
+                        isArabic ? "text-left" : "text-right"
+                      }`}
+                    >
+                      <button
+                        type="button"
+                        onClick={() => handleSendReminder(managerName)}
+                        className="rounded-lg border border-[#e2e8f0] bg-white px-3 py-2 text-xs font-semibold text-[#475569] transition hover:border-[#94a3b8] hover:bg-[#f8fafc] hover:text-[#243B53] active:scale-[0.97]"
                       >
-                        <button
-                          onClick={() => handleSendReminder(managerName)}
-                          className="rounded-[6px] border border-[#d9e2ec] px-[11px] py-[7px] text-[11px] font-medium text-[#486581] transition-all duration-200 hover:border-[#486581] hover:bg-[#f5f7f8] hover:text-[#243b53]"
-                        >
-                          {t("hrEvaluationsGoals.sendReminder")}
-                        </button>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
+                        {t("hrEvaluationsGoals.sendReminder")}
+                      </button>
+                    </td>
+                  </motion.tr>
+                );
+              })}
+            </tbody>
+          </table>
         </div>
-      </div>
+
+        {/* Mobile Cards */}
+        <div className="divide-y divide-[#f1f5f9] lg:hidden">
+          {departments.map((item, index) => {
+            const completion = Math.round((item.completed / item.total) * 100);
+
+            const departmentName = t(
+              `hrEvaluationsGoals.${item.departmentKey}`,
+            );
+
+            const managerName = t(`hrEvaluationsGoals.${item.managerKey}`);
+
+            return (
+              <motion.div
+                key={item.departmentKey}
+                initial={{
+                  opacity: 0,
+                  y: 10,
+                }}
+                animate={{
+                  opacity: 1,
+                  y: 0,
+                }}
+                transition={{
+                  duration: 0.35,
+                  delay: index * 0.07,
+                }}
+                className="p-5"
+              >
+                <div className="flex items-start justify-between gap-4">
+                  <div className="min-w-0">
+                    <h3 className="truncate text-sm font-bold text-[#1e293b] sm:text-base">
+                      {departmentName}
+                    </h3>
+
+                    <p className="mt-1 truncate text-xs text-[#64748b] sm:text-sm">
+                      {managerName}
+                    </p>
+                  </div>
+
+                  {item.overdue > 0 ? (
+                    <span className="shrink-0 rounded-full bg-[#fef2f2] px-2.5 py-1.5 text-[10px] font-bold text-[#dc2626]">
+                      {item.overdue} {t("hrEvaluationsGoals.overdue")}
+                    </span>
+                  ) : (
+                    <span className="shrink-0 rounded-full bg-[#ecfdf5] px-2.5 py-1.5 text-[10px] font-bold text-[#15803d]">
+                      {t("hrEvaluationsGoals.onTrack")}
+                    </span>
+                  )}
+                </div>
+
+                <div className="mt-5 rounded-xl bg-[#f8fafc] p-4">
+                  <div className="mb-2 flex items-center justify-between">
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-[#94a3b8]">
+                      {t("hrEvaluationsGoals.progress")}
+                    </span>
+
+                    <span className="text-sm font-bold text-[#1e293b]">
+                      {completion}%
+                    </span>
+                  </div>
+
+                  <div className="h-2 overflow-hidden rounded-full bg-[#e2e8f0]">
+                    <div
+                      className="h-full rounded-full bg-[#3b82f6] transition-all duration-700"
+                      style={{
+                        width: `${completion}%`,
+                      }}
+                    />
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => handleSendReminder(managerName)}
+                  className="mt-4 w-full rounded-lg border border-[#e2e8f0] bg-white px-4 py-2.5 text-xs font-semibold text-[#475569] transition hover:bg-[#f8fafc] active:scale-[0.98]"
+                >
+                  {t("hrEvaluationsGoals.sendReminder")}
+                </button>
+              </motion.div>
+            );
+          })}
+        </div>
+      </motion.div>
 
       {/* Modal */}
-      {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#243b53]/30 px-[20px]">
-          <div className="w-full max-w-[500px] animate-[scaleIn_0.2s_ease-out] rounded-[11px] border border-[#d9e2ec] bg-white p-[24px] shadow-lg">
-            <div className="mb-[22px] flex items-start justify-between">
-              <div>
-                <h2 className="text-[17px] font-semibold text-[#243b53]">
-                  {t("hrEvaluationsGoals.createWorkflowRecord")}
-                </h2>
+      <AnimatePresence>
+        {isModalOpen && (
+          <div
+            className="fixed inset-0 z-50 flex items-center justify-center p-4"
+            onMouseDown={(event) => {
+              if (event.target === event.currentTarget) {
+                setIsModalOpen(false);
+              }
+            }}
+          >
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="absolute inset-0 bg-[#0f172a]/40 backdrop-blur-[2px]"
+            />
 
-                <p className="mt-[5px] text-[13px] text-[#6b7785]">
-                  {t("hrEvaluationsGoals.departmentManagerReviewSubtitle")}
-                </p>
+            <motion.div
+              initial={{
+                opacity: 0,
+                scale: 0.94,
+                y: 20,
+              }}
+              animate={{
+                opacity: 1,
+                scale: 1,
+                y: 0,
+              }}
+              exit={{
+                opacity: 0,
+                scale: 0.96,
+                y: 10,
+              }}
+              transition={{
+                duration: 0.25,
+                ease: "easeOut",
+              }}
+              className="relative z-10 w-full max-w-md overflow-hidden rounded-2xl border border-[#e2e8f0]/80 bg-white shadow-xl"
+              role="dialog"
+              aria-modal="true"
+            >
+              <div className="flex items-start justify-between border-b border-[#f1f5f9] px-6 py-5">
+                <div>
+                  <div className="mb-3 flex h-9 w-9 items-center justify-center rounded-xl bg-[#eff6ff] text-[#3b82f6]">
+                    <FiPlus className="h-[18px] w-[18px]" />
+                  </div>
+
+                  <h2 className="text-base font-bold text-[#1e293b]">
+                    {t("hrEvaluationsGoals.createWorkflowRecord")}
+                  </h2>
+
+                  <p className="mt-1 text-xs text-[#64748b] sm:text-sm">
+                    {t("hrEvaluationsGoals.departmentManagerReviewSubtitle")}
+                  </p>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => setIsModalOpen(false)}
+                  className="flex h-8 w-8 items-center justify-center rounded-lg text-[#94a3b8] transition hover:bg-[#f8fafc] hover:text-[#475569]"
+                  aria-label={isArabic ? "إغلاق" : "Close"}
+                >
+                  <FiX className="h-4 w-4" />
+                </button>
               </div>
 
-              <button
-                onClick={() => setIsModalOpen(false)}
-                className="flex h-[32px] w-[32px] items-center justify-center rounded-[6px] text-[#6b7785] transition hover:bg-[#f5f7f8] hover:text-[#243b53]"
-              >
-                <FiX size={17} />
-              </button>
-            </div>
+              <div className="p-6">
+                <div className="space-y-5">
+                  <div>
+                    <label className="mb-1.5 block text-xs font-semibold text-[#475569]">
+                      {t("hrEvaluationsGoals.details")}
+                    </label>
 
-            <div className="space-y-[16px]">
-              <div>
-                <label className="mb-[7px] block text-[12px] font-medium text-[#243b53]">
-                  {t("hrEvaluationsGoals.details")}
-                </label>
+                    <input
+                      type="text"
+                      className="w-full rounded-lg border border-[#e2e8f0] bg-white px-3 py-2.5 text-xs text-[#334155] outline-none transition placeholder:text-[#94a3b8] focus:border-[#94a3b8] focus:ring-2 focus:ring-[#f1f5f9] sm:text-sm"
+                    />
+                  </div>
 
-                <input
-                  type="text"
-                  className="h-[44px] w-full rounded-[7px] border border-[#d9e2ec] px-[12px] text-[13px] text-[#243b53] outline-none transition placeholder:text-[#9aa5b1] focus:border-[#486581]"
-                />
+                  <div>
+                    <label className="mb-1.5 block text-xs font-semibold text-[#475569]">
+                      {t("hrEvaluationsGoals.owner")}
+                    </label>
+
+                    <input
+                      type="text"
+                      className="w-full rounded-lg border border-[#e2e8f0] bg-white px-3 py-2.5 text-xs text-[#334155] outline-none transition placeholder:text-[#94a3b8] focus:border-[#94a3b8] focus:ring-2 focus:ring-[#f1f5f9] sm:text-sm"
+                    />
+                  </div>
+                </div>
+
+                <div className="mt-6 flex gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setIsModalOpen(false)}
+                    className="flex-1 rounded-lg border border-[#e2e8f0] bg-white px-4 py-2.5 text-xs font-semibold text-[#64748b] transition hover:bg-[#f8fafc] active:scale-[0.98] sm:text-sm"
+                  >
+                    {t("hrEvaluationsGoals.cancel")}
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsModalOpen(false);
+
+                      toast.success(t("hrEvaluationsGoals.saveChanges"));
+                    }}
+                    className="flex-1 rounded-lg bg-[#243B53] px-4 py-2.5 text-xs font-semibold text-white transition hover:bg-[#1c2f42] active:scale-[0.98] sm:text-sm"
+                  >
+                    {t("hrEvaluationsGoals.saveChanges")}
+                  </button>
+                </div>
               </div>
-
-              <div>
-                <label className="mb-[7px] block text-[12px] font-medium text-[#243b53]">
-                  {t("hrEvaluationsGoals.owner")}
-                </label>
-
-                <input
-                  type="text"
-                  className="h-[44px] w-full rounded-[7px] border border-[#d9e2ec] px-[12px] text-[13px] text-[#243b53] outline-none transition placeholder:text-[#9aa5b1] focus:border-[#486581]"
-                />
-              </div>
-            </div>
-
-            <div className="mt-[24px] flex justify-end gap-[10px]">
-              <button
-                onClick={() => setIsModalOpen(false)}
-                className="h-[42px] rounded-[7px] border border-[#d9e2ec] px-[16px] text-[12px] font-medium text-[#6b7785] transition hover:bg-[#f5f7f8]"
-              >
-                {t("hrEvaluationsGoals.cancel")}
-              </button>
-
-              <button
-                onClick={() => {
-                  setIsModalOpen(false);
-                  toast.success(t("hrEvaluationsGoals.saveChanges"));
-                }}
-                className="h-[42px] rounded-[7px] bg-[#243b53] px-[16px] text-[12px] font-medium text-white transition hover:bg-[#486581]"
-              >
-                {t("hrEvaluationsGoals.saveChanges")}
-              </button>
-            </div>
+            </motion.div>
           </div>
-        </div>
-      )}
-
-      {/* Animations */}
-      <style>
-        {`
-          @keyframes fadeIn {
-            from {
-              opacity: 0;
-            }
-            to {
-              opacity: 1;
-            }
-          }
-
-          @keyframes fadeInUp {
-            from {
-              opacity: 0;
-              transform: translateY(10px);
-            }
-            to {
-              opacity: 1;
-              transform: translateY(0);
-            }
-          }
-
-          @keyframes progress {
-            from {
-              transform: scaleX(0);
-            }
-            to {
-              transform: scaleX(1);
-            }
-          }
-
-          @keyframes scaleIn {
-            from {
-              opacity: 0;
-              transform: scale(0.96);
-            }
-            to {
-              opacity: 1;
-              transform: scale(1);
-            }
-          }
-        `}
-      </style>
-    </div>
+        )}
+      </AnimatePresence>
+    </motion.div>
   );
 };
 

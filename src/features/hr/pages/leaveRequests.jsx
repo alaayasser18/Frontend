@@ -1,11 +1,13 @@
 import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   FiDownload,
   FiCheck,
   FiFileText,
   FiX,
   FiAlertCircle,
+  FiClock,
 } from "react-icons/fi";
 
 const initialRequests = [
@@ -39,9 +41,73 @@ const initialRequests = [
 ];
 
 const categoryStyles = {
-  annual: "bg-[#e9f1f8] text-[#3c6285]",
-  emergency: "bg-[#fff4d9] text-[#a66a00]",
-  medical: "bg-[#fde9e9] text-[#c84242]",
+  annual: "bg-[#f5f3ff] text-[#7c3aed]",
+  emergency: "bg-[#fff7ed] text-[#c2410c]",
+  medical: "bg-[#fef2f2] text-[#dc2626]",
+};
+
+const pageVariants = {
+  hidden: {
+    opacity: 0,
+    y: 16,
+  },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: {
+      duration: 0.45,
+      ease: "easeOut",
+    },
+  },
+};
+
+const containerVariants = {
+  hidden: {},
+  visible: {
+    transition: {
+      staggerChildren: 0.08,
+    },
+  },
+};
+
+const itemVariants = {
+  hidden: {
+    opacity: 0,
+    y: 14,
+  },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: {
+      duration: 0.35,
+      ease: "easeOut",
+    },
+  },
+};
+
+const modalVariants = {
+  hidden: {
+    opacity: 0,
+    scale: 0.94,
+    y: 20,
+  },
+  visible: {
+    opacity: 1,
+    scale: 1,
+    y: 0,
+    transition: {
+      duration: 0.25,
+      ease: "easeOut",
+    },
+  },
+  exit: {
+    opacity: 0,
+    scale: 0.96,
+    y: 10,
+    transition: {
+      duration: 0.18,
+    },
+  },
 };
 
 const LeaveRequests = () => {
@@ -64,18 +130,11 @@ const LeaveRequests = () => {
   const [rejectNote, setRejectNote] = useState("");
   const [message, setMessage] = useState(null);
 
-  /*
-   * Update document language and direction
-   */
   useEffect(() => {
     document.documentElement.dir = isArabic ? "rtl" : "ltr";
     document.documentElement.lang = isArabic ? "ar" : "en";
   }, [isArabic]);
 
-  /*
-   * Translate request data without storing translated values in state.
-   * This avoids setState inside useEffect.
-   */
   const translatedRequests = useMemo(() => {
     return requests.map((request) => ({
       ...request,
@@ -87,9 +146,6 @@ const LeaveRequests = () => {
     }));
   }, [requests, i18n.language, t]);
 
-  /*
-   * Show temporary message
-   */
   const showMessage = (type, text) => {
     setMessage({
       type,
@@ -101,9 +157,6 @@ const LeaveRequests = () => {
     }, 2500);
   };
 
-  /*
-   * Approve request
-   */
   const handleApprove = (request) => {
     setActiveAction(`approve-${request.id}`);
 
@@ -123,9 +176,6 @@ const LeaveRequests = () => {
     }, 500);
   };
 
-  /*
-   * Open reject modal
-   */
   const handleRejectClick = (request) => {
     setRejectModal({
       open: true,
@@ -135,9 +185,6 @@ const LeaveRequests = () => {
     setRejectNote("");
   };
 
-  /*
-   * Close reject modal
-   */
   const closeRejectModal = () => {
     setRejectModal({
       open: false,
@@ -147,9 +194,6 @@ const LeaveRequests = () => {
     setRejectNote("");
   };
 
-  /*
-   * Confirm reject
-   */
   const handleConfirmReject = () => {
     if (!rejectModal.request || !rejectNote.trim()) {
       return;
@@ -182,9 +226,6 @@ const LeaveRequests = () => {
     }, 500);
   };
 
-  /*
-   * Export queue as CSV
-   */
   const handleExport = () => {
     const headers = [
       t("leaveRequests.table.employee"),
@@ -238,84 +279,239 @@ const LeaveRequests = () => {
   const pendingCount = requests.length;
 
   return (
-    <div
+    <motion.div
       dir={isArabic ? "rtl" : "ltr"}
-      className="w-full min-w-0 overflow-x-hidden text-[#12395c]"
+      className="w-full min-w-0 space-y-6 overflow-x-hidden"
+      initial="hidden"
+      animate="visible"
+      variants={pageVariants}
     >
-      {/* Toast */}
-      {message && (
-        <div
-          className={`fixed right-5 top-5 z-100 flex max-w-90 items-center gap-3 rounded-xl border bg-white px-4 py-3 shadow-lg ${
-            message.type === "success"
-              ? "border-[#cce7d8] text-[#32734e]"
-              : "border-[#f0cccc] text-[#bd3e3e]"
-          }`}
-        >
-          {message.type === "success" ? (
-            <FiCheck size={18} />
-          ) : (
-            <FiAlertCircle size={18} />
-          )}
+      {/* ==================== Toast ==================== */}
+      <AnimatePresence>
+        {message && (
+          <motion.div
+            initial={{
+              opacity: 0,
+              y: -15,
+              scale: 0.97,
+            }}
+            animate={{
+              opacity: 1,
+              y: 0,
+              scale: 1,
+            }}
+            exit={{
+              opacity: 0,
+              y: -10,
+              scale: 0.97,
+            }}
+            transition={{
+              duration: 0.2,
+            }}
+            className={`fixed right-5 top-5 z-[100] flex max-w-[360px] items-center gap-3 rounded-xl border bg-white px-4 py-3 shadow-xl ${
+              message.type === "success"
+                ? "border-[#d1fae5] text-[#047857]"
+                : "border-[#fecaca] text-[#dc2626]"
+            }`}
+          >
+            {message.type === "success" ? (
+              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[#ecfdf5]">
+                <FiCheck size={17} />
+              </div>
+            ) : (
+              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[#fef2f2]">
+                <FiAlertCircle size={17} />
+              </div>
+            )}
 
-          <span className="text-sm font-semibold">{message.text}</span>
-        </div>
-      )}
+            <span className="text-xs font-semibold sm:text-sm">
+              {message.text}
+            </span>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
-      {/* Header */}
-      <div className="mb-7 flex w-full items-start justify-between gap-5">
+      {/* ==================== Header ==================== */}
+      <motion.div
+        variants={itemVariants}
+        className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between"
+      >
         <div className="min-w-0">
-          <h1 className="text-[30px] font-bold leading-tight tracking-[-0.4px] text-[#12395c]">
+          <p className="text-[11px] font-bold uppercase tracking-wider text-[#6b879f]">
+            {isArabic
+              ? "الموارد البشرية / طلبات الإجازات"
+              : "HR Portal / Leave Requests"}
+          </p>
+
+          <h1 className="mt-1 text-lg font-bold tracking-tight text-[#1e293b] md:text-[21px]">
             {t("leaveRequests.title")}
           </h1>
 
-          <p className="mt-2 text-[16px] leading-6 text-[#5d82a4]">
+          <p className="mt-1 text-sm font-normal text-[#64748b]">
             {t("leaveRequests.subtitle")}
           </p>
         </div>
 
-        <button
+        <motion.button
           type="button"
           onClick={handleExport}
-          className="group flex h-11 shrink-0 items-center justify-center gap-2 rounded-xl border border-[#d4e0ea] bg-white px-5 text-[14px] font-bold text-[#355d80] shadow-sm transition-all duration-200 hover:-translate-y-px hover:border-[#b9ccdc] hover:bg-[#f8fbfd] hover:shadow-md active:translate-y-0"
+          whileHover={{
+            y: -2,
+            scale: 1.02,
+          }}
+          whileTap={{
+            scale: 0.97,
+          }}
+          transition={{
+            duration: 0.2,
+          }}
+          className="flex shrink-0 items-center justify-center gap-2 rounded-lg border border-[#e2e8f0] bg-white px-4 py-2.5 text-sm font-semibold text-[#475569] transition hover:bg-[#f8fafc]"
         >
-          <FiDownload
-            size={17}
-            className="transition-transform duration-200 group-hover:translate-y-0.5"
-          />
+          <FiDownload className="h-4 w-4" />
 
-          {t("leaveRequests.export")}
-        </button>
-      </div>
+          <span>{t("leaveRequests.export")}</span>
+        </motion.button>
+      </motion.div>
 
-      {/* Stats */}
-      <div className="mb-8 flex flex-wrap items-center gap-3">
-        <span className="rounded-full bg-[#fff4d9] px-4 py-2 text-[13px] font-bold text-[#a66a00]">
+      {/* ==================== Statistics ==================== */}
+      <motion.div
+        variants={containerVariants}
+        className="grid grid-cols-1 gap-5 sm:grid-cols-3"
+      >
+        {/* Pending */}
+        <motion.div
+          variants={itemVariants}
+          whileHover={{
+            y: -4,
+            transition: {
+              duration: 0.2,
+              ease: "easeOut",
+            },
+          }}
+          className="flex flex-col justify-between rounded-2xl border border-[#e2e8f0]/80 bg-white p-5 shadow-[0_1px_3px_rgba(0,0,0,0.03)] transition-shadow duration-200 hover:shadow-md"
+        >
+          <div className="flex items-center justify-between gap-3">
+            <p className="text-[11px] font-bold uppercase tracking-wider text-[#94a3b8]">
+              {isArabic ? "طلبات قيد المراجعة" : "Pending Reviews"}
+            </p>
+
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#fff7ed] text-[#f97316]">
+              <FiClock className="h-[18px] w-[18px]" />
+            </div>
+          </div>
+
+          <div className="mt-2">
+            <p className="text-[27px] font-bold tracking-tight text-[#0f172a]">
+              {pendingCount}
+            </p>
+
+            <p className="mt-1 text-xs font-normal text-[#64748b]">
+              {isArabic ? "في انتظار المراجعة" : "Waiting for review"}
+            </p>
+          </div>
+        </motion.div>
+
+        {/* Approved */}
+        <motion.div
+          variants={itemVariants}
+          whileHover={{
+            y: -4,
+            transition: {
+              duration: 0.2,
+              ease: "easeOut",
+            },
+          }}
+          className="flex flex-col justify-between rounded-2xl border border-[#e2e8f0]/80 bg-white p-5 shadow-[0_1px_3px_rgba(0,0,0,0.03)] transition-shadow duration-200 hover:shadow-md"
+        >
+          <div className="flex items-center justify-between gap-3">
+            <p className="text-[11px] font-bold uppercase tracking-wider text-[#94a3b8]">
+              {isArabic ? "تمت الموافقة" : "Approved"}
+            </p>
+
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#ecfdf5] text-[#10b981]">
+              <FiCheck className="h-[18px] w-[18px]" />
+            </div>
+          </div>
+
+          <div className="mt-2">
+            <p className="text-[27px] font-bold tracking-tight text-[#0f172a]">
+              {approvedCount}
+            </p>
+
+            <p className="mt-1 text-xs font-normal text-[#64748b]">
+              {isArabic ? "تمت الموافقة هذا الشهر" : "Approved this month"}
+            </p>
+          </div>
+        </motion.div>
+
+        {/* Rejected */}
+        <motion.div
+          variants={itemVariants}
+          whileHover={{
+            y: -4,
+            transition: {
+              duration: 0.2,
+              ease: "easeOut",
+            },
+          }}
+          className="flex flex-col justify-between rounded-2xl border border-[#e2e8f0]/80 bg-white p-5 shadow-[0_1px_3px_rgba(0,0,0,0.03)] transition-shadow duration-200 hover:shadow-md"
+        >
+          <div className="flex items-center justify-between gap-3">
+            <p className="text-[11px] font-bold uppercase tracking-wider text-[#94a3b8]">
+              {isArabic ? "مرفوضة" : "Rejected"}
+            </p>
+
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#fef2f2] text-[#ef4444]">
+              <FiX className="h-[18px] w-[18px]" />
+            </div>
+          </div>
+
+          <div className="mt-2">
+            <p className="text-[27px] font-bold tracking-tight text-[#0f172a]">
+              {rejectedCount}
+            </p>
+
+            <p className="mt-1 text-xs font-normal text-[#64748b]">
+              {isArabic ? "تم الرفض هذا الشهر" : "Rejected this month"}
+            </p>
+          </div>
+        </motion.div>
+      </motion.div>
+
+      {/* ==================== Results ==================== */}
+      <motion.div variants={itemVariants}>
+        <p className="text-xs font-normal text-[#64748b]">
           {isArabic
             ? `${pendingCount} طلبات قيد المراجعة`
-            : `${pendingCount} Pending Reviews`}
-        </span>
+            : `${pendingCount} pending requests`}
+        </p>
+      </motion.div>
 
-        <span className="rounded-full bg-[#e5f5ed] px-4 py-2 text-[13px] font-bold text-[#26734d]">
-          {isArabic
-            ? `${approvedCount} تمت الموافقة هذا الشهر`
-            : `${approvedCount} Approved this Month`}
-        </span>
+      {/* ==================== Main Card ==================== */}
+      <motion.div
+        variants={itemVariants}
+        className="w-full overflow-hidden rounded-2xl border border-[#e2e8f0]/80 bg-white shadow-[0_1px_3px_rgba(0,0,0,0.03)]"
+      >
+        {/* Card Header */}
+        <div className="flex items-center justify-between border-b border-[#f1f5f9] px-5 py-5 sm:px-6">
+          <div>
+            <h2 className="text-base font-bold text-[#1e293b] sm:text-lg">
+              {t("leaveRequests.queue")}
+            </h2>
 
-        <span className="rounded-full bg-[#fde8e8] px-4 py-2 text-[13px] font-bold text-[#c13c3c]">
-          {isArabic ? `${rejectedCount} مرفوضة` : `${rejectedCount} Rejected`}
-        </span>
-      </div>
+            <p className="mt-1 text-xs text-[#64748b]">
+              {isArabic
+                ? "مراجعة وإدارة طلبات الإجازات"
+                : "Review and manage employee leave requests."}
+            </p>
+          </div>
 
-      {/* Main card */}
-      <div className="w-full overflow-hidden rounded-2xl border border-[#d5e0e9] bg-white shadow-[0_2px_8px_rgba(31,61,89,0.05)]">
-        {/* Card header */}
-        <div className="border-b border-[#e5ebf0] px-6 py-5">
-          <h2 className="text-[19px] font-bold text-[#12395c]">
-            {t("leaveRequests.queue")}
-          </h2>
+          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#eff6ff] text-[#3b82f6]">
+            <FiFileText className="h-[18px] w-[18px]" />
+          </div>
         </div>
 
-        {/* Desktop table */}
+        {/* ==================== Desktop Table ==================== */}
         <div className="hidden w-full lg:block">
           <table className="w-full table-fixed border-collapse">
             <colgroup>
@@ -329,32 +525,32 @@ const LeaveRequests = () => {
             </colgroup>
 
             <thead>
-              <tr className="bg-[#f7f9fb]">
-                <th className="px-5 py-4 text-left text-[12px] font-bold uppercase tracking-[0.4px] text-[#7190aa] rtl:text-right">
+              <tr className="bg-[#f8fafc]">
+                <th className="px-5 py-4 text-left text-[10px] font-bold uppercase tracking-wider text-[#94a3b8] rtl:text-right sm:text-[11px]">
                   {t("leaveRequests.table.employee")}
                 </th>
 
-                <th className="px-4 py-4 text-left text-[12px] font-bold uppercase tracking-[0.4px] text-[#7190aa] rtl:text-right">
+                <th className="px-4 py-4 text-left text-[10px] font-bold uppercase tracking-wider text-[#94a3b8] rtl:text-right sm:text-[11px]">
                   {t("leaveRequests.table.roleDepartment")}
                 </th>
 
-                <th className="px-4 py-4 text-left text-[12px] font-bold uppercase tracking-[0.4px] text-[#7190aa] rtl:text-right">
+                <th className="px-4 py-4 text-left text-[10px] font-bold uppercase tracking-wider text-[#94a3b8] rtl:text-right sm:text-[11px]">
                   {t("leaveRequests.table.category")}
                 </th>
 
-                <th className="px-4 py-4 text-left text-[12px] font-bold uppercase tracking-[0.4px] text-[#7190aa] rtl:text-right">
+                <th className="px-4 py-4 text-left text-[10px] font-bold uppercase tracking-wider text-[#94a3b8] rtl:text-right sm:text-[11px]">
                   {t("leaveRequests.table.duration")}
                 </th>
 
-                <th className="px-4 py-4 text-left text-[12px] font-bold uppercase tracking-[0.4px] text-[#7190aa] rtl:text-right">
+                <th className="px-4 py-4 text-left text-[10px] font-bold uppercase tracking-wider text-[#94a3b8] rtl:text-right sm:text-[11px]">
                   {t("leaveRequests.table.balance")}
                 </th>
 
-                <th className="px-4 py-4 text-left text-[12px] font-bold uppercase tracking-[0.4px] text-[#7190aa] rtl:text-right">
+                <th className="px-4 py-4 text-left text-[10px] font-bold uppercase tracking-wider text-[#94a3b8] rtl:text-right sm:text-[11px]">
                   {t("leaveRequests.table.reason")}
                 </th>
 
-                <th className="px-4 py-4 text-left text-[12px] font-bold uppercase tracking-[0.4px] text-[#7190aa] rtl:text-right">
+                <th className="px-4 py-4 text-left text-[10px] font-bold uppercase tracking-wider text-[#94a3b8] rtl:text-right sm:text-[11px]">
                   {t("leaveRequests.table.actions")}
                 </th>
               </tr>
@@ -365,17 +561,17 @@ const LeaveRequests = () => {
                 <tr>
                   <td colSpan={7} className="px-6 py-16 text-center">
                     <div className="mx-auto flex max-w-sm flex-col items-center">
-                      <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-[#edf4f8] text-[#5c819f]">
+                      <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-[#f8fafc] text-[#94a3b8]">
                         <FiCheck size={22} />
                       </div>
 
-                      <p className="text-[16px] font-bold text-[#12395c]">
+                      <p className="text-sm font-bold text-[#1e293b] sm:text-base">
                         {isArabic
                           ? "لا توجد طلبات معلقة"
                           : "No pending requests"}
                       </p>
 
-                      <p className="mt-1 text-[14px] text-[#7893aa]">
+                      <p className="mt-1 text-xs text-[#64748b] sm:text-sm">
                         {isArabic
                           ? "تمت مراجعة جميع طلبات الإجازات."
                           : "All leave requests have been reviewed."}
@@ -387,30 +583,30 @@ const LeaveRequests = () => {
                 translatedRequests.map((request) => (
                   <tr
                     key={request.id}
-                    className="border-t border-[#e5ebf0] transition-colors hover:bg-[#fbfcfd]"
+                    className="border-t border-[#f1f5f9] transition-colors hover:bg-[#fafbfc]"
                   >
                     {/* Employee */}
-                    <td className="px-5 py-6 align-middle">
-                      <span className="block truncate text-[16px] font-bold text-[#12395c]">
+                    <td className="px-5 py-5 align-middle">
+                      <span className="block truncate text-sm font-bold text-[#1e293b]">
                         {request.name}
                       </span>
                     </td>
 
-                    {/* Role */}
-                    <td className="px-4 py-6 align-middle">
-                      <div className="truncate text-[15px] text-[#5680a5]">
+                    {/* Role / Department */}
+                    <td className="px-4 py-5 align-middle">
+                      <div className="truncate text-xs font-medium text-[#475569] sm:text-sm">
                         {request.role}
                       </div>
 
-                      <div className="mt-1 truncate text-[13px] text-[#7896af]">
+                      <div className="mt-1 truncate text-xs text-[#94a3b8]">
                         {request.department}
                       </div>
                     </td>
 
                     {/* Category */}
-                    <td className="px-4 py-6 align-middle">
+                    <td className="px-4 py-5 align-middle">
                       <span
-                        className={`inline-flex max-w-full rounded-full px-3.5 py-1.5 text-[12px] font-bold ${
+                        className={`inline-flex max-w-full rounded-full px-2.5 py-1 text-[10px] font-bold sm:px-3 sm:py-1.5 sm:text-xs ${
                           categoryStyles[request.category]
                         }`}
                       >
@@ -419,26 +615,26 @@ const LeaveRequests = () => {
                     </td>
 
                     {/* Duration */}
-                    <td className="px-4 py-6 align-middle">
-                      <span className="block truncate text-[14px] text-[#5680a5]">
+                    <td className="px-4 py-5 align-middle">
+                      <span className="block truncate text-xs text-[#64748b] sm:text-sm">
                         {request.dates}
                       </span>
                     </td>
 
                     {/* Balance */}
-                    <td className="px-4 py-6 align-middle">
-                      <span className="block truncate text-[14px] text-[#5680a5]">
+                    <td className="px-4 py-5 align-middle">
+                      <span className="block truncate text-xs font-medium text-[#475569] sm:text-sm">
                         {request.balance}
                       </span>
                     </td>
 
                     {/* Reason */}
-                    <td className="px-4 py-6 align-middle">
+                    <td className="px-4 py-5 align-middle">
                       <button
                         type="button"
-                        className="flex max-w-full items-center gap-1.5 text-[13px] font-bold text-[#315d80] underline underline-offset-2 transition-colors hover:text-[#12395c] active:text-[#0c2b45]"
+                        className="flex max-w-full items-center gap-1.5 text-xs font-semibold text-[#475569] underline underline-offset-2 transition hover:text-[#243B53]"
                       >
-                        <FiFileText className="shrink-0" size={15} />
+                        <FiFileText className="shrink-0" size={14} />
 
                         <span className="truncate">
                           {t("leaveRequests.viewReason")}
@@ -447,19 +643,19 @@ const LeaveRequests = () => {
                     </td>
 
                     {/* Actions */}
-                    <td className="px-4 py-6 align-middle">
+                    <td className="px-4 py-5 align-middle">
                       <div className="flex items-center gap-2">
                         <button
                           type="button"
                           disabled={activeAction !== null}
                           onClick={() => handleApprove(request)}
-                          className="flex h-10 min-w-22.5 items-center justify-center gap-1.5 rounded-xl bg-[#e7f4ed] px-3 text-[13px] font-bold text-[#367a55] transition-all duration-200 hover:bg-[#d6eddf] hover:shadow-sm active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-60"
+                          className="flex h-9 min-w-[88px] items-center justify-center gap-1.5 rounded-lg bg-[#ecfdf5] px-3 text-xs font-semibold text-[#15803d] transition hover:bg-[#dcfce7] hover:shadow-sm active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-50"
                         >
                           {activeAction === `approve-${request.id}` ? (
-                            <span className="h-4 w-4 animate-spin rounded-full border-2 border-[#367a55] border-t-transparent" />
+                            <span className="h-4 w-4 animate-spin rounded-full border-2 border-[#15803d] border-t-transparent" />
                           ) : (
                             <>
-                              <FiCheck size={15} />
+                              <FiCheck size={14} />
 
                               {t("leaveRequests.approve")}
                             </>
@@ -470,7 +666,7 @@ const LeaveRequests = () => {
                           type="button"
                           disabled={activeAction !== null}
                           onClick={() => handleRejectClick(request)}
-                          className="flex h-10 items-center justify-center rounded-xl bg-[#fce8e8] px-3 text-[13px] font-bold text-[#bd3e3e] transition-all duration-200 hover:bg-[#f8dcdc] hover:shadow-sm active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-60"
+                          className="flex h-9 items-center justify-center rounded-lg bg-[#fef2f2] px-3 text-xs font-semibold text-[#dc2626] transition hover:bg-[#fee2e2] hover:shadow-sm active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-50"
                         >
                           {t("leaveRequests.reject")}
                         </button>
@@ -483,19 +679,19 @@ const LeaveRequests = () => {
           </table>
         </div>
 
-        {/* Mobile / Tablet */}
-        <div className="divide-y divide-[#e5ebf0] lg:hidden">
+        {/* ==================== Mobile ==================== */}
+        <div className="divide-y divide-[#f1f5f9] lg:hidden">
           {requests.length === 0 ? (
             <div className="px-5 py-16 text-center">
-              <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-[#edf4f8] text-[#5c819f]">
+              <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-[#f8fafc] text-[#94a3b8]">
                 <FiCheck size={22} />
               </div>
 
-              <p className="mt-3 text-[16px] font-bold text-[#12395c]">
+              <p className="mt-3 text-sm font-bold text-[#1e293b]">
                 {isArabic ? "لا توجد طلبات معلقة" : "No pending requests"}
               </p>
 
-              <p className="mt-1 text-[14px] text-[#7893aa]">
+              <p className="mt-1 text-xs text-[#64748b]">
                 {isArabic
                   ? "تمت مراجعة جميع طلبات الإجازات."
                   : "All leave requests have been reviewed."}
@@ -503,28 +699,36 @@ const LeaveRequests = () => {
             </div>
           ) : (
             translatedRequests.map((request) => (
-              <div
+              <motion.div
                 key={request.id}
-                className="p-5 transition-colors hover:bg-[#fbfcfd]"
+                initial={{
+                  opacity: 0,
+                  y: 10,
+                }}
+                animate={{
+                  opacity: 1,
+                  y: 0,
+                }}
+                className="p-5 transition-colors hover:bg-[#fafbfc]"
               >
                 {/* Employee */}
                 <div className="flex items-start justify-between gap-4">
                   <div className="min-w-0">
-                    <h3 className="truncate text-[17px] font-bold text-[#12395c]">
+                    <h3 className="truncate text-sm font-bold text-[#1e293b] sm:text-base">
                       {request.name}
                     </h3>
 
-                    <p className="mt-1 truncate text-[14px] text-[#5680a5]">
+                    <p className="mt-1 truncate text-xs text-[#475569] sm:text-sm">
                       {request.role}
                     </p>
 
-                    <p className="mt-1 truncate text-[13px] text-[#7896af]">
+                    <p className="mt-1 truncate text-xs text-[#94a3b8]">
                       {request.department}
                     </p>
                   </div>
 
                   <span
-                    className={`shrink-0 rounded-full px-3 py-1.5 text-[12px] font-bold ${
+                    className={`shrink-0 rounded-full px-2.5 py-1.5 text-[10px] font-bold sm:px-3 sm:text-xs ${
                       categoryStyles[request.category]
                     }`}
                   >
@@ -533,23 +737,23 @@ const LeaveRequests = () => {
                 </div>
 
                 {/* Info */}
-                <div className="mt-5 grid grid-cols-2 gap-4">
+                <div className="mt-5 grid grid-cols-2 gap-3">
                   <div className="rounded-xl bg-[#f8fafc] p-3">
-                    <p className="text-[10px] font-bold uppercase text-[#8aa0b4]">
+                    <p className="text-[10px] font-bold uppercase tracking-wide text-[#94a3b8]">
                       {t("leaveRequests.table.duration")}
                     </p>
 
-                    <p className="mt-1 text-[13px] text-[#5680a5]">
+                    <p className="mt-1 text-xs text-[#475569]">
                       {request.dates}
                     </p>
                   </div>
 
                   <div className="rounded-xl bg-[#f8fafc] p-3">
-                    <p className="text-[10px] font-bold uppercase text-[#8aa0b4]">
+                    <p className="text-[10px] font-bold uppercase tracking-wide text-[#94a3b8]">
                       {t("leaveRequests.table.balance")}
                     </p>
 
-                    <p className="mt-1 text-[13px] text-[#5680a5]">
+                    <p className="mt-1 text-xs text-[#475569]">
                       {request.balance}
                     </p>
                   </div>
@@ -558,9 +762,9 @@ const LeaveRequests = () => {
                 {/* Reason */}
                 <button
                   type="button"
-                  className="mt-4 flex items-center gap-2 text-[14px] font-bold text-[#315d80] underline underline-offset-2"
+                  className="mt-4 flex items-center gap-2 text-xs font-semibold text-[#475569] underline underline-offset-2 transition hover:text-[#243B53] sm:text-sm"
                 >
-                  <FiFileText size={16} />
+                  <FiFileText size={15} />
 
                   {t("leaveRequests.viewReason")}
                 </button>
@@ -571,13 +775,13 @@ const LeaveRequests = () => {
                     type="button"
                     disabled={activeAction !== null}
                     onClick={() => handleApprove(request)}
-                    className="flex h-10 flex-1 items-center justify-center gap-1.5 rounded-xl bg-[#e7f4ed] px-4 text-[13px] font-bold text-[#367a55] transition-all hover:bg-[#d6eddf] active:scale-[0.98] disabled:opacity-60"
+                    className="flex h-10 flex-1 items-center justify-center gap-1.5 rounded-lg bg-[#ecfdf5] px-4 text-xs font-semibold text-[#15803d] transition hover:bg-[#dcfce7] active:scale-[0.98] disabled:opacity-50"
                   >
                     {activeAction === `approve-${request.id}` ? (
-                      <span className="h-4 w-4 animate-spin rounded-full border-2 border-[#367a55] border-t-transparent" />
+                      <span className="h-4 w-4 animate-spin rounded-full border-2 border-[#15803d] border-t-transparent" />
                     ) : (
                       <>
-                        <FiCheck size={15} />
+                        <FiCheck size={14} />
 
                         {t("leaveRequests.approve")}
                       </>
@@ -588,101 +792,130 @@ const LeaveRequests = () => {
                     type="button"
                     disabled={activeAction !== null}
                     onClick={() => handleRejectClick(request)}
-                    className="flex h-10 flex-1 items-center justify-center rounded-xl bg-[#fce8e8] px-4 text-[13px] font-bold text-[#bd3e3e] transition-all hover:bg-[#f8dcdc] active:scale-[0.98] disabled:opacity-60"
+                    className="flex h-10 flex-1 items-center justify-center rounded-lg bg-[#fef2f2] px-4 text-xs font-semibold text-[#dc2626] transition hover:bg-[#fee2e2] active:scale-[0.98] disabled:opacity-50"
                   >
                     {t("leaveRequests.reject")}
                   </button>
                 </div>
-              </div>
+              </motion.div>
             ))
           )}
         </div>
-      </div>
+      </motion.div>
 
-      {/* Reject Modal */}
-      {rejectModal.open && rejectModal.request && (
-        <div
-          className="fixed inset-0 z-90 flex items-center justify-center bg-[#12395c]/30 px-4 backdrop-blur-[2px]"
-          onMouseDown={(event) => {
-            if (event.target === event.currentTarget) {
-              closeRejectModal();
-            }
-          }}
-        >
+      {/* ==================== Reject Modal ==================== */}
+      <AnimatePresence>
+        {rejectModal.open && rejectModal.request && (
           <div
-            className="w-full max-w-115 rounded-2xl border border-[#d9e3eb] bg-white p-6 shadow-2xl"
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="reject-leave-title"
+            className="fixed inset-0 z-50 flex items-center justify-center p-4"
+            onMouseDown={(event) => {
+              if (event.target === event.currentTarget) {
+                closeRejectModal();
+              }
+            }}
           >
-            <div className="flex items-start justify-between gap-4">
-              <div>
-                <h3
-                  id="reject-leave-title"
-                  className="text-[20px] font-bold text-[#12395c]"
-                >
-                  {isArabic ? "رفض طلب الإجازة" : "Reject Leave Request"}
-                </h3>
+            {/* Overlay */}
+            <motion.div
+              initial={{
+                opacity: 0,
+              }}
+              animate={{
+                opacity: 1,
+              }}
+              exit={{
+                opacity: 0,
+              }}
+              className="absolute inset-0 bg-[#0f172a]/40 backdrop-blur-[2px]"
+            />
 
-                <p className="mt-1 text-[14px] text-[#6f8ba4]">
-                  {rejectModal.request.name}
-                </p>
+            {/* Modal */}
+            <motion.div
+              variants={modalVariants}
+              initial="hidden"
+              animate="visible"
+              exit="exit"
+              className="relative z-10 w-full max-w-md overflow-hidden rounded-2xl border border-[#e2e8f0]/80 bg-white shadow-xl"
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="reject-leave-title"
+            >
+              {/* Modal Header */}
+              <div className="flex items-start justify-between border-b border-[#f1f5f9] px-6 py-5">
+                <div>
+                  <div className="mb-3 flex h-9 w-9 items-center justify-center rounded-xl bg-[#fef2f2] text-[#ef4444]">
+                    <FiX className="h-[18px] w-[18px]" />
+                  </div>
+
+                  <h3
+                    id="reject-leave-title"
+                    className="text-base font-bold text-[#1e293b]"
+                  >
+                    {isArabic ? "رفض طلب الإجازة" : "Reject Leave Request"}
+                  </h3>
+
+                  <p className="mt-1 text-xs text-[#64748b] sm:text-sm">
+                    {rejectModal.request.name}
+                  </p>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={closeRejectModal}
+                  className="flex h-8 w-8 items-center justify-center rounded-lg text-[#94a3b8] transition hover:bg-[#f8fafc] hover:text-[#475569]"
+                  aria-label={isArabic ? "إغلاق" : "Close"}
+                >
+                  <FiX className="h-4 w-4" />
+                </button>
               </div>
 
-              <button
-                type="button"
-                onClick={closeRejectModal}
-                className="flex h-9 w-9 items-center justify-center rounded-lg text-[#6d879d] transition hover:bg-[#f3f6f8] hover:text-[#12395c]"
-                aria-label={isArabic ? "إغلاق" : "Close"}
-              >
-                <FiX size={19} />
-              </button>
-            </div>
+              {/* Modal Body */}
+              <div className="p-6">
+                <div>
+                  <label className="mb-1.5 block text-xs font-semibold text-[#475569]">
+                    {isArabic ? "سبب الرفض" : "Rejection note"}
+                  </label>
 
-            <div className="mt-6">
-              <label className="mb-2 block text-[13px] font-bold text-[#355d80]">
-                {isArabic ? "سبب الرفض" : "Rejection note"}
-              </label>
+                  <textarea
+                    value={rejectNote}
+                    onChange={(event) => setRejectNote(event.target.value)}
+                    rows={4}
+                    placeholder={
+                      isArabic
+                        ? "اكتبي سبب رفض الطلب..."
+                        : "Add a note for the employee..."
+                    }
+                    className="w-full resize-none rounded-lg border border-[#e2e8f0] bg-white px-3 py-2.5 text-xs text-[#334155] outline-none transition placeholder:text-[#94a3b8] focus:border-[#94a3b8] focus:ring-2 focus:ring-[#f1f5f9] sm:text-sm"
+                  />
+                </div>
 
-              <textarea
-                value={rejectNote}
-                onChange={(event) => setRejectNote(event.target.value)}
-                rows={4}
-                placeholder={
-                  isArabic
-                    ? "اكتبي سبب رفض الطلب..."
-                    : "Add a note for the employee..."
-                }
-                className="w-full resize-none rounded-xl border border-[#d6e1e9] bg-[#fbfcfd] px-4 py-3 text-[14px] text-[#12395c] outline-none transition focus:border-[#6f96b4] focus:bg-white focus:ring-2 focus:ring-[#dce9f2]"
-              />
-            </div>
+                <div className="mt-6 flex gap-3">
+                  <button
+                    type="button"
+                    onClick={closeRejectModal}
+                    className="flex-1 rounded-lg border border-[#e2e8f0] bg-white px-4 py-2.5 text-xs font-semibold text-[#64748b] transition hover:bg-[#f8fafc] active:scale-[0.98] sm:text-sm"
+                  >
+                    {t("common.cancel")}
+                  </button>
 
-            <div className="mt-5 flex justify-end gap-2">
-              <button
-                type="button"
-                onClick={closeRejectModal}
-                className="h-10 rounded-xl border border-[#d5e0e8] bg-white px-5 text-[13px] font-bold text-[#52718c] transition hover:bg-[#f7f9fb] active:scale-[0.98]"
-              >
-                {t("common.cancel")}
-              </button>
-
-              <button
-                type="button"
-                onClick={handleConfirmReject}
-                disabled={!rejectNote.trim() || activeAction !== null}
-                className="flex h-10 items-center justify-center gap-2 rounded-xl bg-[#bd3e3e] px-5 text-[13px] font-bold text-white transition hover:bg-[#a93232] active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                {activeAction === `reject-${rejectModal.request.id}` ? (
-                  <span className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
-                ) : (
-                  t("leaveRequests.reject")
-                )}
-              </button>
-            </div>
+                  <button
+                    type="button"
+                    onClick={handleConfirmReject}
+                    disabled={!rejectNote.trim() || activeAction !== null}
+                    className="flex-1 rounded-lg bg-[#dc2626] px-4 py-2.5 text-xs font-semibold text-white transition hover:bg-[#b91c1c] active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50 sm:text-sm"
+                  >
+                    {activeAction === `reject-${rejectModal.request.id}` ? (
+                      <span className="mx-auto block h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                    ) : (
+                      t("leaveRequests.reject")
+                    )}
+                  </button>
+                </div>
+              </div>
+            </motion.div>
           </div>
-        </div>
-      )}
-    </div>
+        )}
+      </AnimatePresence>
+    </motion.div>
   );
 };
 

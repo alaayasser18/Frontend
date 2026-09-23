@@ -5,11 +5,77 @@ import {
   LuArrowUpRight,
   LuPlus,
   LuX,
+  LuCheck,
 } from "react-icons/lu";
 import { useTranslation } from "react-i18next";
+import { motion, AnimatePresence } from "framer-motion";
+
+const modalBackdrop = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: { duration: 0.2 },
+  },
+  exit: {
+    opacity: 0,
+    transition: { duration: 0.18 },
+  },
+};
+
+const modalPanel = {
+  hidden: {
+    opacity: 0,
+    scale: 0.96,
+    y: 18,
+  },
+  visible: {
+    opacity: 1,
+    scale: 1,
+    y: 0,
+    transition: {
+      duration: 0.26,
+      ease: "easeOut",
+    },
+  },
+  exit: {
+    opacity: 0,
+    scale: 0.96,
+    y: 10,
+    transition: {
+      duration: 0.18,
+    },
+  },
+};
+
+const toastVariants = {
+  hidden: {
+    opacity: 0,
+    y: -20,
+    scale: 0.96,
+  },
+  visible: {
+    opacity: 1,
+    y: 0,
+    scale: 1,
+    transition: {
+      duration: 0.3,
+      ease: "easeOut",
+    },
+  },
+  exit: {
+    opacity: 0,
+    y: -15,
+    scale: 0.96,
+    transition: {
+      duration: 0.2,
+    },
+  },
+};
 
 export default function Branches() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+
+  const isRtl = i18n.language?.startsWith("ar");
 
   // =========================
   // Branches Data
@@ -37,15 +103,42 @@ export default function Branches() {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
 
   // =========================
+  // Toast State
+  // =========================
+  const [toast, setToast] = useState({
+    visible: false,
+    title: "",
+    message: "",
+  });
+
+  // =========================
   // Form State
   // =========================
   const [branchName, setBranchName] = useState("");
 
   const [gpsCoordinates, setGpsCoordinates] = useState(
-    "30.0444° N, 31.2357° E",
+    "30.0444° N, 31.2357° E"
   );
 
   const [geofenceRadius, setGeofenceRadius] = useState("100");
+
+  // =========================
+  // Show Toast
+  // =========================
+  const showSuccessToast = (title, message) => {
+    setToast({
+      visible: true,
+      title,
+      message,
+    });
+
+    window.setTimeout(() => {
+      setToast((previousToast) => ({
+        ...previousToast,
+        visible: false,
+      }));
+    }, 3000);
+  };
 
   // =========================
   // Close Modal with Escape
@@ -70,15 +163,36 @@ export default function Branches() {
   // Toggle GPS
   // =========================
   const handleToggleGps = (branchId) => {
+    let updatedGpsState = false;
+    let branchName = "";
+
     setBranches((previousBranches) =>
-      previousBranches.map((branch) =>
-        branch.id === branchId
-          ? {
-              ...branch,
-              gpsEnforced: !branch.gpsEnforced,
-            }
-          : branch,
-      ),
+      previousBranches.map((branch) => {
+        if (branch.id !== branchId) {
+          return branch;
+        }
+
+        updatedGpsState = !branch.gpsEnforced;
+        branchName = branch.name;
+
+        return {
+          ...branch,
+          gpsEnforced: updatedGpsState,
+        };
+      })
+    );
+
+    showSuccessToast(
+      updatedGpsState
+        ? t("branchesPage.gpsEnabledToastTitle")
+        : t("branchesPage.gpsDisabledToastTitle"),
+      updatedGpsState
+        ? t("branchesPage.gpsEnabledToastMessage", {
+            name: branchName,
+          })
+        : t("branchesPage.gpsDisabledToastMessage", {
+            name: branchName,
+          })
     );
   };
 
@@ -95,35 +209,76 @@ export default function Branches() {
     const newBranch = {
       id: `branch-${Date.now()}`,
       name: branchName.trim(),
-      coordinates: gpsCoordinates.trim() || "30.0444° N, 31.2357° E",
+      coordinates:
+        gpsCoordinates.trim() || "30.0444° N, 31.2357° E",
       radius: `${geofenceRadius.trim() || "100"}m`,
       gpsEnforced: true,
     };
 
-    setBranches((previousBranches) => [...previousBranches, newBranch]);
+    setBranches((previousBranches) => [
+      ...previousBranches,
+      newBranch,
+    ]);
 
     setBranchName("");
     setGpsCoordinates("30.0444° N, 31.2357° E");
     setGeofenceRadius("100");
     setIsAddModalOpen(false);
+
+    showSuccessToast(
+      t(
+        "branchesPage.branchAddedToastTitle",
+        "Branch added"
+      ),
+      t(
+        "branchesPage.branchAddedToastMessage",
+        "The new branch was added successfully."
+      )
+    );
   };
 
   // =========================
   // Export Branches Config
   // =========================
   const handleExportConfig = () => {
-    const data =
-      "data:text/json;charset=utf-8," +
-      encodeURIComponent(JSON.stringify(branches, null, 2));
+    const exportData = {
+      exportedAt: new Date().toISOString(),
+      branches,
+    };
+
+    const blob = new Blob(
+      [JSON.stringify(exportData, null, 2)],
+      {
+        type: "application/json",
+      }
+    );
+
+    const url = URL.createObjectURL(blob);
 
     const downloadAnchor = document.createElement("a");
 
-    downloadAnchor.href = data;
-    downloadAnchor.download = "wisework_branches_config.json";
+    downloadAnchor.href = url;
+    downloadAnchor.download =
+      "wisework_branches_config.json";
 
     document.body.appendChild(downloadAnchor);
+
     downloadAnchor.click();
-    downloadAnchor.remove();
+
+    document.body.removeChild(downloadAnchor);
+
+    URL.revokeObjectURL(url);
+
+    showSuccessToast(
+      t(
+        "branchesPage.exportSuccessTitle",
+        "Export successful"
+      ),
+      t(
+        "branchesPage.exportSuccessMessage",
+        "Branches configuration exported successfully."
+      )
+    );
   };
 
   return (
@@ -132,19 +287,31 @@ export default function Branches() {
           BRANCHES PAGE
       ===================================================== */}
 
-      <div className="w-full max-w-[1400px] mx-auto box-border">
+      <div
+        dir={isRtl ? "rtl" : "ltr"}
+        className="w-full max-w-[1400px] mx-auto box-border"
+      >
         {/* =====================================================
             HEADER
         ===================================================== */}
 
         <div className="flex justify-between items-end mb-[28px] gap-4 flex-wrap">
           {/* Header Left */}
+
           <div>
             {/* Breadcrumb */}
-            <div className="flex items-center gap-2 text-[12px] font-semibold text-[#829ab1] mb-2">
-              <span>{t("branchesPage.breadcrumbApp")}</span>
 
-              <LuChevronRight size={14} className="text-[#9fb3c8]" />
+            <div className="flex items-center gap-2 text-[12px] font-semibold text-[#829ab1] mb-2">
+              <span>
+                {t("branchesPage.breadcrumbApp")}
+              </span>
+
+              <LuChevronRight
+                size={14}
+                className={`text-[#9fb3c8] ${
+                  isRtl ? "rotate-180" : ""
+                }`}
+              />
 
               <span className="text-[#486581]">
                 {t("branchesPage.breadcrumbPage")}
@@ -152,20 +319,25 @@ export default function Branches() {
             </div>
 
             {/* Page Title */}
+
             <h1 className="text-[28px] font-bold leading-[1.2] text-[#243b53] tracking-[-0.02em]">
               {t("branchesPage.title")}
             </h1>
 
             {/* Page Subtitle */}
+
             <p className="text-[14px] text-[#627d98] mt-[6px] leading-[1.4]">
               {t("branchesPage.subtitle")}
             </p>
           </div>
 
           {/* Export Button */}
-          <button
+
+          <motion.button
             type="button"
             onClick={handleExportConfig}
+            whileHover={{ y: -1 }}
+            whileTap={{ scale: 0.97 }}
             className="
               inline-flex items-center justify-center
               gap-2
@@ -187,8 +359,10 @@ export default function Branches() {
           >
             <LuArrowUpRight size={17} />
 
-            <span>{t("branchesPage.exportConfig")}</span>
-          </button>
+            <span>
+              {t("branchesPage.exportConfig")}
+            </span>
+          </motion.button>
         </div>
 
         {/* =====================================================
@@ -207,6 +381,7 @@ export default function Branches() {
           "
         >
           {/* Card Header */}
+
           <div
             className="
               flex justify-between items-start
@@ -216,6 +391,7 @@ export default function Branches() {
             "
           >
             {/* Card Information */}
+
             <div>
               <h2 className="text-[18px] font-bold text-[#243b53] m-0 leading-[1.3]">
                 {t("branchesPage.cardTitle")}
@@ -227,9 +403,12 @@ export default function Branches() {
             </div>
 
             {/* Add Branch Button */}
-            <button
+
+            <motion.button
               type="button"
               onClick={() => setIsAddModalOpen(true)}
+              whileHover={{ y: -1 }}
+              whileTap={{ scale: 0.97 }}
               className="
                 inline-flex items-center justify-center
                 gap-2
@@ -250,8 +429,10 @@ export default function Branches() {
             >
               <LuPlus size={17} />
 
-              <span>{t("branchesPage.addBranch")}</span>
-            </button>
+              <span>
+                {t("branchesPage.addBranch")}
+              </span>
+            </motion.button>
           </div>
 
           {/* =====================================================
@@ -267,8 +448,20 @@ export default function Branches() {
             "
           >
             {branches.map((branch) => (
-              <div
+              <motion.div
                 key={branch.id}
+                layout
+                initial={{
+                  opacity: 0,
+                  y: 10,
+                }}
+                animate={{
+                  opacity: 1,
+                  y: 0,
+                }}
+                transition={{
+                  duration: 0.3,
+                }}
                 className="
                   bg-white
                   border border-[#d9e2ec]
@@ -283,14 +476,14 @@ export default function Branches() {
                   hover:border-[#bcccdc]
                 "
               >
-                {/* =================================================
-                    TOP ROW
-                ================================================= */}
+                {/* TOP ROW */}
 
                 <div className="flex justify-between items-start gap-3">
                   {/* Branch Information */}
+
                   <div className="flex items-center gap-3 min-w-0">
                     {/* Branch Icon */}
+
                     <div
                       className="
                         w-[42px]
@@ -306,6 +499,7 @@ export default function Branches() {
                     </div>
 
                     {/* Branch Name + Coordinates */}
+
                     <div className="min-w-0">
                       <h3
                         className="
@@ -334,6 +528,7 @@ export default function Branches() {
                   </div>
 
                   {/* Radius Badge */}
+
                   <div
                     className="
                       inline-flex items-center
@@ -359,14 +554,13 @@ export default function Branches() {
                     />
 
                     <span>
-                      {branch.radius} {t("branchesPage.radiusSuffix")}
+                      {branch.radius}{" "}
+                      {t("branchesPage.radiusSuffix")}
                     </span>
                   </div>
                 </div>
 
-                {/* =================================================
-                    BOTTOM GPS ROW
-                ================================================= */}
+                {/* BOTTOM GPS ROW */}
 
                 <div
                   className="
@@ -378,6 +572,7 @@ export default function Branches() {
                   "
                 >
                   {/* GPS Information */}
+
                   <div>
                     <p
                       className="
@@ -388,7 +583,9 @@ export default function Branches() {
                         leading-[1.2]
                       "
                     >
-                      {t("branchesPage.gpsEnforcement")}
+                      {t(
+                        "branchesPage.gpsEnforcement"
+                      )}
                     </p>
 
                     <p
@@ -400,17 +597,26 @@ export default function Branches() {
                         leading-[1.3]
                       "
                     >
-                      {t("branchesPage.gpsEnforcementDesc")}
+                      {t(
+                        "branchesPage.gpsEnforcementDesc"
+                      )}
                     </p>
                   </div>
 
                   {/* GPS Switch */}
-                  <button
+
+                  <motion.button
                     type="button"
-                    onClick={() => handleToggleGps(branch.id)}
-                    aria-label={t("branchesPage.toggleGpsAriaLabel", {
-                      name: branch.name,
-                    })}
+                    whileTap={{ scale: 0.92 }}
+                    onClick={() =>
+                      handleToggleGps(branch.id)
+                    }
+                    aria-label={t(
+                      "branchesPage.toggleGpsAriaLabel",
+                      {
+                        name: branch.name,
+                      }
+                    )}
                     aria-pressed={branch.gpsEnforced}
                     className={`
                       relative
@@ -423,10 +629,17 @@ export default function Branches() {
                       p-0
                       outline-none
                       transition-colors duration-200 ease-in-out
-                      ${branch.gpsEnforced ? "bg-[#5b8c6a]" : "bg-[#bcccdc]"}
+                      ${
+                        branch.gpsEnforced
+                          ? "bg-[#5b8c6a]"
+                          : "bg-[#bcccdc]"
+                      }
                     `}
                   >
-                    <span
+                    <motion.span
+                      animate={{
+                        x: branch.gpsEnforced ? 0 : 0,
+                      }}
                       className={`
                         absolute
                         top-1
@@ -436,12 +649,16 @@ export default function Branches() {
                         bg-white
                         shadow-[0_1px_3px_rgba(0,0,0,0.18)]
                         transition-[left] duration-200 ease-in-out
-                        ${branch.gpsEnforced ? "left-6" : "left-1"}
+                        ${
+                          branch.gpsEnforced
+                            ? "left-6"
+                            : "left-1"
+                        }
                       `}
                     />
-                  </button>
+                  </motion.button>
                 </div>
-              </div>
+              </motion.div>
             ))}
           </div>
         </div>
@@ -451,267 +668,337 @@ export default function Branches() {
           ADD BRANCH MODAL
       ===================================================== */}
 
-      {isAddModalOpen && (
-        <div
-          className="
-            fixed
-            inset-0
-            z-[60]
-            flex items-center justify-center
-            bg-[rgba(16,42,67,0.5)]
-            p-4
-            box-border
-          "
-          onMouseDown={(event) => {
-            if (event.target === event.currentTarget) {
-              setIsAddModalOpen(false);
-            }
-          }}
-        >
-          <div
+      <AnimatePresence>
+        {isAddModalOpen && (
+          <motion.div
+            key="branch-modal-backdrop"
+            variants={modalBackdrop}
+            initial="hidden"
+            animate="visible"
+            exit="exit"
             className="
-              w-full
-              max-w-[512px]
-              bg-white
-              rounded-2xl
-              p-6
-              shadow-[0_20px_30px_rgba(16,42,67,0.2)]
+              fixed
+              inset-0
+              z-[60]
+              flex items-center justify-center
+              bg-[rgba(16,42,67,0.5)]
+              p-4
               box-border
             "
+            onMouseDown={(event) => {
+              if (
+                event.target === event.currentTarget
+              ) {
+                setIsAddModalOpen(false);
+              }
+            }}
           >
-            {/* =================================================
-                MODAL HEADER
-            ================================================= */}
-
-            <div
+            <motion.div
+              key="branch-modal-panel"
+              variants={modalPanel}
+              initial="hidden"
+              animate="visible"
+              exit="exit"
+              dir={isRtl ? "rtl" : "ltr"}
               className="
-                flex justify-between items-center
-                mb-5
+                w-full
+                max-w-[512px]
+                bg-white
+                rounded-2xl
+                p-6
+                shadow-[0_20px_30px_rgba(16,42,67,0.2)]
+                box-border
               "
             >
-              <h2
-                className="
-                  text-[18px]
-                  font-bold
-                  text-[#243b53]
-                  m-0
-                "
-              >
-                {t("branchesPage.modalTitle")}
-              </h2>
-
-              {/* Close Button */}
-              <button
-                type="button"
-                onClick={() => setIsAddModalOpen(false)}
-                aria-label={t("branchesPage.closeModal")}
-                className="
-                  bg-transparent
-                  border-0
-                  text-[#627d98]
-                  p-[6px]
-                  rounded-md
-                  cursor-pointer
-                  flex items-center justify-center
-                  transition-all duration-150
-                  hover:bg-[#f0f4f7]
-                  hover:text-[#243b53]
-                "
-              >
-                <LuX size={20} />
-              </button>
-            </div>
-
-            {/* =================================================
-                FORM
-            ================================================= */}
-
-            <form
-              onSubmit={handleAddBranchSubmit}
-              className="
-                flex flex-col
-                gap-4
-              "
-            >
-              {/* BRANCH NAME */}
-
-              <div className="flex flex-col gap-[6px]">
-                <label
-                  htmlFor="branch-name"
-                  className="
-                    text-[14px]
-                    font-medium
-                    text-[#486581]
-                  "
-                >
-                  {t("branchesPage.branchNameLabel")}
-                </label>
-
-                <input
-                  id="branch-name"
-                  type="text"
-                  placeholder={t("branchesPage.branchNamePlaceholder")}
-                  value={branchName}
-                  onChange={(event) => setBranchName(event.target.value)}
-                  required
-                  className="
-                    h-[42px]
-                    w-full
-                    border
-                    border-[#bcccdc]
-                    rounded-lg
-                    bg-white
-                    px-3
-                    text-[14px]
-                    text-[#243b53]
-                    outline-none
-                    box-border
-                    transition-all duration-150
-                    placeholder:text-[#829ab1]
-                    focus:border-[#486581]
-                    focus:shadow-[0_0_0_2px_#d9e2ec]
-                  "
-                />
-              </div>
-
-              {/* GPS COORDINATES */}
-
-              <div className="flex flex-col gap-[6px]">
-                <label
-                  htmlFor="gps-coordinates"
-                  className="
-                    text-[14px]
-                    font-medium
-                    text-[#486581]
-                  "
-                >
-                  {t("branchesPage.gpsCoordinatesFieldLabel")}
-                </label>
-
-                <input
-                  id="gps-coordinates"
-                  type="text"
-                  placeholder="30.0444° N, 31.2357° E"
-                  value={gpsCoordinates}
-                  onChange={(event) => setGpsCoordinates(event.target.value)}
-                  className="
-                    h-[42px]
-                    w-full
-                    border
-                    border-[#bcccdc]
-                    rounded-lg
-                    bg-white
-                    px-3
-                    text-[14px]
-                    text-[#243b53]
-                    outline-none
-                    box-border
-                    transition-all duration-150
-                    placeholder:text-[#829ab1]
-                    focus:border-[#486581]
-                    focus:shadow-[0_0_0_2px_#d9e2ec]
-                  "
-                />
-              </div>
-
-              {/* GEOFENCE RADIUS */}
-
-              <div className="flex flex-col gap-[6px]">
-                <label
-                  htmlFor="geofence-radius"
-                  className="
-                    text-[14px]
-                    font-medium
-                    text-[#486581]
-                  "
-                >
-                  {t("branchesPage.geofenceRadiusLabel")}
-                </label>
-
-                <input
-                  id="geofence-radius"
-                  type="number"
-                  min="1"
-                  placeholder="100"
-                  value={geofenceRadius}
-                  onChange={(event) => setGeofenceRadius(event.target.value)}
-                  className="
-                    h-[42px]
-                    w-full
-                    border
-                    border-[#bcccdc]
-                    rounded-lg
-                    bg-white
-                    px-3
-                    text-[14px]
-                    text-[#243b53]
-                    outline-none
-                    box-border
-                    transition-all duration-150
-                    placeholder:text-[#829ab1]
-                    focus:border-[#486581]
-                    focus:shadow-[0_0_0_2px_#d9e2ec]
-                  "
-                />
-              </div>
-
-              {/* =================================================
-                  MODAL FOOTER
-              ================================================= */}
+              {/* MODAL HEADER */}
 
               <div
                 className="
-                  flex justify-end
-                  gap-[10px]
-                  mt-2
+                  flex justify-between items-center
+                  mb-5
                 "
               >
-                {/* Cancel */}
+                <h2
+                  className="
+                    text-[18px]
+                    font-bold
+                    text-[#243b53]
+                    m-0
+                  "
+                >
+                  {t("branchesPage.modalTitle")}
+                </h2>
+
+                {/* Close Button */}
+
                 <button
                   type="button"
-                  onClick={() => setIsAddModalOpen(false)}
+                  onClick={() =>
+                    setIsAddModalOpen(false)
+                  }
+                  aria-label={t(
+                    "branchesPage.closeModal"
+                  )}
                   className="
-                    h-10
-                    px-[18px]
-                    bg-white
-                    border
-                    border-[#bcccdc]
-                    rounded-lg
-                    text-[#486581]
-                    text-[14px]
-                    font-semibold
+                    bg-transparent
+                    border-0
+                    text-[#627d98]
+                    p-[6px]
+                    rounded-md
                     cursor-pointer
+                    flex items-center justify-center
                     transition-all duration-150
                     hover:bg-[#f0f4f7]
+                    hover:text-[#243b53]
                   "
                 >
-                  {t("branchesPage.cancel")}
-                </button>
-
-                {/* Submit */}
-                <button
-                  type="submit"
-                  className="
-                    h-10
-                    px-[18px]
-                    bg-[#243b53]
-                    border-0
-                    rounded-lg
-                    text-white
-                    text-[14px]
-                    font-semibold
-                    cursor-pointer
-                    transition-colors duration-150
-                    hover:bg-[#334e68]
-                  "
-                >
-                  {t("branchesPage.addBranch")}
+                  <LuX size={20} />
                 </button>
               </div>
-            </form>
-          </div>
-        </div>
-      )}
+
+              {/* FORM */}
+
+              <form
+                onSubmit={handleAddBranchSubmit}
+                className="
+                  flex flex-col
+                  gap-4
+                "
+              >
+                {/* BRANCH NAME */}
+
+                <div className="flex flex-col gap-[6px]">
+                  <label
+                    htmlFor="branch-name"
+                    className="
+                      text-[14px]
+                      font-medium
+                      text-[#486581]
+                    "
+                  >
+                    {t(
+                      "branchesPage.branchNameLabel"
+                    )}
+                  </label>
+
+                  <input
+                    id="branch-name"
+                    type="text"
+                    placeholder={t(
+                      "branchesPage.branchNamePlaceholder"
+                    )}
+                    value={branchName}
+                    onChange={(event) =>
+                      setBranchName(
+                        event.target.value
+                      )
+                    }
+                    required
+                    className="
+                      h-[42px]
+                      w-full
+                      border
+                      border-[#bcccdc]
+                      rounded-lg
+                      bg-white
+                      px-3
+                      text-[14px]
+                      text-[#243b53]
+                      outline-none
+                      box-border
+                      transition-all duration-150
+                      placeholder:text-[#829ab1]
+                      focus:border-[#486581]
+                      focus:shadow-[0_0_0_2px_#d9e2ec]
+                    "
+                  />
+                </div>
+
+                {/* GPS COORDINATES */}
+
+                <div className="flex flex-col gap-[6px]">
+                  <label
+                    htmlFor="gps-coordinates"
+                    className="
+                      text-[14px]
+                      font-medium
+                      text-[#486581]
+                    "
+                  >
+                    {t(
+                      "branchesPage.gpsCoordinatesFieldLabel"
+                    )}
+                  </label>
+
+                  <input
+                    id="gps-coordinates"
+                    type="text"
+                    placeholder="30.0444° N, 31.2357° E"
+                    value={gpsCoordinates}
+                    onChange={(event) =>
+                      setGpsCoordinates(
+                        event.target.value
+                      )
+                    }
+                    className="
+                      h-[42px]
+                      w-full
+                      border
+                      border-[#bcccdc]
+                      rounded-lg
+                      bg-white
+                      px-3
+                      text-[14px]
+                      text-[#243b53]
+                      outline-none
+                      box-border
+                      transition-all duration-150
+                      placeholder:text-[#829ab1]
+                      focus:border-[#486581]
+                      focus:shadow-[0_0_0_2px_#d9e2ec]
+                    "
+                  />
+                </div>
+
+                {/* GEOFENCE RADIUS */}
+
+                <div className="flex flex-col gap-[6px]">
+                  <label
+                    htmlFor="geofence-radius"
+                    className="
+                      text-[14px]
+                      font-medium
+                      text-[#486581]
+                    "
+                  >
+                    {t(
+                      "branchesPage.geofenceRadiusLabel"
+                    )}
+                  </label>
+
+                  <input
+                    id="geofence-radius"
+                    type="number"
+                    min="1"
+                    placeholder="100"
+                    value={geofenceRadius}
+                    onChange={(event) =>
+                      setGeofenceRadius(
+                        event.target.value
+                      )
+                    }
+                    className="
+                      h-[42px]
+                      w-full
+                      border
+                      border-[#bcccdc]
+                      rounded-lg
+                      bg-white
+                      px-3
+                      text-[14px]
+                      text-[#243b53]
+                      outline-none
+                      box-border
+                      transition-all duration-150
+                      placeholder:text-[#829ab1]
+                      focus:border-[#486581]
+                      focus:shadow-[0_0_0_2px_#d9e2ec]
+                    "
+                  />
+                </div>
+
+                {/* MODAL FOOTER */}
+
+                <div
+                  className="
+                    flex justify-end
+                    gap-[10px]
+                    mt-2
+                  "
+                >
+                  {/* Cancel */}
+
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setIsAddModalOpen(false)
+                    }
+                    className="
+                      h-10
+                      px-[18px]
+                      bg-white
+                      border
+                      border-[#bcccdc]
+                      rounded-lg
+                      text-[#486581]
+                      text-[14px]
+                      font-semibold
+                      cursor-pointer
+                      transition-all duration-150
+                      hover:bg-[#f0f4f7]
+                    "
+                  >
+                    {t("branchesPage.cancel")}
+                  </button>
+
+                  {/* Submit */}
+
+                  <button
+                    type="submit"
+                    className="
+                      h-10
+                      px-[18px]
+                      bg-[#243b53]
+                      border-0
+                      rounded-lg
+                      text-white
+                      text-[14px]
+                      font-semibold
+                      cursor-pointer
+                      transition-colors duration-150
+                      hover:bg-[#334e68]
+                    "
+                  >
+                    {t("branchesPage.addBranch")}
+                  </button>
+                </div>
+              </form>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* =====================================================
+          SUCCESS TOAST
+      ===================================================== */}
+
+      <AnimatePresence>
+        {toast.visible && (
+          <motion.div
+            variants={toastVariants}
+            initial="hidden"
+            animate="visible"
+            exit="exit"
+            className={`fixed top-5 ${
+              isRtl ? "left-5" : "right-5"
+            } z-[100] flex items-center gap-3 rounded-xl border border-[#d9e2ec] bg-white px-4 py-3 shadow-[0_10px_30px_rgba(16,42,67,0.12)]`}
+          >
+            <div className="flex size-9 items-center justify-center rounded-full bg-[#e8f3eb] text-[#3f7d5a]">
+              <LuCheck size={18} />
+            </div>
+
+            <div>
+              <p className="text-sm font-semibold text-[#243B53]">
+                {toast.title}
+              </p>
+
+              <p className="mt-0.5 text-xs text-[#829ab1]">
+                {toast.message}
+              </p>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </>
   );
 }

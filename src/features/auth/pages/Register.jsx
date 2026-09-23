@@ -50,6 +50,7 @@ export default function Register() {
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [contact, setContact] = useState("");
+  const [phone, setPhone] = useState(""); // حقل الهاتف المضاف حسب متطلبات الباك إيند
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
 
@@ -105,12 +106,14 @@ export default function Register() {
       return;
     }
 
+    // إرسال البيانات بالصيغة المطابقة للـ Backend API (Scalar)
     registerMutation.mutate(
       {
-        firstName,
-        lastName,
-        contact,
+        name: `${firstName} ${lastName}`.trim(),
+        email: contact,
+        phone: phone || "+201234567890", // قيمة افتراضية أو من الـ state لو حابب تضيف input للهاتف
         password,
+        password_confirmation: confirmPassword,
       },
       {
         onSuccess: (data) => {
@@ -228,7 +231,7 @@ export default function Register() {
           </motion.div>
 
           {/* =========================
-              CONTACT
+              CONTACT (EMAIL)
           ========================= */}
 
           <motion.div className="form-group" variants={itemVariants}>

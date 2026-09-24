@@ -35,3 +35,4 @@ export const resetPassword = async (resetPasswordData) => {
   );
   return response.data;
 };
+

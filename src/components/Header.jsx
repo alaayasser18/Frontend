@@ -16,33 +16,41 @@ const Header = ({ onToggleMenu, role = "admin" }) => {
 
   const isAr = i18n.language?.startsWith("ar");
   let avatarText = currentUser?.initials;
-  let displayName = currentUser?.name;
-  let displayRole = t("portal.staffMember", "Staff Member");
-  let avatarBg = "bg-[#e7eef5]";
-  let avatarColor = "text-[#486581]";
+  let displayName =
+    isAr && currentUser?.nameAr ? currentUser.nameAr : currentUser?.name;
+  let displayRole =
+    currentUser?.role_label ||
+    currentUser?.job_title ||
+    t("portal.staffMember", "Staff Member");
+  let avatarBg;
+  let avatarColor;
 
   if (effectiveRole === "employee") {
-    avatarText = "OH";
-    displayName = isAr ? "عمر حداد" : "Omar Haddad";
-    displayRole = isAr ? "محلل منتجات أول" : "Senior Product Analyst";
+    avatarText = avatarText || "OH";
+    displayName = displayName || (isAr ? "عمر حداد" : "Omar Haddad");
+    displayRole =
+      displayRole ||
+      (isAr ? "محلل منتجات أول" : "Senior Product Analyst");
     avatarBg = "bg-[#d7eee9]";
     avatarColor = "text-[#235850]";
   } else if (effectiveRole === "hr") {
-    avatarText = "MK";
-    displayName = isAr ? "مصطفى خليل" : "Mostafa Khalil";
-    displayRole = isAr ? "مسؤول موارد بشرية" : "HR Specialist";
+    avatarText = avatarText || "MK";
+    displayName = displayName || (isAr ? "مصطفى خليل" : "Mostafa Khalil");
+    displayRole =
+      displayRole || (isAr ? "مسؤول موارد بشرية" : "HR Specialist");
     avatarBg = "bg-[#ede9fe]";
     avatarColor = "text-[#5b21b6]";
   } else if (effectiveRole === "manager") {
-    avatarText = "LH";
-    displayName = isAr ? "ليلى حسن" : "Layla Hassan";
-    displayRole = isAr ? "مدير الفريق" : "Manager";
+    avatarText = avatarText || "LH";
+    displayName = displayName || (isAr ? "ليلى حسن" : "Layla Hassan");
+    displayRole = displayRole || (isAr ? "مدير الفريق" : "Manager");
     avatarBg = "bg-[#fef3c7]";
     avatarColor = "text-[#92400e]";
   } else {
-    avatarText = currentUser?.initials || "AN";
-    displayName = currentUser?.name || (isAr ? "أحمد ناصر" : "Ahmed Nasser");
-    displayRole = isAr ? "مسؤول النظام" : "Administrator";
+    avatarText = avatarText || "AN";
+    displayName = displayName || (isAr ? "أحمد ناصر" : "Ahmed Nasser");
+    displayRole =
+      displayRole || (isAr ? "مسؤول النظام" : "Administrator");
     avatarBg = "bg-[#e7eef5]";
     avatarColor = "text-[#486581]";
   }

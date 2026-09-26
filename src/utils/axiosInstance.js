@@ -1,9 +1,9 @@
 import axios from "axios";
 
-// Create Axios instance with base URL from Vite environment variables
 const axiosInstance = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL || "https://hr-system.iptvdemo.serv5group.com/api",
   timeout: 15000,
+
   headers: {
     "Content-Type": "application/json",
     Accept: "application/json",
@@ -14,6 +14,7 @@ const axiosInstance = axios.create({
 axiosInstance.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem("token");
+
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -28,22 +29,25 @@ axiosInstance.interceptors.request.use(
 
     return config;
   },
-  (error) => Promise.reject(error)
+  (error) => {
+    return Promise.reject(error);
+  },
 );
 
-// Response interceptor: Handle 401 Unauthorized
 axiosInstance.interceptors.response.use(
   (response) => response,
+
   (error) => {
-    if (error.response && error.response.status === 401) {
+    if (
+      error.response?.status === 401 &&
+      !window.location.pathname.includes("/login")
+    ) {
       localStorage.removeItem("token");
-      if (typeof window !== "undefined" && window.location.pathname !== "/login") {
-        window.location.href = "/login";
-      }
+      window.location.href = "/login";
     }
+
     return Promise.reject(error);
-  }
+  },
 );
 
-export { axiosInstance };
 export default axiosInstance;

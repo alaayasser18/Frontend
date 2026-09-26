@@ -1,7 +1,9 @@
 import axios from "axios";
 
 const axiosInstance = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL || "https://hr-system.iptvdemo.serv5group.com/api",
+  baseURL:
+    import.meta.env.VITE_API_BASE_URL ||
+    "https://nontelepathically-pamphletary-cyndi.ngrok-free.dev/",
   timeout: 15000,
 
   headers: {

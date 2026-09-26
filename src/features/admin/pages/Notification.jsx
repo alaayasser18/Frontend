@@ -37,8 +37,11 @@ export default function Notification() {
     notifications,
     setNotifications,
     unreadCount,
+    loading,
     clearAllNotifications,
     clearNotification,
+    markAllAsRead,
+    toggleNotificationRead,
   } = useNotifications();
 
   const location = useLocation();
@@ -100,13 +103,8 @@ export default function Notification() {
     });
   }, [notifications, filter, searchQuery, t]);
 
-  const handleMarkAllAsRead = () => {
-    setNotifications((prev) =>
-      prev.map((item) => ({
-        ...item,
-        isRead: true,
-      }))
-    );
+  const handleMarkAllAsRead = async () => {
+    await markAllAsRead();
     toast.success(t("portal.markedAllSuccess", "All notifications marked as read"), {
       id: "toast-mark-all",
     });
@@ -121,7 +119,7 @@ export default function Notification() {
     });
   };
 
-  const handleToggleRead = (id, e) => {
+  const handleToggleRead = async (id, e) => {
     if (e) {
       e.preventDefault();
       e.stopPropagation();
@@ -141,11 +139,7 @@ export default function Notification() {
       });
     }
 
-    setNotifications((prev) =>
-      prev.map((item) =>
-        item.id === id ? { ...item, isRead: nextStatus } : item
-      )
-    );
+    await toggleNotificationRead(id);
 
     if (selectedNotification && selectedNotification.id === id) {
       setSelectedNotification((prev) => ({
@@ -376,8 +370,22 @@ export default function Notification() {
         {/* Notifications List */}
         <div className="divide-y divide-[#f1f5f9]">
           <AnimatePresence mode="popLayout">
-            {filteredNotifications.length > 0 ? (
+            {loading ? (
+              /* Loading Skeleton */
+              <div className="flex flex-col gap-3 py-6 px-4">
+                {[1, 2, 3].map((i) => (
+                  <div key={i} className="flex items-start gap-3 animate-pulse">
+                    <div className="h-9 w-9 rounded-full bg-[#e2e8f0] shrink-0" />
+                    <div className="flex-1 space-y-2">
+                      <div className="h-3 w-2/5 rounded bg-[#e2e8f0]" />
+                      <div className="h-2.5 w-4/5 rounded bg-[#f1f5f9]" />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : filteredNotifications.length > 0 ? (
               filteredNotifications.map((item) => {
+
                 const title = t(item.titleKey, item.defaultTitle);
                 const desc = t(item.descKey, item.defaultDesc);
                 const badge = t(item.badgeKey, item.defaultBadge);

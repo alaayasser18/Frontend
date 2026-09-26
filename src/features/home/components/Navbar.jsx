@@ -6,9 +6,11 @@ import { motion, AnimatePresence } from "framer-motion";
 import logoImg from "../../../assets/logo.jpeg";
 import LanguageSwitcher from "../../../components/LanguageSwitcher";
 import { APP_NAME, BRAND_NAME } from "../../../utils/global";
+import { useAuth } from "../../../context/AuthContext";
 
 export default function Navbar() {
   const { t } = useTranslation();
+  const { isAuthenticated, role, ROLE_ROUTES } = useAuth();
   const [scrolled, setScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [activeSection, setActiveSection] = useState("home");
@@ -282,8 +284,13 @@ export default function Navbar() {
                 duration: 0.2,
               }}
             >
-              <Link to="/login" className="button button-primary">
-                {t("home.nav.signIn")}
+              <Link
+                to={isAuthenticated && role ? ROLE_ROUTES[role] || "/admin/dashboard" : "/login"}
+                className="button button-primary"
+              >
+                {isAuthenticated
+                  ? t("home.nav.dashboard", "Dashboard")
+                  : t("home.nav.signIn")}
               </Link>
             </motion.div>
           </motion.div>
@@ -397,11 +404,13 @@ export default function Navbar() {
                 }}
               >
                 <Link
-                  to="/login"
+                  to={isAuthenticated && role ? ROLE_ROUTES[role] || "/admin/dashboard" : "/login"}
                   className="button button-primary"
                   onClick={() => setMobileMenuOpen(false)}
                 >
-                  {t("home.nav.signIn")}
+                  {isAuthenticated
+                    ? t("home.nav.dashboard", "Dashboard")
+                    : t("home.nav.signIn")}
                 </Link>
               </motion.div>
             </motion.div>

@@ -2,7 +2,10 @@ import { useEffect } from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { Toaster } from "react-hot-toast";
 import { useTranslation } from "react-i18next";
+import { AuthProvider } from "./context/AuthContext";
+import ProtectedRoute, { PublicRoute } from "./routes/ProtectedRoute";
 import HrLayout from "./layouts/HrLayout";
+
 // ==================== Home ====================
 import Home from "./features/home";
 
@@ -104,220 +107,238 @@ function App() {
 
   return (
     <BrowserRouter>
-      {/* ==================== Toast Notifications ==================== */}
-      <Toaster
-        position="top-right"
-        toastOptions={{
-          duration: 3000,
-        }}
-      />
-
-      <Routes>
-        {/* ==================== Home ==================== */}
-        <Route path="/" element={<Home />} />
-
-        {/* ==================== Authentication ==================== */}
-        <Route path="/login" element={<Login />} />
-        <Route path="/register" element={<Register />} />
-
-        {/* ==================== Password Reset ==================== */}
-        <Route path="/ForgotPassword" element={<ForgotPassword />} />
-        <Route path="/VerifyOTP" element={<VerifyOTP />} />
-        <Route path="/ResetPassword" element={<ResetPassword />} />
-
-        <Route
-          path="/password-reset-success"
-          element={<PasswordResetSuccess />}
+      <AuthProvider>
+        {/* ==================== Toast Notifications ==================== */}
+        <Toaster
+          position="top-right"
+          toastOptions={{
+            duration: 3000,
+          }}
         />
 
-        {/* ==================== Dashboard Layout ==================== */}
-        <Route element={<DashboardLayout />}>
-          {/* ================================================== */}
-          {/* ==================== ADMIN ======================= */}
-          {/* ================================================== */}
+        <Routes>
+          {/* ==================== Home ==================== */}
+          <Route path="/" element={<Home />} />
 
+          {/* ==================== Authentication ==================== */}
+          {/* Normal Login: for Employee, HR, Manager (Google login hidden, no register link) */}
           <Route
-            path="/admin"
-            element={<Navigate to="/admin/dashboard" replace />}
-          />
-
-          <Route path="/admin/dashboard" element={<AdminDashboard />} />
-
-          <Route path="/admin/users" element={<Users />} />
-
-          <Route path="/admin/branches" element={<Branches />} />
-
-          <Route path="/admin/performance" element={<AdminPerformance />} />
-
-          <Route path="/admin/notifications" element={<Notification />} />
-
-          <Route path="/admin/audit" element={<ActivityLog />} />
-
-          <Route
-            path="/admin/settings"
+            path="/login"
             element={
-              <DashboardPlaceholder
-                messageKey="portal.settings"
-                defaultMessage="الإعدادات"
-              />
+              <PublicRoute>
+                <Login isOwner={false} />
+              </PublicRoute>
             }
           />
 
-          {/* ================================================== */}
-          {/* ====================== HR ======================== */}
-          {/* ================================================== */}
+          {/* Owner Login: for System Owner (Google login visible, register link points to /owner/register) */}
+          <Route
+            path="/owner/login"
+            element={
+              <PublicRoute>
+                <Login isOwner={true} />
+              </PublicRoute>
+            }
+          />
 
-          {/* HR Redirect */}
+          {/* Owner redirect helper */}
+          <Route path="/owner" element={<Navigate to="/owner/login" replace />} />
 
-          {/* ==================== HR ROUTES ==================== */}
+          {/* Owner Register: intended for Owner only */}
+          <Route
+            path="/owner/register"
+            element={
+              <PublicRoute>
+                <Register />
+              </PublicRoute>
+            }
+          />
 
-          <Route path="/hr" element={<HrLayout />}>
-            {/* HR Root */}
-            <Route index element={<Navigate to="/hr/dashboard" replace />} />
+          {/* Backward compatibility for /register: redirect to /owner/register */}
+          <Route
+            path="/register"
+            element={<Navigate to="/owner/register" replace />}
+          />
 
-            {/* HR Dashboard */}
-            <Route path="dashboard" element={<HrDashboard />} />
+          {/* ==================== Password Reset ==================== */}
+          <Route
+            path="/ForgotPassword"
+            element={
+              <PublicRoute>
+                <ForgotPassword />
+              </PublicRoute>
+            }
+          />
+          <Route
+            path="/VerifyOTP"
+            element={
+              <PublicRoute>
+                <VerifyOTP />
+              </PublicRoute>
+            }
+          />
+          <Route
+            path="/ResetPassword"
+            element={
+              <PublicRoute>
+                <ResetPassword />
+              </PublicRoute>
+            }
+          />
 
-            {/* HR Employees */}
-            <Route path="employees" element={<HrEmployees />} />
+          <Route
+            path="/password-reset-success"
+            element={
+              <PublicRoute>
+                <PasswordResetSuccess />
+              </PublicRoute>
+            }
+          />
 
-            {/* HR Departments & Teams */}
-            <Route path="departments" element={<HrDepartments />} />
+          {/* ==================== Dashboard Layout ==================== */}
+          <Route element={<DashboardLayout />}>
+            {/* ================================================== */}
+            {/* ==================== ADMIN (Owner Only) ========== */}
+            {/* ================================================== */}
+            <Route element={<ProtectedRoute allowedRoles={["Owner"]} />}>
+              <Route
+                path="/admin"
+                element={<Navigate to="/admin/dashboard" replace />}
+              />
 
-            {/* HR Attendance */}
-            <Route path="attendance" element={<HrAttendance />} />
+              <Route path="/admin/dashboard" element={<AdminDashboard />} />
+              <Route path="/admin/users" element={<Users />} />
+              <Route path="/admin/branches" element={<Branches />} />
+              <Route path="/admin/performance" element={<AdminPerformance />} />
+              <Route path="/admin/notifications" element={<Notification />} />
+              <Route path="/admin/audit" element={<ActivityLog />} />
+              <Route
+                path="/admin/settings"
+                element={
+                  <DashboardPlaceholder
+                    messageKey="portal.settings"
+                    defaultMessage="الإعدادات"
+                  />
+                }
+              />
+              <Route path="/branches" element={<Branches />} />
+            </Route>
 
-            {/* HR Leave Requests */}
-            <Route path="leave-requests" element={<HrLeaveRequests />} />
-
-            {/* HR Advances & Deductions */}
-            <Route path="advances-deductions" element={<HrAdvances />} />
-
-            {/* HR Payroll */}
-            <Route path="payroll" element={<HrPayroll />} />
-
-            {/* HR Rewards & Bonuses */}
-            <Route path="rewards" element={<HrRewards />} />
-
-            {/* HR Evaluations & Goals */}
-            <Route path="evaluations-goals" element={<HrEvaluationsGoals />} />
-
-            {/* HR Performance Metrics */}
-            <Route
-              path="performance-metrics"
-              element={<PerformanceMetrics />}
-            />
-
-            {/* HR AI Insights */}
-            <Route path="ai-insights" element={<AIInsights />} />
-
-            {/* HR Company Policies */}
-            <Route path="company-policies" element={<HrCompanyPolicies />} />
-
-            {/* HR Holidays & Seasons */}
-            <Route path="holidays" element={<Holidays />} />
-
-            {/* HR Reports */}
-            <Route path="reports" element={<Reports />} />
-
-            {/* HR Notifications */}
-            <Route path="notifications" element={<Notification />} />
-
-            {/* HR Settings */}
-            <Route
-              path="settings"
-              element={
-                <DashboardPlaceholder
-                  messageKey="portal.settings"
-                  defaultMessage="الإعدادات"
+            {/* ================================================== */}
+            {/* ====================== HR (HR Only) ============== */}
+            {/* ================================================== */}
+            <Route element={<ProtectedRoute allowedRoles={["HR"]} />}>
+              <Route path="/hr" element={<HrLayout />}>
+                <Route index element={<Navigate to="/hr/dashboard" replace />} />
+                <Route path="dashboard" element={<HrDashboard />} />
+                <Route path="employees" element={<HrEmployees />} />
+                <Route path="departments" element={<HrDepartments />} />
+                <Route path="attendance" element={<HrAttendance />} />
+                <Route path="leave-requests" element={<HrLeaveRequests />} />
+                <Route path="advances-deductions" element={<HrAdvances />} />
+                <Route path="payroll" element={<HrPayroll />} />
+                <Route path="rewards" element={<HrRewards />} />
+                <Route
+                  path="evaluations-goals"
+                  element={<HrEvaluationsGoals />}
                 />
-              }
-            />
+                <Route
+                  path="performance-metrics"
+                  element={<PerformanceMetrics />}
+                />
+                <Route path="ai-insights" element={<AIInsights />} />
+                <Route
+                  path="company-policies"
+                  element={<HrCompanyPolicies />}
+                />
+                <Route path="holidays" element={<Holidays />} />
+                <Route path="reports" element={<Reports />} />
+                <Route path="notifications" element={<Notification />} />
+                <Route
+                  path="settings"
+                  element={
+                    <DashboardPlaceholder
+                      messageKey="portal.settings"
+                      defaultMessage="الإعدادات"
+                    />
+                  }
+                />
+              </Route>
+            </Route>
+
+            {/* ================================================== */}
+            {/* ==================== MANAGER (Manager Only) ====== */}
+            {/* ================================================== */}
+            <Route element={<ProtectedRoute allowedRoles={["Manager"]} />}>
+              <Route
+                path="/manager"
+                element={<Navigate to="/manager/dashboard" replace />}
+              />
+
+              <Route path="/manager/dashboard" element={<TeamDashboard />} />
+              <Route path="/manager/tasks" element={<TaskManagement />} />
+              <Route
+                path="/manager/submissions"
+                element={<SubmissionReviews />}
+              />
+              <Route
+                path="/manager/evaluations"
+                element={<TeamEvaluations />}
+              />
+              <Route path="/manager/goals" element={<TeamGoals />} />
+              <Route
+                path="/manager/analytics"
+                element={<PerformanceAnalytics />}
+              />
+              <Route path="/manager/attendance" element={<TeamAttendance />} />
+              <Route
+                path="/manager/leave-approvals"
+                element={<TeamLeaveApprovals />}
+              />
+              <Route path="/manager/ai-insights" element={<AITeamInsights />} />
+              <Route path="/manager/notifications" element={<Notification />} />
+              <Route path="/manager/profile" element={<ProfileSetting />} />
+            </Route>
+
+            {/* ================================================== */}
+            {/* ==================== EMPLOYEE (Employee Only) ==== */}
+            {/* ================================================== */}
+            <Route element={<ProtectedRoute allowedRoles={["Employee"]} />}>
+              <Route
+                path="/employee"
+                element={<Navigate to="/employee/dashboard" replace />}
+              />
+
+              <Route path="/employee/dashboard" element={<HomeDashboard />} />
+              <Route path="/employee/attendance" element={<Attendance />} />
+              <Route path="/employee/tasks" element={<Tasks />} />
+              <Route
+                path="/employee/performance"
+                element={<EmployeePerformance />}
+              />
+              <Route path="/employee/leaves" element={<LeaveBalances />} />
+              <Route
+                path="/employee/leave-balances"
+                element={<Navigate to="/employee/leaves" replace />}
+              />
+              <Route path="/employee/ai-assistant" element={<AIAssistant />} />
+              <Route
+                path="/employee/assistant"
+                element={<Navigate to="/employee/ai-assistant" replace />}
+              />
+              <Route
+                path="/employee/notifications"
+                element={<Notification />}
+              />
+              <Route path="/employee/policies" element={<CompanyPolicies />} />
+              <Route
+                path="/employee/profile"
+                element={<EmployeeProfileSettings />}
+              />
+            </Route>
           </Route>
-
-          {/* ================================================== */}
-          {/* ==================== MANAGER ===================== */}
-          {/* ================================================== */}
-
-          <Route
-            path="/manager"
-            element={<Navigate to="/manager/dashboard" replace />}
-          />
-
-          <Route path="/manager/dashboard" element={<TeamDashboard />} />
-
-          <Route path="/manager/tasks" element={<TaskManagement />} />
-
-          <Route path="/manager/submissions" element={<SubmissionReviews />} />
-
-          <Route path="/manager/evaluations" element={<TeamEvaluations />} />
-
-          <Route path="/manager/goals" element={<TeamGoals />} />
-
-          <Route path="/manager/analytics" element={<PerformanceAnalytics />} />
-
-          <Route path="/manager/attendance" element={<TeamAttendance />} />
-
-          <Route
-            path="/manager/leave-approvals"
-            element={<TeamLeaveApprovals />}
-          />
-
-          <Route path="/manager/ai-insights" element={<AITeamInsights />} />
-
-          <Route path="/manager/notifications" element={<Notification />} />
-
-          <Route path="/manager/profile" element={<ProfileSetting />} />
-
-          {/* ================================================== */}
-          {/* ==================== EMPLOYEE ==================== */}
-          {/* ================================================== */}
-
-          <Route
-            path="/employee"
-            element={<Navigate to="/employee/dashboard" replace />}
-          />
-
-          <Route path="/employee/dashboard" element={<HomeDashboard />} />
-
-          <Route path="/employee/attendance" element={<Attendance />} />
-
-          <Route path="/employee/tasks" element={<Tasks />} />
-
-          <Route
-            path="/employee/performance"
-            element={<EmployeePerformance />}
-          />
-
-          <Route path="/employee/leaves" element={<LeaveBalances />} />
-
-          <Route
-            path="/employee/leave-balances"
-            element={<Navigate to="/employee/leaves" replace />}
-          />
-
-          <Route path="/employee/ai-assistant" element={<AIAssistant />} />
-
-          <Route
-            path="/employee/assistant"
-            element={<Navigate to="/employee/ai-assistant" replace />}
-          />
-
-          <Route path="/employee/notifications" element={<Notification />} />
-
-          {/* Employee Company Policies */}
-          <Route path="/employee/policies" element={<CompanyPolicies />} />
-
-          <Route
-            path="/employee/profile"
-            element={<EmployeeProfileSettings />}
-          />
-
-          {/* ==================== Shared ==================== */}
-
-          <Route path="/branches" element={<Branches />} />
-        </Route>
-      </Routes>
+        </Routes>
+      </AuthProvider>
     </BrowserRouter>
   );
 }

@@ -1,4 +1,4 @@
-import axiosInstance from "../../../config/axiosInstance";
+import axiosInstance from "../../../utils/axiosInstance";
 
 // =========================
 // Login

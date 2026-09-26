@@ -795,6 +795,7 @@
     ]
   },
   "portal": {
+    "dashboardTitle": "Dashboard",
     "holidays": "Holidays & Seasons",
     "aiInsights": "AI Insights",
     "performanceMetrics": "Performance Metrics",

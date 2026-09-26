@@ -795,6 +795,7 @@
     ]
   },
   "portal": {
+    "dashboardTitle": "لوحة التحكم",
     "holidays": "العطلات والمواسم",
     "aiInsights": "رؤى الذكاء الاصطناعي",
     "performanceMetrics": "مؤشرات الأداء",

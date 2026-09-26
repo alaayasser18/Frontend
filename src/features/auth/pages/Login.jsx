@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useLogin } from "../hooks/useLogin";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import toast from "react-hot-toast";
 import { motion } from "framer-motion";
@@ -22,6 +22,7 @@ const containerVariants = {
     opacity: 0,
     x: 40,
   },
+
   visible: {
     opacity: 1,
     x: 0,
@@ -38,6 +39,7 @@ const itemVariants = {
     opacity: 0,
     y: 18,
   },
+
   visible: {
     opacity: 1,
     y: 0,
@@ -49,49 +51,287 @@ const itemVariants = {
 };
 
 export default function Login() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+
+  const navigate = useNavigate();
+
   const loginMutation = useLogin();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+
   const [showPassword, setShowPassword] = useState(false);
+
   const [rememberMe, setRememberMe] = useState(true);
+
+  /* =========================
+     TOGGLE PASSWORD
+  ========================= */
 
   const togglePassword = () => {
     setShowPassword((prev) => !prev);
   };
 
+  /* =========================
+     LOGIN
+  ========================= */
+
   const handleSignIn = (e) => {
     e.preventDefault();
 
-    if (!email || !password) {
-      toast.error(t("auth.login.emailPasswordRequired"));
+    /* =========================
+       REQUIRED FIELDS
+    ========================= */
+
+    if (!email.trim() || !password) {
+      toast.error(
+        t(
+          "auth.login.emailPasswordRequired",
+          "Please enter your email and password.",
+        ),
+      );
+
       return;
     }
 
-    loginMutation.mutate(
-      {
-        email,
-        password,
-      },
-      {
-        onSuccess: (data) => {
-          console.log("Login response:", data);
+    /* =========================
+       CURRENT LANGUAGE
+    ========================= */
 
-          toast.success(t("auth.login.signingInAlert", { email }));
-        },
+    // Backend accepts only "ar" or "en"
+    const currentLanguage = i18n.language?.startsWith("ar") ? "ar" : "en";
 
-        onError: (error) => {
-          console.log("Login error:", error);
+    console.log("=================================");
+    console.log("i18n.language:", i18n.language);
+    console.log("currentLanguage:", currentLanguage);
+    console.log("=================================");
+    /* =========================
+       LOGIN DATA
+    ========================= */
+
+    const loginData = {
+      email: email.trim(),
+      password,
+      lang: currentLanguage,
+    };
+
+    console.log("Login data:", loginData);
+
+    /* =========================
+       LOGIN REQUEST
+    ========================= */
+
+    loginMutation.mutate(loginData, {
+      /* =========================
+         SUCCESS - 200
+      ========================= */
+
+      onSuccess: (data) => {
+        console.log("=================================");
+        console.log("LOGIN SUCCESS");
+        console.log("Login response:", data);
+        console.log("=================================");
+
+        const token = data?.data?.access_token;
+        const user = data?.data?.user;
+
+        console.log("Token:", token);
+        console.log("User:", user);
+
+        /* =========================
+           MAKE SURE TOKEN EXISTS
+        ========================= */
+
+        if (!token) {
+          console.error("Login succeeded but no access token was returned.");
 
           toast.error(
-            error?.response?.data?.message ||
-              "Something went wrong. Please try again.",
+            t(
+              "auth.login.tokenMissing",
+              "Login succeeded, but the access token was not received.",
+            ),
           );
-        },
+
+          return;
+        }
+
+        /* =========================
+           SAVE TOKEN
+        ========================= */
+
+        localStorage.setItem("token", token);
+
+        /* =========================
+           SAVE USER
+        ========================= */
+
+        if (user) {
+          localStorage.setItem("user", JSON.stringify(user));
+        }
+
+        /* =========================
+           SAVE LANGUAGE
+        ========================= */
+
+        localStorage.setItem("language", currentLanguage);
+
+        /* =========================
+           REMEMBER ME
+        ========================= */
+
+        if (rememberMe) {
+          localStorage.setItem("rememberMe", "true");
+        } else {
+          localStorage.removeItem("rememberMe");
+        }
+
+        console.log(
+          "Token saved:",
+          localStorage.getItem("token") ? "YES" : "NO",
+        );
+
+        console.log("User saved:", localStorage.getItem("user") ? "YES" : "NO");
+
+        /* =========================
+           SUCCESS MESSAGE
+        ========================= */
+
+        toast.success(t("auth.login.loginSuccess", "Logged in successfully."));
+
+        /* =========================
+           GO TO HOME
+        ========================= */
+
+        console.log("Going to Home...");
+
+        navigate("/", {
+          replace: true,
+        });
       },
-    );
+
+      /* =========================
+         ERROR
+      ========================= */
+
+      onError: (error) => {
+        console.log("=================================");
+        console.log("LOGIN ERROR");
+        console.log("=================================");
+
+        console.log("Login error:", error);
+        console.log("Status:", error?.response?.status);
+        console.log("Backend response:", error?.response?.data);
+        console.log("Validation errors:", error?.response?.data?.errors);
+
+        const status = error?.response?.status;
+
+        const responseData = error?.response?.data;
+
+        const backendMessage = responseData?.message;
+
+        const validationErrors = responseData?.errors;
+
+        /* =========================
+           403
+           ACCOUNT INACTIVE
+        ========================= */
+
+        if (status === 403) {
+          toast.error(
+            backendMessage ||
+              t(
+                "auth.login.accountInactive",
+                "Your account is inactive. Please activate your account first.",
+              ),
+          );
+
+          return;
+        }
+
+        /* =========================
+           422
+           VALIDATION / INVALID CREDENTIALS
+        ========================= */
+
+        if (status === 422) {
+          const emailError = validationErrors?.email?.[0];
+
+          if (emailError) {
+            toast.error(emailError);
+            return;
+          }
+
+          toast.error(
+            backendMessage ||
+              t(
+                "auth.login.invalidCredentials",
+                "These credentials do not match our records.",
+              ),
+          );
+
+          return;
+        }
+
+        /* =========================
+           429
+           TOO MANY REQUESTS
+        ========================= */
+
+        if (status === 429) {
+          toast.error(
+            backendMessage ||
+              t(
+                "auth.login.tooManyRequests",
+                "Too many login attempts. Please try again later.",
+              ),
+          );
+
+          return;
+        }
+
+        /* =========================
+           500
+           SERVER ERROR
+        ========================= */
+
+        if (status === 500) {
+          toast.error(
+            backendMessage ||
+              t(
+                "auth.login.serverError",
+                "Something went wrong on the server. Please try again later.",
+              ),
+          );
+
+          return;
+        }
+
+        /* =========================
+           OTHER BACKEND ERROR
+        ========================= */
+
+        if (backendMessage) {
+          toast.error(backendMessage);
+          return;
+        }
+
+        /* =========================
+           GENERIC ERROR
+        ========================= */
+
+        toast.error(
+          t(
+            "auth.login.errorGeneric",
+            "Something went wrong. Please try again.",
+          ),
+        );
+      },
+    });
   };
+
+  /* =========================
+     GOOGLE LOGIN
+  ========================= */
 
   const handleGoogleSignIn = () => {
     alert("Google Sign-In clicked!");
@@ -106,12 +346,18 @@ export default function Login() {
         initial="hidden"
         animate="visible"
       >
-        {/* Title */}
+        {/* =========================
+            TITLE
+        ========================= */}
+
         <motion.h1 className="title" variants={itemVariants}>
           {t("auth.login.title")}
         </motion.h1>
 
-        {/* Subtitle */}
+        {/* =========================
+            SUBTITLE
+        ========================= */}
+
         <motion.p className="subtitle" variants={itemVariants}>
           {t("auth.login.noAccount")}{" "}
           <Link to="/register" className="signup-link">
@@ -119,8 +365,15 @@ export default function Login() {
           </Link>
         </motion.p>
 
+        {/* =========================
+            FORM
+        ========================= */}
+
         <motion.form onSubmit={handleSignIn} variants={itemVariants}>
-          {/* Email */}
+          {/* =========================
+              EMAIL
+          ========================= */}
+
           <motion.div className="form-group" variants={itemVariants}>
             <label htmlFor="email">{t("auth.login.workEmail")}</label>
 
@@ -130,6 +383,7 @@ export default function Login() {
               <input
                 id="email"
                 type="email"
+                autoComplete="email"
                 placeholder={t("auth.login.emailPlaceholder")}
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
@@ -137,7 +391,10 @@ export default function Login() {
             </div>
           </motion.div>
 
-          {/* Password */}
+          {/* =========================
+              PASSWORD
+          ========================= */}
+
           <motion.div className="form-group" variants={itemVariants}>
             <label htmlFor="password">{t("auth.login.password")}</label>
 
@@ -147,6 +404,7 @@ export default function Login() {
               <input
                 id="password"
                 type={showPassword ? "text" : "password"}
+                autoComplete="current-password"
                 placeholder={t("auth.login.passwordPlaceholder")}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
@@ -171,7 +429,10 @@ export default function Login() {
             </div>
           </motion.div>
 
-          {/* Options */}
+          {/* =========================
+              OPTIONS
+          ========================= */}
+
           <motion.div className="form-options" variants={itemVariants}>
             <label className="remember">
               <input
@@ -191,7 +452,10 @@ export default function Login() {
             </Link>
           </motion.div>
 
-          {/* Sign In Button */}
+          {/* =========================
+              SIGN IN BUTTON
+          ========================= */}
+
           <motion.button
             type="submit"
             className="sign-in"
@@ -207,16 +471,24 @@ export default function Login() {
               duration: 0.2,
             }}
           >
-            {loginMutation.isPending ? "Signing in..." : t("auth.login.signIn")}
+            {loginMutation.isPending
+              ? t("auth.login.signingIn", "Signing in...")
+              : t("auth.login.signIn")}
           </motion.button>
         </motion.form>
 
-        {/* OR Separator */}
+        {/* =========================
+            OR SEPARATOR
+        ========================= */}
+
         <motion.div className="separator" variants={itemVariants}>
           <span>{t("auth.login.or")}</span>
         </motion.div>
 
-        {/* Google Sign In */}
+        {/* =========================
+            GOOGLE SIGN IN
+        ========================= */}
+
         <motion.button
           className="quick-signin"
           type="button"
@@ -240,7 +512,7 @@ export default function Login() {
           <svg viewBox="0 0 24 24" width="20" height="20">
             <path
               fill="#4285F4"
-              d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+              d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31-1.17.78-2.66 1.24-4.21 1.24-3.26 0-6.02-2.2-7.01-5.16H2.18v3.16C3.99 20.53 7.7 23 12 23c2.97 0 5.46-.98 7.28-2.66 1.82-1.68 3.28-4.74 3.28-8.09z"
             />
 
             <path

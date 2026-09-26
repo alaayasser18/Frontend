@@ -18,7 +18,8 @@ const echo = new Echo({
   wssPort: pusherPort ?? 443,
   forceTLS: pusherScheme === "https",
   enabledTransports: ["ws", "wss"],
-  authorizer: (channel, options) => {
+
+  authorizer: (channel) => {
     return {
       authorize: (socketId, callback) => {
         axiosInstance

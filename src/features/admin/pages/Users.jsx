@@ -1,33 +1,21 @@
 import { useState, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import {
-<<<<<<< HEAD
   FiSearch,
   FiPlus,
   FiX,
   FiChevronRight,
   FiCheckCircle,
   FiLoader,
-=======
-    FiSearch,
-    FiPlus,
-    FiX,
-    FiChevronRight,
-    FiCheckCircle,
-    FiLoader,
-    FiEdit2,
->>>>>>> d022119de8d1e6227ecbda9172233c748528c3dc
+  FiEdit2,
 } from "react-icons/fi";
 import { LuArrowUpRight } from "react-icons/lu";
 import { motion, AnimatePresence } from "framer-motion";
 import toast from "react-hot-toast";
 
 import { useEmployees, usePermissions, useCreateEmployee } from "../hooks";
-<<<<<<< HEAD
 import { useDepartments } from "../hooks/useDepartments";
-=======
 import { useUpdateEmployeeHrFields } from "../../hr/hooks/useEmployees";
->>>>>>> d022119de8d1e6227ecbda9172233c748528c3dc
 
 const ROLE_COLORS = {
   Owner: "#3f7d5a",
@@ -193,7 +181,7 @@ const Users = () => {
   const [accessMap, setAccessMap] = useState({});
   const [showToast, setShowToast] = useState(false);
 
-  // Form state
+  // Create form state
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -208,7 +196,16 @@ const Users = () => {
   const [address, setAddress] = useState("");
   const [selectedPermissions, setSelectedPermissions] = useState([]);
 
-<<<<<<< HEAD
+  // Edit HR fields modal state
+  const [isEditHrModalOpen, setIsEditHrModalOpen] = useState(false);
+  const [selectedEditUser, setSelectedEditUser] = useState(null);
+  const [editHrForm, setEditHrForm] = useState({
+    job_title: "",
+    employment_type: "",
+    status: "",
+    department_id: "",
+  });
+
   // API Hooks
   const {
     data: employeesResponse,
@@ -236,6 +233,9 @@ const Users = () => {
     lang: currentLang,
   });
 
+  const createEmployeeMutation = useCreateEmployee();
+  const updateHrFieldsMutation = useUpdateEmployeeHrFields(currentLang);
+
   // API shape: { success, message, data: { links, meta, departments: [] } }
   // Also tolerates axios interceptors that already unwrap the body.
   const departments = useMemo(() => {
@@ -250,8 +250,6 @@ const Users = () => {
     ];
     return candidates.find(Array.isArray) ?? [];
   }, [departmentsResponse]);
-
-  const createEmployeeMutation = useCreateEmployee();
 
   // Extracted live employees list
   const employeesList = useMemo(() => {
@@ -307,26 +305,11 @@ const Users = () => {
         userPhone.includes(q);
 
       return matchesRole && matchesSearch;
-=======
-    // API Hooks
-    const updateHrFieldsMutation = useUpdateEmployeeHrFields(currentLang);
-    const {
-        data: employeesResponse,
-        isLoading: isEmployeesLoading,
-        isError: isEmployeesError,
-        error: employeesError,
-        refetch: refetchEmployees,
-    } = useEmployees({
-        search: searchQuery || undefined,
-        role: roleFilter === "All" ? undefined : roleFilter,
-        lang: currentLang,
->>>>>>> d022119de8d1e6227ecbda9172233c748528c3dc
     });
   }, [employeesList, roleFilter, searchQuery]);
 
   /* ─── Export configuration ─── */
 
-<<<<<<< HEAD
   const handleExportConfiguration = () => {
     const configuration = {
       exportedAt: new Date().toISOString(),
@@ -347,146 +330,6 @@ const Users = () => {
               ? user.status.toLowerCase() === "active"
               : true,
       })),
-=======
-    const createEmployeeMutation = useCreateEmployee();
-
-    // Edit HR fields modal state
-    const [isEditHrModalOpen, setIsEditHrModalOpen] = useState(false);
-    const [selectedEditUser, setSelectedEditUser] = useState(null);
-    const [editHrForm, setEditHrForm] = useState({
-        job_title: "",
-        employment_type: "",
-        status: "",
-        department_id: "",
-    });
-
-    const openEditHrModal = (user) => {
-        setSelectedEditUser(user);
-        setEditHrForm({
-            job_title: user.job_title || user.role || "",
-            employment_type: user.employment_type || "",
-            status: user.statusType || user.status || "",
-            department_id: user.department_id || "",
-        });
-        setIsEditHrModalOpen(true);
-    };
-
-    const closeEditHrModal = () => {
-        setIsEditHrModalOpen(false);
-        setSelectedEditUser(null);
-    };
-
-    const handleSaveHrFields = async () => {
-        if (!selectedEditUser) return;
-        try {
-            await updateHrFieldsMutation.mutateAsync({
-                id: selectedEditUser.id,
-                hrData: editHrForm,
-            });
-            toast.success(isRtl ? "تم تحديث البيانات بنجاح" : "HR Fields updated successfully");
-            closeEditHrModal();
-            refetchEmployees();
-        } catch (e) {
-            toast.error(isRtl ? "حدث خطأ" : "Failed to update HR fields");
-            console.error(e);
-        }
-    };
-
-    // Extracted live employees list
-    const employeesList = useMemo(() => {
-        if (Array.isArray(employeesResponse?.data?.data)) {
-            return employeesResponse.data.data;
-        }
-        if (Array.isArray(employeesResponse?.data)) {
-            return employeesResponse.data;
-        }
-        if (Array.isArray(employeesResponse)) {
-            return employeesResponse;
-        }
-        return [];
-    }, [employeesResponse]);
-
-    // Permissions list from backend
-    const permissionsList = useMemo(() => {
-        if (Array.isArray(permissionsResponse?.data)) {
-            return permissionsResponse.data;
-        }
-        if (Array.isArray(permissionsResponse)) {
-            return permissionsResponse;
-        }
-        return [];
-    }, [permissionsResponse]);
-
-    // Client-side search & role filter if not already filtered by API
-    const filteredUsers = useMemo(() => {
-        return employeesList.filter((user) => {
-            const matchesRole =
-                roleFilter === "All" ||
-                user.role === roleFilter ||
-                (roleFilter === "Admin" && user.role === "Owner");
-
-            const q = searchQuery.toLowerCase().trim();
-            if (!q) return matchesRole;
-
-            const name = (user.name || "").toLowerCase();
-            const userEmail = (user.email || "").toLowerCase();
-            const dept = (user.department?.name || user.department || "").toLowerCase();
-            const job = (user.job_title || "").toLowerCase();
-            const userPhone = (user.phone || "").toLowerCase();
-
-            const matchesSearch =
-                name.includes(q) ||
-                userEmail.includes(q) ||
-                dept.includes(q) ||
-                job.includes(q) ||
-                userPhone.includes(q);
-
-            return matchesRole && matchesSearch;
-        });
-    }, [employeesList, roleFilter, searchQuery]);
-
-    /* ─── Export configuration ─── */
-
-    const handleExportConfiguration = () => {
-        const configuration = {
-            exportedAt: new Date().toISOString(),
-            users: filteredUsers.map((user) => ({
-                id: user.id,
-                name: user.name,
-                email: user.email,
-                role: user.role,
-                phone: user.phone || null,
-                job_title: user.job_title || null,
-                department: user.department?.name || user.department || null,
-                status: user.status || "Active",
-                permissions: user.permissions || [],
-                access:
-                    accessMap[user.id] !== undefined
-                        ? accessMap[user.id]
-                        : user.status
-                        ? user.status.toLowerCase() === "active"
-                        : true,
-            })),
-        };
-
-        const jsonData = JSON.stringify(configuration, null, 2);
-        const blob = new Blob([jsonData], {
-            type: "application/json",
-        });
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement("a");
-        link.href = url;
-        link.download = "wisework-users-configuration.json";
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        URL.revokeObjectURL(url);
-
-        setShowToast(true);
-        setTimeout(() => {
-            setShowToast(false);
-        }, 3000);
->>>>>>> d022119de8d1e6227ecbda9172233c748528c3dc
     };
 
     const jsonData = JSON.stringify(configuration, null, 2);
@@ -616,6 +459,53 @@ const Users = () => {
         },
       },
     );
+  };
+
+  /* ─── Edit HR fields ─── */
+
+  const openEditHrModal = (user) => {
+    setSelectedEditUser(user);
+    setEditHrForm({
+      job_title: user.job_title || "",
+      employment_type: user.employment_type || "",
+      status: (user.statusType || user.status || "").toLowerCase(),
+      department_id: String(user.department?.id ?? user.department_id ?? ""),
+    });
+    setIsEditHrModalOpen(true);
+  };
+
+  const closeEditHrModal = () => {
+    setIsEditHrModalOpen(false);
+    setSelectedEditUser(null);
+  };
+
+  const handleSaveHrFields = async () => {
+    if (!selectedEditUser) return;
+
+    const hrData = {
+      ...editHrForm,
+      department_id: editHrForm.department_id
+        ? Number(editHrForm.department_id)
+        : null,
+    };
+
+    try {
+      await updateHrFieldsMutation.mutateAsync({
+        id: selectedEditUser.id,
+        hrData,
+      });
+      toast.success(
+        isRtl ? "تم تحديث البيانات بنجاح" : "HR fields updated successfully",
+      );
+      closeEditHrModal();
+      refetchEmployees();
+    } catch (err) {
+      toast.error(
+        err?.response?.data?.message ||
+          (isRtl ? "حدث خطأ" : "Failed to update HR fields"),
+      );
+      console.error(err);
+    }
   };
 
   /* ─── Toggle access ─── */
@@ -969,11 +859,31 @@ const Users = () => {
                           </td>
 
                           <td className="py-4 text-right rtl:text-left">
-                            <Toggle
-                              checked={currentAccess}
-                              onChange={() => handleToggleAccess(user.id)}
-                              label={`Toggle ${user.name}`}
-                            />
+                            <div className="flex items-center justify-end rtl:justify-start gap-3">
+                              <button
+                                type="button"
+                                onClick={() => openEditHrModal(user)}
+                                className="text-[#64748b] hover:text-[#243B53] transition cursor-pointer"
+                                title={
+                                  isRtl
+                                    ? "تعديل بيانات الموظف"
+                                    : "Edit HR fields"
+                                }
+                                aria-label={
+                                  isRtl
+                                    ? "تعديل بيانات الموظف"
+                                    : "Edit HR fields"
+                                }
+                              >
+                                <FiEdit2 size={16} />
+                              </button>
+
+                              <Toggle
+                                checked={currentAccess}
+                                onChange={() => handleToggleAccess(user.id)}
+                                label={`Toggle ${user.name}`}
+                              />
+                            </div>
                           </td>
                         </motion.tr>
                       );
@@ -1326,953 +1236,163 @@ const Users = () => {
                       <FiLoader className="animate-spin" size={15} />
                     )}
 
-<<<<<<< HEAD
                     {createEmployeeMutation.isPending
                       ? t("usersPage.creating", "Creating...")
                       : t("usersPage.createUser", "Create user")}
                   </button>
-=======
-                    <div className="flex flex-wrap gap-3">
-                        <div className="relative min-w-56 flex-1">
-                            <FiSearch
-                                className={`absolute top-1/2 -translate-y-1/2 text-[#829ab1] ${
-                                    isRtl
-                                        ? "right-3"
-                                        : "left-3"
-                                }`}
-                                size={16}
-                            />
-
-                            <input
-                                type="text"
-                                value={searchQuery}
-                                onChange={(e) =>
-                                    setSearchQuery(e.target.value)
-                                }
-                                placeholder={t(
-                                    "usersPage.searchPlaceholder",
-                                    "Search users",
-                                )}
-                                className={`w-full rounded-lg border border-[#d9e2ec] py-2.5 text-sm text-[#1e293b] placeholder:text-[#829ab1] outline-none focus:border-[#486581] focus:ring-1 focus:ring-[#486581]/20 transition ${
-                                    isRtl
-                                        ? "pr-9 pl-3"
-                                        : "pl-9 pr-3"
-                                }`}
-                            />
-                        </div>
-
-                        <select
-                            value={roleFilter}
-                            onChange={(e) =>
-                                setRoleFilter(e.target.value)
-                            }
-                            className="rounded-lg border border-[#d9e2ec] bg-white px-3 py-2.5 text-sm font-medium text-[#486581] outline-none focus:border-[#486581] focus:ring-1 focus:ring-[#486581]/20 transition cursor-pointer"
-                        >
-                            <option value="All">
-                                {t(
-                                    "usersPage.filterAll",
-                                    "All",
-                                )}
-                            </option>
-
-                            <option value="Owner">
-                                {t(
-                                    "usersPage.filterOwner",
-                                    "Owner",
-                                )}
-                            </option>
-
-                            <option value="Admin">
-                                {t(
-                                    "usersPage.filterAdmin",
-                                    "Admin",
-                                )}
-                            </option>
-
-                            <option value="HR">
-                                {t(
-                                    "usersPage.filterHr",
-                                    "HR",
-                                )}
-                            </option>
-
-                            <option value="Manager">
-                                {t(
-                                    "usersPage.filterManager",
-                                    "Manager",
-                                )}
-                            </option>
-
-                            <option value="Employee">
-                                {t(
-                                    "usersPage.filterEmployee",
-                                    "Employee",
-                                )}
-                            </option>
-                        </select>
-                    </div>
-
-                    {/* Table */}
-
-                    <div className="overflow-x-auto">
-                        <table className="w-full min-w-[760px] text-left rtl:text-right text-sm">
-                            <thead className="border-b border-[#d9e2ec] text-xs uppercase tracking-wide text-[#829ab1]">
-                                <tr>
-                                    <th className="pb-3 font-semibold">
-                                        {t(
-                                            "usersPage.colUser",
-                                            "User",
-                                        )}
-                                    </th>
-
-                                    <th className="pb-3 font-semibold">
-                                        {t(
-                                            "usersPage.colRole",
-                                            "Role",
-                                        )}
-                                    </th>
-
-                                    <th className="pb-3 font-semibold">
-                                        {t(
-                                            "usersPage.colDepartment",
-                                            "Department",
-                                        )}
-                                    </th>
-
-                                    <th className="pb-3 font-semibold">
-                                        {t(
-                                            "usersPage.colPhone",
-                                            "Phone",
-                                        )}
-                                    </th>
-
-                                    <th className="pb-3 font-semibold">
-                                        {t(
-                                            "usersPage.colStatus",
-                                            "Status",
-                                        )}
-                                    </th>
-
-                                    <th className="pb-3 font-semibold text-right rtl:text-left">
-                                        {t(
-                                            "usersPage.colAccess",
-                                            "Access",
-                                        )}
-                                    </th>
-                                </tr>
-                            </thead>
-
-                            <tbody className="divide-y divide-[#eef1f4]">
-                                {isEmployeesLoading ? (
-                                    [...Array(4)].map((_, idx) => (
-                                        <tr
-                                            key={`skeleton-${idx}`}
-                                            className="animate-pulse"
-                                        >
-                                            <td className="py-4">
-                                                <div className="flex items-center gap-3">
-                                                    <div className="size-9 rounded-full bg-[#eef1f4]" />
-                                                    <div className="space-y-1.5">
-                                                        <div className="h-4 w-28 rounded bg-[#eef1f4]" />
-                                                        <div className="h-3 w-40 rounded bg-[#eef1f4]" />
-                                                    </div>
-                                                </div>
-                                            </td>
-                                            <td className="py-4">
-                                                <div className="h-6 w-16 rounded-full bg-[#eef1f4]" />
-                                            </td>
-                                            <td className="py-4">
-                                                <div className="h-4 w-24 rounded bg-[#eef1f4]" />
-                                            </td>
-                                            <td className="py-4">
-                                                <div className="h-4 w-24 rounded bg-[#eef1f4]" />
-                                            </td>
-                                            <td className="py-4">
-                                                <div className="h-6 w-16 rounded-full bg-[#eef1f4]" />
-                                            </td>
-                                            <td className="py-4 text-right rtl:text-left">
-                                                <div className="h-6 w-11 inline-block rounded-full bg-[#eef1f4]" />
-                                            </td>
-                                        </tr>
-                                    ))
-                                ) : isEmployeesError ? (
-                                    <tr>
-                                        <td
-                                            colSpan={6}
-                                            className="py-8 text-center"
-                                        >
-                                            <p className="text-sm text-red-500 font-medium">
-                                                {employeesError?.response?.data?.message ||
-                                                    t(
-                                                        "usersPage.createError",
-                                                        "Failed to load employees.",
-                                                    )}
-                                            </p>
-                                            <button
-                                                type="button"
-                                                onClick={() =>
-                                                    refetchEmployees()
-                                                }
-                                                className="mt-2 text-xs font-semibold text-[#243B53] underline hover:text-[#486581] cursor-pointer"
-                                            >
-                                                Retry
-                                            </button>
-                                        </td>
-                                    </tr>
-                                ) : filteredUsers.length === 0 ? (
-                                    <tr>
-                                        <td
-                                            colSpan={6}
-                                            className="py-10 text-center text-sm text-[#829ab1]"
-                                        >
-                                            {t(
-                                                "usersPage.noEmployeesFound",
-                                                "No employees found.",
-                                            )}
-                                        </td>
-                                    </tr>
-                                ) : (
-                                    <AnimatePresence mode="popLayout">
-                                        {filteredUsers.map((user, i) => {
-                                            const roleColor =
-                                                ROLE_COLORS[user.role] ||
-                                                "#64748b";
-                                            const roleLabelKey =
-                                                ROLE_LABEL_KEYS[user.role] ||
-                                                "filterEmployee";
-
-                                            const isUserActive = user.status
-                                                ? user.status.toLowerCase() ===
-                                                  "active"
-                                                : true;
-
-                                            const currentAccess =
-                                                accessMap[user.id] !== undefined
-                                                    ? accessMap[user.id]
-                                                    : isUserActive;
-
-                                            const deptName =
-                                                user.department?.name ||
-                                                (typeof user.department ===
-                                                "string"
-                                                    ? user.department
-                                                    : "") ||
-                                                "";
-
-                                            return (
-                                                <motion.tr
-                                                    key={user.id}
-                                                    custom={i}
-                                                    variants={rowVariants}
-                                                    initial="hidden"
-                                                    animate="visible"
-                                                    exit="exit"
-                                                    layout
-                                                >
-                                                    <td className="py-4">
-                                                        <div className="flex items-center gap-3">
-                                                            {user.avatar ? (
-                                                                <img
-                                                                    src={
-                                                                        user.avatar
-                                                                    }
-                                                                    alt={
-                                                                        user.name
-                                                                    }
-                                                                    className="size-9 rounded-full object-cover shrink-0"
-                                                                />
-                                                            ) : (
-                                                                <div className="flex size-9 items-center justify-center rounded-full bg-[#e7eef5] text-xs font-bold text-[#486581] shrink-0">
-                                                                    {getInitials(
-                                                                        user.name,
-                                                                    )}
-                                                                </div>
-                                                            )}
-
-                                                            <div>
-                                                                <p className="font-semibold text-[#243B53] text-sm">
-                                                                    {user.name}
-                                                                </p>
-
-                                                                <p className="text-xs text-[#829ab1]">
-                                                                    {user.email}
-                                                                </p>
-                                                            </div>
-                                                        </div>
-                                                    </td>
-
-                                                    <td className="py-4">
-                                                        <RoleBadge
-                                                            role={t(
-                                                                `usersPage.${roleLabelKey}`,
-                                                                user.role,
-                                                            )}
-                                                            color={roleColor}
-                                                        />
-                                                    </td>
-
-                                                    <td className="py-4 text-sm text-[#627d98]">
-                                                        <div>
-                                                            <p className="font-medium text-[#243B53]">
-                                                                {user.job_title ||
-                                                                    deptName ||
-                                                                    "—"}
-                                                            </p>
-                                                            {user.job_title &&
-                                                                deptName && (
-                                                                    <p className="text-xs text-[#829ab1]">
-                                                                        {deptName}
-                                                                    </p>
-                                                                )}
-                                                        </div>
-                                                    </td>
-
-                                                    <td className="py-4 text-sm text-[#627d98]">
-                                                        <span className="dir-ltr inline-block">
-                                                            {user.phone || "—"}
-                                                        </span>
-                                                    </td>
-
-                                                    <td className="py-4">
-                                                        <StatusBadge
-                                                            active={
-                                                                isUserActive
-                                                            }
-                                                            activeLabel={t(
-                                                                `usersPage.${STATUS_LABEL_KEYS.Active}`,
-                                                                "Active",
-                                                            )}
-                                                            inactiveLabel={t(
-                                                                `usersPage.${STATUS_LABEL_KEYS.Inactive}`,
-                                                                "Inactive",
-                                                            )}
-                                                        />
-                                                    </td>
-
-                                                    <td className="py-4 text-right rtl:text-left">
-                                                        <div className="flex flex-col sm:flex-row items-center justify-end gap-3">
-                                                            <button
-                                                                type="button"
-                                                                onClick={() => openEditHrModal(user)}
-                                                                className="text-[#64748b] hover:text-[#243B53] transition"
-                                                                title={isRtl ? "تعديل بيانات الموظف" : "Edit HR Fields"}
-                                                            >
-                                                                <FiEdit2 size={16} />
-                                                            </button>
-                                                            <Toggle
-                                                                checked={
-                                                                    currentAccess
-                                                                }
-                                                                onChange={() =>
-                                                                    handleToggleAccess(
-                                                                        user.id,
-                                                                    )
-                                                                }
-                                                                label={`Toggle ${user.name}`}
-                                                            />
-                                                        </div>
-                                                    </td>
-                                                </motion.tr>
-                                            );
-                                        })}
-                                    </AnimatePresence>
-                                )}
-                            </tbody>
-                        </table>
-                    </div>
->>>>>>> d022119de8d1e6227ecbda9172233c748528c3dc
                 </div>
               </form>
             </motion.div>
-<<<<<<< HEAD
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* ── Edit HR Fields Modal ── */}
+      <AnimatePresence>
+        {isEditHrModalOpen && (
+          <motion.div
+            key="edit-backdrop"
+            variants={modalBackdrop}
+            initial="hidden"
+            animate="visible"
+            exit="exit"
+            className="fixed inset-0 z-50 flex items-center justify-center bg-[#102a43]/40 p-4 backdrop-blur-sm"
+            onMouseDown={(e) => {
+              if (e.target === e.currentTarget) closeEditHrModal();
+            }}
+          >
+            <motion.div
+              key="edit-panel"
+              variants={modalPanel}
+              initial="hidden"
+              animate="visible"
+              exit="exit"
+              className="w-full max-w-md overflow-hidden rounded-2xl bg-white shadow-2xl"
+              dir={isRtl ? "rtl" : "ltr"}
+            >
+              <div className="flex items-center justify-between border-b border-[#e2e8f0] bg-[#f8fafc] px-6 py-5">
+                <h2 className="text-lg font-bold text-[#1e293b]">
+                  {isRtl ? "تحديث بيانات الموارد البشرية" : "Update HR fields"}
+                </h2>
+
+                <button
+                  type="button"
+                  onClick={closeEditHrModal}
+                  className="rounded-lg p-1.5 text-[#64748b] transition hover:bg-[#e2e8f0] hover:text-[#1e293b] cursor-pointer"
+                  aria-label="Close"
+                >
+                  <FiX size={18} />
+                </button>
+              </div>
+
+              <div className="space-y-4 bg-white p-6">
+                <div>
+                  <label className={LABEL_CLASS}>
+                    {isRtl ? "المسمى الوظيفي" : "Job title"}
+                  </label>
+                  <input
+                    type="text"
+                    value={editHrForm.job_title}
+                    onChange={(e) =>
+                      setEditHrForm({
+                        ...editHrForm,
+                        job_title: e.target.value,
+                      })
+                    }
+                    className={INPUT_CLASS}
+                  />
+                </div>
+
+                <div>
+                  <label className={LABEL_CLASS}>
+                    {isRtl ? "نوع التوظيف" : "Employment type"}
+                  </label>
+                  <select
+                    value={editHrForm.employment_type}
+                    onChange={(e) =>
+                      setEditHrForm({
+                        ...editHrForm,
+                        employment_type: e.target.value,
+                      })
+                    }
+                    className={SELECT_CLASS}
+                  >
+                    <option value="">--</option>
+                    <option value="Full-time">Full-time</option>
+                    <option value="Part-time">Part-time</option>
+                    <option value="Contract">Contract</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className={LABEL_CLASS}>
+                    {isRtl ? "الحالة" : "Status"}
+                  </label>
+                  <select
+                    value={editHrForm.status}
+                    onChange={(e) =>
+                      setEditHrForm({ ...editHrForm, status: e.target.value })
+                    }
+                    className={SELECT_CLASS}
+                  >
+                    <option value="">--</option>
+                    <option value="active">Active</option>
+                    <option value="inactive">Inactive</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className={LABEL_CLASS}>
+                    {isRtl ? "القسم" : "Department"}
+                  </label>
+                  <select
+                    value={editHrForm.department_id}
+                    onChange={(e) =>
+                      setEditHrForm({
+                        ...editHrForm,
+                        department_id: e.target.value,
+                      })
+                    }
+                    disabled={isDepartmentsLoading}
+                    className={`${SELECT_CLASS} disabled:cursor-not-allowed disabled:bg-[#f0f4f7]`}
+                  >
+                    <option value="">--</option>
+                    {departments.map((department) => (
+                      <option key={department.id} value={String(department.id)}>
+                        {department.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              <div className="flex gap-3 border-t border-[#e2e8f0] bg-[#f8fafc] px-6 py-5">
+                <button
+                  type="button"
+                  onClick={closeEditHrModal}
+                  className="w-full rounded-lg border border-[#d9e2ec] py-2.5 text-sm font-semibold text-[#486581] transition hover:bg-[#f0f4f7] cursor-pointer"
+                >
+                  {isRtl ? "إلغاء" : "Cancel"}
+                </button>
+
+                <button
+                  type="button"
+                  onClick={handleSaveHrFields}
+                  disabled={updateHrFieldsMutation.isPending}
+                  className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-[#243B53] py-2.5 text-sm font-semibold text-white transition hover:bg-[#334e68] disabled:opacity-50 cursor-pointer"
+                >
+                  {updateHrFieldsMutation.isPending && (
+                    <FiLoader className="animate-spin" size={15} />
+                  )}
+                  {isRtl ? "حفظ التعديلات" : "Save changes"}
+                </button>
+              </div>
+            </motion.div>
           </motion.div>
         )}
       </AnimatePresence>
     </div>
   );
-=======
-
-            {/* ── Add User Modal ── */}
-
-            <AnimatePresence>
-                {isModalOpen && (
-                    <motion.div
-                        key="backdrop"
-                        variants={modalBackdrop}
-                        initial="hidden"
-                        animate="visible"
-                        exit="exit"
-                        className="fixed inset-0 z-50 flex items-center justify-center bg-[#102a43]/40 p-4"
-                        onClick={(e) =>
-                            e.target === e.currentTarget &&
-                            handleCloseModal()
-                        }
-                    >
-                        <motion.div
-                            key="panel"
-                            variants={modalPanel}
-                            initial="hidden"
-                            animate="visible"
-                            exit="exit"
-                            className="w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-2xl bg-white p-6 shadow-xl"
-                        >
-                            <div className="flex items-center justify-between mb-6 pb-3 border-b border-[#eef1f4]">
-                                <h3 className="text-[18px] font-bold text-[#243B53] leading-[1.3]">
-                                    {t(
-                                        "usersPage.addUserAccount",
-                                        "Add user account",
-                                    )}
-                                </h3>
-
-                                <button
-                                    type="button"
-                                    onClick={handleCloseModal}
-                                    className="text-[#829ab1] hover:text-[#243B53] transition rounded-lg p-1 hover:bg-[#f0f4f7] cursor-pointer"
-                                    aria-label="Close"
-                                >
-                                    <FiX size={20} />
-                                </button>
-                            </div>
-
-                            <form onSubmit={handleCreateUser} className="space-y-4">
-                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-
-                                    {/* Full name */}
-                                    <div>
-                                        <label className="block text-sm font-semibold text-[#243B53] mb-1.5">
-                                            {t(
-                                                "usersPage.fullName",
-                                                "Full name",
-                                            )}{" "}
-                                            <span className="text-red-500">*</span>
-                                        </label>
-
-                                        <input
-                                            type="text"
-                                            required
-                                            value={fullName}
-                                            onChange={(e) =>
-                                                setFullName(
-                                                    e.target.value,
-                                                )
-                                            }
-                                            placeholder={t(
-                                                "usersPage.fullName",
-                                                "Full name",
-                                            )}
-                                            className="w-full rounded-lg border border-[#d9e2ec] px-3.5 py-2.5 text-sm text-[#243B53] outline-none focus:border-[#486581] focus:ring-1 focus:ring-[#486581]/20 transition"
-                                        />
-                                    </div>
-
-                                    {/* Email */}
-                                    <div>
-                                        <label className="block text-sm font-semibold text-[#243B53] mb-1.5">
-                                            {t(
-                                                "usersPage.emailAddress",
-                                                "Email address",
-                                            )}{" "}
-                                            <span className="text-red-500">*</span>
-                                        </label>
-
-                                        <input
-                                            type="email"
-                                            required
-                                            value={email}
-                                            onChange={(e) =>
-                                                setEmail(
-                                                    e.target.value,
-                                                )
-                                            }
-                                            placeholder={t(
-                                                "usersPage.emailAddress",
-                                                "Email address",
-                                            )}
-                                            className="w-full rounded-lg border border-[#d9e2ec] px-3.5 py-2.5 text-sm text-[#243B53] outline-none focus:border-[#486581] focus:ring-1 focus:ring-[#486581]/20 transition"
-                                        />
-                                    </div>
-
-                                    {/* Password */}
-                                    <div>
-                                        <label className="block text-sm font-semibold text-[#243B53] mb-1.5">
-                                            {t(
-                                                "usersPage.password",
-                                                "Password",
-                                            )}{" "}
-                                            <span className="text-red-500">*</span>
-                                        </label>
-
-                                        <input
-                                            type="password"
-                                            required
-                                            minLength={8}
-                                            value={password}
-                                            onChange={(e) =>
-                                                setPassword(
-                                                    e.target.value,
-                                                )
-                                            }
-                                            placeholder={t(
-                                                "usersPage.passwordPlaceholder",
-                                                "Minimum 8 characters",
-                                            )}
-                                            className="w-full rounded-lg border border-[#d9e2ec] px-3.5 py-2.5 text-sm text-[#243B53] outline-none focus:border-[#486581] focus:ring-1 focus:ring-[#486581]/20 transition"
-                                        />
-                                    </div>
-
-                                    {/* Role */}
-                                    <div>
-                                        <label className="block text-sm font-semibold text-[#243B53] mb-1.5">
-                                            {t(
-                                                "usersPage.role",
-                                                "Role",
-                                            )}{" "}
-                                            <span className="text-red-500">*</span>
-                                        </label>
-
-                                        <select
-                                            value={role}
-                                            onChange={(e) =>
-                                                setRole(
-                                                    e.target.value,
-                                                )
-                                            }
-                                            className="w-full rounded-lg border border-[#d9e2ec] bg-white px-3.5 py-2.5 text-sm text-[#243B53] outline-none focus:border-[#486581] focus:ring-1 focus:ring-[#486581]/20 transition cursor-pointer"
-                                        >
-                                            <option value="Employee">
-                                                {t(
-                                                    "usersPage.filterEmployee",
-                                                    "Employee",
-                                                )}
-                                            </option>
-
-                                            <option value="Manager">
-                                                {t(
-                                                    "usersPage.filterManager",
-                                                    "Manager",
-                                                )}
-                                            </option>
-
-                                            <option value="HR">
-                                                {t(
-                                                    "usersPage.filterHr",
-                                                    "HR",
-                                                )}
-                                            </option>
-                                        </select>
-                                    </div>
-
-                                    {/* Job Title */}
-                                    <div>
-                                        <label className="block text-sm font-semibold text-[#243B53] mb-1.5">
-                                            {t(
-                                                "usersPage.jobTitle",
-                                                "Job title",
-                                            )}{" "}
-                                            <span className="text-red-500">*</span>
-                                        </label>
-
-                                        <input
-                                            type="text"
-                                            required
-                                            value={jobTitle}
-                                            onChange={(e) =>
-                                                setJobTitle(
-                                                    e.target.value,
-                                                )
-                                            }
-                                            placeholder={t(
-                                                "usersPage.jobTitlePlaceholder",
-                                                "e.g. Software Engineer",
-                                            )}
-                                            className="w-full rounded-lg border border-[#d9e2ec] px-3.5 py-2.5 text-sm text-[#243B53] outline-none focus:border-[#486581] focus:ring-1 focus:ring-[#486581]/20 transition"
-                                        />
-                                    </div>
-
-                                    {/* Employment Type */}
-                                    <div>
-                                        <label className="block text-sm font-semibold text-[#243B53] mb-1.5">
-                                            {t(
-                                                "usersPage.employmentType",
-                                                "Employment type",
-                                            )}{" "}
-                                            <span className="text-red-500">*</span>
-                                        </label>
-
-                                        <select
-                                            value={employmentType}
-                                            onChange={(e) =>
-                                                setEmploymentType(
-                                                    e.target.value,
-                                                )
-                                            }
-                                            className="w-full rounded-lg border border-[#d9e2ec] bg-white px-3.5 py-2.5 text-sm text-[#243B53] outline-none focus:border-[#486581] focus:ring-1 focus:ring-[#486581]/20 transition cursor-pointer"
-                                        >
-                                            <option value="Full-time">
-                                                {t(
-                                                    "usersPage.fullTime",
-                                                    "Full-time",
-                                                )}
-                                            </option>
-
-                                            <option value="Part-time">
-                                                {t(
-                                                    "usersPage.partTime",
-                                                    "Part-time",
-                                                )}
-                                            </option>
-
-                                            <option value="Contract">
-                                                {t(
-                                                    "usersPage.contract",
-                                                    "Contract",
-                                                )}
-                                            </option>
-                                        </select>
-                                    </div>
-
-                                    {/* Start Date */}
-                                    <div>
-                                        <label className="block text-sm font-semibold text-[#243B53] mb-1.5">
-                                            {t(
-                                                "usersPage.startDate",
-                                                "Start date",
-                                            )}{" "}
-                                            <span className="text-red-500">*</span>
-                                        </label>
-
-                                        <input
-                                            type="date"
-                                            required
-                                            value={startDate}
-                                            onChange={(e) =>
-                                                setStartDate(
-                                                    e.target.value,
-                                                )
-                                            }
-                                            className="w-full rounded-lg border border-[#d9e2ec] px-3.5 py-2.5 text-sm text-[#243B53] outline-none focus:border-[#486581] focus:ring-1 focus:ring-[#486581]/20 transition"
-                                        />
-                                    </div>
-
-                                    {/* Department */}
-                                    <div>
-                                        <label className="block text-sm font-semibold text-[#243B53] mb-1.5">
-                                            {t(
-                                                "usersPage.department",
-                                                "Department",
-                                            )}{" "}
-                                            {role !== "HR" && (
-                                                <span className="text-red-500">
-                                                    *
-                                                </span>
-                                            )}
-                                        </label>
-
-                                        <select
-                                            value={departmentId}
-                                            onChange={(e) =>
-                                                setDepartmentId(
-                                                    e.target.value,
-                                                )
-                                            }
-                                            className="w-full rounded-lg border border-[#d9e2ec] bg-white px-3.5 py-2.5 text-sm text-[#243B53] outline-none focus:border-[#486581] focus:ring-1 focus:ring-[#486581]/20 transition cursor-pointer"
-                                        >
-                                            <option value="">
-                                                {t(
-                                                    "departments.selectDepartment",
-                                                    "Select Department",
-                                                )}
-                                            </option>
-                                            <option value="1">
-                                                1 - Engineering
-                                            </option>
-                                            <option value="2">
-                                                2 - Operations
-                                            </option>
-                                            <option value="3">
-                                                3 - People & Culture
-                                            </option>
-                                            <option value="4">
-                                                4 - Sales
-                                            </option>
-                                            <option value="5">
-                                                5 - Finance
-                                            </option>
-                                        </select>
-                                    </div>
-
-                                    {/* Phone */}
-                                    <div>
-                                        <label className="block text-sm font-semibold text-[#243B53] mb-1.5">
-                                            {t(
-                                                "usersPage.phone",
-                                                "Phone number",
-                                            )}
-                                        </label>
-
-                                        <input
-                                            type="tel"
-                                            value={phone}
-                                            onChange={(e) =>
-                                                setPhone(
-                                                    e.target.value,
-                                                )
-                                            }
-                                            placeholder={t(
-                                                "usersPage.phonePlaceholder",
-                                                "e.g. +201234567890",
-                                            )}
-                                            className="w-full rounded-lg border border-[#d9e2ec] px-3.5 py-2.5 text-sm text-[#243B53] outline-none focus:border-[#486581] focus:ring-1 focus:ring-[#486581]/20 transition"
-                                        />
-                                    </div>
-
-                                    {/* Address */}
-                                    <div>
-                                        <label className="block text-sm font-semibold text-[#243B53] mb-1.5">
-                                            {t(
-                                                "usersPage.address",
-                                                "Address",
-                                            )}
-                                        </label>
-
-                                        <input
-                                            type="text"
-                                            value={address}
-                                            onChange={(e) =>
-                                                setAddress(
-                                                    e.target.value,
-                                                )
-                                            }
-                                            placeholder={t(
-                                                "usersPage.addressPlaceholder",
-                                                "e.g. Cairo, Egypt",
-                                            )}
-                                            className="w-full rounded-lg border border-[#d9e2ec] px-3.5 py-2.5 text-sm text-[#243B53] outline-none focus:border-[#486581] focus:ring-1 focus:ring-[#486581]/20 transition"
-                                        />
-                                    </div>
-                                </div>
-
-                                {/* Permissions dynamically loaded */}
-                                <div className="pt-2">
-                                    <label className="block text-sm font-semibold text-[#243B53] mb-2">
-                                        {t(
-                                            "usersPage.permissions",
-                                            "Permissions",
-                                        )}
-                                    </label>
-
-                                    {isPermissionsLoading ? (
-                                        <div className="flex items-center gap-2 py-3 text-xs text-[#829ab1]">
-                                            <FiLoader className="animate-spin" size={14} />
-                                            <span>
-                                                {t(
-                                                    "usersPage.loadingPermissions",
-                                                    "Loading permissions...",
-                                                )}
-                                            </span>
-                                        </div>
-                                    ) : permissionsList.length === 0 ? (
-                                        <p className="py-2 text-xs text-[#829ab1]">
-                                            {t(
-                                                "usersPage.noPermissionsFound",
-                                                "No permissions available.",
-                                            )}
-                                        </p>
-                                    ) : (
-                                        <div className="flex flex-wrap gap-2 max-h-36 overflow-y-auto p-3 rounded-lg border border-[#d9e2ec] bg-[#f8fafc]">
-                                            {permissionsList.map(
-                                                (perm) => {
-                                                    const isSelected =
-                                                        selectedPermissions.includes(
-                                                            perm,
-                                                        );
-
-                                                    return (
-                                                        <button
-                                                            key={perm}
-                                                            type="button"
-                                                            onClick={() =>
-                                                                togglePermission(
-                                                                    perm,
-                                                                )
-                                                            }
-                                                            className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition cursor-pointer ${
-                                                                isSelected
-                                                                    ? "bg-[#243B53] text-white shadow-xs"
-                                                                    : "bg-white text-[#486581] border border-[#d9e2ec] hover:border-[#9fb3c8]"
-                                                            }`}
-                                                        >
-                                                            <span
-                                                                className={`size-1.5 rounded-full ${
-                                                                    isSelected
-                                                                        ? "bg-[#12B76A]"
-                                                                        : "bg-[#9fb3c8]"
-                                                                }`}
-                                                            />
-                                                            {perm}
-                                                        </button>
-                                                    );
-                                                },
-                                            )}
-                                        </div>
-                                    )}
-                                </div>
-
-                                <div className="flex items-center justify-end gap-3 pt-4 border-t border-[#eef1f4]">
-                                    <button
-                                        type="button"
-                                        onClick={handleCloseModal}
-                                        disabled={
-                                            createEmployeeMutation.isPending
-                                        }
-                                        className="rounded-lg border border-[#d9e2ec] px-4 py-2.5 text-sm font-semibold text-[#486581] hover:bg-[#f0f4f7] hover:border-[#9fb3c8] transition cursor-pointer disabled:opacity-50"
-                                    >
-                                        {t(
-                                            "usersPage.cancel",
-                                            "Cancel",
-                                        )}
-                                    </button>
-
-                                    <button
-                                        type="submit"
-                                        disabled={
-                                            createEmployeeMutation.isPending
-                                        }
-                                        className="inline-flex items-center justify-center gap-2 rounded-lg bg-[#243B53] px-5 py-2.5 text-sm font-semibold text-white hover:bg-[#334e68] transition shadow-[0_1px_3px_rgba(16,42,67,0.12)] cursor-pointer disabled:opacity-60"
-                                    >
-                                        {createEmployeeMutation.isPending && (
-                                            <FiLoader
-                                                className="animate-spin"
-                                                size={15}
-                                            />
-                                        )}
-                                        {createEmployeeMutation.isPending
-                                            ? t(
-                                                  "usersPage.creating",
-                                                  "Creating...",
-                                              )
-                                            : t(
-                                                  "usersPage.createUser",
-                                                  "Create user",
-                                              )}
-                                    </button>
-                                </div>
-                            </form>
-                        </motion.div>
-                    </motion.div>
-                )}
-            </AnimatePresence>
-
-            {/* ── Edit HR Fields Modal ── */}
-            <AnimatePresence>
-                {isEditHrModalOpen && (
-                    <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                        className="fixed inset-0 z-50 flex items-center justify-center bg-[#102a43]/40 p-4 backdrop-blur-sm"
-                        onMouseDown={(e) => {
-                            if (e.target === e.currentTarget) closeEditHrModal();
-                        }}
-                    >
-                        <motion.div
-                            variants={modalPanel}
-                            initial="hidden"
-                            animate="visible"
-                            exit="exit"
-                            className="w-full max-w-md overflow-hidden rounded-2xl bg-white shadow-2xl"
-                            dir={isRtl ? "rtl" : "ltr"}
-                        >
-                            <div className="flex items-center justify-between border-b border-[#e2e8f0] bg-[#f8fafc] px-6 py-5">
-                                <h2 className="text-lg font-bold text-[#1e293b]">
-                                    {isRtl ? "تحديث بيانات الموارد البشرية" : "Update HR Fields"}
-                                </h2>
-                                <button
-                                    type="button"
-                                    onClick={closeEditHrModal}
-                                    className="rounded-lg text-[#64748b] transition hover:bg-[#e2e8f0] hover:text-[#1e293b] p-1.5"
-                                >
-                                    <FiX size={18} />
-                                </button>
-                            </div>
-
-                            <div className="space-y-4 bg-white p-6">
-                                <div>
-                                    <label className="mb-1.5 block text-sm font-semibold text-[#1e293b]">
-                                        {isRtl ? "المسمى الوظيفي" : "Job Title"}
-                                    </label>
-                                    <input
-                                        type="text"
-                                        value={editHrForm.job_title}
-                                        onChange={(e) => setEditHrForm({ ...editHrForm, job_title: e.target.value })}
-                                        className="w-full rounded-lg border border-[#d9e2ec] bg-white px-3 py-2 text-sm text-[#1e293b] outline-none transition focus:border-[#486581] focus:ring-1 focus:ring-[#486581]/20"
-                                    />
-                                </div>
-                                <div>
-                                    <label className="mb-1.5 block text-sm font-semibold text-[#1e293b]">
-                                        {isRtl ? "نوع التوظيف" : "Employment Type"}
-                                    </label>
-                                    <select
-                                        value={editHrForm.employment_type}
-                                        onChange={(e) => setEditHrForm({ ...editHrForm, employment_type: e.target.value })}
-                                        className="w-full rounded-lg border border-[#d9e2ec] bg-white px-3 py-2 text-sm text-[#1e293b] outline-none transition focus:border-[#486581] focus:ring-1 focus:ring-[#486581]/20"
-                                    >
-                                        <option value="">--</option>
-                                        <option value="Full-time">Full-time</option>
-                                        <option value="Part-time">Part-time</option>
-                                        <option value="Contract">Contract</option>
-                                    </select>
-                                </div>
-                                <div>
-                                    <label className="mb-1.5 block text-sm font-semibold text-[#1e293b]">
-                                        {isRtl ? "الحالة" : "Status"}
-                                    </label>
-                                    <select
-                                        value={editHrForm.status}
-                                        onChange={(e) => setEditHrForm({ ...editHrForm, status: e.target.value })}
-                                        className="w-full rounded-lg border border-[#d9e2ec] bg-white px-3 py-2 text-sm text-[#1e293b] outline-none transition focus:border-[#486581] focus:ring-1 focus:ring-[#486581]/20"
-                                    >
-                                        <option value="">--</option>
-                                        <option value="active">Active</option>
-                                        <option value="inactive">Inactive</option>
-                                    </select>
-                                </div>
-                                <div>
-                                    <label className="mb-1.5 block text-sm font-semibold text-[#1e293b]">
-                                        {isRtl ? "معرف القسم" : "Department ID"}
-                                    </label>
-                                    <input
-                                        type="number"
-                                        value={editHrForm.department_id}
-                                        onChange={(e) => setEditHrForm({ ...editHrForm, department_id: e.target.value })}
-                                        className="w-full rounded-lg border border-[#d9e2ec] bg-white px-3 py-2 text-sm text-[#1e293b] outline-none transition focus:border-[#486581] focus:ring-1 focus:ring-[#486581]/20"
-                                    />
-                                </div>
-                            </div>
-
-                            <div className="border-t border-[#e2e8f0] bg-[#f8fafc] px-6 py-5 flex gap-3">
-                                <button
-                                    type="button"
-                                    onClick={closeEditHrModal}
-                                    className="w-full rounded-lg border border-[#d9e2ec] py-2.5 text-sm font-semibold text-[#486581] transition hover:bg-[#f0f4f7]"
-                                >
-                                    {isRtl ? "إلغاء" : "Cancel"}
-                                </button>
-                                <button
-                                    type="button"
-                                    onClick={handleSaveHrFields}
-                                    disabled={updateHrFieldsMutation.isPending}
-                                    className="w-full rounded-lg bg-[#243B53] py-2.5 text-sm font-semibold text-white transition hover:bg-[#334e68] disabled:opacity-50"
-                                >
-                                    {updateHrFieldsMutation.isPending ? "..." : (isRtl ? "حفظ التعديلات" : "Save Changes")}
-                                </button>
-                            </div>
-                        </motion.div>
-                    </motion.div>
-                )}
-            </AnimatePresence>
-        </div>
-    );
->>>>>>> d022119de8d1e6227ecbda9172233c748528c3dc
 };
 
 export default Users;

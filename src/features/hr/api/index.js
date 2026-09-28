@@ -35,3 +35,44 @@ export const getPermissions = async (lang = "en") => {
 
   return response.data;
 };
+
+// =====================================================
+// UPDATE EMPLOYEE HR FIELDS
+// PATCH /employees/{id}/hr-fields
+// Owner / HR only
+// =====================================================
+export const updateEmployeeHRFields = async (id, employeeData, lang = "en") => {
+  const response = await axiosInstance.patch(
+    `/employees/${id}/hr-fields`,
+    employeeData,
+    {
+      params: { lang },
+      headers: {
+        "Accept-Language": lang,
+      },
+    },
+  );
+
+  return response.data;
+};
+
+// =====================================================
+// CHANGE EMPLOYEE ACCOUNT STATUS
+// PATCH /employees/{id}/change-account-status
+// Owner / HR only
+// No request body
+// =====================================================
+export const changeEmployeeAccountStatus = async (id, lang = "en") => {
+  const response = await axiosInstance.patch(
+    `/employees/${id}/change-account-status`,
+    null,
+    {
+      params: { lang },
+      headers: {
+        "Accept-Language": lang,
+      },
+    },
+  );
+
+  return response.data;
+};

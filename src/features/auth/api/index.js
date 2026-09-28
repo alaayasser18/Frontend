@@ -112,4 +112,3 @@ export const resendOTP = async (resendOTPData) => {
 
   return response.data;
 };
-

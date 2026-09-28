@@ -1,10 +1,12 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { motion } from "framer-motion";
 
 import MainAuthForm from "../components/MainAuthForm";
 import { useRegister } from "../hooks/useRegister";
+import { useAuth } from "../../../context/AuthContext";
+import { ROLE_ROUTES } from "../../../utils/roleRoutes";
 
 /* =========================
    ANIMATION
@@ -47,6 +49,14 @@ export default function Register() {
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const registerMutation = useRegister();
+  const { isAuthenticated, role } = useAuth();
+
+  // Redirect if already authenticated
+  useEffect(() => {
+    if (isAuthenticated && role && ROLE_ROUTES[role]) {
+      navigate(ROLE_ROUTES[role], { replace: true });
+    }
+  }, [isAuthenticated, role, navigate]);
 
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
@@ -159,73 +169,16 @@ export default function Register() {
       // ==================================================
 
       onSuccess: (data) => {
-        console.log("=================================");
-        console.log("REGISTER SUCCESS");
-        console.log("Register response:", data);
-        console.log("=================================");
-
-        const token = data?.data?.access_token;
-        const user = data?.data?.user;
-
-        // =========================
-        // CHECK TOKEN
-        // =========================
-
-        if (!token) {
-          console.error(
-            "Registration succeeded but access token was not returned.",
-          );
-
-          setMessageKey("auth.register.tokenMissing");
-          setMessageType("error");
-          return;
-        }
-
-        // =========================
-        // SAVE TOKEN
-        // =========================
-
-        localStorage.setItem("token", token);
-
-        console.log(
-          "Registration token saved:",
-          localStorage.getItem("token") ? "YES" : "NO",
-        );
-
-        // =========================
-        // SAVE USER
-        // =========================
-
-        if (user) {
-          localStorage.setItem("user", JSON.stringify(user));
-
-          console.log("Registered user saved:", user);
-        }
-
-        // =========================
-        // SAVE LANGUAGE
-        // =========================
-
-        localStorage.setItem("language", currentLanguage);
-
-        console.log(
-          "Registration language saved:",
-          localStorage.getItem("language"),
-        );
-
-        // =========================
-        // SUCCESS MESSAGE
-        // =========================
-
+        // Registration successful: do not create an active session
+        // Direct the user to the Owner Login page as required
         setMessageKey("auth.register.successMessage");
+        if (data?.message) {
+          setMessageText(data.message);
+        }
         setMessageType("success");
 
-        // =========================
-        // GO TO LOGIN
-        // =========================
-
         setTimeout(() => {
-          navigate("/login", { replace: true });
+          navigate("/owner/login", { replace: true });
         }, 1500);
       },
 
@@ -349,7 +302,7 @@ export default function Register() {
 
         <motion.p className="subtitle" variants={itemVariants}>
           {t("auth.register.alreadyHaveAccount")}{" "}
-          <Link to="/login" className="signup-link">
+          <Link to="/owner/login" className="signup-link">
             {t("auth.register.signIn")}
           </Link>
         </motion.p>

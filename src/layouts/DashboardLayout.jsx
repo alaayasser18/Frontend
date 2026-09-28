@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Outlet, useLocation } from "react-router-dom";
 import Sidebar from "../components/Sidebar";
 import Header from "../components/Header";
-import { AuthProvider, useAuth } from "../context/AuthContext";
+import { useAuth } from "../context/AuthContext";
 import { NotificationProvider } from "../context/NotificationContext";
 
 const DashboardInner = () => {
@@ -23,7 +23,10 @@ const DashboardInner = () => {
   }
 
   return (
-    <NotificationProvider currentRole={currentUserRole} currentUserId={currentUser?.userId}>
+    <NotificationProvider
+      currentRole={currentUserRole}
+      currentUserId={currentUser?.id || currentUser?.userId}
+    >
       <div className="flex min-h-screen w-full bg-[#f5f7f8]">
         <Sidebar
           role={currentUserRole}
@@ -76,11 +79,7 @@ const DashboardInner = () => {
 };
 
 const DashboardLayout = () => {
-  return (
-    <AuthProvider>
-      <DashboardInner />
-    </AuthProvider>
-  );
+  return <DashboardInner />;
 };
 
 export default DashboardLayout;

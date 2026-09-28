@@ -55,14 +55,13 @@ const Sidebar = ({ role = "admin", isOpen = false, onClose }) => {
   let userInfo;
 
   if (isAdminPage) {
-    const adminName =
-      (activeUser?.role === "admin" || !activeUser?.role) && activeUser?.name
-        ? isRtl && activeUser?.nameAr
-          ? activeUser.nameAr
-          : activeUser.name
-        : activeUser?.fullName ||
-          activeUser?.username ||
-          (isRtl ? "أحمد ناصر" : "Ahmed Nasser");
+    const adminName = activeUser?.name
+      ? isRtl && activeUser?.nameAr
+        ? activeUser.nameAr
+        : activeUser.name
+      : activeUser?.fullName ||
+        activeUser?.username ||
+        (isRtl ? "أحمد ناصر" : "Ahmed Nasser");
 
     const adminAvatarText = activeUser?.initials
       ? activeUser.initials.toUpperCase()
@@ -79,6 +78,7 @@ const Sidebar = ({ role = "admin", isOpen = false, onClose }) => {
     userInfo = {
       displayName: adminName,
       displayTitle:
+        activeUser?.role_label ||
         activeUser?.jobTitle ||
         activeUser?.roleTitle ||
         (isRtl ? "مسؤول النظام" : "Administrator"),
@@ -88,20 +88,22 @@ const Sidebar = ({ role = "admin", isOpen = false, onClose }) => {
     };
   } else if (effectiveRole === "hr") {
     userInfo = {
-      displayName:
-        activeUser?.role === "hr" && activeUser?.name
-          ? isRtl && activeUser?.nameAr
-            ? activeUser.nameAr
-            : activeUser.name
-          : isRtl
-            ? "مصطفى خليل"
-            : "Mostafa Khalil",
+      displayName: activeUser?.name
+        ? isRtl && activeUser?.nameAr
+          ? activeUser.nameAr
+          : activeUser.name
+        : isRtl
+          ? "مصطفى خليل"
+          : "Mostafa Khalil",
 
-      displayTitle: isRtl ? "مسؤول موارد بشرية" : "HR Specialist",
+      displayTitle:
+        activeUser?.role_label ||
+        activeUser?.job_title ||
+        (isRtl ? "مسؤول موارد بشرية" : "HR Specialist"),
 
       avatarText:
-        activeUser?.role === "hr" && activeUser?.initials
-          ? activeUser.initials
+        activeUser?.initials
+          ? activeUser.initials.toUpperCase()
           : "MK",
 
       avatarBg: "#ede9fe",
@@ -109,20 +111,22 @@ const Sidebar = ({ role = "admin", isOpen = false, onClose }) => {
     };
   } else if (effectiveRole === "manager") {
     userInfo = {
-      displayName:
-        activeUser?.role === "manager" && activeUser?.name
-          ? isRtl && activeUser?.nameAr
-            ? activeUser.nameAr
-            : activeUser.name
-          : isRtl
-            ? "ليلى حسن"
-            : "Layla Hassan",
+      displayName: activeUser?.name
+        ? isRtl && activeUser?.nameAr
+          ? activeUser.nameAr
+          : activeUser.name
+        : isRtl
+          ? "ليلى حسن"
+          : "Layla Hassan",
 
-      displayTitle: isRtl ? "مدير الفريق" : "Manager",
+      displayTitle:
+        activeUser?.role_label ||
+        activeUser?.job_title ||
+        (isRtl ? "مدير الفريق" : "Manager"),
 
       avatarText:
-        activeUser?.role === "manager" && activeUser?.initials
-          ? activeUser.initials
+        activeUser?.initials
+          ? activeUser.initials.toUpperCase()
           : "LH",
 
       avatarBg: "#fef3c7",
@@ -130,20 +134,22 @@ const Sidebar = ({ role = "admin", isOpen = false, onClose }) => {
     };
   } else {
     userInfo = {
-      displayName:
-        activeUser?.role === "employee" && activeUser?.name
-          ? isRtl && activeUser?.nameAr
-            ? activeUser.nameAr
-            : activeUser.name
-          : isRtl
-            ? "عمر حداد"
-            : "Omar Haddad",
+      displayName: activeUser?.name
+        ? isRtl && activeUser?.nameAr
+          ? activeUser.nameAr
+          : activeUser.name
+        : isRtl
+          ? "عمر حداد"
+          : "Omar Haddad",
 
-      displayTitle: isRtl ? "محلل منتجات أول" : "Senior Product Analyst",
+      displayTitle:
+        activeUser?.role_label ||
+        activeUser?.job_title ||
+        (isRtl ? "محلل منتجات أول" : "Senior Product Analyst"),
 
       avatarText:
-        activeUser?.role === "employee" && activeUser?.initials
-          ? activeUser.initials
+        activeUser?.initials
+          ? activeUser.initials.toUpperCase()
           : "OH",
 
       avatarBg: "#d7eee9",

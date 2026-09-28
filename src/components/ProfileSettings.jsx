@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { createPortal } from "react-dom";
 import { useTranslation } from "react-i18next";
-import { useNavigate } from "react-router-dom";
 import { FiUsers, FiMapPin, FiMessageSquare, FiActivity, FiSettings, FiX } from "react-icons/fi";
 import { profileSettingsConfig } from "../config/profileSettingsConfig";
 import { useAuth } from "../context/AuthContext";
@@ -16,8 +15,7 @@ const getInitials = (name) =>
 
 const ProfileSettings = ({ role = "employee" }) => {
   const { t, i18n } = useTranslation();
-  const navigate = useNavigate();
-  const { setCurrentUser } = useAuth();
+  const { logout } = useAuth();
   const initialData = profileSettingsConfig[role] || profileSettingsConfig.employee;
 
   const [data, setData] = useState(initialData);
@@ -58,10 +56,7 @@ const ProfileSettings = ({ role = "employee" }) => {
 
   const handleConfirmLogout = () => {
     setIsLogoutModalOpen(false);
-    if (setCurrentUser) {
-      setCurrentUser(null);
-    }
-    navigate("/login");
+    logout();
   };
 
   if (!data) return null;

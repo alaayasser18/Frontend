@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useLogin } from "../hooks/useLogin";
+import { googleRedirect } from "../api";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import toast from "react-hot-toast";
@@ -302,8 +303,43 @@ export default function Login({ isOwner }) {
      GOOGLE LOGIN
   ========================= */
 
-  const handleGoogleSignIn = () => {
-    alert("Google Sign-In clicked!");
+  const handleGoogleSignIn = async () => {
+    try {
+      const data = await googleRedirect();
+      const googleUrl = data?.data?.url;
+
+      if (googleUrl) {
+        window.location.href = googleUrl;
+      } else {
+        toast.error(
+          t(
+            "auth.login.googleError",
+            "Failed to get Google login URL.",
+          ),
+        );
+      }
+    } catch (error) {
+      const status = error?.response?.status;
+      const backendMessage = error?.response?.data?.message;
+
+      if (status === 500) {
+        toast.error(
+          backendMessage ||
+            t(
+              "auth.login.serverError",
+              "Something went wrong on the server. Please try again later.",
+            ),
+        );
+      } else {
+        toast.error(
+          backendMessage ||
+            t(
+              "auth.login.googleError",
+              "Failed to initiate Google login.",
+            ),
+        );
+      }
+    }
   };
 
   return (

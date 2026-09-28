@@ -246,12 +246,6 @@ export default function Notification() {
               <FiChevronRight className="h-3.5 w-3.5 shrink-0" />
               <span className="text-[#334e68]">{t("portal.wiseWork", "WiseWork")}</span>
             </div>
-            <h1 className="text-[28px] font-bold leading-[1.2] tracking-tight text-[#102a43]">
-              {t("portal.notificationsTitle", "Notifications")}
-            </h1>
-            <p className="mt-1.5 text-sm text-[#64748b]">
-              {t("portal.notificationsSubtitle", "Configure and manage your WiseWork notifications.")}
-            </p>
           </div>
 
           <motion.button

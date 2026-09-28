@@ -7,12 +7,14 @@ import {
     FiChevronRight,
     FiCheckCircle,
     FiLoader,
+    FiEdit2,
 } from "react-icons/fi";
 import { LuArrowUpRight } from "react-icons/lu";
 import { motion, AnimatePresence } from "framer-motion";
 import toast from "react-hot-toast";
 
 import { useEmployees, usePermissions, useCreateEmployee } from "../hooks";
+import { useUpdateEmployeeHrFields } from "../../hr/hooks/useEmployees";
 
 const ROLE_COLORS = {
     Owner: "#3f7d5a",
@@ -245,6 +247,7 @@ const Users = () => {
     const [selectedPermissions, setSelectedPermissions] = useState([]);
 
     // API Hooks
+    const updateHrFieldsMutation = useUpdateEmployeeHrFields(currentLang);
     const {
         data: employeesResponse,
         isLoading: isEmployeesLoading,
@@ -263,6 +266,48 @@ const Users = () => {
     } = usePermissions(currentLang);
 
     const createEmployeeMutation = useCreateEmployee();
+
+    // Edit HR fields modal state
+    const [isEditHrModalOpen, setIsEditHrModalOpen] = useState(false);
+    const [selectedEditUser, setSelectedEditUser] = useState(null);
+    const [editHrForm, setEditHrForm] = useState({
+        job_title: "",
+        employment_type: "",
+        status: "",
+        department_id: "",
+    });
+
+    const openEditHrModal = (user) => {
+        setSelectedEditUser(user);
+        setEditHrForm({
+            job_title: user.job_title || user.role || "",
+            employment_type: user.employment_type || "",
+            status: user.statusType || user.status || "",
+            department_id: user.department_id || "",
+        });
+        setIsEditHrModalOpen(true);
+    };
+
+    const closeEditHrModal = () => {
+        setIsEditHrModalOpen(false);
+        setSelectedEditUser(null);
+    };
+
+    const handleSaveHrFields = async () => {
+        if (!selectedEditUser) return;
+        try {
+            await updateHrFieldsMutation.mutateAsync({
+                id: selectedEditUser.id,
+                hrData: editHrForm,
+            });
+            toast.success(isRtl ? "تم تحديث البيانات بنجاح" : "HR Fields updated successfully");
+            closeEditHrModal();
+            refetchEmployees();
+        } catch (e) {
+            toast.error(isRtl ? "حدث خطأ" : "Failed to update HR fields");
+            console.error(e);
+        }
+    };
 
     // Extracted live employees list
     const employeesList = useMemo(() => {
@@ -963,17 +1008,27 @@ const Users = () => {
                                                     </td>
 
                                                     <td className="py-4 text-right rtl:text-left">
-                                                        <Toggle
-                                                            checked={
-                                                                currentAccess
-                                                            }
-                                                            onChange={() =>
-                                                                handleToggleAccess(
-                                                                    user.id,
-                                                                )
-                                                            }
-                                                            label={`Toggle ${user.name}`}
-                                                        />
+                                                        <div className="flex flex-col sm:flex-row items-center justify-end gap-3">
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => openEditHrModal(user)}
+                                                                className="text-[#64748b] hover:text-[#243B53] transition"
+                                                                title={isRtl ? "تعديل بيانات الموظف" : "Edit HR Fields"}
+                                                            >
+                                                                <FiEdit2 size={16} />
+                                                            </button>
+                                                            <Toggle
+                                                                checked={
+                                                                    currentAccess
+                                                                }
+                                                                onChange={() =>
+                                                                    handleToggleAccess(
+                                                                        user.id,
+                                                                    )
+                                                                }
+                                                                label={`Toggle ${user.name}`}
+                                                            />
+                                                        </div>
                                                     </td>
                                                 </motion.tr>
                                             );
@@ -1451,6 +1506,115 @@ const Users = () => {
                                     </button>
                                 </div>
                             </form>
+                        </motion.div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+
+            {/* ── Edit HR Fields Modal ── */}
+            <AnimatePresence>
+                {isEditHrModalOpen && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="fixed inset-0 z-50 flex items-center justify-center bg-[#102a43]/40 p-4 backdrop-blur-sm"
+                        onMouseDown={(e) => {
+                            if (e.target === e.currentTarget) closeEditHrModal();
+                        }}
+                    >
+                        <motion.div
+                            variants={modalPanel}
+                            initial="hidden"
+                            animate="visible"
+                            exit="exit"
+                            className="w-full max-w-md overflow-hidden rounded-2xl bg-white shadow-2xl"
+                            dir={isRtl ? "rtl" : "ltr"}
+                        >
+                            <div className="flex items-center justify-between border-b border-[#e2e8f0] bg-[#f8fafc] px-6 py-5">
+                                <h2 className="text-lg font-bold text-[#1e293b]">
+                                    {isRtl ? "تحديث بيانات الموارد البشرية" : "Update HR Fields"}
+                                </h2>
+                                <button
+                                    type="button"
+                                    onClick={closeEditHrModal}
+                                    className="rounded-lg text-[#64748b] transition hover:bg-[#e2e8f0] hover:text-[#1e293b] p-1.5"
+                                >
+                                    <FiX size={18} />
+                                </button>
+                            </div>
+
+                            <div className="space-y-4 bg-white p-6">
+                                <div>
+                                    <label className="mb-1.5 block text-sm font-semibold text-[#1e293b]">
+                                        {isRtl ? "المسمى الوظيفي" : "Job Title"}
+                                    </label>
+                                    <input
+                                        type="text"
+                                        value={editHrForm.job_title}
+                                        onChange={(e) => setEditHrForm({ ...editHrForm, job_title: e.target.value })}
+                                        className="w-full rounded-lg border border-[#d9e2ec] bg-white px-3 py-2 text-sm text-[#1e293b] outline-none transition focus:border-[#486581] focus:ring-1 focus:ring-[#486581]/20"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="mb-1.5 block text-sm font-semibold text-[#1e293b]">
+                                        {isRtl ? "نوع التوظيف" : "Employment Type"}
+                                    </label>
+                                    <select
+                                        value={editHrForm.employment_type}
+                                        onChange={(e) => setEditHrForm({ ...editHrForm, employment_type: e.target.value })}
+                                        className="w-full rounded-lg border border-[#d9e2ec] bg-white px-3 py-2 text-sm text-[#1e293b] outline-none transition focus:border-[#486581] focus:ring-1 focus:ring-[#486581]/20"
+                                    >
+                                        <option value="">--</option>
+                                        <option value="Full-time">Full-time</option>
+                                        <option value="Part-time">Part-time</option>
+                                        <option value="Contract">Contract</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label className="mb-1.5 block text-sm font-semibold text-[#1e293b]">
+                                        {isRtl ? "الحالة" : "Status"}
+                                    </label>
+                                    <select
+                                        value={editHrForm.status}
+                                        onChange={(e) => setEditHrForm({ ...editHrForm, status: e.target.value })}
+                                        className="w-full rounded-lg border border-[#d9e2ec] bg-white px-3 py-2 text-sm text-[#1e293b] outline-none transition focus:border-[#486581] focus:ring-1 focus:ring-[#486581]/20"
+                                    >
+                                        <option value="">--</option>
+                                        <option value="active">Active</option>
+                                        <option value="inactive">Inactive</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label className="mb-1.5 block text-sm font-semibold text-[#1e293b]">
+                                        {isRtl ? "معرف القسم" : "Department ID"}
+                                    </label>
+                                    <input
+                                        type="number"
+                                        value={editHrForm.department_id}
+                                        onChange={(e) => setEditHrForm({ ...editHrForm, department_id: e.target.value })}
+                                        className="w-full rounded-lg border border-[#d9e2ec] bg-white px-3 py-2 text-sm text-[#1e293b] outline-none transition focus:border-[#486581] focus:ring-1 focus:ring-[#486581]/20"
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="border-t border-[#e2e8f0] bg-[#f8fafc] px-6 py-5 flex gap-3">
+                                <button
+                                    type="button"
+                                    onClick={closeEditHrModal}
+                                    className="w-full rounded-lg border border-[#d9e2ec] py-2.5 text-sm font-semibold text-[#486581] transition hover:bg-[#f0f4f7]"
+                                >
+                                    {isRtl ? "إلغاء" : "Cancel"}
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={handleSaveHrFields}
+                                    disabled={updateHrFieldsMutation.isPending}
+                                    className="w-full rounded-lg bg-[#243B53] py-2.5 text-sm font-semibold text-white transition hover:bg-[#334e68] disabled:opacity-50"
+                                >
+                                    {updateHrFieldsMutation.isPending ? "..." : (isRtl ? "حفظ التعديلات" : "Save Changes")}
+                                </button>
+                            </div>
                         </motion.div>
                     </motion.div>
                 )}

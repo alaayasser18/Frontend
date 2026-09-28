@@ -13,8 +13,9 @@ import {
   FiChevronDown,
 } from "react-icons/fi";
 
-import { useEmployees, useCreateEmployee } from "../hooks/useEmployees";
+import { useEmployees, useCreateEmployee, useUpdateEmployeeHrFields } from "../hooks/useEmployees";
 import { usePermissions } from "../hooks/usePermissions";
+import { useAuth } from "../../../context/AuthContext";
 
 // =====================================================
 // ANIMATIONS
@@ -74,6 +75,10 @@ function EmployeesPage() {
   const { data: permissionsResponse } = usePermissions(currentLang);
 
   const createEmployeeMutation = useCreateEmployee(currentLang);
+  const updateHrFieldsMutation = useUpdateEmployeeHrFields(currentLang);
+
+  const { role, hasPermission } = useAuth();
+  const canUpdateHrFields = role === "Admin" || role === "HR" || hasPermission("Update HR fields");
 
   // =====================================================
   // FORM DATA
@@ -165,6 +170,14 @@ function EmployeesPage() {
     noResultsText: isArabic
       ? "لم نتمكن من العثور على موظفين مطابقين لبحثك."
       : "We couldn't find any employees matching your search.",
+
+    editHrFields: isArabic ? "تعديل بيانات الموارد البشرية" : "Edit HR Fields",
+    editHrFieldsModalTitle: isArabic ? "تحديث بيانات الموارد البشرية للموظف" : "Update Employee HR Fields",
+    jobTitleLabel: isArabic ? "المسمى الوظيفي" : "Job Title",
+    employmentTypeLabel: isArabic ? "نوع التوظيف" : "Employment Type",
+    statusLabelText: isArabic ? "الحالة" : "Status",
+    departmentIdLabel: isArabic ? "معرف القسم" : "Department ID",
+    saveHrFields: isArabic ? "حفظ التعديلات" : "Save Changes",
   };
 
   // =====================================================
@@ -183,6 +196,41 @@ function EmployeesPage() {
 
   // Permissions dropdown state
   const [isPermissionsOpen, setIsPermissionsOpen] = useState(false);
+
+  // Edit HR fields modal state
+  const [isEditHrModalOpen, setIsEditHrModalOpen] = useState(false);
+  const [editHrForm, setEditHrForm] = useState({
+    job_title: "",
+    employment_type: "",
+    status: "",
+    department_id: "",
+  });
+
+  const openEditHrModal = (employee) => {
+    setEditHrForm({
+      job_title: employee.job_title || employee.role || "",
+      employment_type: employee.employment_type || "",
+      status: employee.statusType || employee.status || "",
+      department_id: employee.department_id || "",
+    });
+    setIsEditHrModalOpen(true);
+  };
+
+  const closeEditHrModal = () => setIsEditHrModalOpen(false);
+
+  const handleSaveHrFields = async () => {
+    if (!selectedEmployee) return;
+    try {
+      await updateHrFieldsMutation.mutateAsync({
+        id: selectedEmployee.id,
+        hrData: editHrForm,
+      });
+      closeEditHrModal();
+      closeProfile(); // Close profile view to refresh
+    } catch (e) {
+      console.error(e);
+    }
+  };
 
   // =====================================================
   // EMPLOYEES FROM API
@@ -1446,13 +1494,134 @@ function EmployeesPage() {
                 />
               </div>
 
-              <div className="border-t border-[#e2e8f0] bg-[#f8fafc] px-6 py-5">
+              <div className="border-t border-[#e2e8f0] bg-[#f8fafc] px-6 py-5 flex flex-col gap-3">
+                {canUpdateHrFields && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      closeProfile();
+                      openEditHrModal(selectedEmployee);
+                    }}
+                    className="w-full rounded-lg border border-[#243B53] text-[#243B53] py-2.5 text-sm font-semibold transition hover:bg-[#edf3f7]"
+                  >
+                    {t.editHrFields}
+                  </button>
+                )}
                 <button
                   type="button"
                   onClick={closeProfile}
                   className="w-full rounded-lg bg-[#243B53] py-2.5 text-sm font-semibold text-white transition hover:bg-[#1c2f42]"
                 >
                   {t.closeBtn}
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* =====================================================
+          EDIT HR FIELDS MODAL
+      ===================================================== */}
+      <AnimatePresence>
+        {isEditHrModalOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-[#1e293b]/50 p-4 backdrop-blur-sm"
+            onMouseDown={(e) => {
+              if (e.target === e.currentTarget) closeEditHrModal();
+            }}
+          >
+            <motion.div
+              variants={modalVariants}
+              initial="hidden"
+              animate="visible"
+              exit="hidden"
+              className="w-full max-w-md overflow-hidden rounded-2xl bg-white shadow-2xl"
+              dir={isArabic ? "rtl" : "ltr"}
+            >
+              <div className="flex items-center justify-between border-b border-[#e2e8f0] bg-[#f8fafc] px-6 py-5">
+                <h2 className="text-lg font-bold text-[#1e293b]">{t.editHrFieldsModalTitle}</h2>
+                <button
+                  type="button"
+                  onClick={closeEditHrModal}
+                  className="rounded-lg text-[#64748b] transition hover:bg-[#e2e8f0] hover:text-[#1e293b] p-1.5"
+                >
+                  <FiX size={18} />
+                </button>
+              </div>
+
+              <div className="space-y-4 bg-white p-6">
+                <div>
+                  <label className="mb-1.5 block text-sm font-semibold text-[#1e293b]">
+                    {t.jobTitleLabel}
+                  </label>
+                  <input
+                    type="text"
+                    value={editHrForm.job_title}
+                    onChange={(e) => setEditHrForm({ ...editHrForm, job_title: e.target.value })}
+                    className="w-full rounded-lg border border-[#e2e8f0] bg-white px-3 py-2 text-sm text-[#1e293b] outline-none transition focus:border-[#486581] focus:ring-1 focus:ring-[#486581]"
+                  />
+                </div>
+                <div>
+                  <label className="mb-1.5 block text-sm font-semibold text-[#1e293b]">
+                    {t.employmentTypeLabel}
+                  </label>
+                  <select
+                    value={editHrForm.employment_type}
+                    onChange={(e) => setEditHrForm({ ...editHrForm, employment_type: e.target.value })}
+                    className="w-full rounded-lg border border-[#e2e8f0] bg-white px-3 py-2 text-sm text-[#1e293b] outline-none transition focus:border-[#486581] focus:ring-1 focus:ring-[#486581]"
+                  >
+                    <option value="">--</option>
+                    <option value="Full-time">Full-time</option>
+                    <option value="Part-time">Part-time</option>
+                    <option value="Contract">Contract</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="mb-1.5 block text-sm font-semibold text-[#1e293b]">
+                    {t.statusLabelText}
+                  </label>
+                  <select
+                    value={editHrForm.status}
+                    onChange={(e) => setEditHrForm({ ...editHrForm, status: e.target.value })}
+                    className="w-full rounded-lg border border-[#e2e8f0] bg-white px-3 py-2 text-sm text-[#1e293b] outline-none transition focus:border-[#486581] focus:ring-1 focus:ring-[#486581]"
+                  >
+                    <option value="">--</option>
+                    <option value="active">Active</option>
+                    <option value="inactive">Inactive</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="mb-1.5 block text-sm font-semibold text-[#1e293b]">
+                    {t.departmentIdLabel}
+                  </label>
+                  <input
+                    type="number"
+                    value={editHrForm.department_id}
+                    onChange={(e) => setEditHrForm({ ...editHrForm, department_id: e.target.value })}
+                    className="w-full rounded-lg border border-[#e2e8f0] bg-white px-3 py-2 text-sm text-[#1e293b] outline-none transition focus:border-[#486581] focus:ring-1 focus:ring-[#486581]"
+                  />
+                </div>
+              </div>
+
+              <div className="border-t border-[#e2e8f0] bg-[#f8fafc] px-6 py-5 flex gap-3">
+                <button
+                  type="button"
+                  onClick={closeEditHrModal}
+                  className="w-full rounded-lg border border-[#e2e8f0] py-2.5 text-sm font-semibold text-[#64748b] transition hover:bg-[#edf3f7]"
+                >
+                  {t.cancel}
+                </button>
+                <button
+                  type="button"
+                  onClick={handleSaveHrFields}
+                  disabled={updateHrFieldsMutation.isPending}
+                  className="w-full rounded-lg bg-[#243B53] py-2.5 text-sm font-semibold text-white transition hover:bg-[#1c2f42] disabled:opacity-50"
+                >
+                  {updateHrFieldsMutation.isPending ? "..." : t.saveHrFields}
                 </button>
               </div>
             </motion.div>

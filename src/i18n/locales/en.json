@@ -1207,6 +1207,8 @@
     "jobTitleLabel": "Job title",
     "cancelEdit": "Cancel",
     "saveChanges": "Save changes",
+    "addressLabel": "Address",
+    "avatarLabel": "Profile Image",
     "logoutConfirmTitle": "Confirm Logout",
     "logoutConfirmMessage": "Are you sure you want to log out of your account?",
     "confirmLogout": "Log out",

@@ -1207,6 +1207,8 @@
     "jobTitleLabel": "المسمى الوظيفي",
     "cancelEdit": "إلغاء",
     "saveChanges": "حفظ التغييرات",
+    "addressLabel": "العنوان",
+    "avatarLabel": "صورة الملف الشخصي",
     "logoutConfirmTitle": "تأكيد تسجيل الخروج",
     "logoutConfirmMessage": "هل أنت متأكد من رغبتك في تسجيل الخروج من حسابك؟",
     "confirmLogout": "تسجيل الخروج",

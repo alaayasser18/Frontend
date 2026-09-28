@@ -35,3 +35,18 @@ export const getPermissions = async (lang = "en") => {
 
   return response.data;
 };
+
+// =====================================================
+// UPDATE EMPLOYEE HR FIELDS
+// Supports Arabic / English
+// =====================================================
+export const updateEmployeeHrFields = async (id, hrData, lang = "en") => {
+  const response = await axiosInstance.patch(`/employees/${id}/hr-fields`, hrData, {
+    params: { lang },
+    headers: {
+      "Accept-Language": lang,
+    },
+  });
+
+  return response.data;
+};

@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 import { FiUsers, FiMapPin, FiMessageSquare, FiActivity, FiSettings, FiX } from "react-icons/fi";
 import { profileSettingsConfig } from "../config/profileSettingsConfig";
 import { useAuth } from "../context/AuthContext";
+import { useProfile } from "../features/profile/hooks/useProfile";
 
 const getInitials = (name) =>
   name
@@ -15,10 +16,23 @@ const getInitials = (name) =>
 
 const ProfileSettings = ({ role = "employee" }) => {
   const { t, i18n } = useTranslation();
-  const { logout } = useAuth();
+  const isRtl = i18n.language?.startsWith("ar");
+  const { logout, currentUser } = useAuth();
+  const { updateProfile, isUpdating } = useProfile();
+  
   const initialData = profileSettingsConfig[role] || profileSettingsConfig.employee;
 
-  const [data, setData] = useState(initialData);
+  const [data, setData] = useState({
+    ...initialData,
+    fullName: currentUser?.name || initialData.fullName,
+    jobTitle: currentUser?.job_title || currentUser?.role_label || initialData.jobTitle,
+    workEmail: currentUser?.email || initialData.workEmail,
+    phone: currentUser?.phone || initialData.phone,
+    workLocation: currentUser?.company_location?.name || currentUser?.address || initialData.workLocation,
+    directManager: currentUser?.manager?.name || initialData.directManager,
+    employeeId: currentUser?.employee_code || initialData.employeeId,
+    avatarUrl: currentUser?.avatar_url || null,
+  });
   const [biometricLogin, setBiometricLogin] = useState(initialData?.biometricLogin ?? false);
   const [pushNotifications, setPushNotifications] = useState(initialData?.pushNotifications ?? false);
 
@@ -31,7 +45,9 @@ const ProfileSettings = ({ role = "employee" }) => {
     workLocation: "",
     workEmail: "",
     phone: "",
+    address: "",
   });
+  const [avatarFile, setAvatarFile] = useState(null);
 
   const handleOpenEditModal = () => {
     setEditForm({
@@ -41,7 +57,9 @@ const ProfileSettings = ({ role = "employee" }) => {
       workLocation: data.workLocation,
       workEmail: data.workEmail,
       phone: data.phone,
+      address: currentUser?.address || data.workLocation,
     });
+    setAvatarFile(null);
     setIsEditModalOpen(true);
   };
 
@@ -49,9 +67,26 @@ const ProfileSettings = ({ role = "employee" }) => {
     setIsEditModalOpen(false);
   };
 
-  const handleSaveProfile = () => {
-    setData((prev) => ({ ...prev, ...editForm }));
-    setIsEditModalOpen(false);
+  const handleSaveProfile = async () => {
+    const formData = new FormData();
+    formData.append("_method", "PATCH");
+    if (editForm.fullName) formData.append("name", editForm.fullName);
+    if (editForm.phone) formData.append("phone", editForm.phone);
+    if (editForm.address) formData.append("address", editForm.address);
+    formData.append("locale", i18n.language?.startsWith("ar") ? "ar" : "en");
+    if (avatarFile) formData.append("avatar", avatarFile);
+
+    try {
+      const response = await updateProfile(formData);
+      setData((prev) => ({ 
+        ...prev, 
+        ...editForm,
+        avatarUrl: response?.data?.avatar_url || prev.avatarUrl 
+      }));
+      setIsEditModalOpen(false);
+    } catch (e) {
+      console.error(e);
+    }
   };
 
   const handleConfirmLogout = () => {
@@ -63,7 +98,7 @@ const ProfileSettings = ({ role = "employee" }) => {
 
   return (
     <>
-      <div className="w-full space-y-6">
+      <div className="w-full space-y-6" dir={isRtl ? "rtl" : "ltr"}>
       {/* Page Header */}
       <div>
         <p className="text-xs font-bold tracking-wider text-[#3f7d5a] uppercase mb-1">
@@ -88,8 +123,12 @@ const ProfileSettings = ({ role = "employee" }) => {
           <div className="px-6 pb-6">
             <div className="flex items-start justify-between -mt-8">
               <div className="flex items-end gap-4">
-                <div className="flex size-16 items-center justify-center rounded-full bg-[#d9eee7] text-[#3f7d5a] text-lg font-bold ring-4 ring-white">
-                  {getInitials(data.fullName)}
+                <div className="flex size-16 items-center justify-center rounded-full bg-[#d9eee7] text-[#3f7d5a] text-lg font-bold ring-4 ring-white overflow-hidden">
+                  {data.avatarUrl ? (
+                    <img src={data.avatarUrl} alt={data.fullName} className="w-full h-full object-cover" />
+                  ) : (
+                    getInitials(data.fullName)
+                  )}
                 </div>
               </div>
                           <button
@@ -269,7 +308,7 @@ const ProfileSettings = ({ role = "employee" }) => {
             className="fixed inset-0 top-0 left-0 right-0 bottom-0 !m-0 z-[9999] flex items-center justify-center bg-slate-900/50 p-4"
             style={{ margin: 0 }}
           >
-            <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl">
+            <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl" dir={isRtl ? "rtl" : "ltr"}>
               <div className="flex items-center justify-between mb-6">
                 <h3 className="text-lg font-bold text-[#1e293b]">
                   {t("profileSettingsPage.editProfileTitle", "Edit profile")}
@@ -368,6 +407,34 @@ const ProfileSettings = ({ role = "employee" }) => {
                     className="w-full rounded-lg border border-[#e2e8f0] px-3.5 py-2.5 text-sm text-[#1e293b] focus:outline-none focus:ring-2 focus:ring-[#486581]/30"
                   />
                 </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-[#1e293b] mb-1.5">
+                    {t("profileSettingsPage.addressLabel", "Address")}
+                  </label>
+                  <input
+                    type="text"
+                    value={editForm.address}
+                    onChange={(e) =>
+                      setEditForm((prev) => ({ ...prev, address: e.target.value }))
+                    }
+                    className="w-full rounded-lg border border-[#e2e8f0] px-3.5 py-2.5 text-sm text-[#1e293b] focus:outline-none focus:ring-2 focus:ring-[#486581]/30"
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-[#1e293b] mb-1.5">
+                    {t("profileSettingsPage.avatarLabel", "Profile Image")}
+                  </label>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) =>
+                      setAvatarFile(e.target.files[0])
+                    }
+                    className="w-full rounded-lg border border-[#e2e8f0] px-3.5 py-2.5 text-sm text-[#1e293b] focus:outline-none focus:ring-2 focus:ring-[#486581]/30"
+                  />
+                </div>
               </div>
 
               <div className="flex items-center justify-end gap-3 mt-6">
@@ -381,9 +448,10 @@ const ProfileSettings = ({ role = "employee" }) => {
                 <button
                   type="button"
                   onClick={handleSaveProfile}
-                  className="rounded-lg bg-[#243B53] px-4 py-2.5 text-sm font-semibold text-white hover:bg-[#1c2f42] transition"
+                  disabled={isUpdating}
+                  className="rounded-lg bg-[#243B53] px-4 py-2.5 text-sm font-semibold text-white hover:bg-[#1c2f42] transition disabled:opacity-50"
                 >
-                  {t("profileSettingsPage.saveChanges", "Save changes")}
+                  {isUpdating ? t("common.saving", "Saving...") : t("profileSettingsPage.saveChanges", "Save changes")}
                 </button>
               </div>
             </div>
@@ -399,7 +467,7 @@ const ProfileSettings = ({ role = "employee" }) => {
             className="fixed inset-0 top-0 left-0 right-0 bottom-0 !m-0 z-[9999] flex items-center justify-center bg-slate-900/50 p-4"
             style={{ margin: 0 }}
           >
-            <div className="w-full max-w-sm rounded-2xl bg-white p-6 shadow-xl">
+            <div className="w-full max-w-sm rounded-2xl bg-white p-6 shadow-xl" dir={isRtl ? "rtl" : "ltr"}>
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-lg font-bold text-[#1e293b]">
                   {t("profileSettingsPage.logoutConfirmTitle", "Confirm Logout")}

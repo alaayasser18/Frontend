@@ -1,8 +1,13 @@
 import axios from "axios";
+
 console.log("API URL:", import.meta.env.VITE_API_BASE_URL);
+
 const axiosInstance = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL,
+  baseURL:
+    import.meta.env.VITE_API_BASE_URL ||
+    "https://hr-system.iptvdemo.serv5group.com/api",
   timeout: 15000,
+
   headers: {
     "Content-Type": "application/json",
     Accept: "application/json",
@@ -24,6 +29,7 @@ axiosInstance.interceptors.request.use(
 
 axiosInstance.interceptors.response.use(
   (response) => response,
+
   (error) => {
     if (error.response?.status === 401) {
       // Clear central authentication state from storage

@@ -1,3 +1,4 @@
+
 import axiosInstance from "../../../utils/axiosInstance";
 
 // =====================================================
@@ -38,15 +39,45 @@ export const getPermissions = async (lang = "en") => {
 
 // =====================================================
 // UPDATE EMPLOYEE HR FIELDS
-// Supports Arabic / English
+// PATCH /employees/{id}/hr-fields
+// Owner / HR only
 // =====================================================
-export const updateEmployeeHrFields = async (id, hrData, lang = "en") => {
-  const response = await axiosInstance.patch(`/employees/${id}/hr-fields`, hrData, {
-    params: { lang },
-    headers: {
-      "Accept-Language": lang,
+export const updateEmployeeHRFields = async (
+  id,
+  employeeData,
+  lang = "en",
+) => {
+  const response = await axiosInstance.patch(
+    `/employees/${id}/hr-fields`,
+    employeeData,
+    {
+      params: { lang },
+      headers: {
+        "Accept-Language": lang,
+      },
     },
-  });
+  );
+
+  return response.data;
+};
+
+// =====================================================
+// CHANGE EMPLOYEE ACCOUNT STATUS
+// PATCH /employees/{id}/change-account-status
+// Owner / HR only
+// No request body
+// =====================================================
+export const changeEmployeeAccountStatus = async (id, lang = "en") => {
+  const response = await axiosInstance.patch(
+    `/employees/${id}/change-account-status`,
+    null,
+    {
+      params: { lang },
+      headers: {
+        "Accept-Language": lang,
+      },
+    },
+  );
 
   return response.data;
 };

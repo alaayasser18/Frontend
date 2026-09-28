@@ -81,3 +81,27 @@ export const changeEmployeeAccountStatus = async (id, lang = "en") => {
 
   return response.data;
 };
+
+// =====================================================
+// GET EMPLOYEE BY ID
+// GET /employees/{id}
+// Allowed for all roles
+// =====================================================
+export const getEmployeeById = async (id, lang = "en") => {
+  if (!id) {
+    throw new Error("Employee ID is required");
+  }
+
+  const response = await axiosInstance.get(`/employees/${id}`, {
+    params: { lang },
+    headers: {
+      "Accept-Language": lang,
+    },
+  });
+
+  return response.data?.data || response.data;
+};
+
+// Aliases for compatibility
+export const updateEmployeeHrFields = updateEmployeeHRFields;
+

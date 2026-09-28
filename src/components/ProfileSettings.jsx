@@ -14,6 +14,7 @@ import {
 import { profileSettingsConfig } from "../config/profileSettingsConfig";
 import { useAuth } from "../context/AuthContext";
 import { getEmployeeById } from "../features/employee/api";
+import { useProfile } from "../features/profile/hooks/useProfile";
 
 const getInitials = (name) => {
   if (!name || typeof name !== "string") return "U";
@@ -30,6 +31,7 @@ const getInitials = (name) => {
 const ProfileSettings = ({ role = "employee" }) => {
   const { t, i18n } = useTranslation();
   const { logout, currentUser } = useAuth();
+  const { updateProfile, isUpdating } = useProfile();
 
   const isRtl = i18n.language?.startsWith("ar");
   const language = isRtl ? "ar" : "en";
@@ -59,26 +61,48 @@ const ProfileSettings = ({ role = "employee" }) => {
 
     queryFn: () => getEmployeeById(employeeId, language),
 
-    enabled: role === "employee" && Boolean(employeeId),
+    enabled: Boolean(employeeId),
+    retry: 1,
   });
 
   // =====================================================
   // NORMALIZE API DATA
   // =====================================================
-  const employeeProfileData =
-    role === "employee" && employee
-      ? {
-          fullName: employee.name || "",
-          jobTitle: employee.job_title || "",
-          employeeId: employee.employee_code || "",
-          directManager: employee.manager?.name || "-",
-          workLocation: employee.company_location?.name || "-",
-          workEmail: employee.email || "",
-          phone: employee.phone || "-",
-          address: employee.address || "",
-          avatarUrl: employee.avatar_url || null,
-        }
-      : initialData;
+  const employeeProfileData = {
+    fullName:
+      employee?.name || currentUser?.name || initialData?.fullName || "",
+    jobTitle:
+      employee?.job_title ||
+      currentUser?.job_title ||
+      currentUser?.role_label ||
+      initialData?.jobTitle ||
+      "",
+    employeeId:
+      employee?.employee_code ||
+      currentUser?.employee_code ||
+      (employeeId ? `EMP-${employeeId}` : initialData?.employeeId || ""),
+    directManager:
+      employee?.manager?.name ||
+      currentUser?.manager?.name ||
+      initialData?.directManager ||
+      "-",
+    workLocation:
+      employee?.company_location?.name ||
+      currentUser?.company_location?.name ||
+      initialData?.workLocation ||
+      "-",
+    workEmail:
+      employee?.email || currentUser?.email || initialData?.workEmail || "",
+    phone:
+      employee?.phone || currentUser?.phone || initialData?.phone || "-",
+    address:
+      employee?.address || currentUser?.address || initialData?.address || "",
+    avatarUrl:
+      employee?.avatar_url ||
+      currentUser?.avatar_url ||
+      initialData?.avatarUrl ||
+      null,
+  };
 
   // =====================================================
   // LOCAL EDITED PROFILE
@@ -152,19 +176,29 @@ const ProfileSettings = ({ role = "employee" }) => {
 
   // =====================================================
   // SAVE PROFILE
-  // NOTE:
-  // Currently saves locally only.
-  // Backend PATCH will be connected separately.
+  // PATCH /api/employees/profile
   // =====================================================
-  const handleSaveProfile = () => {
-    setEditedProfile({
-      ...editForm,
-      avatarUrl: avatarFile
-        ? URL.createObjectURL(avatarFile)
-        : data?.avatarUrl || null,
-    });
+  const handleSaveProfile = async () => {
+    const formData = new FormData();
+    if (editForm.fullName) formData.append("name", editForm.fullName);
+    if (editForm.phone) formData.append("phone", editForm.phone);
+    if (editForm.address) formData.append("address", editForm.address);
+    formData.append("locale", language);
+    if (avatarFile) formData.append("avatar", avatarFile);
 
-    setIsEditModalOpen(false);
+    try {
+      const response = await updateProfile(formData);
+      const updatedUser = response?.data;
+      setEditedProfile({
+        ...editForm,
+        avatarUrl:
+          updatedUser?.avatar_url ||
+          (avatarFile ? URL.createObjectURL(avatarFile) : data?.avatarUrl || null),
+      });
+      setIsEditModalOpen(false);
+    } catch (err) {
+      console.error("Failed to update profile:", err);
+    }
   };
 
   // =====================================================
@@ -795,12 +829,15 @@ const ProfileSettings = ({ role = "employee" }) => {
                 <button
                   type="button"
                   onClick={handleSaveProfile}
-                  className="rounded-lg bg-[#243B53] px-4 py-2.5 text-sm font-semibold text-white hover:bg-[#1c2f42] transition"
+                  disabled={isUpdating}
+                  className="rounded-lg bg-[#243B53] px-4 py-2.5 text-sm font-semibold text-white hover:bg-[#1c2f42] transition disabled:cursor-not-allowed disabled:opacity-50"
                 >
-                  {t(
-                    "profileSettingsPage.saveChanges",
-                    "Save changes",
-                  )}
+                  {isUpdating
+                    ? t("common.saving", isRtl ? "جاري الحفظ..." : "Saving...")
+                    : t(
+                        "profileSettingsPage.saveChanges",
+                        "Save changes",
+                      )}
                 </button>
               </div>
             </div>

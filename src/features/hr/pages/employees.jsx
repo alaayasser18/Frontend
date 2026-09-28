@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -16,12 +16,12 @@ import {
   FiSave,
 } from "react-icons/fi";
 
-import { useEmployees, useCreateEmployee, useUpdateEmployeeHrFields } from "../hooks/useEmployees";
 import {
   useEmployees,
   useCreateEmployee,
-  useUpdateEmployeeHRFields,
+  useUpdateEmployeeHrFields,
   useChangeEmployeeAccountStatus,
+  useEmployee,
 } from "../hooks/useEmployees";
 
 import { usePermissions } from "../hooks/usePermissions";
@@ -111,14 +111,42 @@ function EmployeesPage() {
   const { data: permissionsResponse } = usePermissions(currentLang);
 
   const createEmployeeMutation = useCreateEmployee(currentLang);
-  const updateHrFieldsMutation = useUpdateEmployeeHrFields(currentLang);
+  const updateEmployeeMutation = useUpdateEmployeeHrFields(currentLang);
+  const updateHrFieldsMutation = updateEmployeeMutation;
 
-  const { role, hasPermission } = useAuth();
-  const canUpdateHrFields = role === "Admin" || role === "HR" || hasPermission("Update HR fields");
-
-  const updateEmployeeMutation = useUpdateEmployeeHRFields(currentLang);
+  const { role, hasPermission, currentUser } = useAuth();
+  const canUpdateHrFields =
+    role === "Admin" ||
+    role === "HR" ||
+    role === "Owner" ||
+    (typeof hasPermission === "function" && hasPermission("Update HR fields"));
 
   const changeStatusMutation = useChangeEmployeeAccountStatus(currentLang);
+
+  const [selectedEmployee, setSelectedEmployee] = useState(null);
+
+  // GET /api/employees/{id} - retrieve detailed profile for selected employee
+  const { data: employeeDetails } = useEmployee(
+    selectedEmployee?.id,
+    currentLang,
+  );
+
+  useEffect(() => {
+    if (employeeDetails) {
+      setEditFormData({
+        job_title: employeeDetails.job_title || "",
+        employment_type: employeeDetails.employment_type || "Full-time",
+        status:
+          String(employeeDetails.status || "").toLowerCase() === "inactive"
+            ? "inactive"
+            : "active",
+        department_id:
+          employeeDetails.department?.id ||
+          employeeDetails.department_id ||
+          "",
+      });
+    }
+  }, [employeeDetails]);
 
   // =====================================================
   // FORM DATA - CREATE EMPLOYEE
@@ -244,8 +272,6 @@ function EmployeesPage() {
   const [owner, setOwner] = useState("");
 
   const [searchTerm, setSearchTerm] = useState("");
-
-  const [selectedEmployee, setSelectedEmployee] = useState(null);
 
   const [isPermissionsOpen, setIsPermissionsOpen] = useState(false);
 
@@ -717,6 +743,10 @@ function EmployeesPage() {
 
   const handleChangeAccountStatus = async () => {
     if (!selectedEmployee?.id) {
+      return;
+    }
+
+    if (currentUser?.id === selectedEmployee?.id) {
       return;
     }
 
@@ -1684,85 +1714,87 @@ function EmployeesPage() {
                     <ProfileRow
                       icon={<FiBriefcase size={15} />}
                       label={t.roleHeader}
-                      value={selectedEmployee.role}
+                      value={employeeDetails?.job_title || selectedEmployee.role}
                     />
 
                     <ProfileRow
                       icon={<FiUsers size={15} />}
                       label={t.departmentLabel}
-                      value={selectedEmployee.department}
+                      value={
+                        employeeDetails?.department?.name ||
+                        selectedEmployee.department
+                      }
                     />
 
                     <ProfileRow
                       icon={<FiMapPin size={15} />}
                       label={t.branchLabel}
-                      value={selectedEmployee.branch}
+                      value={
+                        employeeDetails?.company_location?.name ||
+                        selectedEmployee.branch
+                      }
                     />
-
-              <div className="border-t border-[#e2e8f0] bg-[#f8fafc] px-6 py-5 flex flex-col gap-3">
-                {canUpdateHrFields && (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      closeProfile();
-                      openEditHrModal(selectedEmployee);
-                    }}
-                    className="w-full rounded-lg border border-[#243B53] text-[#243B53] py-2.5 text-sm font-semibold transition hover:bg-[#edf3f7]"
-                  >
-                    {t.editHrFields}
-                  </button>
-                )}
-                <button
-                  type="button"
-                  onClick={closeProfile}
-                  className="w-full rounded-lg bg-[#243B53] py-2.5 text-sm font-semibold text-white transition hover:bg-[#1c2f42]"
-                >
-                  {t.closeBtn}
-                </button>
-              </div>
                     <ProfileRow
                       icon={<FiCheck size={15} />}
                       label={t.statusLabel}
-                      value={getStatusLabel(selectedEmployee.status)}
-                      valueClass={getStatusClasses(selectedEmployee.statusType)}
+                      value={getStatusLabel(
+                        employeeDetails?.status || selectedEmployee.status,
+                      )}
+                      valueClass={getStatusClasses(
+                        String(
+                          employeeDetails?.status || selectedEmployee.status,
+                        ).toLowerCase() === "active"
+                          ? "success"
+                          : "danger",
+                      )}
                     />
                   </div>
 
                   {/* ACTIONS */}
 
                   <div className="space-y-2 border-t border-[#e2e8f0] bg-[#f8fafc] px-6 py-5">
-                    <button
-                      type="button"
-                      onClick={openEditMode}
-                      disabled={changeStatusMutation.isPending}
-                      className="flex w-full items-center justify-center gap-2 rounded-lg bg-[#243B53] py-2.5 text-sm font-semibold text-white transition hover:bg-[#1c2f42] disabled:cursor-not-allowed disabled:opacity-50"
-                    >
-                      <FiEdit2 size={15} />
+                    {canUpdateHrFields && (
+                      <button
+                        type="button"
+                        onClick={openEditMode}
+                        disabled={changeStatusMutation.isPending}
+                        className="flex w-full items-center justify-center gap-2 rounded-lg bg-[#243B53] py-2.5 text-sm font-semibold text-white transition hover:bg-[#1c2f42] disabled:cursor-not-allowed disabled:opacity-50"
+                      >
+                        <FiEdit2 size={15} />
 
-                      {t.editEmployee}
-                    </button>
+                        {t.editHrFields || t.editEmployee}
+                      </button>
+                    )}
 
-                    <button
-                      type="button"
-                      onClick={handleChangeAccountStatus}
-                      disabled={changeStatusMutation.isPending}
-                      className={`flex w-full items-center justify-center gap-2 rounded-lg border py-2.5 text-sm font-semibold transition disabled:cursor-not-allowed disabled:opacity-50 ${
-                        String(selectedEmployee.status || "").toLowerCase() ===
-                        "active"
-                          ? "border-red-100 bg-red-50 text-red-700 hover:bg-red-100"
-                          : "border-emerald-100 bg-emerald-50 text-emerald-700 hover:bg-emerald-100"
-                      }`}
-                    >
-                      <FiPower size={15} />
-
-                      {changeStatusMutation.isPending
-                        ? t.updating
-                        : String(
-                              selectedEmployee.status || "",
+                    {canUpdateHrFields &&
+                      currentUser?.id !== selectedEmployee.id && (
+                        <button
+                          type="button"
+                          onClick={handleChangeAccountStatus}
+                          disabled={changeStatusMutation.isPending}
+                          className={`flex w-full items-center justify-center gap-2 rounded-lg border py-2.5 text-sm font-semibold transition disabled:cursor-not-allowed disabled:opacity-50 ${
+                            String(
+                              employeeDetails?.status ||
+                                selectedEmployee.status ||
+                                "",
                             ).toLowerCase() === "active"
-                          ? t.deactivate
-                          : t.activate}
-                    </button>
+                              ? "border-red-100 bg-red-50 text-red-700 hover:bg-red-100"
+                              : "border-emerald-100 bg-emerald-50 text-emerald-700 hover:bg-emerald-100"
+                          }`}
+                        >
+                          <FiPower size={15} />
+
+                          {changeStatusMutation.isPending
+                            ? t.updating
+                            : String(
+                                employeeDetails?.status ||
+                                  selectedEmployee.status ||
+                                  "",
+                              ).toLowerCase() === "active"
+                              ? t.deactivate
+                              : t.activate}
+                        </button>
+                      )}
 
                     {changeStatusMutation.isError && (
                       <ApiError
@@ -1929,114 +1961,6 @@ function EmployeesPage() {
         )}
       </AnimatePresence>
 
-      {/* =====================================================
-          EDIT HR FIELDS MODAL
-      ===================================================== */}
-      <AnimatePresence>
-        {isEditHrModalOpen && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-center justify-center bg-[#1e293b]/50 p-4 backdrop-blur-sm"
-            onMouseDown={(e) => {
-              if (e.target === e.currentTarget) closeEditHrModal();
-            }}
-          >
-            <motion.div
-              variants={modalVariants}
-              initial="hidden"
-              animate="visible"
-              exit="hidden"
-              className="w-full max-w-md overflow-hidden rounded-2xl bg-white shadow-2xl"
-              dir={isArabic ? "rtl" : "ltr"}
-            >
-              <div className="flex items-center justify-between border-b border-[#e2e8f0] bg-[#f8fafc] px-6 py-5">
-                <h2 className="text-lg font-bold text-[#1e293b]">{t.editHrFieldsModalTitle}</h2>
-                <button
-                  type="button"
-                  onClick={closeEditHrModal}
-                  className="rounded-lg text-[#64748b] transition hover:bg-[#e2e8f0] hover:text-[#1e293b] p-1.5"
-                >
-                  <FiX size={18} />
-                </button>
-              </div>
-
-              <div className="space-y-4 bg-white p-6">
-                <div>
-                  <label className="mb-1.5 block text-sm font-semibold text-[#1e293b]">
-                    {t.jobTitleLabel}
-                  </label>
-                  <input
-                    type="text"
-                    value={editHrForm.job_title}
-                    onChange={(e) => setEditHrForm({ ...editHrForm, job_title: e.target.value })}
-                    className="w-full rounded-lg border border-[#e2e8f0] bg-white px-3 py-2 text-sm text-[#1e293b] outline-none transition focus:border-[#486581] focus:ring-1 focus:ring-[#486581]"
-                  />
-                </div>
-                <div>
-                  <label className="mb-1.5 block text-sm font-semibold text-[#1e293b]">
-                    {t.employmentTypeLabel}
-                  </label>
-                  <select
-                    value={editHrForm.employment_type}
-                    onChange={(e) => setEditHrForm({ ...editHrForm, employment_type: e.target.value })}
-                    className="w-full rounded-lg border border-[#e2e8f0] bg-white px-3 py-2 text-sm text-[#1e293b] outline-none transition focus:border-[#486581] focus:ring-1 focus:ring-[#486581]"
-                  >
-                    <option value="">--</option>
-                    <option value="Full-time">Full-time</option>
-                    <option value="Part-time">Part-time</option>
-                    <option value="Contract">Contract</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="mb-1.5 block text-sm font-semibold text-[#1e293b]">
-                    {t.statusLabelText}
-                  </label>
-                  <select
-                    value={editHrForm.status}
-                    onChange={(e) => setEditHrForm({ ...editHrForm, status: e.target.value })}
-                    className="w-full rounded-lg border border-[#e2e8f0] bg-white px-3 py-2 text-sm text-[#1e293b] outline-none transition focus:border-[#486581] focus:ring-1 focus:ring-[#486581]"
-                  >
-                    <option value="">--</option>
-                    <option value="active">Active</option>
-                    <option value="inactive">Inactive</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="mb-1.5 block text-sm font-semibold text-[#1e293b]">
-                    {t.departmentIdLabel}
-                  </label>
-                  <input
-                    type="number"
-                    value={editHrForm.department_id}
-                    onChange={(e) => setEditHrForm({ ...editHrForm, department_id: e.target.value })}
-                    className="w-full rounded-lg border border-[#e2e8f0] bg-white px-3 py-2 text-sm text-[#1e293b] outline-none transition focus:border-[#486581] focus:ring-1 focus:ring-[#486581]"
-                  />
-                </div>
-              </div>
-
-              <div className="border-t border-[#e2e8f0] bg-[#f8fafc] px-6 py-5 flex gap-3">
-                <button
-                  type="button"
-                  onClick={closeEditHrModal}
-                  className="w-full rounded-lg border border-[#e2e8f0] py-2.5 text-sm font-semibold text-[#64748b] transition hover:bg-[#edf3f7]"
-                >
-                  {t.cancel}
-                </button>
-                <button
-                  type="button"
-                  onClick={handleSaveHrFields}
-                  disabled={updateHrFieldsMutation.isPending}
-                  className="w-full rounded-lg bg-[#243B53] py-2.5 text-sm font-semibold text-white transition hover:bg-[#1c2f42] disabled:opacity-50"
-                >
-                  {updateHrFieldsMutation.isPending ? "..." : t.saveHrFields}
-                </button>
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
     </motion.div>
   );
 }

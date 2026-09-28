@@ -23,6 +23,7 @@ export const useProfile = () => {
       }
       
       queryClient.invalidateQueries({ queryKey: ["userProfile"] });
+      queryClient.invalidateQueries({ queryKey: ["employee"] });
     },
     onError: (error) => {
       const message = error?.response?.data?.message || "Failed to update profile";

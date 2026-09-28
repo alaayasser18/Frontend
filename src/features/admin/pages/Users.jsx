@@ -14,7 +14,10 @@ import { motion, AnimatePresence } from "framer-motion";
 import toast from "react-hot-toast";
 
 import { useEmployees, usePermissions, useCreateEmployee } from "../hooks";
-import { useUpdateEmployeeHrFields } from "../../hr/hooks/useEmployees";
+import {
+    useUpdateEmployeeHrFields,
+    useChangeEmployeeAccountStatus,
+} from "../../hr/hooks/useEmployees";
 
 const ROLE_COLORS = {
     Owner: "#3f7d5a",
@@ -248,6 +251,7 @@ const Users = () => {
 
     // API Hooks
     const updateHrFieldsMutation = useUpdateEmployeeHrFields(currentLang);
+    const changeStatusMutation = useChangeEmployeeAccountStatus(currentLang);
     const {
         data: employeesResponse,
         isLoading: isEmployeesLoading,
@@ -533,7 +537,9 @@ const Users = () => {
 
     /* ─── Toggle access ─── */
 
-    const handleToggleAccess = (userId) => {
+    const handleToggleAccess = async (userId) => {
+        if (!userId) return;
+
         setAccessMap((prev) => {
             const currentAccess =
                 prev[userId] !== undefined ? prev[userId] : true;
@@ -542,6 +548,31 @@ const Users = () => {
                 [userId]: !currentAccess,
             };
         });
+
+        try {
+            await changeStatusMutation.mutateAsync(userId);
+            toast.success(
+                isRtl
+                    ? "تم تغيير حالة الحساب بنجاح"
+                    : "Account status updated successfully",
+            );
+        } catch (error) {
+            // Revert state on error
+            setAccessMap((prev) => {
+                const currentAccess =
+                    prev[userId] !== undefined ? prev[userId] : true;
+                return {
+                    ...prev,
+                    [userId]: !currentAccess,
+                };
+            });
+            toast.error(
+                error?.response?.data?.message ||
+                    (isRtl
+                        ? "فشل في تغيير حالة الحساب"
+                        : "Failed to change account status"),
+            );
+        }
     };
 
     return (

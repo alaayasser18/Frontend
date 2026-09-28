@@ -1,5 +1,5 @@
 import { NavLink, useLocation } from "react-router-dom";
-import { FiArrowRight, FiMoreHorizontal } from "react-icons/fi";
+import { FiArrowRight, FiMoreHorizontal, FiX } from "react-icons/fi";
 import { LuSparkles } from "react-icons/lu";
 import { useTranslation } from "react-i18next";
 
@@ -194,7 +194,7 @@ const Sidebar = ({ role = "admin", isOpen = false, onClose }) => {
           className="
             fixed
             inset-0
-            z-[35]
+            z-[45]
             bg-[rgba(16,42,67,0.5)]
             lg:hidden
           "
@@ -215,7 +215,7 @@ const Sidebar = ({ role = "admin", isOpen = false, onClose }) => {
           ${sidebarPosition}
           top-0
           bottom-0
-          z-40
+          z-50
 
           flex
           w-[256px]
@@ -252,39 +252,50 @@ const Sidebar = ({ role = "admin", isOpen = false, onClose }) => {
             mb-6
             flex
             items-center
-            gap-3
+            justify-between
             px-2
             shrink-0
           "
         >
-          <img
-            src={logoImg}
-            alt={`${APP_NAME} Logo`}
-            className="
-              h-8
-              w-8
-              shrink-0
-              rounded-xl
-            "
-          />
+          <div className="flex items-center gap-3">
+            <img
+              src={logoImg}
+              alt={`${APP_NAME} Logo`}
+              className="
+                h-8
+                w-8
+                shrink-0
+                rounded-xl
+              "
+            />
 
-          <span
-            className="
-              text-lg
-              font-bold
-              tracking-tight
-              text-white
-            "
-          >
-            {BRAND_NAME.prefix}
             <span
-              style={{
-                color: BRAND_NAME.suffixColor,
-              }}
+              className="
+                text-lg
+                font-bold
+                tracking-tight
+                text-white
+              "
             >
-              {BRAND_NAME.suffix}
+              {BRAND_NAME.prefix}
+              <span
+                style={{
+                  color: BRAND_NAME.suffixColor,
+                }}
+              >
+                {BRAND_NAME.suffix}
+              </span>
             </span>
-          </span>
+          </div>
+
+          <button
+            type="button"
+            onClick={onClose}
+            className="lg:hidden p-1.5 text-[#9fb3c8] hover:text-white rounded-lg hover:bg-[#294861] transition cursor-pointer"
+            aria-label="Close Sidebar"
+          >
+            <FiX size={18} />
+          </button>
         </div>
 
         {/* =========================

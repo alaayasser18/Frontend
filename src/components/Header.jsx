@@ -106,11 +106,11 @@ const Header = ({ onToggleMenu, role }) => {
   };
 
   return (
-    <header className="sticky top-0 z-30 flex h-[65px] items-center justify-between border-b border-[#e2e8f0] bg-white px-8 max-[760px]:px-2.5">
+    <header className="sticky top-0 z-30 flex h-[65px] items-center justify-between border-b border-[#e2e8f0] bg-white px-4 sm:px-6 lg:px-8">
       {/* Mobile Menu Button */}
       <button
         type="button"
-        className="hidden max-[760px]:flex items-center justify-center p-1.5 text-[#243b53] rounded-lg hover:bg-[#f0f4f7] transition shrink-0"
+        className="flex lg:hidden items-center justify-center p-2 text-[#243b53] rounded-lg hover:bg-[#f0f4f7] transition shrink-0 cursor-pointer"
         onClick={onToggleMenu}
         aria-label="Toggle Menu"
       >

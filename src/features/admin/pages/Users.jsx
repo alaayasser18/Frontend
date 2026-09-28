@@ -195,6 +195,7 @@ const Users = () => {
   const [phone, setPhone] = useState("");
   const [address, setAddress] = useState("");
   const [selectedPermissions, setSelectedPermissions] = useState([]);
+  const [formErrors, setFormErrors] = useState({});
 
   // Edit HR fields modal state
   const [isEditHrModalOpen, setIsEditHrModalOpen] = useState(false);
@@ -291,7 +292,8 @@ const Users = () => {
       const userEmail = (user.email || "").toLowerCase();
       const dept = (
         user.department?.name ||
-        user.department ||
+        user.department_name ||
+        (typeof user.department === "string" ? user.department : "") ||
         ""
       ).toLowerCase();
       const job = (user.job_title || "").toLowerCase();
@@ -320,7 +322,7 @@ const Users = () => {
         role: user.role,
         phone: user.phone || null,
         job_title: user.job_title || null,
-        department: user.department?.name || user.department || null,
+        department: user.department?.name || user.department_name || user.department || null,
         status: user.status || "Active",
         permissions: user.permissions || [],
         access:
@@ -363,6 +365,7 @@ const Users = () => {
     setPhone("");
     setAddress("");
     setSelectedPermissions([]);
+    setFormErrors({});
   };
 
   /* ─── Close modal ─── */
@@ -384,6 +387,7 @@ const Users = () => {
 
   const handleCreateUser = (e) => {
     if (e && e.preventDefault) e.preventDefault();
+    setFormErrors({});
 
     if (
       !fullName.trim() ||
@@ -425,7 +429,6 @@ const Users = () => {
       start_date: startDate,
       department_id:
         role === "HR" && !departmentId ? null : Number(departmentId) || null,
-      permissions: selectedPermissions,
       phone: phone.trim() || null,
       address: address.trim() || null,
     };
@@ -439,6 +442,7 @@ const Users = () => {
               t("usersPage.createSuccess", "Employee created successfully."),
           );
           handleCloseModal();
+          refetchEmployees();
         },
         onError: (err) => {
           const backendErrors = err?.response?.data?.errors;
@@ -448,10 +452,11 @@ const Users = () => {
             t("usersPage.createError", "Failed to create employee.");
 
           if (backendErrors && typeof backendErrors === "object") {
-            const firstFieldErrors = Object.values(backendErrors).flat();
+            setFormErrors(backendErrors);
+            const allErrors = Object.values(backendErrors).flat();
 
-            if (firstFieldErrors.length > 0) {
-              errorMessage = firstFieldErrors[0];
+            if (allErrors.length > 0) {
+              errorMessage = allErrors.join(" — ");
             }
           }
 
@@ -508,17 +513,47 @@ const Users = () => {
     }
   };
 
-  /* ─── Toggle access ─── */
+  /* ─── Toggle access (Persisted to Backend API) ─── */
 
-  const handleToggleAccess = (userId) => {
-    setAccessMap((prev) => {
-      const currentAccess = prev[userId] !== undefined ? prev[userId] : true;
+  const handleToggleAccess = async (user) => {
+    const isCurrentlyActive =
+      accessMap[user.id] !== undefined
+        ? accessMap[user.id]
+        : user.status
+          ? (user.status.toLowerCase() === "active" || user.status === "نشط")
+          : true;
 
-      return {
+    const nextActive = !isCurrentlyActive;
+    const nextStatus = nextActive ? "active" : "inactive";
+
+    // Optimistically update local state
+    setAccessMap((prev) => ({
+      ...prev,
+      [user.id]: nextActive,
+    }));
+
+    try {
+      await updateHrFieldsMutation.mutateAsync({
+        id: user.id,
+        hrData: { status: nextStatus },
+      });
+      toast.success(
+        nextActive
+          ? (isRtl ? "تم تفعيل الحساب بنجاح" : "Account activated successfully")
+          : (isRtl ? "تم تعطيل الحساب بنجاح" : "Account deactivated successfully"),
+      );
+      refetchEmployees();
+    } catch (err) {
+      // Revert optimistic update
+      setAccessMap((prev) => ({
         ...prev,
-        [userId]: !currentAccess,
-      };
-    });
+        [user.id]: isCurrentlyActive,
+      }));
+      toast.error(
+        err?.response?.data?.message ||
+          (isRtl ? "فشل تحديث حالة الحساب" : "Failed to update account status"),
+      );
+    }
   };
 
   return (
@@ -767,7 +802,8 @@ const Users = () => {
                         ROLE_LABEL_KEYS[user.role] || "filterEmployee";
 
                       const isUserActive = user.status
-                        ? user.status.toLowerCase() === "active"
+                        ? user.status.toLowerCase() === "active" ||
+                          user.status === "نشط"
                         : true;
 
                       const currentAccess =
@@ -880,7 +916,7 @@ const Users = () => {
 
                               <Toggle
                                 checked={currentAccess}
-                                onChange={() => handleToggleAccess(user.id)}
+                                onChange={() => handleToggleAccess(user)}
                                 label={`Toggle ${user.name}`}
                               />
                             </div>
@@ -965,6 +1001,11 @@ const Users = () => {
                       placeholder={t("usersPage.emailAddress", "Email address")}
                       className={INPUT_CLASS}
                     />
+                    {formErrors?.email && (
+                      <p className="mt-1.5 text-xs text-red-500 font-medium">
+                        {formErrors.email[0]}
+                      </p>
+                    )}
                   </div>
 
                   {/* Password */}
@@ -1125,6 +1166,11 @@ const Users = () => {
                           )}
                         </p>
                       )}
+                    {formErrors?.department_id && (
+                      <p className="mt-1.5 text-xs text-red-500 font-medium">
+                        {formErrors.department_id[0]}
+                      </p>
+                    )}
                   </div>
 
                   {/* Phone */}
@@ -1143,6 +1189,11 @@ const Users = () => {
                       )}
                       className={INPUT_CLASS}
                     />
+                    {formErrors?.phone && (
+                      <p className="mt-1.5 text-xs text-red-500 font-medium">
+                        {formErrors.phone[0]}
+                      </p>
+                    )}
                   </div>
 
                   {/* Address */}
@@ -1166,9 +1217,14 @@ const Users = () => {
 
                 {/* Permissions */}
                 <div className="pt-2">
-                  <label className="block text-sm font-semibold text-[#243B53] mb-2">
+                  <label className="block text-sm font-semibold text-[#243B53] mb-1">
                     {t("usersPage.permissions", "Permissions")}
                   </label>
+                  <p className="text-xs text-[#829ab1] mb-2">
+                    {isRtl
+                      ? "يتم تعيين الصلاحيات الافتراضية تلقائياً للموظف حسب الدور المحدد."
+                      : "Standard permissions are automatically assigned based on the selected role."}
+                  </p>
 
                   {isPermissionsLoading ? (
                     <div className="flex items-center gap-2 py-3 text-xs text-[#829ab1]">

@@ -1,4 +1,4 @@
-import { useMemo, useState, useEffect } from "react";
+import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -112,7 +112,6 @@ function EmployeesPage() {
 
   const createEmployeeMutation = useCreateEmployee(currentLang);
   const updateEmployeeMutation = useUpdateEmployeeHrFields(currentLang);
-  const updateHrFieldsMutation = updateEmployeeMutation;
 
   const { role, hasPermission, currentUser } = useAuth();
   const canUpdateHrFields =
@@ -131,22 +130,16 @@ function EmployeesPage() {
     currentLang,
   );
 
-  useEffect(() => {
-    if (employeeDetails) {
-      setEditFormData({
-        job_title: employeeDetails.job_title || "",
-        employment_type: employeeDetails.employment_type || "Full-time",
-        status:
-          String(employeeDetails.status || "").toLowerCase() === "inactive"
-            ? "inactive"
-            : "active",
-        department_id:
-          employeeDetails.department?.id ||
-          employeeDetails.department_id ||
-          "",
-      });
-    }
-  }, [employeeDetails]);
+  // =====================================================
+  // EDIT HR FORM
+  // =====================================================
+
+  const [editFormData, setEditFormData] = useState({
+    job_title: "",
+    employment_type: "Full-time",
+    status: "active",
+    department_id: "",
+  });
 
   // =====================================================
   // FORM DATA - CREATE EMPLOYEE
@@ -162,17 +155,6 @@ function EmployeesPage() {
     phone: "",
     address: "",
     permissions: [],
-  });
-
-  // =====================================================
-  // EDIT HR FORM
-  // =====================================================
-
-  const [editFormData, setEditFormData] = useState({
-    job_title: "",
-    employment_type: "Full-time",
-    status: "active",
-    department_id: "",
   });
 
   // =====================================================
@@ -251,7 +233,9 @@ function EmployeesPage() {
       : "We couldn't find any employees matching your search.",
 
     editHrFields: isArabic ? "تعديل بيانات الموارد البشرية" : "Edit HR Fields",
-    editHrFieldsModalTitle: isArabic ? "تحديث بيانات الموارد البشرية للموظف" : "Update Employee HR Fields",
+    editHrFieldsModalTitle: isArabic
+      ? "تحديث بيانات الموارد البشرية للموظف"
+      : "Update Employee HR Fields",
     jobTitleLabel: isArabic ? "المسمى الوظيفي" : "Job Title",
     employmentTypeLabel: isArabic ? "نوع التوظيف" : "Employment Type",
     statusLabelText: isArabic ? "الحالة" : "Status",
@@ -618,24 +602,18 @@ function EmployeesPage() {
   // =====================================================
 
   const openEditMode = () => {
-    if (!selectedEmployee) {
-      return;
-    }
+    if (!employeeDetails) return;
 
     setEditFormData({
-      job_title: selectedEmployee.role === "-" ? "" : selectedEmployee.role,
-
-      employment_type: selectedEmployee.employment_type || "Full-time",
-
+      job_title: employeeDetails.job_title || "",
+      employment_type: employeeDetails.employment_type || "Full-time",
       status:
-        String(selectedEmployee.status || "").toLowerCase() === "inactive"
+        String(employeeDetails.status || "").toLowerCase() === "inactive"
           ? "inactive"
           : "active",
-
-      department_id: selectedEmployee.departmentId || "",
+      department_id:
+        employeeDetails.department?.id || employeeDetails.department_id || "",
     });
-
-    updateEmployeeMutation.reset();
 
     setIsEditMode(true);
   };
@@ -1714,7 +1692,9 @@ function EmployeesPage() {
                     <ProfileRow
                       icon={<FiBriefcase size={15} />}
                       label={t.roleHeader}
-                      value={employeeDetails?.job_title || selectedEmployee.role}
+                      value={
+                        employeeDetails?.job_title || selectedEmployee.role
+                      }
                     />
 
                     <ProfileRow
@@ -1787,10 +1767,10 @@ function EmployeesPage() {
                           {changeStatusMutation.isPending
                             ? t.updating
                             : String(
-                                employeeDetails?.status ||
-                                  selectedEmployee.status ||
-                                  "",
-                              ).toLowerCase() === "active"
+                                  employeeDetails?.status ||
+                                    selectedEmployee.status ||
+                                    "",
+                                ).toLowerCase() === "active"
                               ? t.deactivate
                               : t.activate}
                         </button>
@@ -1960,7 +1940,6 @@ function EmployeesPage() {
           </motion.div>
         )}
       </AnimatePresence>
-
     </motion.div>
   );
 }

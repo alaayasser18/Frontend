@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { motion } from "framer-motion";
 import { FiMapPin, FiArrowRight, FiChevronDown } from "react-icons/fi";
@@ -48,7 +48,11 @@ const containerVariants = {
 
 const itemVariants = {
   hidden: { opacity: 0, y: 12 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.35, ease: "easeOut" } },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.35, ease: "easeOut" },
+  },
 };
 
 export default function Attendance() {
@@ -77,13 +81,16 @@ export default function Attendance() {
         <p className="text-sm text-[#829ab1] mt-1 font-normal">
           {t(
             "employee.attendancePage.subtitle",
-            "Track your workday and attendance history."
+            "Track your workday and attendance history.",
           )}
         </p>
       </motion.div>
 
       {/* 2. Top Grid */}
-      <motion.div variants={itemVariants} className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <motion.div
+        variants={itemVariants}
+        className="grid grid-cols-1 lg:grid-cols-2 gap-6"
+      >
         {/* Left Card: Workday status */}
         <div className="rounded-2xl border border-[#e2e8f0] bg-white p-6 shadow-[0_1px_3px_rgba(0,0,0,0.02)] flex flex-col justify-between">
           <div>
@@ -95,7 +102,7 @@ export default function Attendance() {
                 <p className="text-xs text-[#829ab1] mt-0.5">
                   {t(
                     "employee.attendancePage.locationValidation",
-                    "Location validation keeps attendance accurate."
+                    "Location validation keeps attendance accurate.",
                   )}
                 </p>
               </div>
@@ -108,12 +115,21 @@ export default function Attendance() {
             <div className="relative my-6 flex h-40 items-center justify-center">
               <motion.div
                 animate={{ scale: [1, 1.05, 1], opacity: [0.4, 0.6, 0.4] }}
-                transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+                transition={{
+                  duration: 3,
+                  repeat: Infinity,
+                  ease: "easeInOut",
+                }}
                 className="absolute h-36 w-36 rounded-full border border-[#d1fae5] bg-[#f0fdf4]/40"
               />
               <motion.div
                 animate={{ scale: [1, 1.04, 1], opacity: [0.5, 0.7, 0.5] }}
-                transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut", delay: 0.2 }}
+                transition={{
+                  duration: 2.5,
+                  repeat: Infinity,
+                  ease: "easeInOut",
+                  delay: 0.2,
+                }}
                 className="absolute h-28 w-28 rounded-full border border-[#a7f3d0] bg-[#ecfdf5]/60"
               />
               <div className="absolute h-20 w-20 rounded-full border border-[#6ee7b7] bg-[#d1fae5]/70" />
@@ -128,10 +144,16 @@ export default function Attendance() {
 
             <div className="text-center space-y-1 mb-6">
               <strong className="block text-sm font-bold text-[#102a43]">
-                {t("employee.attendancePage.insideRadius", "Inside workplace radius")}
+                {t(
+                  "employee.attendancePage.insideRadius",
+                  "Inside workplace radius",
+                )}
               </strong>
               <span className="text-xs text-[#829ab1]">
-                {t("employee.attendancePage.location", "Downtown Campus · 42m from office")}
+                {t(
+                  "employee.attendancePage.location",
+                  "Downtown Campus · 42m from office",
+                )}
               </span>
             </div>
           </div>
@@ -146,11 +168,13 @@ export default function Attendance() {
             >
               {isCheckedIn ? (
                 <>
-                  {t("employee.home.checkOut", "Check out")} <FiArrowRight className="w-3.5 h-3.5" />
+                  {t("employee.home.checkOut", "Check out")}{" "}
+                  <FiArrowRight className="w-3.5 h-3.5" />
                 </>
               ) : (
                 <>
-                  {t("employee.home.checkIn", "Check in")} <FiArrowRight className="w-3.5 h-3.5" />
+                  {t("employee.home.checkIn", "Check in")}{" "}
+                  <FiArrowRight className="w-3.5 h-3.5" />
                 </>
               )}
             </motion.button>
@@ -159,7 +183,10 @@ export default function Attendance() {
               type="button"
               className="mt-3 block w-full text-center text-xs font-semibold text-[#16a34a] hover:underline"
             >
-              {t("employee.attendancePage.simulate", "Simulate out-of-range location")}
+              {t(
+                "employee.attendancePage.simulate",
+                "Simulate out-of-range location",
+              )}
             </button>
           </div>
         </div>
@@ -178,23 +205,42 @@ export default function Attendance() {
 
             <div className="divide-y divide-[#f1f5f9]">
               <div className="flex items-center justify-between py-4">
-                <span className="text-xs text-[#64748b]">{t("employee.attendancePage.shift", "Shift")}</span>
-                <span className="text-xs font-bold text-[#102a43]">{t("employee.attendancePage.shiftTimeDefault", "08:45 AM – 05:30 PM")}</span>
+                <span className="text-xs text-[#64748b]">
+                  {t("employee.attendancePage.shift", "Shift")}
+                </span>
+                <span className="text-xs font-bold text-[#102a43]">
+                  {t(
+                    "employee.attendancePage.shiftTimeDefault",
+                    "08:45 AM – 05:30 PM",
+                  )}
+                </span>
               </div>
 
               <div className="flex items-center justify-between py-4">
-                <span className="text-xs text-[#64748b]">{t("employee.attendancePage.checkIn", "Check-in")}</span>
-                <span className="text-xs font-bold text-[#102a43]">{t("employee.attendancePage.checkInTimeDefault", "08:45 AM")}</span>
+                <span className="text-xs text-[#64748b]">
+                  {t("employee.attendancePage.checkIn", "Check-in")}
+                </span>
+                <span className="text-xs font-bold text-[#102a43]">
+                  {t("employee.attendancePage.checkInTimeDefault", "08:45 AM")}
+                </span>
               </div>
 
               <div className="flex items-center justify-between py-4">
-                <span className="text-xs text-[#64748b]">{t("employee.attendancePage.breakTime", "Break time")}</span>
-                <span className="text-xs font-bold text-[#102a43]">{t("employee.attendancePage.breakTimeDefault", "01:00 hour")}</span>
+                <span className="text-xs text-[#64748b]">
+                  {t("employee.attendancePage.breakTime", "Break time")}
+                </span>
+                <span className="text-xs font-bold text-[#102a43]">
+                  {t("employee.attendancePage.breakTimeDefault", "01:00 hour")}
+                </span>
               </div>
 
               <div className="flex items-center justify-between py-4">
-                <span className="text-xs text-[#64748b]">{t("employee.attendancePage.workedToday", "Worked today")}</span>
-                <span className="text-xs font-bold text-[#16a34a] font-mono">{isCheckedIn ? "03:20:51" : "00:00:00"}</span>
+                <span className="text-xs text-[#64748b]">
+                  {t("employee.attendancePage.workedToday", "Worked today")}
+                </span>
+                <span className="text-xs font-bold text-[#16a34a] font-mono">
+                  {isCheckedIn ? "03:20:51" : "00:00:00"}
+                </span>
               </div>
             </div>
           </div>
@@ -202,14 +248,20 @@ export default function Attendance() {
       </motion.div>
 
       {/* 3. Attendance History Section */}
-      <motion.div variants={itemVariants} className="rounded-2xl border border-[#e2e8f0] bg-white p-6 shadow-[0_1px_3px_rgba(0,0,0,0.02)]">
+      <motion.div
+        variants={itemVariants}
+        className="rounded-2xl border border-[#e2e8f0] bg-white p-6 shadow-[0_1px_3px_rgba(0,0,0,0.02)]"
+      >
         <div className="flex items-center justify-between mb-6">
           <div>
             <h3 className="text-base font-bold text-[#102a43]">
               {t("employee.attendancePage.history", "Attendance history")}
             </h3>
             <p className="text-xs text-[#829ab1] mt-0.5">
-              {t("employee.attendancePage.recentRecords", "Your recent attendance records.")}
+              {t(
+                "employee.attendancePage.recentRecords",
+                "Your recent attendance records.",
+              )}
             </p>
           </div>
 
@@ -229,18 +281,32 @@ export default function Attendance() {
           <table className="w-full text-left rtl:text-right border-collapse">
             <thead>
               <tr className="border-b border-[#f1f5f9] text-[11px] font-bold tracking-wider text-[#94a3b8]">
-                <th className="pb-3 px-4">{t("employee.attendancePage.dateColumn", "DATE")}</th>
-                <th className="pb-3 px-4">{t("employee.attendancePage.shiftTime", "SHIFT TIME")}</th>
-                <th className="pb-3 px-4">{t("employee.attendancePage.duration", "TOTAL DURATION")}</th>
-                <th className="pb-3 px-4">{t("employee.attendancePage.status", "STATUS")}</th>
+                <th className="pb-3 px-4">
+                  {t("employee.attendancePage.dateColumn", "DATE")}
+                </th>
+                <th className="pb-3 px-4">
+                  {t("employee.attendancePage.shiftTime", "SHIFT TIME")}
+                </th>
+                <th className="pb-3 px-4">
+                  {t("employee.attendancePage.duration", "TOTAL DURATION")}
+                </th>
+                <th className="pb-3 px-4">
+                  {t("employee.attendancePage.status", "STATUS")}
+                </th>
               </tr>
             </thead>
             <tbody className="divide-y divide-[#f1f5f9]">
               {ATTENDANCE_HISTORY.map((row) => (
                 <tr key={row.id} className="hover:bg-[#f8fafc]/50 transition">
-                  <td className="py-4 px-4 text-xs font-semibold text-[#1e293b]">{row.date}</td>
-                  <td className="py-4 px-4 text-xs text-[#64748b]">{row.shiftTime}</td>
-                  <td className="py-4 px-4 text-xs font-mono text-[#1e293b]">{row.duration}</td>
+                  <td className="py-4 px-4 text-xs font-semibold text-[#1e293b]">
+                    {row.date}
+                  </td>
+                  <td className="py-4 px-4 text-xs text-[#64748b]">
+                    {row.shiftTime}
+                  </td>
+                  <td className="py-4 px-4 text-xs font-mono text-[#1e293b]">
+                    {row.duration}
+                  </td>
                   <td className="py-4 px-4">
                     {row.statusType === "present" && (
                       <span className="inline-flex items-center rounded-full bg-[#ecfdf5] px-2.5 py-0.5 text-xs font-semibold text-[#059669]">

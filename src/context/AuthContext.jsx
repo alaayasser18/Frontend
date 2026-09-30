@@ -7,6 +7,7 @@ import {
   useCallback,
 } from "react";
 import { ROLE_ROUTES } from "../utils/roleRoutes";
+import { logoutUser } from "../features/auth/api";
 
 const AuthContext = createContext(null);
 
@@ -144,8 +145,16 @@ export const AuthProvider = ({ children }) => {
    * Clears state, localStorage, and redirects to appropriate login
    */
   const logout = useCallback(
-    (options = {}) => {
+    async (options = {}) => {
       const previousRole = role;
+
+      // Call backend logout to invalidate the token
+      try {
+        await logoutUser();
+      } catch (e) {
+        // Continue with local cleanup even if API call fails
+        console.warn("Backend logout failed (token may already be expired)", e);
+      }
 
       setAuthState({
         token: null,

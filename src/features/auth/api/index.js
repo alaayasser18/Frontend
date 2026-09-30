@@ -23,6 +23,34 @@ export const loginUser = async (loginData) => {
 };
 
 // =========================
+// Logout
+// POST /auth/logout
+// =========================
+export const logoutUser = async (lang = "en") => {
+  const response = await axiosInstance.post(
+    "/auth/logout",
+    {},
+    {
+      params: {
+        lang,
+      },
+    },
+  );
+
+  return response.data;
+};
+
+// =========================
+// Google Login (Owner Only)
+// GET /auth/google/redirect
+// =========================
+export const googleRedirect = async () => {
+  const response = await axiosInstance.get("/auth/google/redirect");
+
+  return response.data;
+};
+
+// =========================
 // Register
 // =========================
 export const registerUser = async (registerData) => {

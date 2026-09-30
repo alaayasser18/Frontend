@@ -11,47 +11,83 @@ import {
   FiMapPin,
   FiChevronRight,
   FiChevronDown,
+  FiEdit2,
+  FiPower,
+  FiSave,
 } from "react-icons/fi";
 
-import { useEmployees, useCreateEmployee } from "../hooks/useEmployees";
+import {
+  useEmployees,
+  useCreateEmployee,
+  useUpdateEmployeeHrFields,
+  useChangeEmployeeAccountStatus,
+  useEmployee,
+} from "../hooks/useEmployees";
+
 import { usePermissions } from "../hooks/usePermissions";
+import { useAuth } from "../../../context/AuthContext";
 
 // =====================================================
 // ANIMATIONS
 // =====================================================
 
 const pageVariants = {
-  hidden: { opacity: 0, y: 15 },
+  hidden: {
+    opacity: 0,
+    y: 15,
+  },
+
   visible: {
     opacity: 1,
     y: 0,
-    transition: { duration: 0.35, ease: "easeOut" },
+    transition: {
+      duration: 0.35,
+      ease: "easeOut",
+    },
   },
 };
 
 const containerVariants = {
   hidden: {},
+
   visible: {
-    transition: { staggerChildren: 0.08 },
+    transition: {
+      staggerChildren: 0.08,
+    },
   },
 };
 
 const itemVariants = {
-  hidden: { opacity: 0, y: 14 },
+  hidden: {
+    opacity: 0,
+    y: 14,
+  },
+
   visible: {
     opacity: 1,
     y: 0,
-    transition: { duration: 0.3, ease: "easeOut" },
+    transition: {
+      duration: 0.3,
+      ease: "easeOut",
+    },
   },
 };
 
 const modalVariants = {
-  hidden: { opacity: 0, scale: 0.96, y: 12 },
+  hidden: {
+    opacity: 0,
+    scale: 0.96,
+    y: 12,
+  },
+
   visible: {
     opacity: 1,
     scale: 1,
     y: 0,
-    transition: { duration: 0.25, ease: "easeOut" },
+    transition: {
+      duration: 0.25,
+      ease: "easeOut",
+    },
   },
 };
 
@@ -63,6 +99,7 @@ function EmployeesPage() {
   const { i18n } = useTranslation();
 
   const currentLang = i18n.language || "en";
+
   const isArabic = currentLang.toLowerCase().startsWith("ar");
 
   // =====================================================
@@ -74,9 +111,38 @@ function EmployeesPage() {
   const { data: permissionsResponse } = usePermissions(currentLang);
 
   const createEmployeeMutation = useCreateEmployee(currentLang);
+  const updateEmployeeMutation = useUpdateEmployeeHrFields(currentLang);
+
+  const { role, hasPermission, currentUser } = useAuth();
+  const canUpdateHrFields =
+    role === "Admin" ||
+    role === "HR" ||
+    role === "Owner" ||
+    (typeof hasPermission === "function" && hasPermission("Update HR fields"));
+
+  const changeStatusMutation = useChangeEmployeeAccountStatus(currentLang);
+
+  const [selectedEmployee, setSelectedEmployee] = useState(null);
+
+  // GET /api/employees/{id} - retrieve detailed profile for selected employee
+  const { data: employeeDetails } = useEmployee(
+    selectedEmployee?.id,
+    currentLang,
+  );
 
   // =====================================================
-  // FORM DATA
+  // EDIT HR FORM
+  // =====================================================
+
+  const [editFormData, setEditFormData] = useState({
+    job_title: "",
+    employment_type: "Full-time",
+    status: "active",
+    department_id: "",
+  });
+
+  // =====================================================
+  // FORM DATA - CREATE EMPLOYEE
   // =====================================================
 
   const [formData, setFormData] = useState({
@@ -165,6 +231,16 @@ function EmployeesPage() {
     noResultsText: isArabic
       ? "لم نتمكن من العثور على موظفين مطابقين لبحثك."
       : "We couldn't find any employees matching your search.",
+
+    editHrFields: isArabic ? "تعديل بيانات الموارد البشرية" : "Edit HR Fields",
+    editHrFieldsModalTitle: isArabic
+      ? "تحديث بيانات الموارد البشرية للموظف"
+      : "Update Employee HR Fields",
+    jobTitleLabel: isArabic ? "المسمى الوظيفي" : "Job Title",
+    employmentTypeLabel: isArabic ? "نوع التوظيف" : "Employment Type",
+    statusLabelText: isArabic ? "الحالة" : "Status",
+    departmentIdLabel: isArabic ? "معرف القسم" : "Department ID",
+    saveHrFields: isArabic ? "حفظ التعديلات" : "Save Changes",
   };
 
   // =====================================================
@@ -172,17 +248,18 @@ function EmployeesPage() {
   // =====================================================
 
   const [isModalOpen, setIsModalOpen] = useState(false);
+
   const [isSuccess, setIsSuccess] = useState(false);
 
   const [details, setDetails] = useState("");
+
   const [owner, setOwner] = useState("");
 
   const [searchTerm, setSearchTerm] = useState("");
 
-  const [selectedEmployee, setSelectedEmployee] = useState(null);
-
-  // Permissions dropdown state
   const [isPermissionsOpen, setIsPermissionsOpen] = useState(false);
+
+  const [isEditMode, setIsEditMode] = useState(false);
 
   // =====================================================
   // EMPLOYEES FROM API
@@ -192,28 +269,50 @@ function EmployeesPage() {
     const response = employeesResponse;
 
     if (Array.isArray(response?.data)) {
-      return response.data.map((employee) => ({
-        id: employee.id,
+      return response.data.map((employee) => {
+        const normalizedStatus = String(employee.status || "").toLowerCase();
 
-        name: employee.name || "-",
+        let statusType = "info";
 
-        code: employee.employee_code || employee.code || employee.id || "-",
+        if (normalizedStatus === "active") {
+          statusType = "success";
+        } else if (normalizedStatus === "inactive") {
+          statusType = "danger";
+        } else if (normalizedStatus === "late") {
+          statusType = "warning";
+        }
 
-        role: employee.job_title || employee.role_label || employee.role || "-",
+        return {
+          id: employee.id,
 
-        department:
-          employee.department?.name || employee.department_name || "-",
+          name: employee.name || "-",
 
-        branch:
-          employee.company_location?.name ||
-          employee.branch ||
-          employee.branch_name ||
-          "-",
+          code: employee.employee_code || employee.code || employee.id || "-",
 
-        status: employee.status || "Present",
+          role:
+            employee.job_title || employee.role_label || employee.role || "-",
 
-        statusType: "success",
-      }));
+          department:
+            employee.department?.name ||
+            employee.department_name ||
+            employee.department_id ||
+            "-",
+
+          departmentId: employee.department_id || employee.department?.id || "",
+
+          branch:
+            employee.company_location?.name ||
+            employee.branch ||
+            employee.branch_name ||
+            "-",
+
+          status: employee.status || "Unknown",
+
+          statusType,
+
+          employment_type: employee.employment_type || "Full-time",
+        };
+      });
     }
 
     return [];
@@ -238,27 +337,37 @@ function EmployeesPage() {
   const filteredEmployees = useMemo(() => {
     const value = searchTerm.trim().toLowerCase();
 
-    if (!value) return employees;
+    if (!value) {
+      return employees;
+    }
 
     return employees.filter((employee) => {
       return (
         employee.name.toLowerCase().includes(value) ||
         employee.code.toString().toLowerCase().includes(value) ||
         employee.role.toLowerCase().includes(value) ||
-        employee.department.toLowerCase().includes(value) ||
+        employee.department.toString().toLowerCase().includes(value) ||
         employee.branch.toLowerCase().includes(value)
       );
     });
   }, [searchTerm, employees]);
 
   // =====================================================
-  // STATUS
+  // STATUS LABEL
   // =====================================================
 
   const getStatusLabel = (status) => {
-    if (!isArabic) return status;
+    if (!isArabic) {
+      return status;
+    }
 
     const statusMap = {
+      Active: "نشط",
+      active: "نشط",
+
+      Inactive: "غير نشط",
+      inactive: "غير نشط",
+
       Present: "حاضر",
       Late: "متأخر",
       "On leave": "في إجازة",
@@ -267,6 +376,10 @@ function EmployeesPage() {
 
     return statusMap[status] || status;
   };
+
+  // =====================================================
+  // STATUS CLASSES
+  // =====================================================
 
   const getStatusClasses = (type) => {
     const styles = {
@@ -349,6 +462,7 @@ function EmployeesPage() {
       await createEmployeeMutation.mutateAsync(payload);
 
       setDetails("");
+
       setOwner("");
 
       setFormData({
@@ -364,6 +478,7 @@ function EmployeesPage() {
       });
 
       setIsPermissionsOpen(false);
+
       setIsSuccess(true);
     } catch (error) {
       console.error("Create employee failed:", error);
@@ -371,11 +486,12 @@ function EmployeesPage() {
   };
 
   // =====================================================
-  // ADD MODAL
+  // OPEN ADD MODAL
   // =====================================================
 
   const openAddModal = () => {
     setDetails("");
+
     setOwner("");
 
     setFormData({
@@ -395,8 +511,13 @@ function EmployeesPage() {
     createEmployeeMutation.reset();
 
     setIsSuccess(false);
+
     setIsModalOpen(true);
   };
+
+  // =====================================================
+  // CLOSE ADD MODAL
+  // =====================================================
 
   const closeModal = () => {
     if (createEmployeeMutation.isPending) {
@@ -404,10 +525,13 @@ function EmployeesPage() {
     }
 
     setIsModalOpen(false);
+
     setIsSuccess(false);
+
     setIsPermissionsOpen(false);
 
     setDetails("");
+
     setOwner("");
 
     setFormData({
@@ -426,19 +550,213 @@ function EmployeesPage() {
   };
 
   // =====================================================
-  // PROFILE
+  // OPEN PROFILE
   // =====================================================
 
   const openProfile = (employee) => {
     setSelectedEmployee(employee);
-  };
 
-  const closeProfile = () => {
-    setSelectedEmployee(null);
+    setIsEditMode(false);
+
+    setEditFormData({
+      job_title: employee.role === "-" ? "" : employee.role,
+
+      employment_type: employee.employment_type || "Full-time",
+
+      status:
+        String(employee.status || "").toLowerCase() === "inactive"
+          ? "inactive"
+          : "active",
+
+      department_id: employee.departmentId || "",
+    });
   };
 
   // =====================================================
-  // PAGE
+  // CLOSE PROFILE
+  // =====================================================
+
+  const closeProfile = () => {
+    if (updateEmployeeMutation.isPending || changeStatusMutation.isPending) {
+      return;
+    }
+
+    setSelectedEmployee(null);
+
+    setIsEditMode(false);
+  };
+
+  // =====================================================
+  // EDIT FORM CHANGE
+  // =====================================================
+
+  const handleEditFormChange = (field, value) => {
+    setEditFormData((prev) => ({
+      ...prev,
+      [field]: value,
+    }));
+  };
+
+  // =====================================================
+  // START EDIT MODE
+  // =====================================================
+
+  const openEditMode = () => {
+    if (!employeeDetails) return;
+
+    setEditFormData({
+      job_title: employeeDetails.job_title || "",
+      employment_type: employeeDetails.employment_type || "Full-time",
+      status:
+        String(employeeDetails.status || "").toLowerCase() === "inactive"
+          ? "inactive"
+          : "active",
+      department_id:
+        employeeDetails.department?.id || employeeDetails.department_id || "",
+    });
+
+    setIsEditMode(true);
+  };
+
+  // =====================================================
+  // CANCEL EDIT
+  // =====================================================
+
+  const cancelEditMode = () => {
+    if (updateEmployeeMutation.isPending) {
+      return;
+    }
+
+    setIsEditMode(false);
+
+    updateEmployeeMutation.reset();
+  };
+
+  // =====================================================
+  // UPDATE HR FIELDS
+  // =====================================================
+
+  const handleUpdateEmployee = async () => {
+    if (!selectedEmployee?.id) {
+      return;
+    }
+
+    if (!editFormData.job_title.trim()) {
+      return;
+    }
+
+    if (!editFormData.department_id) {
+      return;
+    }
+
+    const payload = {
+      job_title: editFormData.job_title.trim(),
+
+      employment_type: editFormData.employment_type,
+
+      status: editFormData.status,
+
+      department_id: Number(editFormData.department_id),
+    };
+
+    try {
+      const response = await updateEmployeeMutation.mutateAsync({
+        id: selectedEmployee.id,
+        employeeData: payload,
+      });
+
+      const updatedEmployee = response?.data || response;
+
+      // Update selected employee locally so
+      // modal reflects the latest values immediately.
+      if (updatedEmployee) {
+        setSelectedEmployee((prev) => ({
+          ...prev,
+
+          role: updatedEmployee.job_title || payload.job_title,
+
+          department:
+            updatedEmployee.department?.name ||
+            updatedEmployee.department_name ||
+            payload.department_id,
+
+          departmentId: updatedEmployee.department_id || payload.department_id,
+
+          status: updatedEmployee.status || payload.status,
+
+          employment_type:
+            updatedEmployee.employment_type || payload.employment_type,
+
+          statusType:
+            String(updatedEmployee.status || payload.status).toLowerCase() ===
+            "active"
+              ? "success"
+              : "danger",
+        }));
+      } else {
+        setSelectedEmployee((prev) => ({
+          ...prev,
+
+          role: payload.job_title,
+
+          departmentId: payload.department_id,
+
+          status: payload.status,
+
+          employment_type: payload.employment_type,
+
+          statusType: payload.status === "active" ? "success" : "danger",
+        }));
+      }
+
+      setIsEditMode(false);
+    } catch (error) {
+      console.error("Update employee HR fields failed:", error);
+    }
+  };
+
+  // =====================================================
+  // CHANGE ACCOUNT STATUS
+  // =====================================================
+
+  const handleChangeAccountStatus = async () => {
+    if (!selectedEmployee?.id) {
+      return;
+    }
+
+    if (currentUser?.id === selectedEmployee?.id) {
+      return;
+    }
+
+    try {
+      const response = await changeStatusMutation.mutateAsync(
+        selectedEmployee.id,
+      );
+
+      const updatedEmployee = response?.data || response;
+
+      const currentStatus = String(selectedEmployee.status || "").toLowerCase();
+
+      const fallbackStatus = currentStatus === "active" ? "Inactive" : "Active";
+
+      const newStatus = updatedEmployee?.status || fallbackStatus;
+
+      const normalizedStatus = String(newStatus).toLowerCase();
+
+      setSelectedEmployee((prev) => ({
+        ...prev,
+
+        status: newStatus,
+
+        statusType: normalizedStatus === "active" ? "success" : "danger",
+      }));
+    } catch (error) {
+      console.error("Change employee account status failed:", error);
+    }
+  };
+
+  // =====================================================
+  // RENDER
   // =====================================================
 
   return (
@@ -465,11 +783,11 @@ function EmployeesPage() {
               {t.breadcrumb}
             </p>
 
-            <h1 className="text-lg md:text-[21px] font-bold text-[#1e293b] tracking-tight mt-1">
+            <h1 className="mt-1 text-lg font-bold tracking-tight text-[#1e293b] md:text-[21px]">
               {t.title}
             </h1>
 
-            <p className="text-sm text-[#64748b] mt-1 font-normal">
+            <p className="mt-1 text-sm font-normal text-[#64748b]">
               {t.subtitle}
             </p>
           </motion.div>
@@ -483,10 +801,13 @@ function EmployeesPage() {
               scale: 1.02,
               boxShadow: "0 4px 12px rgba(36,59,83,0.15)",
             }}
-            whileTap={{ scale: 0.98 }}
-            className="flex shrinking-0 items-center justify-center gap-2 rounded-lg bg-[#243B53] px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-[#1c2f42]"
+            whileTap={{
+              scale: 0.98,
+            }}
+            className="flex shrink-0 items-center justify-center gap-2 rounded-lg bg-[#243B53] px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-[#1c2f42]"
           >
             <FiUserPlus size={16} />
+
             {t.addBtn}
           </motion.button>
         </motion.div>
@@ -496,8 +817,14 @@ function EmployeesPage() {
         ================================================= */}
 
         <motion.div
-          initial={{ opacity: 0, y: 12 }}
-          animate={{ opacity: 1, y: 0 }}
+          initial={{
+            opacity: 0,
+            y: 12,
+          }}
+          animate={{
+            opacity: 1,
+            y: 0,
+          }}
           transition={{
             duration: 0.35,
             delay: 0.08,
@@ -505,6 +832,7 @@ function EmployeesPage() {
           className="overflow-hidden rounded-2xl border border-[#e2e8f0]/80 bg-white shadow-[0_1px_3px_rgba(0,0,0,0.03)]"
         >
           {/* SEARCH */}
+
           <div className="flex flex-col gap-4 border-b border-[#f1f5f9] p-5 lg:flex-row lg:items-center lg:justify-between">
             <div className="flex items-center gap-2">
               <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#edf3f7] text-[#64748b]">
@@ -710,7 +1038,7 @@ function EmployeesPage() {
                         whileTap={{
                           scale: 0.98,
                         }}
-                        className="text-sm font-semibold text-[#2f6f4d] hover:text-[#23583c] transition shrinking-0 inline-flex items-center gap-1.5"
+                        className="inline-flex shrink-0 items-center gap-1.5 text-sm font-semibold text-[#2f6f4d] transition hover:text-[#23583c]"
                       >
                         {t.viewProfileBtn}
 
@@ -754,6 +1082,10 @@ function EmployeesPage() {
                 >
                   <div className="flex items-start justify-between gap-3">
                     <div className="flex min-w-0 items-center gap-3">
+                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-[#edf3f7] text-[#52728c]">
+                        <FiUsers size={17} />
+                      </div>
+
                       <div className="min-w-0">
                         <div className="truncate text-sm font-semibold text-[#1e293b]">
                           {employee.name}
@@ -833,9 +1165,15 @@ function EmployeesPage() {
       <AnimatePresence>
         {isModalOpen && (
           <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
+            initial={{
+              opacity: 0,
+            }}
+            animate={{
+              opacity: 1,
+            }}
+            exit={{
+              opacity: 0,
+            }}
             className="fixed inset-0 z-50 flex items-center justify-center bg-[#1e293b]/50 p-4 backdrop-blur-sm"
             onMouseDown={(e) => {
               if (e.target === e.currentTarget) {
@@ -852,7 +1190,7 @@ function EmployeesPage() {
             >
               {!isSuccess ? (
                 <>
-                  {/* MODAL HEADER */}
+                  {/* HEADER */}
 
                   <div className="flex items-center justify-between border-b border-[#e2e8f0] bg-[#f8fafc] px-5 py-4">
                     <div>
@@ -877,251 +1215,172 @@ function EmployeesPage() {
                     </button>
                   </div>
 
-                  {/* MODAL BODY */}
+                  {/* BODY */}
 
                   <div className="max-h-[70vh] space-y-5 overflow-y-auto p-5">
                     {/* NAME + EMAIL */}
 
                     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                      <div>
-                        <label className="mb-2 block text-sm font-semibold text-[#1e293b]">
-                          {isArabic ? "اسم الموظف" : "Employee Name"}
-                          <span className="ml-1 text-red-500">*</span>
-                        </label>
+                      <FormInput
+                        label={t.detailsLabel}
+                        value={details}
+                        onChange={(value) => setDetails(value)}
+                        placeholder={t.detailsPlaceholder}
+                        required
+                        isArabic={isArabic}
+                      />
 
-                        <input
-                          type="text"
-                          value={details}
-                          onChange={(e) => setDetails(e.target.value)}
-                          placeholder={
-                            isArabic ? "اكتب اسم الموظف" : "Enter employee name"
-                          }
-                          className={`h-11 w-full rounded-lg border border-[#e2e8f0] bg-white px-3.5 text-sm text-[#1e293b] outline-none transition placeholder:text-[#94a3b8] focus:border-[#cbd5e1] focus:ring-2 focus:ring-[#f1f5f9] ${
-                            isArabic ? "text-right" : "text-left"
-                          }`}
-                        />
-                      </div>
-
-                      <div>
-                        <label className="mb-2 block text-sm font-semibold text-[#1e293b]">
-                          {isArabic ? "البريد الإلكتروني" : "Email"}
-                          <span className="ml-1 text-red-500">*</span>
-                        </label>
-
-                        <input
-                          type="email"
-                          value={formData.email}
-                          onChange={(e) =>
-                            handleFormChange("email", e.target.value)
-                          }
-                          placeholder="example@email.com"
-                          className={`h-11 w-full rounded-lg border border-[#e2e8f0] bg-white px-3.5 text-sm text-[#1e293b] outline-none transition placeholder:text-[#94a3b8] focus:border-[#cbd5e1] focus:ring-2 focus:ring-[#f1f5f9] ${
-                            isArabic ? "text-right" : "text-left"
-                          }`}
-                        />
-                      </div>
+                      <FormInput
+                        label={isArabic ? "البريد الإلكتروني" : "Email"}
+                        type="email"
+                        value={formData.email}
+                        onChange={(value) => handleFormChange("email", value)}
+                        placeholder="example@email.com"
+                        required
+                        isArabic={isArabic}
+                      />
                     </div>
 
                     {/* PASSWORD + JOB TITLE */}
 
                     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                      <div>
-                        <label className="mb-2 block text-sm font-semibold text-[#1e293b]">
-                          {isArabic ? "كلمة المرور" : "Password"}
-                          <span className="ml-1 text-red-500">*</span>
-                        </label>
+                      <FormInput
+                        label={isArabic ? "كلمة المرور" : "Password"}
+                        type="password"
+                        value={formData.password}
+                        onChange={(value) =>
+                          handleFormChange("password", value)
+                        }
+                        placeholder="••••••••"
+                        required
+                        isArabic={isArabic}
+                        helper={
+                          isArabic ? "8 أحرف على الأقل" : "Minimum 8 characters"
+                        }
+                      />
 
-                        <input
-                          type="password"
-                          value={formData.password}
-                          onChange={(e) =>
-                            handleFormChange("password", e.target.value)
-                          }
-                          placeholder="••••••••"
-                          className={`h-11 w-full rounded-lg border border-[#e2e8f0] bg-white px-3.5 text-sm text-[#1e293b] outline-none transition placeholder:text-[#94a3b8] focus:border-[#cbd5e1] focus:ring-2 focus:ring-[#f1f5f9] ${
-                            isArabic ? "text-right" : "text-left"
-                          }`}
-                        />
-
-                        <p className="mt-1.5 text-[11px] text-[#94a3b8]">
-                          {isArabic
-                            ? "8 أحرف على الأقل"
-                            : "Minimum 8 characters"}
-                        </p>
-                      </div>
-
-                      <div>
-                        <label className="mb-2 block text-sm font-semibold text-[#1e293b]">
-                          {isArabic ? "المسمى الوظيفي" : "Job Title"}
-                          <span className="ml-1 text-red-500">*</span>
-                        </label>
-
-                        <input
-                          type="text"
-                          maxLength={255}
-                          value={owner}
-                          onChange={(e) => setOwner(e.target.value)}
-                          placeholder={
-                            isArabic ? "اكتب المسمى الوظيفي" : "Enter job title"
-                          }
-                          className={`h-11 w-full rounded-lg border border-[#e2e8f0] bg-white px-3.5 text-sm text-[#1e293b] outline-none transition placeholder:text-[#94a3b8] focus:border-[#cbd5e1] focus:ring-2 focus:ring-[#f1f5f9] ${
-                            isArabic ? "text-right" : "text-left"
-                          }`}
-                        />
-                      </div>
+                      <FormInput
+                        label={t.ownerLabel}
+                        value={owner}
+                        onChange={(value) => setOwner(value)}
+                        placeholder={t.ownerPlaceholder}
+                        required
+                        isArabic={isArabic}
+                      />
                     </div>
 
                     {/* ROLE + EMPLOYMENT TYPE */}
 
                     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                      <div>
-                        <label className="mb-2 block text-sm font-semibold text-[#1e293b]">
-                          {isArabic ? "الدور" : "Role"}
-                          <span className="ml-1 text-red-500">*</span>
-                        </label>
+                      <FormSelect
+                        label={isArabic ? "الدور" : "Role"}
+                        value={formData.role}
+                        onChange={(value) => handleFormChange("role", value)}
+                        required
+                        isArabic={isArabic}
+                        options={[
+                          {
+                            value: "Employee",
+                            label: isArabic ? "موظف" : "Employee",
+                          },
+                          {
+                            value: "Manager",
+                            label: isArabic ? "مدير" : "Manager",
+                          },
+                          {
+                            value: "HR",
+                            label: isArabic ? "موارد بشرية" : "HR",
+                          },
+                        ]}
+                      />
 
-                        <select
-                          value={formData.role}
-                          onChange={(e) =>
-                            handleFormChange("role", e.target.value)
-                          }
-                          className="h-11 w-full rounded-lg border border-[#e2e8f0] bg-white px-3.5 text-sm text-[#1e293b] outline-none transition focus:border-[#cbd5e1] focus:ring-2 focus:ring-[#f1f5f9]"
-                        >
-                          <option value="Employee">
-                            {isArabic ? "موظف" : "Employee"}
-                          </option>
-
-                          <option value="Manager">
-                            {isArabic ? "مدير" : "Manager"}
-                          </option>
-
-                          <option value="HR">
-                            {isArabic ? "موارد بشرية" : "HR"}
-                          </option>
-                        </select>
-                      </div>
-
-                      <div>
-                        <label className="mb-2 block text-sm font-semibold text-[#1e293b]">
-                          {isArabic ? "نوع التوظيف" : "Employment Type"}
-                          <span className="ml-1 text-red-500">*</span>
-                        </label>
-
-                        <select
-                          value={formData.employment_type}
-                          onChange={(e) =>
-                            handleFormChange("employment_type", e.target.value)
-                          }
-                          className="h-11 w-full rounded-lg border border-[#e2e8f0] bg-white px-3.5 text-sm text-[#1e293b] outline-none transition focus:border-[#cbd5e1] focus:ring-2 focus:ring-[#f1f5f9]"
-                        >
-                          <option value="Full-time">
-                            {isArabic ? "دوام كامل" : "Full-time"}
-                          </option>
-
-                          <option value="Part-time">
-                            {isArabic ? "دوام جزئي" : "Part-time"}
-                          </option>
-
-                          <option value="Contract">
-                            {isArabic ? "تعاقد" : "Contract"}
-                          </option>
-                        </select>
-                      </div>
+                      <FormSelect
+                        label={isArabic ? "نوع التوظيف" : "Employment Type"}
+                        value={formData.employment_type}
+                        onChange={(value) =>
+                          handleFormChange("employment_type", value)
+                        }
+                        required
+                        isArabic={isArabic}
+                        options={[
+                          {
+                            value: "Full-time",
+                            label: isArabic ? "دوام كامل" : "Full-time",
+                          },
+                          {
+                            value: "Part-time",
+                            label: isArabic ? "دوام جزئي" : "Part-time",
+                          },
+                          {
+                            value: "Contract",
+                            label: isArabic ? "تعاقد" : "Contract",
+                          },
+                        ]}
+                      />
                     </div>
 
                     {/* DEPARTMENT + START DATE */}
 
                     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                      <div>
-                        <label className="mb-2 block text-sm font-semibold text-[#1e293b]">
-                          {isArabic ? "رقم القسم" : "Department ID"}
-
-                          {(formData.role === "Employee" ||
-                            formData.role === "Manager") && (
-                            <span className="ml-1 text-red-500">*</span>
-                          )}
-                        </label>
-
-                        <input
-                          type="number"
-                          min="1"
-                          value={formData.department_id}
-                          onChange={(e) =>
-                            handleFormChange("department_id", e.target.value)
-                          }
-                          placeholder="1"
-                          className="h-11 w-full rounded-lg border border-[#e2e8f0] bg-white px-3.5 text-sm text-[#1e293b] outline-none transition placeholder:text-[#94a3b8] focus:border-[#cbd5e1] focus:ring-2 focus:ring-[#f1f5f9]"
-                        />
-
-                        {(formData.role === "Employee" ||
-                          formData.role === "Manager") && (
-                          <p className="mt-1.5 text-[11px] text-[#94a3b8]">
-                            {isArabic
+                      <FormInput
+                        label={isArabic ? "رقم القسم" : "Department ID"}
+                        type="number"
+                        value={formData.department_id}
+                        onChange={(value) =>
+                          handleFormChange("department_id", value)
+                        }
+                        placeholder="1"
+                        required={
+                          formData.role === "Employee" ||
+                          formData.role === "Manager"
+                        }
+                        isArabic={isArabic}
+                        helper={
+                          formData.role === "Employee" ||
+                          formData.role === "Manager"
+                            ? isArabic
                               ? "مطلوب للموظف والمدير"
-                              : "Required for Employee and Manager"}
-                          </p>
-                        )}
-                      </div>
+                              : "Required for Employee and Manager"
+                            : undefined
+                        }
+                      />
 
-                      <div>
-                        <label className="mb-2 block text-sm font-semibold text-[#1e293b]">
-                          {isArabic ? "تاريخ البدء" : "Start Date"}
-                          <span className="ml-1 text-red-500">*</span>
-                        </label>
-
-                        <input
-                          type="date"
-                          value={formData.start_date}
-                          onChange={(e) =>
-                            handleFormChange("start_date", e.target.value)
-                          }
-                          className="h-11 w-full rounded-lg border border-[#e2e8f0] bg-white px-3.5 text-sm text-[#1e293b] outline-none transition focus:border-[#cbd5e1] focus:ring-2 focus:ring-[#f1f5f9]"
-                        />
-                      </div>
+                      <FormInput
+                        label={isArabic ? "تاريخ البدء" : "Start Date"}
+                        type="date"
+                        value={formData.start_date}
+                        onChange={(value) =>
+                          handleFormChange("start_date", value)
+                        }
+                        required
+                        isArabic={isArabic}
+                      />
                     </div>
 
                     {/* PHONE + ADDRESS */}
 
                     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                      <div>
-                        <label className="mb-2 block text-sm font-semibold text-[#1e293b]">
-                          {isArabic ? "رقم الهاتف" : "Phone"}
-                        </label>
+                      <FormInput
+                        label={isArabic ? "رقم الهاتف" : "Phone"}
+                        type="tel"
+                        value={formData.phone}
+                        onChange={(value) => handleFormChange("phone", value)}
+                        placeholder="01xxxxxxxxx"
+                        isArabic={isArabic}
+                      />
 
-                        <input
-                          type="tel"
-                          maxLength={20}
-                          value={formData.phone}
-                          onChange={(e) =>
-                            handleFormChange("phone", e.target.value)
-                          }
-                          placeholder="01xxxxxxxxx"
-                          className="h-11 w-full rounded-lg border border-[#e2e8f0] bg-white px-3.5 text-sm text-[#1e293b] outline-none transition placeholder:text-[#94a3b8] focus:border-[#cbd5e1] focus:ring-2 focus:ring-[#f1f5f9]"
-                        />
-                      </div>
-
-                      <div>
-                        <label className="mb-2 block text-sm font-semibold text-[#1e293b]">
-                          {isArabic ? "العنوان" : "Address"}
-                        </label>
-
-                        <input
-                          type="text"
-                          value={formData.address}
-                          onChange={(e) =>
-                            handleFormChange("address", e.target.value)
-                          }
-                          placeholder={
-                            isArabic ? "اكتب العنوان" : "Enter address"
-                          }
-                          className="h-11 w-full rounded-lg border border-[#e2e8f0] bg-white px-3.5 text-sm text-[#1e293b] outline-none transition placeholder:text-[#94a3b8] focus:border-[#cbd5e1] focus:ring-2 focus:ring-[#f1f5f9]"
-                        />
-                      </div>
+                      <FormInput
+                        label={isArabic ? "العنوان" : "Address"}
+                        value={formData.address}
+                        onChange={(value) => handleFormChange("address", value)}
+                        placeholder={
+                          isArabic ? "اكتب العنوان" : "Enter address"
+                        }
+                        isArabic={isArabic}
+                      />
                     </div>
 
-                    {/* =================================================
-                        PERMISSIONS DROPDOWN
-                    ================================================= */}
+                    {/* PERMISSIONS */}
 
                     <div>
                       <div className="mb-2 flex items-center justify-between gap-3">
@@ -1138,8 +1397,6 @@ function EmployeesPage() {
                       </div>
 
                       <div className="relative">
-                        {/* DROPDOWN BUTTON */}
-
                         <button
                           type="button"
                           onClick={() => setIsPermissionsOpen((prev) => !prev)}
@@ -1171,8 +1428,6 @@ function EmployeesPage() {
                             }`}
                           />
                         </button>
-
-                        {/* DROPDOWN MENU */}
 
                         <AnimatePresence>
                           {isPermissionsOpen && permissions.length > 0 && (
@@ -1274,17 +1529,19 @@ function EmployeesPage() {
                     {/* API ERROR */}
 
                     {createEmployeeMutation.isError && (
-                      <div className="rounded-lg border border-red-100 bg-red-50 px-3 py-2.5 text-xs font-medium text-red-700">
-                        {createEmployeeMutation.error?.response?.data
-                          ?.message ||
+                      <ApiError
+                        message={
+                          createEmployeeMutation.error?.response?.data
+                            ?.message ||
                           (isArabic
                             ? "حدث خطأ أثناء إضافة الموظف."
-                            : "Failed to create employee.")}
-                      </div>
+                            : "Failed to create employee.")
+                        }
+                      />
                     )}
                   </div>
 
-                  {/* FORM FOOTER */}
+                  {/* FOOTER */}
 
                   <div className="flex items-center justify-end gap-2 border-t border-[#e2e8f0] bg-[#f8fafc] px-5 py-4">
                     <button
@@ -1325,10 +1582,6 @@ function EmployeesPage() {
                   </div>
                 </>
               ) : (
-                /* =================================================
-                   SUCCESS
-                ================================================= */
-
                 <div className="px-6 py-10 text-center">
                   <motion.div
                     initial={{
@@ -1367,15 +1620,21 @@ function EmployeesPage() {
       </AnimatePresence>
 
       {/* =====================================================
-          PROFILE MODAL
+          PROFILE / EDIT MODAL
       ===================================================== */}
 
       <AnimatePresence>
         {selectedEmployee && (
           <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
+            initial={{
+              opacity: 0,
+            }}
+            animate={{
+              opacity: 1,
+            }}
+            exit={{
+              opacity: 0,
+            }}
             className="fixed inset-0 z-50 flex items-center justify-center bg-[#1e293b]/50 p-4 backdrop-blur-sm"
             onMouseDown={(e) => {
               if (e.target === e.currentTarget) {
@@ -1391,11 +1650,17 @@ function EmployeesPage() {
               className="w-full max-w-md overflow-hidden rounded-2xl bg-white shadow-2xl"
               dir={isArabic ? "rtl" : "ltr"}
             >
+              {/* PROFILE HEADER */}
+
               <div className="relative border-b border-[#e2e8f0] bg-[#f8fafc] px-6 pb-6 pt-7">
                 <button
                   type="button"
                   onClick={closeProfile}
-                  className={`absolute top-5 flex h-8 w-8 items-center justify-center rounded-lg bg-[#edf3f7] text-[#64748b] transition hover:bg-[#e2e8f0] hover:text-[#1e293b] ${
+                  disabled={
+                    updateEmployeeMutation.isPending ||
+                    changeStatusMutation.isPending
+                  }
+                  className={`absolute top-5 flex h-8 w-8 items-center justify-center rounded-lg bg-[#edf3f7] text-[#64748b] transition hover:bg-[#e2e8f0] hover:text-[#1e293b] disabled:cursor-not-allowed disabled:opacity-50 ${
                     isArabic ? "left-5" : "right-5"
                   }`}
                 >
@@ -1407,8 +1672,8 @@ function EmployeesPage() {
                     <FiUsers size={21} />
                   </div>
 
-                  <div>
-                    <h2 className="text-lg md:text-[21px] font-bold text-[#1e293b]">
+                  <div className="min-w-0">
+                    <h2 className="truncate text-lg font-bold text-[#1e293b] md:text-[21px]">
                       {selectedEmployee.name}
                     </h2>
 
@@ -1419,47 +1684,350 @@ function EmployeesPage() {
                 </div>
               </div>
 
-              <div className="space-y-3 bg-white p-6">
-                <ProfileRow
-                  icon={<FiBriefcase size={15} />}
-                  label={t.roleHeader}
-                  value={selectedEmployee.role}
-                />
+              {/* PROFILE BODY */}
 
-                <ProfileRow
-                  icon={<FiUsers size={15} />}
-                  label={t.departmentLabel}
-                  value={selectedEmployee.department}
-                />
+              {!isEditMode ? (
+                <>
+                  <div className="space-y-3 bg-white p-6">
+                    <ProfileRow
+                      icon={<FiBriefcase size={15} />}
+                      label={t.roleHeader}
+                      value={
+                        employeeDetails?.job_title || selectedEmployee.role
+                      }
+                    />
 
-                <ProfileRow
-                  icon={<FiMapPin size={15} />}
-                  label={t.branchLabel}
-                  value={selectedEmployee.branch}
-                />
+                    <ProfileRow
+                      icon={<FiUsers size={15} />}
+                      label={t.departmentLabel}
+                      value={
+                        employeeDetails?.department?.name ||
+                        selectedEmployee.department
+                      }
+                    />
 
-                <ProfileRow
-                  icon={<FiCheck size={15} />}
-                  label={t.statusLabel}
-                  value={getStatusLabel(selectedEmployee.status)}
-                  valueClass={getStatusClasses(selectedEmployee.statusType)}
-                />
-              </div>
+                    <ProfileRow
+                      icon={<FiMapPin size={15} />}
+                      label={t.branchLabel}
+                      value={
+                        employeeDetails?.company_location?.name ||
+                        selectedEmployee.branch
+                      }
+                    />
+                    <ProfileRow
+                      icon={<FiCheck size={15} />}
+                      label={t.statusLabel}
+                      value={getStatusLabel(
+                        employeeDetails?.status || selectedEmployee.status,
+                      )}
+                      valueClass={getStatusClasses(
+                        String(
+                          employeeDetails?.status || selectedEmployee.status,
+                        ).toLowerCase() === "active"
+                          ? "success"
+                          : "danger",
+                      )}
+                    />
+                  </div>
 
-              <div className="border-t border-[#e2e8f0] bg-[#f8fafc] px-6 py-5">
-                <button
-                  type="button"
-                  onClick={closeProfile}
-                  className="w-full rounded-lg bg-[#243B53] py-2.5 text-sm font-semibold text-white transition hover:bg-[#1c2f42]"
-                >
-                  {t.closeBtn}
-                </button>
-              </div>
+                  {/* ACTIONS */}
+
+                  <div className="space-y-2 border-t border-[#e2e8f0] bg-[#f8fafc] px-6 py-5">
+                    {canUpdateHrFields && (
+                      <button
+                        type="button"
+                        onClick={openEditMode}
+                        disabled={changeStatusMutation.isPending}
+                        className="flex w-full items-center justify-center gap-2 rounded-lg bg-[#243B53] py-2.5 text-sm font-semibold text-white transition hover:bg-[#1c2f42] disabled:cursor-not-allowed disabled:opacity-50"
+                      >
+                        <FiEdit2 size={15} />
+
+                        {t.editHrFields || t.editEmployee}
+                      </button>
+                    )}
+
+                    {canUpdateHrFields &&
+                      currentUser?.id !== selectedEmployee.id && (
+                        <button
+                          type="button"
+                          onClick={handleChangeAccountStatus}
+                          disabled={changeStatusMutation.isPending}
+                          className={`flex w-full items-center justify-center gap-2 rounded-lg border py-2.5 text-sm font-semibold transition disabled:cursor-not-allowed disabled:opacity-50 ${
+                            String(
+                              employeeDetails?.status ||
+                                selectedEmployee.status ||
+                                "",
+                            ).toLowerCase() === "active"
+                              ? "border-red-100 bg-red-50 text-red-700 hover:bg-red-100"
+                              : "border-emerald-100 bg-emerald-50 text-emerald-700 hover:bg-emerald-100"
+                          }`}
+                        >
+                          <FiPower size={15} />
+
+                          {changeStatusMutation.isPending
+                            ? t.updating
+                            : String(
+                                  employeeDetails?.status ||
+                                    selectedEmployee.status ||
+                                    "",
+                                ).toLowerCase() === "active"
+                              ? t.deactivate
+                              : t.activate}
+                        </button>
+                      )}
+
+                    {changeStatusMutation.isError && (
+                      <ApiError
+                        message={
+                          changeStatusMutation.error?.response?.data?.message ||
+                          t.statusError
+                        }
+                      />
+                    )}
+
+                    <button
+                      type="button"
+                      onClick={closeProfile}
+                      disabled={changeStatusMutation.isPending}
+                      className="w-full rounded-lg border border-[#e2e8f0] bg-white py-2.5 text-sm font-semibold text-[#475569] transition hover:bg-[#f8fafc] disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                      {t.closeBtn}
+                    </button>
+                  </div>
+                </>
+              ) : (
+                <>
+                  {/* EDIT FORM */}
+
+                  <div className="space-y-5 bg-white p-6">
+                    <div>
+                      <h3 className="text-sm font-bold text-[#1e293b]">
+                        {t.editHrFields}
+                      </h3>
+
+                      <p className="mt-1 text-xs text-[#64748b]">
+                        {isArabic
+                          ? "قم بتعديل بيانات الموارد البشرية الخاصة بالموظف."
+                          : "Update the employee's HR information."}
+                      </p>
+                    </div>
+
+                    {/* JOB TITLE */}
+
+                    <FormInput
+                      label={t.jobTitle}
+                      value={editFormData.job_title}
+                      onChange={(value) =>
+                        handleEditFormChange("job_title", value)
+                      }
+                      placeholder={
+                        isArabic ? "اكتب المسمى الوظيفي" : "Enter job title"
+                      }
+                      required
+                      isArabic={isArabic}
+                    />
+
+                    {/* EMPLOYMENT TYPE */}
+
+                    <FormSelect
+                      label={t.employmentType}
+                      value={editFormData.employment_type}
+                      onChange={(value) =>
+                        handleEditFormChange("employment_type", value)
+                      }
+                      required
+                      isArabic={isArabic}
+                      options={[
+                        {
+                          value: "Full-time",
+                          label: t.fullTime,
+                        },
+                        {
+                          value: "Part-time",
+                          label: t.partTime,
+                        },
+                        {
+                          value: "Contract",
+                          label: t.contract,
+                        },
+                      ]}
+                    />
+
+                    {/* STATUS */}
+
+                    <FormSelect
+                      label={t.accountStatus}
+                      value={editFormData.status}
+                      onChange={(value) =>
+                        handleEditFormChange("status", value)
+                      }
+                      required
+                      isArabic={isArabic}
+                      options={[
+                        {
+                          value: "active",
+                          label: t.active,
+                        },
+                        {
+                          value: "inactive",
+                          label: t.inactive,
+                        },
+                      ]}
+                    />
+
+                    {/* DEPARTMENT */}
+
+                    <FormInput
+                      label={t.departmentId}
+                      type="number"
+                      min="1"
+                      value={editFormData.department_id}
+                      onChange={(value) =>
+                        handleEditFormChange("department_id", value)
+                      }
+                      placeholder="1"
+                      required
+                      isArabic={isArabic}
+                    />
+
+                    {/* ERROR */}
+
+                    {updateEmployeeMutation.isError && (
+                      <ApiError
+                        message={
+                          updateEmployeeMutation.error?.response?.data
+                            ?.message || t.updateError
+                        }
+                      />
+                    )}
+                  </div>
+
+                  {/* EDIT FOOTER */}
+
+                  <div className="flex items-center gap-2 border-t border-[#e2e8f0] bg-[#f8fafc] px-6 py-5">
+                    <button
+                      type="button"
+                      onClick={cancelEditMode}
+                      disabled={updateEmployeeMutation.isPending}
+                      className="flex-1 rounded-lg border border-[#e2e8f0] bg-white py-2.5 text-sm font-semibold text-[#475569] transition hover:bg-[#f8fafc] disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                      {t.cancel}
+                    </button>
+
+                    <motion.button
+                      type="button"
+                      onClick={handleUpdateEmployee}
+                      whileTap={{
+                        scale: 0.98,
+                      }}
+                      disabled={
+                        updateEmployeeMutation.isPending ||
+                        !editFormData.job_title.trim() ||
+                        !editFormData.department_id
+                      }
+                      className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-[#243B53] py-2.5 text-sm font-semibold text-white transition hover:bg-[#1c2f42] disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                      <FiSave size={15} />
+
+                      {updateEmployeeMutation.isPending
+                        ? t.updating
+                        : t.saveChanges}
+                    </motion.button>
+                  </div>
+                </>
+              )}
             </motion.div>
           </motion.div>
         )}
       </AnimatePresence>
     </motion.div>
+  );
+}
+
+// =====================================================
+// FORM INPUT
+// =====================================================
+
+function FormInput({
+  label,
+  value,
+  onChange,
+  placeholder,
+  type = "text",
+  required = false,
+  helper,
+  isArabic = false,
+  min,
+  maxLength,
+}) {
+  return (
+    <div>
+      <label className="mb-2 block text-sm font-semibold text-[#1e293b]">
+        {label}
+
+        {required && <span className="ml-1 text-red-500">*</span>}
+      </label>
+
+      <input
+        type={type}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder={placeholder}
+        min={min}
+        maxLength={maxLength}
+        className={`h-11 w-full rounded-lg border border-[#e2e8f0] bg-white px-3.5 text-sm text-[#1e293b] outline-none transition placeholder:text-[#94a3b8] focus:border-[#cbd5e1] focus:ring-2 focus:ring-[#f1f5f9] ${
+          isArabic ? "text-right" : "text-left"
+        }`}
+      />
+
+      {helper && <p className="mt-1.5 text-[11px] text-[#94a3b8]">{helper}</p>}
+    </div>
+  );
+}
+
+// =====================================================
+// FORM SELECT
+// =====================================================
+
+function FormSelect({
+  label,
+  value,
+  onChange,
+  options = [],
+  required = false,
+}) {
+  return (
+    <div>
+      <label className="mb-2 block text-sm font-semibold text-[#1e293b]">
+        {label}
+
+        {required && <span className="ml-1 text-red-500">*</span>}
+      </label>
+
+      <select
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        className="h-11 w-full rounded-lg border border-[#e2e8f0] bg-white px-3.5 text-sm text-[#1e293b] outline-none transition focus:border-[#cbd5e1] focus:ring-2 focus:ring-[#f1f5f9]"
+      >
+        {options.map((option) => (
+          <option key={option.value} value={option.value}>
+            {option.label}
+          </option>
+        ))}
+      </select>
+    </div>
+  );
+}
+
+// =====================================================
+// API ERROR
+// =====================================================
+
+function ApiError({ message }) {
+  return (
+    <div className="rounded-lg border border-red-100 bg-red-50 px-3 py-2.5 text-xs font-medium text-red-700">
+      {message}
+    </div>
   );
 }
 

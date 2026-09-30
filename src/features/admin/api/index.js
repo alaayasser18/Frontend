@@ -23,3 +23,11 @@ export const createEmployee = async (employeeData, lang) => {
   });
   return response.data;
 };
+// Get all departments
+export const getDepartments = async (params = {}) => {
+  const response = await axiosInstance.get("/departments", {
+    params,
+  });
+
+  return response.data;
+};

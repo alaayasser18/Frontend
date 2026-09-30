@@ -6,7 +6,6 @@ import { useNotifications } from "../../../context/NotificationContext";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   FiChevronRight,
-  FiArrowUpRight,
   FiCheck,
   FiX,
   FiSearch,
@@ -50,9 +49,6 @@ export default function Notification() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedNotification, setSelectedNotification] = useState(null);
 
-  // هل الصفحة معروضة في بوابة الموظف؟
-  const isEmployeeRole = location.pathname.startsWith("/employee");
-
   // Auto-open notification when navigated with a specific notification ID in state
   useEffect(() => {
     const notifId = location.state?.selectedNotificationId;
@@ -63,17 +59,6 @@ export default function Notification() {
       }
     }
   }, [location.state, notifications]);
-
-  // Dynamic breadcrumb based on current portal path (لباقي الرولز)
-  const portalBreadcrumb = useMemo(() => {
-    if (location.pathname.startsWith("/manager")) {
-      return t("portal.managerPortal", "Manager Portal");
-    }
-    if (location.pathname.startsWith("/hr")) {
-      return t("portal.hrPortal", "HR Portal");
-    }
-    return t("portal.administration", "Administration");
-  }, [location.pathname, t]);
 
   // ============================================================
   // FILTER NOTIFICATIONS
@@ -165,36 +150,6 @@ export default function Notification() {
     });
   };
 
-  const handleExportConfig = () => {
-    const configData = {
-      system: "WiseWork Admin Portal",
-      exportDate: new Date().toISOString(),
-      notificationSettings: {
-        evaluations: true,
-        securityAlerts: true,
-        systemAudit: true,
-        emailDigest: "daily",
-        activeChannels: ["in-app", "email"],
-      },
-      currentNotificationsCount: notifications.length,
-      unreadCount,
-    };
-
-    const blob = new Blob([JSON.stringify(configData, null, 2)], {
-      type: "application/json",
-    });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = "wisework-notifications-config.json";
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-
-    toast.success(t("portal.exportSuccess", "Configuration exported successfully"));
-  };
-
   const getBadgeClasses = (category) => {
     const base =
       "inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-semibold leading-none";
@@ -218,55 +173,6 @@ export default function Notification() {
       animate="visible"
       className="mx-auto flex w-full max-w-[1350px] flex-col gap-6 pb-12 font-sans"
     >
-      {/* ============================================================
-          PAGE HEADER: ديناميكي (ستايل الموظف المطابق للصورة 2 أو الستايل الأصلي للرولز الأخرى)
-      ============================================================ */}
-      {isEmployeeRole ? (
-        /* هيدر الموظف المطابق للصورة 2 */
-        <motion.div variants={itemVariants}>
-          <p className="text-[11px] font-bold tracking-wider text-[#5b8c6a] uppercase mb-1">
-            {t("employeeNotifications.categoryTag", "COMMUNICATIONS")}
-          </p>
-          <h1 className="text-2xl md:text-[28px] font-bold text-[#102a43] tracking-tight">
-            {t("portal.notificationsTitle", "Notifications")}
-          </h1>
-          <p className="text-sm text-[#829ab1] mt-1 font-normal">
-            {t(
-              "employeeNotifications.subtitle",
-              "Manage your employee notifications and alerts."
-            )}
-          </p>
-        </motion.div>
-      ) : (
-        /* هيدر الأدمن والمانيجر والـ HR القديم بدون أي تغيير */
-        <motion.div variants={itemVariants} className="flex flex-wrap items-start justify-between gap-4">
-          <div>
-            <div className="mb-1.5 flex items-center gap-1.5 text-xs font-semibold text-[#829ab1]">
-              <span>{portalBreadcrumb}</span>
-              <FiChevronRight className="h-3.5 w-3.5 shrink-0" />
-              <span className="text-[#334e68]">{t("portal.wiseWork", "WiseWork")}</span>
-            </div>
-            <h1 className="text-[28px] font-bold leading-[1.2] tracking-tight text-[#102a43]">
-              {t("portal.notificationsTitle", "Notifications")}
-            </h1>
-            <p className="mt-1.5 text-sm text-[#64748b]">
-              {t("portal.notificationsSubtitle", "Configure and manage your WiseWork notifications.")}
-            </p>
-          </div>
-
-          <motion.button
-            type="button"
-            whileHover={{ y: -1 }}
-            whileTap={{ scale: 0.98 }}
-            className="inline-flex items-center gap-2 rounded-xl border border-[#bcccdc] bg-white px-4 py-2.5 text-xs font-semibold text-[#334e68] shadow-sm transition hover:bg-[#f0f4f7]"
-            onClick={handleExportConfig}
-          >
-            <FiArrowUpRight className="h-4 w-4" />
-            <span>{t("portal.exportConfig", "Export configuration")}</span>
-          </motion.button>
-        </motion.div>
-      )}
-
       {/* ============================================================
           SECTION TITLE + CONTROLS
       ============================================================ */}

@@ -24,6 +24,7 @@ import Notification from "./features/admin/pages/Notification";
 import ActivityLog from "./features/admin/pages/AuditLogs";
 import Users from "./features/admin/pages/Users";
 import AdminPerformance from "./features/admin/pages/PerformancePage";
+import AdminProfileSettings from "./features/admin/pages/ProfileSettings";
 
 // ==================== Employee Pages ====================
 import EmployeePerformance from "./features/employee/pages/Performance";
@@ -62,6 +63,7 @@ import AIInsights from "./features/hr/pages/aiInsights";
 import HrCompanyPolicies from "./features/hr/pages/companyPolicies";
 import Holidays from "./features/hr/pages/holidays";
 import Reports from "./features/hr/pages/reports";
+import HrProfileSettings from "./features/hr/pages/ProfileSettings";
 
 // ==================== Layout ====================
 import DashboardLayout from "./layouts/DashboardLayout";
@@ -212,14 +214,10 @@ function App() {
               <Route path="/admin/performance" element={<AdminPerformance />} />
               <Route path="/admin/notifications" element={<Notification />} />
               <Route path="/admin/audit" element={<ActivityLog />} />
+              <Route path="/admin/profile" element={<AdminProfileSettings />} />
               <Route
                 path="/admin/settings"
-                element={
-                  <DashboardPlaceholder
-                    messageKey="portal.settings"
-                    defaultMessage="الإعدادات"
-                  />
-                }
+                element={<AdminProfileSettings />}
               />
               <Route path="/branches" element={<Branches />} />
             </Route>
@@ -254,14 +252,10 @@ function App() {
                 <Route path="holidays" element={<Holidays />} />
                 <Route path="reports" element={<Reports />} />
                 <Route path="notifications" element={<Notification />} />
+                <Route path="profile" element={<HrProfileSettings />} />
                 <Route
                   path="settings"
-                  element={
-                    <DashboardPlaceholder
-                      messageKey="portal.settings"
-                      defaultMessage="الإعدادات"
-                    />
-                  }
+                  element={<HrProfileSettings />}
                 />
               </Route>
             </Route>

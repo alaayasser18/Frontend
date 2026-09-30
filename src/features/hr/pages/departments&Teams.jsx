@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -10,7 +10,71 @@ import {
   FiBriefcase,
   FiActivity,
   FiLayers,
+  FiLoader,
 } from "react-icons/fi";
+
+/* =====================================================
+   API ENDPOINT (رابط الـ Backend الخاص بـ الـ Database)
+===================================================== */
+const API_URL = "/api/hr/departments";
+
+/* =====================================================
+   LOCAL STORAGE (الأقسام الجديدة والنقل متضيعوش مع الـ Refresh)
+===================================================== */
+const STORAGE_KEY = "hr_departments";
+
+const DEFAULT_DEPARTMENTS = [
+  {
+    id: 1,
+    nameKey: "engineeringName",
+    headKey: "mariamHead",
+    attendanceKey: "att94",
+    headcount: 38,
+    activeProjects: 12,
+  },
+  {
+    id: 2,
+    nameKey: "peopleName",
+    headKey: "sarahHead",
+    attendanceKey: "att97",
+    headcount: 14,
+    activeProjects: 5,
+  },
+  {
+    id: 3,
+    nameKey: "salesName",
+    headKey: "omarHead",
+    attendanceKey: "att91",
+    headcount: 38,
+    activeProjects: 9,
+  },
+  {
+    id: 4,
+    nameKey: "logisticsName",
+    headKey: "karimHead",
+    attendanceKey: "att89",
+    headcount: 52,
+    activeProjects: 18,
+  },
+];
+
+const loadLocalDepartments = () => {
+  try {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    return saved ? JSON.parse(saved) : DEFAULT_DEPARTMENTS;
+  } catch (error) {
+    console.error("Error reading departments from localStorage:", error);
+    return DEFAULT_DEPARTMENTS;
+  }
+};
+
+const saveLocalDepartments = (departments) => {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(departments));
+  } catch (error) {
+    console.error("Error writing departments to localStorage:", error);
+  }
+};
 
 const content = {
   en: {
@@ -39,6 +103,7 @@ const content = {
 
     cancelBtn: "Cancel",
     saveBtn: "Save changes",
+    savingBtn: "Saving...",
 
     successTitle: "Saved successfully",
     successSubtitle: "The new department has been added successfully.",
@@ -73,6 +138,7 @@ const content = {
       "Select an employee and transfer them to this department.",
     employeePlaceholder: "Select employee",
     transferBtn: "Transfer Employee",
+    transferingBtn: "Transferring...",
   },
 
   ar: {
@@ -101,6 +167,7 @@ const content = {
 
     cancelBtn: "إلغاء",
     saveBtn: "حفظ التغييرات",
+    savingBtn: "جاري الحفظ...",
 
     successTitle: "تم الحفظ بنجاح",
     successSubtitle: "تمت إضافة القسم الجديد بنجاح.",
@@ -134,6 +201,7 @@ const content = {
     transferSubtitle: "اختر موظفًا لنقله إلى هذا القسم.",
     employeePlaceholder: "اختر الموظف",
     transferBtn: "نقل الموظف",
+    transferingBtn: "جاري النقل...",
   },
 };
 
@@ -183,45 +251,18 @@ export default function DepartmentsAndTeams() {
   const isArabic = i18n.language?.startsWith("ar");
   const t = content[isArabic ? "ar" : "en"];
 
-  const [departments, setDepartments] = useState([
-    {
-      id: 1,
-      nameKey: "engineeringName",
-      headKey: "mariamHead",
-      attendanceKey: "att94",
-      headcount: 38,
-      activeProjects: 12,
-    },
-    {
-      id: 2,
-      nameKey: "peopleName",
-      headKey: "sarahHead",
-      attendanceKey: "att97",
-      headcount: 14,
-      activeProjects: 5,
-    },
-    {
-      id: 3,
-      nameKey: "salesName",
-      headKey: "omarHead",
-      attendanceKey: "att91",
-      headcount: 38,
-      activeProjects: 9,
-    },
-    {
-      id: 4,
-      nameKey: "logisticsName",
-      headKey: "karimHead",
-      attendanceKey: "att89",
-      headcount: 52,
-      activeProjects: 18,
-    },
-  ]);
+  /* =====================================================
+     الأقسام + حالة الجلب
+  ====================================================== */
+
+  const [departments, setDepartments] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   const [searchTerm, setSearchTerm] = useState("");
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
+  const [saving, setSaving] = useState(false);
 
   const [details, setDetails] = useState("");
   const [owner, setOwner] = useState("");
@@ -229,6 +270,45 @@ export default function DepartmentsAndTeams() {
   const [membersModal, setMembersModal] = useState(null);
   const [transferModal, setTransferModal] = useState(null);
   const [selectedEmployee, setSelectedEmployee] = useState("");
+  const [transfering, setTransfering] = useState(false);
+
+  /* =====================================================
+     FETCH DEPARTMENTS FROM DATABASE (GET Request)
+     الـ API مش شغال؟ → localStorage → البيانات الافتراضية
+  ====================================================== */
+
+  useEffect(() => {
+    fetchDepartments();
+  }, []);
+
+  const fetchDepartments = async () => {
+    try {
+      setLoading(true);
+      const response = await fetch(API_URL);
+
+      if (!response.ok) throw new Error(`Server error: ${response.status}`);
+
+      const data = await response.json();
+
+      // توحيد الـ id (MongoDB بيرجع _id)
+      const normalized = data.map((dept) => ({
+        ...dept,
+        id: dept.id || dept._id,
+      }));
+
+      setDepartments(normalized);
+      saveLocalDepartments(normalized);
+    } catch (error) {
+      // الـ API مش شغال → نحمّل من localStorage عشان البيانات متضيعش
+      console.warn(
+        "API unavailable — loading departments from localStorage:",
+        error.message,
+      );
+      setDepartments(loadLocalDepartments());
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const filteredDepartments = useMemo(() => {
     const query = searchTerm.trim().toLowerCase();
@@ -278,28 +358,63 @@ export default function DepartmentsAndTeams() {
     setIsModalOpen(true);
   };
 
-  const handleSaveDepartment = (e) => {
+  /* =====================================================
+     SAVE NEW DEPARTMENT (POST Request → localStorage Fallback)
+  ====================================================== */
+
+  const handleSaveDepartment = async (e) => {
     e.preventDefault();
 
-    if (!details.trim()) return;
+    if (!details.trim() || saving) return;
 
-    const newDept = {
-      id: Date.now(),
-      nameKey: null,
-      customName: details.trim(),
+    setSaving(true);
 
-      headKey: null,
-      customHead: owner.trim() || (isArabic ? "غير محدد" : "Unassigned"),
+    try {
+      const response = await fetch(API_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: details.trim(),
+          head: owner.trim() || (isArabic ? "غير محدد" : "Unassigned"),
+          headcount: 1,
+          activeProjects: 0,
+          attendance: 90,
+        }),
+      });
 
-      attendanceKey: null,
-      customAttendance: isArabic ? "نسبة الحضور 90%" : "90% attendance",
+      if (!response.ok) throw new Error(`Save failed: ${response.status}`);
+    } catch (error) {
+      // الـ API مش شغال → نحفظ محلياً عشان القسم متضيعش
+      console.warn(
+        "API unavailable — saving department locally:",
+        error.message,
+      );
+    } finally {
+      // الإضافة المحلية في الحالتين (نجاح أو فشل الـ API)
+      const newDept = {
+        id: `custom-${Date.now()}`,
+        nameKey: null,
+        customName: details.trim(),
 
-      headcount: 1,
-      activeProjects: 0,
-    };
+        headKey: null,
+        customHead: owner.trim() || (isArabic ? "غير محدد" : "Unassigned"),
 
-    setDepartments((prev) => [newDept, ...prev]);
-    setIsSuccess(true);
+        attendanceKey: null,
+        customAttendance: isArabic ? "نسبة الحضور 90%" : "90% attendance",
+
+        headcount: 1,
+        activeProjects: 0,
+      };
+
+      setDepartments((prev) => {
+        const next = [newDept, ...prev];
+        saveLocalDepartments(next);
+        return next;
+      });
+
+      setSaving(false);
+      setIsSuccess(true);
+    }
   };
 
   const closeCreateModal = () => {
@@ -327,20 +442,46 @@ export default function DepartmentsAndTeams() {
     setSelectedEmployee("");
   };
 
-  const handleTransfer = (e) => {
+  /* =====================================================
+     TRANSFER EMPLOYEE (PUT Request → localStorage Fallback)
+  ====================================================== */
+
+  const handleTransfer = async (e) => {
     e.preventDefault();
 
-    if (!selectedEmployee || !transferModal) return;
+    if (!selectedEmployee || !transferModal || transfering) return;
 
-    setDepartments((prev) =>
-      prev.map((dept) =>
-        dept.id === transferModal.id
-          ? { ...dept, headcount: dept.headcount + 1 }
-          : dept,
-      ),
-    );
+    setTransfering(true);
 
-    closeTransferModal();
+    try {
+      const response = await fetch(`${API_URL}/${transferModal.id}/transfer`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ employeeId: selectedEmployee }),
+      });
+
+      if (!response.ok) throw new Error(`Transfer failed: ${response.status}`);
+    } catch (error) {
+      // الـ API مش شغال → نحفظ محلياً عشان النقل متضيعش
+      console.warn(
+        "API unavailable — saving transfer locally:",
+        error.message,
+      );
+    } finally {
+      // التحديث المحلي في الحالتين (نجاح أو فشل الـ API)
+      setDepartments((prev) => {
+        const next = prev.map((dept) =>
+          dept.id === transferModal.id
+            ? { ...dept, headcount: dept.headcount + 1 }
+            : dept,
+        );
+        saveLocalDepartments(next);
+        return next;
+      });
+
+      setTransfering(false);
+      closeTransferModal();
+    }
   };
 
   return (
@@ -541,8 +682,12 @@ export default function DepartmentsAndTeams() {
         </p>
       </motion.div>
 
-      {/* ==================== Departments ==================== */}
-      {filteredDepartments.length > 0 ? (
+      {/* ==================== Departments (OR LOADING) ==================== */}
+      {loading ? (
+        <div className="flex h-48 items-center justify-center rounded-2xl border border-[#e2e8f0]/80 bg-white shadow-[0_1px_3px_rgba(0,0,0,0.03)]">
+          <FiLoader className="h-8 w-8 animate-spin text-[#243B53]" />
+        </div>
+      ) : filteredDepartments.length > 0 ? (
         <motion.div
           variants={containerVariants}
           className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
@@ -713,6 +858,7 @@ export default function DepartmentsAndTeams() {
                           onChange={(e) => setDetails(e.target.value)}
                           placeholder={t.detailsPlaceholder}
                           autoFocus
+                          disabled={saving}
                           className="w-full rounded-lg border border-[#e2e8f0] bg-white px-3 py-2.5 text-xs text-[#334155] outline-none transition focus:border-[#94a3b8] focus:ring-2 focus:ring-[#f1f5f9] sm:text-sm"
                         />
                       </div>
@@ -727,6 +873,7 @@ export default function DepartmentsAndTeams() {
                           value={owner}
                           onChange={(e) => setOwner(e.target.value)}
                           placeholder={t.ownerPlaceholder}
+                          disabled={saving}
                           className="w-full rounded-lg border border-[#e2e8f0] bg-white px-3 py-2.5 text-xs text-[#334155] outline-none transition focus:border-[#94a3b8] focus:ring-2 focus:ring-[#f1f5f9] sm:text-sm"
                         />
                       </div>
@@ -736,6 +883,7 @@ export default function DepartmentsAndTeams() {
                       <button
                         type="button"
                         onClick={closeCreateModal}
+                        disabled={saving}
                         className="flex-1 rounded-lg border border-[#e2e8f0] bg-white px-4 py-2.5 text-xs font-semibold text-[#64748b] transition hover:bg-[#f8fafc] sm:text-sm"
                       >
                         {t.cancelBtn}
@@ -743,10 +891,13 @@ export default function DepartmentsAndTeams() {
 
                       <button
                         type="submit"
-                        disabled={!details.trim()}
-                        className="flex-1 rounded-lg bg-[#243B53] px-4 py-2.5 text-xs font-semibold text-white transition hover:bg-[#1c2f42] disabled:cursor-not-allowed disabled:opacity-50 sm:text-sm"
+                        disabled={!details.trim() || saving}
+                        className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-[#243B53] px-4 py-2.5 text-xs font-semibold text-white transition hover:bg-[#1c2f42] disabled:cursor-not-allowed disabled:opacity-50 sm:text-sm"
                       >
-                        {t.saveBtn}
+                        {saving && (
+                          <FiLoader className="h-3.5 w-3.5 animate-spin" />
+                        )}
+                        {saving ? t.savingBtn : t.saveBtn}
                       </button>
                     </div>
                   </form>
@@ -920,6 +1071,7 @@ export default function DepartmentsAndTeams() {
                 <select
                   value={selectedEmployee}
                   onChange={(e) => setSelectedEmployee(e.target.value)}
+                  disabled={transfering}
                   className="w-full rounded-lg border border-[#e2e8f0] bg-white px-3 py-2.5 text-xs text-[#334155] outline-none transition focus:border-[#94a3b8] focus:ring-2 focus:ring-[#f1f5f9] sm:text-sm"
                 >
                   <option value="">{t.employeePlaceholder}</option>
@@ -941,6 +1093,7 @@ export default function DepartmentsAndTeams() {
                   <button
                     type="button"
                     onClick={closeTransferModal}
+                    disabled={transfering}
                     className="flex-1 rounded-lg border border-[#e2e8f0] bg-white px-4 py-2.5 text-xs font-semibold text-[#64748b] transition hover:bg-[#f8fafc] sm:text-sm"
                   >
                     {t.cancelBtn}
@@ -948,10 +1101,13 @@ export default function DepartmentsAndTeams() {
 
                   <button
                     type="submit"
-                    disabled={!selectedEmployee}
-                    className="flex-1 rounded-lg bg-[#243B53] px-4 py-2.5 text-xs font-semibold text-white transition hover:bg-[#1c2f42] disabled:cursor-not-allowed disabled:opacity-50 sm:text-sm"
+                    disabled={!selectedEmployee || transfering}
+                    className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-[#243B53] px-4 py-2.5 text-xs font-semibold text-white transition hover:bg-[#1c2f42] disabled:cursor-not-allowed disabled:opacity-50 sm:text-sm"
                   >
-                    {t.transferBtn}
+                    {transfering && (
+                      <FiLoader className="h-3.5 w-3.5 animate-spin" />
+                    )}
+                    {transfering ? t.transferingBtn : t.transferBtn}
                   </button>
                 </div>
               </form>

@@ -1,6 +1,7 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { motion, AnimatePresence } from "framer-motion";
+import axios from "axios";
 import {
   FiPlus,
   FiX,
@@ -9,6 +10,14 @@ import {
   FiClock,
   FiAlertCircle,
 } from "react-icons/fi";
+
+const api = axios.create({
+  baseURL: "https://hr-system.iptvdemo.serv5group.com/api",
+  headers: {
+    "Content-Type": "application/json",
+    "Accept": "application/json",
+  },
+});
 
 const pageVariants = {
   hidden: { opacity: 0, y: 16 },
@@ -75,6 +84,33 @@ export default function AdvancesAndDeductions() {
   const [isSuccess, setIsSuccess] = useState(false);
   const [details, setDetails] = useState("");
   const [owner, setOwner] = useState("");
+
+  // استخدام localStorage لضمان عدم اختفاء البيانات عند تحديث الصفحة
+  const [workflowRecords, setWorkflowRecords] = useState(() => {
+    const saved = localStorage.getItem("workflow_records_local");
+    return saved ? JSON.parse(saved) : [];
+  });
+
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    localStorage.setItem("workflow_records_local", JSON.stringify(workflowRecords));
+  }, [workflowRecords]);
+
+  const fetchWorkflowRecords = async () => {
+    try {
+      setLoading(true);
+      const response = await api.get("/workflow-records");
+      const dataFromApi = response.data.data || response.data || [];
+      if (dataFromApi.length > 0) {
+        setWorkflowRecords(dataFromApi);
+      }
+      setLoading(false);
+    } catch (error) {
+      console.error("Error fetching data:", error);
+      setLoading(false);
+    }
+  };
 
   const content = {
     en: {
@@ -162,14 +198,28 @@ export default function AdvancesAndDeductions() {
 
   const t = isArabic ? content.ar : content.en;
 
-  const handleSave = (e) => {
+  const handleSave = async (e) => {
     e.preventDefault();
 
-    console.log({
+    try {
+      // محاولة الإرسال للـ API
+      await api.post("/workflow-records", {
+        details,
+        owner,
+      });
+    } catch (error) {
+      console.error("API error, saving locally:", error);
+    }
+
+    // حفظ العنصر محلياً لضمان ظهوره فوراً وعدم اختفائه
+    const newRecord = {
+      id: Date.now(),
       details,
       owner,
-    });
+      date: new Date().toLocaleDateString(),
+    };
 
+    setWorkflowRecords((prev) => [newRecord, ...prev]);
     setIsSuccess(true);
   };
 
@@ -224,7 +274,6 @@ export default function AdvancesAndDeductions() {
         variants={itemVariants}
         className="overflow-hidden rounded-2xl border border-[#e2e8f0]/80 bg-white shadow-[0_1px_3px_rgba(0,0,0,0.03)]"
       >
-        {/* Section Header */}
         <div className="flex items-center gap-3 border-b border-[#f1f5f9] p-5">
           <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#eff6ff] text-[#3b82f6]">
             <FiDollarSign size={17} />
@@ -235,7 +284,6 @@ export default function AdvancesAndDeductions() {
           </h2>
         </div>
 
-        {/* Table */}
         <div className="overflow-x-auto">
           <table
             className={`w-full min-w-[900px] border-collapse ${
@@ -247,23 +295,18 @@ export default function AdvancesAndDeductions() {
                 <th className="p-5 text-[11px] font-bold tracking-wider text-[#94a3b8] uppercase">
                   {t.colEmployee}
                 </th>
-
                 <th className="p-5 text-[11px] font-bold tracking-wider text-[#94a3b8] uppercase">
                   {t.colRequestedAmount}
                 </th>
-
                 <th className="p-5 text-[11px] font-bold tracking-wider text-[#94a3b8] uppercase">
                   {t.colRepayment}
                 </th>
-
                 <th className="p-5 text-[11px] font-bold tracking-wider text-[#94a3b8] uppercase">
                   {t.colMonthlyDeduction}
                 </th>
-
                 <th className="p-5 text-[11px] font-bold tracking-wider text-[#94a3b8] uppercase">
                   {t.colReason}
                 </th>
-
                 <th
                   className={`p-5 text-[11px] font-bold tracking-wider text-[#94a3b8] uppercase ${
                     isArabic ? "text-left" : "text-right"
@@ -275,34 +318,33 @@ export default function AdvancesAndDeductions() {
             </thead>
 
             <tbody className="text-sm">
+              {/* عرض السجلات المضافة حديثاً */}
+              {workflowRecords.map((item) => (
+                <tr key={item.id || Math.random()} className="border-b border-[#f1f5f9] bg-[#f8fafc] transition hover:bg-[#f1f5f9]">
+                  <td className="p-5">
+                    <span className="font-bold text-[#1e293b]">{item.owner || "N/A"}</span>
+                  </td>
+                  <td className="p-5 font-medium text-[#475569]">-</td>
+                  <td className="p-5 text-[#64748b]">-</td>
+                  <td className="p-5 font-medium text-[#475569]">-</td>
+                  <td className="p-5 text-xs text-[#64748b]">{item.details || "N/A"}</td>
+                  <td className={`p-5 ${isArabic ? "text-left" : "text-right"}`}>
+                    <span className="text-xs font-semibold text-[#059669]">Added Record</span>
+                  </td>
+                </tr>
+              ))}
+
               {/* Omar */}
               <tr className="border-b border-[#f1f5f9] transition hover:bg-[#f8fafc]">
                 <td className="p-5">
                   <span className="font-bold text-[#1e293b]">Omar Khaled</span>
                 </td>
-
                 <td className="p-5 font-medium text-[#475569]">$1,200</td>
-
                 <td className="p-5 text-[#64748b]">3 Months</td>
-
                 <td className="p-5 font-medium text-[#475569]">$400</td>
-
                 <td className="p-5 text-xs text-[#64748b]">{t.omarReason}</td>
-
                 <td className={`p-5 ${isArabic ? "text-left" : "text-right"}`}>
-                  <button
-                    className="
-                      rounded-lg
-                      border border-[#d1fae5]
-                      bg-[#ecfdf5]
-                      px-4 py-2
-                      text-xs
-                      font-semibold
-                      text-[#059669]
-                      transition
-                      hover:bg-[#d1fae5]
-                    "
-                  >
+                  <button className="rounded-lg border border-[#d1fae5] bg-[#ecfdf5] px-4 py-2 text-xs font-semibold text-[#059669] transition hover:bg-[#d1fae5]">
                     {t.approve}
                   </button>
                 </td>
@@ -313,29 +355,12 @@ export default function AdvancesAndDeductions() {
                 <td className="p-5">
                   <span className="font-bold text-[#1e293b]">Nour Adel</span>
                 </td>
-
                 <td className="p-5 font-medium text-[#475569]">$800</td>
-
                 <td className="p-5 text-[#64748b]">4 Months</td>
-
                 <td className="p-5 font-medium text-[#475569]">$200</td>
-
                 <td className="p-5 text-xs text-[#64748b]">{t.nourReason}</td>
-
                 <td className={`p-5 ${isArabic ? "text-left" : "text-right"}`}>
-                  <button
-                    className="
-                      rounded-lg
-                      border border-[#d1fae5]
-                      bg-[#ecfdf5]
-                      px-4 py-2
-                      text-xs
-                      font-semibold
-                      text-[#059669]
-                      transition
-                      hover:bg-[#d1fae5]
-                    "
-                  >
+                  <button className="rounded-lg border border-[#d1fae5] bg-[#ecfdf5] px-4 py-2 text-xs font-semibold text-[#059669] transition hover:bg-[#d1fae5]">
                     {t.approve}
                   </button>
                 </td>
@@ -350,7 +375,6 @@ export default function AdvancesAndDeductions() {
         variants={itemVariants}
         className="overflow-hidden rounded-2xl border border-[#e2e8f0]/80 bg-white shadow-[0_1px_3px_rgba(0,0,0,0.03)]"
       >
-        {/* Section Header */}
         <div className="flex items-center gap-3 border-b border-[#f1f5f9] p-5">
           <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#fff7ed] text-[#f97316]">
             <FiAlertCircle size={17} />
@@ -361,7 +385,6 @@ export default function AdvancesAndDeductions() {
           </h2>
         </div>
 
-        {/* Table */}
         <div className="overflow-x-auto">
           <table
             className={`w-full min-w-[800px] border-collapse ${
@@ -373,19 +396,15 @@ export default function AdvancesAndDeductions() {
                 <th className="p-5 text-[11px] font-bold tracking-wider text-[#94a3b8] uppercase">
                   {t.colEmployee}
                 </th>
-
                 <th className="p-5 text-[11px] font-bold tracking-wider text-[#94a3b8] uppercase">
                   {t.colPenaltyReason}
                 </th>
-
                 <th className="p-5 text-[11px] font-bold tracking-wider text-[#94a3b8] uppercase">
                   {t.colAmount}
                 </th>
-
                 <th className="p-5 text-[11px] font-bold tracking-wider text-[#94a3b8] uppercase">
                   {t.colDate}
                 </th>
-
                 <th
                   className={`p-5 text-[11px] font-bold tracking-wider text-[#94a3b8] uppercase ${
                     isArabic ? "text-left" : "text-right"
@@ -397,70 +416,30 @@ export default function AdvancesAndDeductions() {
             </thead>
 
             <tbody className="text-sm">
-              {/* Mariam */}
               <tr className="border-b border-[#f1f5f9] transition hover:bg-[#f8fafc]">
                 <td className="p-5">
-                  <span className="font-bold text-[#1e293b]">
-                    Mariam Hassan
-                  </span>
+                  <span className="font-bold text-[#1e293b]">Mariam Hassan</span>
                 </td>
-
                 <td className="p-5 text-xs text-[#64748b]">{t.mariamReason}</td>
-
                 <td className="p-5 font-medium text-[#475569]">$75</td>
-
                 <td className="p-5 text-[#64748b]">Sep 15</td>
-
                 <td className={`p-5 ${isArabic ? "text-left" : "text-right"}`}>
-                  <span
-                    className="
-                      inline-flex
-                      items-center
-                      gap-1.5
-                      rounded-full
-                      border border-[#fed7aa]
-                      bg-[#fff7ed]
-                      px-3
-                      py-1
-                      text-xs
-                      font-semibold
-                      text-[#c2410c]
-                    "
-                  >
+                  <span className="inline-flex items-center gap-1.5 rounded-full border border-[#fed7aa] bg-[#fff7ed] px-3 py-1 text-xs font-semibold text-[#c2410c]">
                     <FiClock size={12} />
                     {t.statusQueued}
                   </span>
                 </td>
               </tr>
 
-              {/* Karim */}
               <tr className="transition hover:bg-[#f8fafc]">
                 <td className="p-5">
                   <span className="font-bold text-[#1e293b]">Karim Ashraf</span>
                 </td>
-
                 <td className="p-5 text-xs text-[#64748b]">{t.karimReason}</td>
-
                 <td className="p-5 font-medium text-[#475569]">$120</td>
-
                 <td className="p-5 text-[#64748b]">Sep 12</td>
-
                 <td className={`p-5 ${isArabic ? "text-left" : "text-right"}`}>
-                  <span
-                    className="
-                      inline-flex
-                      items-center
-                      gap-1.5
-                      rounded-full
-                      border border-[#fed7aa]
-                      bg-[#fff7ed]
-                      px-3
-                      py-1
-                      text-xs
-                      font-semibold
-                      text-[#c2410c]
-                    "
-                  >
+                  <span className="inline-flex items-center gap-1.5 rounded-full border border-[#fed7aa] bg-[#fff7ed] px-3 py-1 text-xs font-semibold text-[#c2410c]">
                     <FiClock size={12} />
                     {t.statusQueued}
                   </span>
@@ -489,13 +468,11 @@ export default function AdvancesAndDeductions() {
             >
               {!isSuccess ? (
                 <>
-                  {/* Modal Header */}
                   <div className="flex items-center justify-between border-b border-[#f1f5f9] px-6 py-5">
                     <div>
                       <h3 className="text-base font-bold text-[#1e293b]">
                         {t.modalTitle}
                       </h3>
-
                       <p className="mt-1 text-xs text-[#64748b] sm:text-sm">
                         {t.recordBtn}
                       </p>
@@ -509,104 +486,49 @@ export default function AdvancesAndDeductions() {
                     </button>
                   </div>
 
-                  {/* Modal Body */}
                   <form onSubmit={handleSave} className="space-y-5 p-6">
                     <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
-                      {/* Details */}
                       <div>
                         <label className="mb-2 block text-[11px] font-bold tracking-wider text-[#64748b] uppercase">
                           {t.detailsLabel}
                         </label>
-
                         <input
                           type="text"
                           value={details}
                           onChange={(e) => setDetails(e.target.value)}
                           placeholder={t.detailsPlaceholder}
-                          className="
-                            w-full
-                            rounded-lg
-                            border border-[#e2e8f0]
-                            bg-white
-                            px-3
-                            py-2.5
-                            text-xs
-                            text-[#475569]
-                            outline-none
-                            transition
-                            placeholder:text-[#94a3b8]
-                            focus:border-[#94a3b8]
-                            focus:ring-2
-                            focus:ring-[#f1f5f9]
-                          "
+                          required
+                          className="w-full rounded-lg border border-[#e2e8f0] bg-white px-3 py-2.5 text-xs text-[#475569] outline-none transition placeholder:text-[#94a3b8] focus:border-[#94a3b8] focus:ring-2 focus:ring-[#f1f5f9]"
                         />
                       </div>
 
-                      {/* Owner */}
                       <div>
                         <label className="mb-2 block text-[11px] font-bold tracking-wider text-[#64748b] uppercase">
                           {t.ownerLabel}
                         </label>
-
                         <input
                           type="text"
                           value={owner}
                           onChange={(e) => setOwner(e.target.value)}
                           placeholder={t.ownerPlaceholder}
-                          className="
-                            w-full
-                            rounded-lg
-                            border border-[#e2e8f0]
-                            bg-white
-                            px-3
-                            py-2.5
-                            text-xs
-                            text-[#475569]
-                            outline-none
-                            transition
-                            placeholder:text-[#94a3b8]
-                            focus:border-[#94a3b8]
-                            focus:ring-2
-                            focus:ring-[#f1f5f9]
-                          "
+                          required
+                          className="w-full rounded-lg border border-[#e2e8f0] bg-white px-3 py-2.5 text-xs text-[#475569] outline-none transition placeholder:text-[#94a3b8] focus:border-[#94a3b8] focus:ring-2 focus:ring-[#f1f5f9]"
                         />
                       </div>
                     </div>
 
-                    {/* Footer */}
                     <div className="flex items-center justify-end gap-2 border-t border-[#f1f5f9] pt-4">
                       <button
                         type="button"
                         onClick={handleCloseModal}
-                        className="
-                          rounded-lg
-                          border border-[#e2e8f0]
-                          bg-white
-                          px-4
-                          py-2.5
-                          text-xs
-                          font-semibold
-                          text-[#475569]
-                          transition
-                          hover:bg-[#f8fafc]
-                        "
+                        className="rounded-lg border border-[#e2e8f0] bg-white px-4 py-2.5 text-xs font-semibold text-[#475569] transition hover:bg-[#f8fafc]"
                       >
                         {t.cancelBtn}
                       </button>
 
                       <button
                         type="submit"
-                        className="
-                          rounded-lg
-                          bg-[#243B53]
-                          px-4
-                          py-2.5
-                          text-xs
-                          font-semibold
-                          text-white
-                          transition
-                          hover:bg-[#1c2f42]
-                        "
+                        className="rounded-lg bg-[#243B53] px-4 py-2.5 text-xs font-semibold text-white transition hover:bg-[#1c2f42]"
                       >
                         {t.saveBtn}
                       </button>
@@ -614,7 +536,6 @@ export default function AdvancesAndDeductions() {
                   </form>
                 </>
               ) : (
-                /* ================= SUCCESS ================= */
                 <div className="flex flex-col items-center justify-center p-10 text-center">
                   <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-[#ecfdf5] text-[#10b981]">
                     <FiCheck size={26} strokeWidth={2.5} />
@@ -626,20 +547,7 @@ export default function AdvancesAndDeductions() {
 
                   <button
                     onClick={handleCloseModal}
-                    className="
-                      mt-6
-                      w-full
-                      max-w-[180px]
-                      rounded-lg
-                      bg-[#243B53]
-                      px-4
-                      py-2.5
-                      text-sm
-                      font-semibold
-                      text-white
-                      transition
-                      hover:bg-[#1c2f42]
-                    "
+                    className="mt-6 w-full max-w-[180px] rounded-lg bg-[#243B53] px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-[#1c2f42]"
                   >
                     {t.doneBtn}
                   </button>

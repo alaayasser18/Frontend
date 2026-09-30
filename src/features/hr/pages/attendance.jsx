@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   FiCheckCircle,
@@ -11,14 +11,132 @@ import {
   FiActivity,
   FiDownload,
   FiChevronDown,
-  FiSearch,
   FiMoreHorizontal,
   FiUsers,
   FiArrowUpRight,
   FiX,
   FiSave,
+  FiEdit3,
+  FiLoader,
+  FiRotateCcw,
 } from "react-icons/fi";
 import { motion, AnimatePresence } from "framer-motion";
+
+/* =====================================================
+   API ENDPOINT (رابط الـ Backend الخاص بـ الـ Database)
+===================================================== */
+const API_URL = "/api/hr/attendance";
+
+/* =====================================================
+   LOCAL STORAGE (التعديلات اليدوية متضيعش مع الـ Refresh)
+===================================================== */
+const ADJUSTMENTS_KEY = "hr_attendance_adjustments";
+
+// بداية الوردية الصباحية + فترة السماح
+const SHIFT_START_MINUTES = 9 * 60; // 09:00
+const GRACE_PERIOD_MINUTES = 5;
+
+const loadAdjustments = () => {
+  try {
+    const saved = localStorage.getItem(ADJUSTMENTS_KEY);
+    return saved ? JSON.parse(saved) : {};
+  } catch (error) {
+    console.error("Error reading adjustments from localStorage:", error);
+    return {};
+  }
+};
+
+const saveAdjustments = (adjustments) => {
+  try {
+    localStorage.setItem(ADJUSTMENTS_KEY, JSON.stringify(adjustments));
+  } catch (error) {
+    console.error("Error writing adjustments to localStorage:", error);
+  }
+};
+
+/* =====================================================
+   TIME HELPERS
+===================================================== */
+
+const toMinutes = (time) => {
+  if (!time || time === "—") return null;
+
+  const [hours, minutes] = time.split(":").map(Number);
+
+  if (Number.isNaN(hours) || Number.isNaN(minutes)) return null;
+
+  return hours * 60 + minutes;
+};
+
+const formatDuration = (minutes) => {
+  const hours = Math.floor(minutes / 60);
+  const mins = minutes % 60;
+
+  return mins > 0 ? `${hours}h ${mins}m` : `${hours}h`;
+};
+
+/* =====================================================
+   بناء الحقول المعدّلة (delay / duration / status)
+===================================================== */
+
+const buildAdjustedFields = (employee, adjustment) => {
+  const checkIn =
+    adjustment.type === "checkIn" ? adjustment.time : employee.checkIn;
+  const checkOut =
+    adjustment.type === "checkOut" ? adjustment.time : employee.checkOut;
+
+  const inMin = toMinutes(checkIn);
+  const outMin = toMinutes(checkOut);
+
+  const delayMin = inMin !== null ? inMin - SHIFT_START_MINUTES : null;
+
+  const duration =
+    inMin !== null && outMin !== null && outMin > inMin
+      ? formatDuration(outMin - inMin)
+      : "—";
+
+  let status = employee.status;
+
+  if (inMin === null && outMin === null) {
+    status = "absent";
+  } else if (delayMin !== null && delayMin > GRACE_PERIOD_MINUTES) {
+    status = "late";
+  } else {
+    status = "present";
+  }
+
+  return {
+    checkIn: checkIn || "—",
+    checkOut: checkOut || "—",
+    duration,
+    delay:
+      delayMin !== null && delayMin > GRACE_PERIOD_MINUTES
+        ? `${delayMin} min`
+        : "—",
+    status,
+  };
+};
+
+/* =====================================================
+   تطبيق التعديلات المحفوظة على بيانات الحضور
+===================================================== */
+
+const applyAdjustments = (rows, adjustments) =>
+  rows.map((row) => {
+    const saved = adjustments[row.id];
+
+    if (!saved) return row;
+
+    return {
+      ...row,
+      checkIn: saved.checkIn,
+      checkOut: saved.checkOut,
+      duration: saved.duration,
+      delay: saved.delay,
+      status: saved.status,
+      hasAdjustment: true,
+    };
+  });
 
 const attendanceData = [
   {
@@ -90,10 +208,10 @@ const Attendance = () => {
 
   const [selectedBranch, setSelectedBranch] = useState("all");
   const [selectedShift, setSelectedShift] = useState("all");
-  const [search, setSearch] = useState("");
 
   const [adjustmentModal, setAdjustmentModal] = useState(false);
   const [selectedEmployee, setSelectedEmployee] = useState(null);
+  const [saving, setSaving] = useState(false);
 
   const [adjustment, setAdjustment] = useState({
     type: "checkIn",
@@ -102,6 +220,55 @@ const Attendance = () => {
   });
 
   const [savedMessage, setSavedMessage] = useState(false);
+
+  /* =====================================================
+     التعديلات المحفوظة + بيانات السيرفر
+  ====================================================== */
+
+  const [adjustments, setAdjustments] = useState(() => loadAdjustments());
+  const [serverRecords, setServerRecords] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  /* =====================================================
+     FETCH ATTENDANCE FROM DATABASE (GET Request)
+     الـ API مش شغال؟ → البيانات المحلية + التعديلات المحفوظة
+  ====================================================== */
+
+  useEffect(() => {
+    fetchAttendance();
+  }, []);
+
+  const fetchAttendance = async () => {
+    try {
+      setLoading(true);
+      const response = await fetch(API_URL);
+
+      if (!response.ok) throw new Error(`Server error: ${response.status}`);
+
+      const data = await response.json();
+      setServerRecords(data);
+    } catch (error) {
+      // الـ API مش شغال → نستخدم البيانات المحلية (التعديلات بتتطبق تلقائياً)
+      console.warn(
+        "API unavailable — using local attendance data:",
+        error.message,
+      );
+      setServerRecords(null);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  /* =====================================================
+     البيانات النهائية = البيانات الأساسية + التعديلات
+  ====================================================== */
+
+  const records = useMemo(() => {
+    const base = serverRecords ?? attendanceData;
+    return applyAdjustments(base, adjustments);
+  }, [serverRecords, adjustments]);
+
+  const adjustmentsCount = Object.keys(adjustments).length;
 
   const containerVariants = {
     hidden: {},
@@ -192,19 +359,7 @@ const Attendance = () => {
   ];
 
   const filteredData = useMemo(() => {
-    return attendanceData.filter((row) => {
-      const searchValue = search.trim().toLowerCase();
-
-      const employeeName = t(
-        row.employeeKey,
-        row.employeeDefault,
-      ).toLowerCase();
-
-      const matchesSearch =
-        !searchValue ||
-        employeeName.includes(searchValue) ||
-        row.id.toLowerCase().includes(searchValue);
-
+    return records.filter((row) => {
       const branch =
         row.branchDefault === "Cairo HQ"
           ? "cairo"
@@ -215,12 +370,11 @@ const Attendance = () => {
       const shift = row.shiftDefault === "Morning 9–5" ? "morning" : "evening";
 
       return (
-        matchesSearch &&
         (selectedBranch === "all" || selectedBranch === branch) &&
         (selectedShift === "all" || selectedShift === shift)
       );
     });
-  }, [search, selectedBranch, selectedShift, t]);
+  }, [records, selectedBranch, selectedShift]);
 
   const statusStyles = {
     present: {
@@ -292,20 +446,86 @@ const Attendance = () => {
     }));
   };
 
-  const handleSaveAdjustment = (event) => {
+  /* =====================================================
+     SAVE ADJUSTMENT (PUT Request → localStorage Fallback)
+  ====================================================== */
+
+  const handleSaveAdjustment = async (event) => {
     event.preventDefault();
 
-    if (!adjustment.time || !adjustment.reason.trim()) {
+    if (!adjustment.time || !adjustment.reason.trim() || !selectedEmployee) {
       return;
     }
 
-    setSavedMessage(true);
+    setSaving(true);
 
-    window.setTimeout(() => {
-      setSavedMessage(false);
-    }, 2500);
+    const employeeId = selectedEmployee.id;
 
-    closeAdjustmentModal();
+    // حساب الحقول الجديدة (delay / duration / status)
+    const adjustedFields = buildAdjustedFields(selectedEmployee, adjustment);
+
+    const adjustmentRecord = {
+      type: adjustment.type,
+      time: adjustment.time,
+      reason: adjustment.reason.trim(),
+      savedAt: new Date().toISOString(),
+      ...adjustedFields,
+    };
+
+    try {
+      const response = await fetch(`${API_URL}/${employeeId}/adjustment`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(adjustmentRecord),
+      });
+
+      if (!response.ok) throw new Error(`Save failed: ${response.status}`);
+    } catch (error) {
+      // الـ API مش شغال → نحفظ في localStorage عشان التعديل متضيعش
+      console.warn(
+        "API unavailable — saving adjustment locally:",
+        error.message,
+      );
+    } finally {
+      // الحفظ المحلي في الحالتين (نجاح أو فشل الـ API)
+      setAdjustments((prev) => {
+        const next = { ...prev, [employeeId]: adjustmentRecord };
+        saveAdjustments(next);
+        return next;
+      });
+
+      setSaving(false);
+      setSavedMessage(true);
+
+      window.setTimeout(() => {
+        setSavedMessage(false);
+      }, 2500);
+
+      closeAdjustmentModal();
+    }
+  };
+
+  /* =====================================================
+     RESET ALL ADJUSTMENTS (DELETE Request → localStorage)
+  ====================================================== */
+
+  const handleResetAdjustments = async () => {
+    const confirmed = window.confirm(
+      isArabic
+        ? "هل تريد إزالة كل التعديلات اليدوية والرجوع للبيانات الأصلية؟"
+        : "Remove all manual adjustments and restore original data?",
+    );
+
+    if (!confirmed) return;
+
+    try {
+      await fetch(`${API_URL}/adjustments`, { method: "DELETE" });
+    } catch (error) {
+      console.warn("API unavailable — resetting locally:", error.message);
+    } finally {
+      saveAdjustments({});
+      setAdjustments({});
+    }
   };
 
   return (
@@ -409,119 +629,71 @@ const Attendance = () => {
           </div>
         </motion.div>
 
-        {/* ==================== FILTERS ==================== */}
+        {/* ==================== FILTERS (مباشرة على الصفحة — بدون كارت) ==================== */}
 
         <motion.section
           variants={itemVariants}
-          className="rounded-2xl border border-[#e2e8f0]/80 bg-white p-5 shadow-[0_1px_3px_rgba(0,0,0,0.03)]"
+          className="flex flex-col gap-2.5 md:flex-row md:items-center"
         >
-          <div className="mb-5 flex items-center gap-3">
-            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#eff6ff] text-[#3b82f6]">
-              <FiSearch className="h-4 w-4" />
-            </div>
+          {/* Date */}
 
-            <div>
-              <h2 className="text-base font-bold text-[#1e293b]">
-                {isArabic ? "تصفية الحضور" : "Attendance Filters"}
-              </h2>
+          <button
+            type="button"
+            className="flex h-9 items-center justify-between gap-3 rounded-lg border border-[#e2e8f0] bg-white px-3 text-xs font-medium text-[#475569] transition hover:bg-[#f8fafc] md:w-[150px]"
+          >
+            <span>09/15/2026</span>
 
-              <p className="mt-0.5 text-xs font-normal text-[#64748b]">
-                {isArabic
-                  ? "ابحث وحدد الفرع والوردية لعرض السجلات المطلوبة"
-                  : "Search and filter attendance records by branch and shift"}
-              </p>
-            </div>
+            <FiCalendar className="h-3.5 w-3.5 text-[#94a3b8]" />
+          </button>
+
+          {/* Branch */}
+
+          <div className="relative md:w-[150px]">
+            <select
+              value={selectedBranch}
+              onChange={(e) => setSelectedBranch(e.target.value)}
+              className={`h-9 w-full appearance-none rounded-lg border border-[#e2e8f0] bg-white text-xs font-medium text-[#475569] outline-none transition focus:border-[#94a3b8] focus:ring-2 focus:ring-[#f1f5f9] ${
+                isArabic ? "pr-3 pl-8" : "pl-3 pr-8"
+              }`}
+            >
+              <option value="all">{t("hrAttendance.allBranches")}</option>
+
+              <option value="cairo">{t("hrAttendance.branchCairo")}</option>
+
+              <option value="alexandria">{t("hrAttendance.branchAlex")}</option>
+
+              <option value="giza">{t("hrAttendance.branchGiza")}</option>
+            </select>
+
+            <FiChevronDown
+              className={`pointer-events-none absolute top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-[#94a3b8] ${
+                isArabic ? "left-2.5" : "right-2.5"
+              }`}
+            />
           </div>
 
-          <div className="grid grid-cols-1 gap-4 lg:grid-cols-4">
-            {/* Search */}
+          {/* Shift */}
 
-            <div className="relative lg:col-span-2">
-              <FiSearch
-                className={`pointer-events-none absolute top-1/2 h-4 w-4 -translate-y-1/2 text-[#94a3b8] ${
-                  isArabic ? "right-3.5" : "left-3.5"
-                }`}
-              />
-
-              <input
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                placeholder={t("hrAttendance.searchPlaceholder")}
-                className={`h-10 w-full rounded-lg border border-[#e2e8f0] bg-white text-xs text-[#475569] outline-none transition placeholder:text-[#94a3b8] focus:border-[#94a3b8] focus:ring-2 focus:ring-[#f1f5f9] ${
-                  isArabic ? "pr-10 pl-3" : "pl-10 pr-3"
-                }`}
-              />
-            </div>
-
-            {/* Date */}
-
-            <button
-              type="button"
-              className="flex h-10 items-center justify-between gap-4 rounded-lg border border-[#e2e8f0] bg-white px-3.5 text-xs font-medium text-[#475569] transition hover:bg-[#f8fafc]"
+          <div className="relative md:w-[140px]">
+            <select
+              value={selectedShift}
+              onChange={(e) => setSelectedShift(e.target.value)}
+              className={`h-9 w-full appearance-none rounded-lg border border-[#e2e8f0] bg-white text-xs font-medium text-[#475569] outline-none transition focus:border-[#94a3b8] focus:ring-2 focus:ring-[#f1f5f9] ${
+                isArabic ? "pr-3 pl-8" : "pl-3 pr-8"
+              }`}
             >
-              <span className="flex items-center gap-2">
-                <FiCalendar className="h-4 w-4 text-[#94a3b8]" />
-                09/15/2026
-              </span>
+              <option value="all">{t("hrAttendance.allShifts")}</option>
 
-              <FiChevronDown className="h-4 w-4 text-[#94a3b8]" />
-            </button>
+              <option value="morning">{t("hrAttendance.shiftMorning")}</option>
 
-            {/* Branch */}
+              <option value="evening">{t("hrAttendance.shiftEvening")}</option>
+            </select>
 
-            <div className="relative">
-              <select
-                value={selectedBranch}
-                onChange={(e) => setSelectedBranch(e.target.value)}
-                className={`h-10 w-full appearance-none rounded-lg border border-[#e2e8f0] bg-white text-xs font-medium text-[#475569] outline-none transition focus:border-[#94a3b8] focus:ring-2 focus:ring-[#f1f5f9] ${
-                  isArabic ? "pr-3 pl-9" : "pl-3 pr-9"
-                }`}
-              >
-                <option value="all">{t("hrAttendance.allBranches")}</option>
-
-                <option value="cairo">{t("hrAttendance.branchCairo")}</option>
-
-                <option value="alexandria">
-                  {t("hrAttendance.branchAlex")}
-                </option>
-
-                <option value="giza">{t("hrAttendance.branchGiza")}</option>
-              </select>
-
-              <FiChevronDown
-                className={`pointer-events-none absolute top-1/2 h-4 w-4 -translate-y-1/2 text-[#94a3b8] ${
-                  isArabic ? "left-3" : "right-3"
-                }`}
-              />
-            </div>
-
-            {/* Shift */}
-
-            <div className="relative">
-              <select
-                value={selectedShift}
-                onChange={(e) => setSelectedShift(e.target.value)}
-                className={`h-10 w-full appearance-none rounded-lg border border-[#e2e8f0] bg-white text-xs font-medium text-[#475569] outline-none transition focus:border-[#94a3b8] focus:ring-2 focus:ring-[#f1f5f9] ${
-                  isArabic ? "pr-3 pl-9" : "pl-3 pr-9"
-                }`}
-              >
-                <option value="all">{t("hrAttendance.allShifts")}</option>
-
-                <option value="morning">
-                  {t("hrAttendance.shiftMorning")}
-                </option>
-
-                <option value="evening">
-                  {t("hrAttendance.shiftEvening")}
-                </option>
-              </select>
-
-              <FiChevronDown
-                className={`pointer-events-none absolute top-1/2 h-4 w-4 -translate-y-1/2 text-[#94a3b8] ${
-                  isArabic ? "left-3" : "right-3"
-                }`}
-              />
-            </div>
+            <FiChevronDown
+              className={`pointer-events-none absolute top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-[#94a3b8] ${
+                isArabic ? "left-2.5" : "right-2.5"
+              }`}
+            />
           </div>
         </motion.section>
 
@@ -599,256 +771,301 @@ const Attendance = () => {
           </div>
         </motion.section>
 
-        {/* ==================== TABLE ==================== */}
+        {/* ==================== TABLE (OR LOADING) ==================== */}
 
-        <motion.section
-          variants={itemVariants}
-          className="overflow-hidden rounded-2xl border border-[#e2e8f0]/80 bg-white shadow-[0_1px_3px_rgba(0,0,0,0.03)]"
-        >
-          <div className="flex flex-col justify-between gap-3 border-b border-[#f1f5f9] px-5 py-4 sm:flex-row sm:items-center">
-            <div>
-              <div className="flex items-center gap-2">
-                <h2 className="text-base font-bold text-[#1e293b]">
-                  {t("hrAttendance.tableTitle")}
-                </h2>
+        {loading ? (
+          <div className="flex h-48 items-center justify-center rounded-2xl border border-[#e2e8f0]/80 bg-white shadow-[0_1px_3px_rgba(0,0,0,0.03)]">
+            <FiLoader className="h-8 w-8 animate-spin text-[#243B53]" />
+          </div>
+        ) : (
+          <motion.section
+            variants={itemVariants}
+            className="overflow-hidden rounded-2xl border border-[#e2e8f0]/80 bg-white shadow-[0_1px_3px_rgba(0,0,0,0.03)]"
+          >
+            <div className="flex flex-col justify-between gap-3 border-b border-[#f1f5f9] px-5 py-4 sm:flex-row sm:items-center">
+              <div>
+                <div className="flex items-center gap-2">
+                  <h2 className="text-base font-bold text-[#1e293b]">
+                    {t("hrAttendance.tableTitle")}
+                  </h2>
 
-                <span className="rounded-full bg-[#f1f5f9] px-2 py-0.5 text-[10px] font-bold text-[#64748b]">
-                  {filteredData.length}
-                </span>
+                  <span className="rounded-full bg-[#f1f5f9] px-2 py-0.5 text-[10px] font-bold text-[#64748b]">
+                    {filteredData.length}
+                  </span>
+                </div>
+
+                <p className="mt-0.5 text-xs font-normal text-[#64748b]">
+                  {t("hrAttendance.tableSubtitle")}
+                </p>
               </div>
 
-              <p className="mt-0.5 text-xs font-normal text-[#64748b]">
-                {t("hrAttendance.tableSubtitle")}
-              </p>
+              <button
+                type="button"
+                className="inline-flex items-center gap-2 self-start rounded-lg px-2 py-1.5 text-xs font-semibold text-[#64748b] transition hover:bg-[#f8fafc]"
+              >
+                <FiMoreHorizontal className="h-4 w-4" />
+
+                {t("hrAttendance.more")}
+              </button>
             </div>
 
-            <button
-              type="button"
-              className="inline-flex items-center gap-2 self-start rounded-lg px-2 py-1.5 text-xs font-semibold text-[#64748b] transition hover:bg-[#f8fafc]"
-            >
-              <FiMoreHorizontal className="h-4 w-4" />
+            <div className="w-full overflow-x-auto">
+              <table className="w-full min-w-[1180px] border-collapse">
+                <thead>
+                  <tr className="bg-[#f8fafc]">
+                    {[
+                      "colEmployee",
+                      "colBranch",
+                      "colShift",
+                      "colCheckIn",
+                      "colCheckOut",
+                      "colDuration",
+                      "colDelay",
+                      "colMode",
+                      "colStatus",
+                      "colAction",
+                    ].map((key) => (
+                      <th
+                        key={key}
+                        className="whitespace-nowrap border-b border-[#f1f5f9] px-5 py-3 text-start text-[10px] font-bold uppercase tracking-wider text-[#94a3b8]"
+                      >
+                        {t(`hrAttendance.${key}`)}
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
 
-              {t("hrAttendance.more")}
-            </button>
-          </div>
+                <tbody>
+                  {filteredData.map((row, index) => {
+                    const status = statusStyles[row.status];
+                    const mode = modeConfig[row.mode];
+                    const ModeIcon = mode.icon;
 
-          <div className="w-full overflow-x-auto">
-            <table className="w-full min-w-[1180px] border-collapse">
-              <thead>
-                <tr className="bg-[#f8fafc]">
-                  {[
-                    "colEmployee",
-                    "colBranch",
-                    "colShift",
-                    "colCheckIn",
-                    "colCheckOut",
-                    "colDuration",
-                    "colDelay",
-                    "colMode",
-                    "colStatus",
-                    "colAction",
-                  ].map((key) => (
-                    <th
-                      key={key}
-                      className="whitespace-nowrap border-b border-[#f1f5f9] px-5 py-3 text-start text-[10px] font-bold uppercase tracking-wider text-[#94a3b8]"
-                    >
-                      {t(`hrAttendance.${key}`)}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
+                    return (
+                      <motion.tr
+                        key={row.id}
+                        initial={{
+                          opacity: 0,
+                          y: 8,
+                        }}
+                        animate={{
+                          opacity: 1,
+                          y: 0,
+                        }}
+                        transition={{
+                          duration: 0.3,
+                          delay: index * 0.05,
+                        }}
+                        className="group border-b border-[#f1f5f9] last:border-0 hover:bg-[#f8fafc]/70"
+                      >
+                        {/* Employee */}
 
-              <tbody>
-                {filteredData.map((row, index) => {
-                  const status = statusStyles[row.status];
-                  const mode = modeConfig[row.mode];
-                  const ModeIcon = mode.icon;
-
-                  return (
-                    <motion.tr
-                      key={row.id}
-                      initial={{
-                        opacity: 0,
-                        y: 8,
-                      }}
-                      animate={{
-                        opacity: 1,
-                        y: 0,
-                      }}
-                      transition={{
-                        duration: 0.3,
-                        delay: index * 0.05,
-                      }}
-                      className="group border-b border-[#f1f5f9] last:border-0 hover:bg-[#f8fafc]/70"
-                    >
-                      {/* Employee */}
-
-                      <td className="px-5 py-4">
-                        <div className="flex items-center gap-3">
-                          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#eff6ff] text-xs font-bold text-[#3b82f6]">
-                            {t(row.employeeKey, row.employeeDefault)
-                              .split(" ")
-                              .map((name) => name[0])
-                              .slice(0, 2)
-                              .join("")}
-                          </div>
-
-                          <div>
-                            <p className="text-sm font-bold text-[#1e293b]">
-                              {t(row.employeeKey, row.employeeDefault)}
-                            </p>
-
-                            <p className="mt-0.5 text-[11px] text-[#94a3b8]">
-                              {row.id}
-                            </p>
-                          </div>
-                        </div>
-                      </td>
-
-                      {/* Branch */}
-
-                      <td className="px-5 py-4">
-                        <span className="inline-flex items-center gap-1.5 text-sm font-normal text-[#64748b]">
-                          <FiMapPin className="h-3.5 w-3.5 text-[#94a3b8]" />
-
-                          {t(row.branchKey, row.branchDefault)}
-                        </span>
-                      </td>
-
-                      {/* Shift */}
-
-                      <td className="px-5 py-4 text-sm font-normal text-[#64748b]">
-                        {t(row.shiftKey, row.shiftDefault)}
-                      </td>
-
-                      {/* Check In */}
-
-                      <td className="px-5 py-4">
-                        <span className="font-mono text-sm font-medium text-[#475569]">
-                          {row.checkIn}
-                        </span>
-                      </td>
-
-                      {/* Check Out */}
-
-                      <td className="px-5 py-4">
-                        <span className="font-mono text-sm font-medium text-[#475569]">
-                          {row.checkOut}
-                        </span>
-                      </td>
-
-                      {/* Duration */}
-
-                      <td className="px-5 py-4">
-                        <span className="text-sm font-medium text-[#64748b]">
-                          {row.duration}
-                        </span>
-                      </td>
-
-                      {/* Delay */}
-
-                      <td className="px-5 py-4">
-                        {row.delay !== "—" ? (
-                          <span className="inline-flex rounded-lg bg-[#fff7ed] px-2 py-1 text-xs font-semibold text-[#c2410c]">
-                            +{row.delay}
-                          </span>
-                        ) : (
-                          <span className="text-sm text-[#cbd5e1]">—</span>
-                        )}
-                      </td>
-
-                      {/* Mode */}
-
-                      <td className="px-5 py-4">
-                        {mode.title === "—" ? (
-                          <span className="text-sm text-[#cbd5e1]">—</span>
-                        ) : (
-                          <div className="flex items-center gap-2.5">
-                            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#f1f5f9] text-[#64748b]">
-                              <ModeIcon className="h-4 w-4" />
+                        <td className="px-5 py-4">
+                          <div className="flex items-center gap-3">
+                            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#eff6ff] text-xs font-bold text-[#3b82f6]">
+                              {t(row.employeeKey, row.employeeDefault)
+                                .split(" ")
+                                .map((name) => name[0])
+                                .slice(0, 2)
+                                .join("")}
                             </div>
 
                             <div>
-                              <p className="text-xs font-semibold text-[#475569]">
-                                {mode.title}
+                              <p className="text-sm font-bold text-[#1e293b]">
+                                {t(row.employeeKey, row.employeeDefault)}
                               </p>
 
-                              <p className="mt-0.5 text-[10px] text-[#94a3b8]">
-                                {mode.subtitle}
+                              <p className="mt-0.5 flex items-center gap-1.5 text-[11px] text-[#94a3b8]">
+                                {row.id}
+
+                                {/* MANUAL ADJUSTMENT BADGE */}
+
+                                {row.hasAdjustment && (
+                                  <span className="inline-flex items-center gap-1 rounded-full bg-[#fffbeb] px-1.5 py-0.5 text-[9px] font-bold text-[#b45309] ring-1 ring-inset ring-[#fde68a]">
+                                    <FiEdit3 className="h-2.5 w-2.5" />
+
+                                    {isArabic
+                                      ? "معدّل يدوياً"
+                                      : "Manually adjusted"}
+                                  </span>
+                                )}
                               </p>
                             </div>
                           </div>
-                        )}
-                      </td>
+                        </td>
 
-                      {/* Status */}
+                        {/* Branch */}
 
-                      <td className="px-5 py-4">
-                        <span
-                          className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1.5 text-[11px] font-semibold ${status.wrapper}`}
-                        >
+                        <td className="px-5 py-4">
+                          <span className="inline-flex items-center gap-1.5 text-sm font-normal text-[#64748b]">
+                            <FiMapPin className="h-3.5 w-3.5 text-[#94a3b8]" />
+
+                            {t(row.branchKey, row.branchDefault)}
+                          </span>
+                        </td>
+
+                        {/* Shift */}
+
+                        <td className="px-5 py-4 text-sm font-normal text-[#64748b]">
+                          {t(row.shiftKey, row.shiftDefault)}
+                        </td>
+
+                        {/* Check In */}
+
+                        <td className="px-5 py-4">
+                          <span className="font-mono text-sm font-medium text-[#475569]">
+                            {row.checkIn}
+                          </span>
+                        </td>
+
+                        {/* Check Out */}
+
+                        <td className="px-5 py-4">
+                          <span className="font-mono text-sm font-medium text-[#475569]">
+                            {row.checkOut}
+                          </span>
+                        </td>
+
+                        {/* Duration */}
+
+                        <td className="px-5 py-4">
+                          <span className="text-sm font-medium text-[#64748b]">
+                            {row.duration}
+                          </span>
+                        </td>
+
+                        {/* Delay */}
+
+                        <td className="px-5 py-4">
+                          {row.delay !== "—" ? (
+                            <span className="inline-flex rounded-lg bg-[#fff7ed] px-2 py-1 text-xs font-semibold text-[#c2410c]">
+                              +{row.delay}
+                            </span>
+                          ) : (
+                            <span className="text-sm text-[#cbd5e1]">—</span>
+                          )}
+                        </td>
+
+                        {/* Mode */}
+
+                        <td className="px-5 py-4">
+                          {mode.title === "—" ? (
+                            <span className="text-sm text-[#cbd5e1]">—</span>
+                          ) : (
+                            <div className="flex items-center gap-2.5">
+                              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#f1f5f9] text-[#64748b]">
+                                <ModeIcon className="h-4 w-4" />
+                              </div>
+
+                              <div>
+                                <p className="text-xs font-semibold text-[#475569]">
+                                  {mode.title}
+                                </p>
+
+                                <p className="mt-0.5 text-[10px] text-[#94a3b8]">
+                                  {mode.subtitle}
+                                </p>
+                              </div>
+                            </div>
+                          )}
+                        </td>
+
+                        {/* Status */}
+
+                        <td className="px-5 py-4">
                           <span
-                            className={`h-1.5 w-1.5 rounded-full ${status.dot}`}
-                          />
+                            className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1.5 text-[11px] font-semibold ${status.wrapper}`}
+                          >
+                            <span
+                              className={`h-1.5 w-1.5 rounded-full ${status.dot}`}
+                            />
 
-                          {status.label}
-                        </span>
-                      </td>
+                            {status.label}
+                          </span>
+                        </td>
 
-                      {/* Manual Adjustment */}
+                        {/* Manual Adjustment */}
 
-                      <td className="px-5 py-4">
-                        <motion.button
-                          type="button"
-                          whileHover={{ y: -2 }}
-                          whileTap={{ scale: 0.98 }}
-                          onClick={() => openAdjustmentModal(row)}
-                          className="inline-flex items-center gap-2 rounded-lg border border-[#e2e8f0] bg-white px-3.5 py-2 text-xs font-semibold text-[#475569] transition hover:bg-[#f8fafc]"
-                        >
-                          <FiClock className="h-3.5 w-3.5" />
+                        <td className="px-5 py-4">
+                          <motion.button
+                            type="button"
+                            whileHover={{ y: -2 }}
+                            whileTap={{ scale: 0.98 }}
+                            onClick={() => openAdjustmentModal(row)}
+                            className="inline-flex items-center gap-2 rounded-lg border border-[#e2e8f0] bg-white px-3.5 py-2 text-xs font-semibold text-[#475569] transition hover:bg-[#f8fafc]"
+                          >
+                            <FiClock className="h-3.5 w-3.5" />
 
-                          {t("hrAttendance.manualAdjustment")}
-                        </motion.button>
-                      </td>
-                    </motion.tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-
-          {/* Empty */}
-
-          {filteredData.length === 0 && (
-            <div className="border-t border-[#f1f5f9] px-6 py-12 text-center">
-              <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-[#f8fafc] text-[#94a3b8]">
-                <FiUsers className="h-5 w-5" />
-              </div>
-
-              <h3 className="text-sm font-bold text-[#334155]">
-                {t("hrAttendance.noResults")}
-              </h3>
-
-              <p className="mx-auto mt-1 max-w-sm text-xs font-normal text-[#64748b]">
-                {t("hrAttendance.noResultsDescription")}
-              </p>
+                            {t("hrAttendance.manualAdjustment")}
+                          </motion.button>
+                        </td>
+                      </motion.tr>
+                    );
+                  })}
+                </tbody>
+              </table>
             </div>
-          )}
 
-          {/* Footer */}
+            {/* Empty */}
 
-          <div className="flex items-center justify-between border-t border-[#f1f5f9] bg-[#f8fafc]/70 px-5 py-3">
-            <p className="text-xs font-normal text-[#64748b]">
-              {t("hrAttendance.showingResults", {
-                count: filteredData.length,
-              })}
-            </p>
+            {filteredData.length === 0 && (
+              <div className="border-t border-[#f1f5f9] px-6 py-12 text-center">
+                <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-[#f8fafc] text-[#94a3b8]">
+                  <FiUsers className="h-5 w-5" />
+                </div>
 
-            <span className="text-xs font-medium text-[#64748b]">
-              {t("hrAttendance.updatedJustNow")}
-            </span>
-          </div>
-        </motion.section>
+                <h3 className="text-sm font-bold text-[#334155]">
+                  {t("hrAttendance.noResults")}
+                </h3>
+
+                <p className="mx-auto mt-1 max-w-sm text-xs font-normal text-[#64748b]">
+                  {t("hrAttendance.noResultsDescription")}
+                </p>
+              </div>
+            )}
+
+            {/* Footer */}
+
+            <div className="flex items-center justify-between gap-4 border-t border-[#f1f5f9] bg-[#f8fafc]/70 px-5 py-3">
+              <p className="text-xs font-normal text-[#64748b]">
+                {t("hrAttendance.showingResults", {
+                  count: filteredData.length,
+                })}
+              </p>
+
+              <div className="flex items-center gap-3">
+                {/* ADJUSTMENTS COUNT + RESET */}
+
+                {adjustmentsCount > 0 && (
+                  <>
+                    <span className="hidden items-center gap-1 text-xs font-medium text-[#b45309] sm:inline-flex">
+                      <FiEdit3 className="h-3 w-3" />
+
+                      {adjustmentsCount}{" "}
+                      {isArabic
+                        ? "تعديل يدوي محفوظ"
+                        : "manual adjustment(s) saved"}
+                    </span>
+
+                    <button
+                      type="button"
+                      onClick={handleResetAdjustments}
+                      className="inline-flex items-center gap-1.5 rounded-lg px-2 py-1 text-xs font-semibold text-[#64748b] transition hover:bg-white hover:text-[#dc2626]"
+                    >
+                      <FiRotateCcw className="h-3 w-3" />
+
+                      {isArabic ? "إعادة تعيين" : "Reset"}
+                    </button>
+                  </>
+                )}
+
+                <span className="text-xs font-medium text-[#64748b]">
+                  {t("hrAttendance.updatedJustNow")}
+                </span>
+              </div>
+            </div>
+          </motion.section>
+        )}
       </motion.div>
 
       {/* ==================== MANUAL ADJUSTMENT MODAL ==================== */}
@@ -999,6 +1216,7 @@ const Attendance = () => {
                     whileTap={{ scale: 0.98 }}
                     type="button"
                     onClick={closeAdjustmentModal}
+                    disabled={saving}
                     className="rounded-lg border border-[#e2e8f0] bg-white px-4 py-2.5 text-xs font-semibold text-[#475569] transition hover:bg-[#f8fafc]"
                   >
                     {t("common.cancel", "Cancel")}
@@ -1012,10 +1230,16 @@ const Attendance = () => {
                     }
                     whileTap={{ scale: 0.98 }}
                     type="submit"
-                    disabled={!adjustment.time || !adjustment.reason.trim()}
+                    disabled={
+                      saving || !adjustment.time || !adjustment.reason.trim()
+                    }
                     className="inline-flex items-center gap-2 rounded-lg bg-[#243B53] px-4 py-2.5 text-xs font-semibold text-white transition hover:bg-[#1c2f42] disabled:cursor-not-allowed disabled:opacity-45"
                   >
-                    <FiSave className="h-4 w-4" />
+                    {saving ? (
+                      <FiLoader className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <FiSave className="h-4 w-4" />
+                    )}
 
                     {t("hrAttendance.saveAdjustment", "Save adjustment")}
                   </motion.button>

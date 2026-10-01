@@ -478,7 +478,10 @@
       "plans": "Plans",
       "contact": "Contact",
       "signIn": "Sign In",
-      "getStarted": "Get Started"
+      "getStarted": "Get Started",
+      "dashboard": "Dashboard",
+      "mobileAccount": "Account",
+      "mobileWelcome": "Welcome"
     },
     "hero": {
       "badge": "Unified People Operations Platform",
@@ -498,7 +501,17 @@
         "pendingRequestsVal": "12 items",
         "aiInsightTitle": "Workforce Talent Insight",
         "aiInsightText": "3 engineers match Senior Fullstack requirements based on Q3 skill progression.",
-        "quickAction": "Review Candidates"
+        "quickAction": "Review Candidates",
+        "shiftScheduled": "Shift Scheduled",
+        "shiftTime": "Today, 09:00 AM • Main Branch",
+        "portalLabel": "Enterprise Operations",
+        "activeQuarter": "Active Q3",
+        "systemOperational": "System Operational",
+        "weeklyPresence": "Weekly Workforce Presence",
+        "weeklyTrend": "+4.2% this week",
+        "insightLabel": "Insight:",
+        "leaveApproved": "Leave Request Approved",
+        "leaveEmployee": "Sarah Jenkins • Annual Leave"
       }
     },
     "about": {
@@ -509,6 +522,14 @@
       "problemDesc": "HR departments struggle with scattered employee data, disconnected attendance tools, delayed review cycles, and blind talent matching without actionable data.",
       "solutionTitle": "The WiseWork Solution",
       "solutionDesc": "A single, unified workspace combining core HR administration with cutting-edge talent intelligence and intuitive self-service portals.",
+      "clarityTitle": "Real-Time Operational Clarity",
+      "clarityDesc": "Everything from attendance punches to leave balances update live across all departments.",
+      "stat1Value": "0 Silos",
+      "stat1Label": "Unified workforce records",
+      "stat2Value": "45% Faster",
+      "stat2Label": "Daily approval workflows",
+      "stat3Value": "100% Audit-Ready",
+      "stat3Label": "Compliance & policy tracking",
       "pills": [
         {
           "title": "Zero Data Silos",
@@ -528,6 +549,15 @@
       "badge": "Core Platform Capabilities",
       "title": "Everything You Need to Run HR at Scale",
       "subtitle": "Built with calm, operational clarity to empower both HR leaders and their employees.",
+      "platformLabel": "WiseWork Platform",
+      "badges": {
+        "employees": "Employee Management",
+        "attendance": "Attendance & Time",
+        "leaves": "Leave Management",
+        "performance": "Performance KPIs",
+        "reports": "Reports & Analytics",
+        "aiInsights": "Talent Intelligence"
+      },
       "items": {
         "employees": {
           "title": "Employee Directory & Profiles",
@@ -559,6 +589,26 @@
       "badge": "Tailored Experience",
       "title": "Designed for Every Stakeholder",
       "subtitle": "WiseWork adapts to each user role, providing relevant tools and clean interfaces without clutter.",
+      "preview": {
+        "hr": {
+          "section": "HR Overview",
+          "title": "Operational Dashboard"
+        },
+        "employee": {
+          "section": "Employee Portal",
+          "greeting": "Good morning",
+          "leaveBalance": "Leave Balance",
+          "leaveDays": "14 days",
+          "attendance": "Attendance",
+          "goalProgress": "Goal progress",
+          "requestLeave": "Request Leave"
+        },
+        "manager": {
+          "section": "Manager Workspace",
+          "title": "Approval Center",
+          "teamAttendance": "Team attendance"
+        }
+      },
       "aiBanner": {
         "kicker": "SMARTER DECISIONS, POWERED BY DATA",
         "titlePart1": "Turn HR data into ",
@@ -688,8 +738,10 @@
       "subtitle": "Choose the ideal tier for your organization. Upgrade or customize anytime as your team expands.",
       "recommendedBadge": "Most Popular",
       "period": "/month",
+      "whatsIncluded": "What's included",
       "basic": {
         "name": "Starter",
+        "audience": "For teams getting started",
         "price": "",
         "userPeriod": "per employee / month",
         "desc": "Essential people operations for small teams and startups.",
@@ -703,6 +755,7 @@
       },
       "pro": {
         "name": "Professional",
+        "audience": "For growing organizations",
         "price": "",
         "userPeriod": "per employee / month",
         "desc": "Complete workforce management with performance & AI insights.",
@@ -718,6 +771,7 @@
       },
       "enterprise": {
         "name": "Enterprise",
+        "audience": "For large enterprise teams",
         "price": "Custom",
         "userPeriod": "tailored for your organization",
         "desc": "Maximum flexibility, dedicated infrastructure, and SLA guarantee.",
@@ -754,6 +808,7 @@
     },
     "footer": {
       "tagline": "Corporate, trustworthy, and operational workforce management system built for modern teams.",
+      "enterpriseLabel": "Enterprise Grade People Operations Platform",
       "platformTitle": "Platform",
       "resourcesTitle": "Resources",
       "companyTitle": "Company",

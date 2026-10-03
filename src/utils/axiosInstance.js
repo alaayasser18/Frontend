@@ -1,17 +1,17 @@
 import axios from "axios";
 
+console.log("API URL:", import.meta.env.VITE_API_BASE_URL);
+
 const axiosInstance = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL || "ps://nontelepathically-pamphletary-cyndi.ngrok-free.dev/api/",
-
+  baseURL:
+    import.meta.env.VITE_API_BASE_URL ||
+    "https://nontelepathically-pamphletary-cyndi.ngrok-free.dev/api/",
   timeout: 15000,
-
   headers: {
-    "Content-Type": "application/json",
     Accept: "application/json",
+    "ngrok-skip-browser-warning": "true", // <-- ده المهم
   },
 });
-
-// Add token to requests
 axiosInstance.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem("token");
@@ -22,22 +22,43 @@ axiosInstance.interceptors.request.use(
 
     return config;
   },
-  (error) => {
-    return Promise.reject(error);
-  },
+  (error) => Promise.reject(error),
 );
 
-// Handle unauthorized requests
 axiosInstance.interceptors.response.use(
   (response) => response,
 
   (error) => {
-    if (
-      error.response?.status === 401 &&
-      !window.location.pathname.includes("/login")
-    ) {
+    if (error.response?.status === 401) {
       localStorage.removeItem("token");
-      window.location.href = "/login";
+      localStorage.removeItem("user");
+      localStorage.removeItem("role");
+      localStorage.removeItem("permissions");
+      localStorage.removeItem("currentUser");
+      localStorage.removeItem("admin");
+      localStorage.removeItem("auth_user");
+      localStorage.removeItem("rememberMe");
+
+      if (typeof window !== "undefined") {
+        window.dispatchEvent(new CustomEvent("auth:unauthorized"));
+
+        const path = window.location.pathname;
+
+        const isAuthPage =
+          path.includes("/login") ||
+          path.includes("/register") ||
+          path.includes("/ForgotPassword") ||
+          path.includes("/VerifyOTP") ||
+          path.includes("/ResetPassword");
+
+        if (!isAuthPage) {
+          const redirectTo = path.startsWith("/admin")
+            ? "/owner/login"
+            : "/login";
+
+          window.location.href = redirectTo;
+        }
+      }
     }
 
     return Promise.reject(error);
@@ -45,4 +66,3 @@ axiosInstance.interceptors.response.use(
 );
 
 export default axiosInstance;
-export { axiosInstance };

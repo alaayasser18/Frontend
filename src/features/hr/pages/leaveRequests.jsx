@@ -144,7 +144,7 @@ const LeaveRequests = () => {
       dates: t(request.datesKey),
       balance: t(request.balanceKey),
     }));
-  }, [requests, i18n.language, t]);
+  }, [requests, t]);
 
   const showMessage = (type, text) => {
     setMessage({

@@ -1,5 +1,5 @@
 import { NavLink, useLocation } from "react-router-dom";
-import { FiArrowRight, FiMoreHorizontal } from "react-icons/fi";
+import { FiArrowRight, FiMoreHorizontal, FiX } from "react-icons/fi";
 import { LuSparkles } from "react-icons/lu";
 import { useTranslation } from "react-i18next";
 
@@ -55,14 +55,13 @@ const Sidebar = ({ role = "admin", isOpen = false, onClose }) => {
   let userInfo;
 
   if (isAdminPage) {
-    const adminName =
-      (activeUser?.role === "admin" || !activeUser?.role) && activeUser?.name
-        ? isRtl && activeUser?.nameAr
-          ? activeUser.nameAr
-          : activeUser.name
-        : activeUser?.fullName ||
-          activeUser?.username ||
-          (isRtl ? "أحمد ناصر" : "Ahmed Nasser");
+    const adminName = activeUser?.name
+      ? isRtl && activeUser?.nameAr
+        ? activeUser.nameAr
+        : activeUser.name
+      : activeUser?.fullName ||
+        activeUser?.username ||
+        (isRtl ? "أحمد ناصر" : "Ahmed Nasser");
 
     const adminAvatarText = activeUser?.initials
       ? activeUser.initials.toUpperCase()
@@ -79,6 +78,7 @@ const Sidebar = ({ role = "admin", isOpen = false, onClose }) => {
     userInfo = {
       displayName: adminName,
       displayTitle:
+        activeUser?.role_label ||
         activeUser?.jobTitle ||
         activeUser?.roleTitle ||
         (isRtl ? "مسؤول النظام" : "Administrator"),
@@ -88,20 +88,22 @@ const Sidebar = ({ role = "admin", isOpen = false, onClose }) => {
     };
   } else if (effectiveRole === "hr") {
     userInfo = {
-      displayName:
-        activeUser?.role === "hr" && activeUser?.name
-          ? isRtl && activeUser?.nameAr
-            ? activeUser.nameAr
-            : activeUser.name
-          : isRtl
-            ? "مصطفى خليل"
-            : "Mostafa Khalil",
+      displayName: activeUser?.name
+        ? isRtl && activeUser?.nameAr
+          ? activeUser.nameAr
+          : activeUser.name
+        : isRtl
+          ? "مصطفى خليل"
+          : "Mostafa Khalil",
 
-      displayTitle: isRtl ? "مسؤول موارد بشرية" : "HR Specialist",
+      displayTitle:
+        activeUser?.role_label ||
+        activeUser?.job_title ||
+        (isRtl ? "مسؤول موارد بشرية" : "HR Specialist"),
 
       avatarText:
-        activeUser?.role === "hr" && activeUser?.initials
-          ? activeUser.initials
+        activeUser?.initials
+          ? activeUser.initials.toUpperCase()
           : "MK",
 
       avatarBg: "#ede9fe",
@@ -109,20 +111,22 @@ const Sidebar = ({ role = "admin", isOpen = false, onClose }) => {
     };
   } else if (effectiveRole === "manager") {
     userInfo = {
-      displayName:
-        activeUser?.role === "manager" && activeUser?.name
-          ? isRtl && activeUser?.nameAr
-            ? activeUser.nameAr
-            : activeUser.name
-          : isRtl
-            ? "ليلى حسن"
-            : "Layla Hassan",
+      displayName: activeUser?.name
+        ? isRtl && activeUser?.nameAr
+          ? activeUser.nameAr
+          : activeUser.name
+        : isRtl
+          ? "ليلى حسن"
+          : "Layla Hassan",
 
-      displayTitle: isRtl ? "مدير الفريق" : "Manager",
+      displayTitle:
+        activeUser?.role_label ||
+        activeUser?.job_title ||
+        (isRtl ? "مدير الفريق" : "Manager"),
 
       avatarText:
-        activeUser?.role === "manager" && activeUser?.initials
-          ? activeUser.initials
+        activeUser?.initials
+          ? activeUser.initials.toUpperCase()
           : "LH",
 
       avatarBg: "#fef3c7",
@@ -130,20 +134,22 @@ const Sidebar = ({ role = "admin", isOpen = false, onClose }) => {
     };
   } else {
     userInfo = {
-      displayName:
-        activeUser?.role === "employee" && activeUser?.name
-          ? isRtl && activeUser?.nameAr
-            ? activeUser.nameAr
-            : activeUser.name
-          : isRtl
-            ? "عمر حداد"
-            : "Omar Haddad",
+      displayName: activeUser?.name
+        ? isRtl && activeUser?.nameAr
+          ? activeUser.nameAr
+          : activeUser.name
+        : isRtl
+          ? "عمر حداد"
+          : "Omar Haddad",
 
-      displayTitle: isRtl ? "محلل منتجات أول" : "Senior Product Analyst",
+      displayTitle:
+        activeUser?.role_label ||
+        activeUser?.job_title ||
+        (isRtl ? "محلل منتجات أول" : "Senior Product Analyst"),
 
       avatarText:
-        activeUser?.role === "employee" && activeUser?.initials
-          ? activeUser.initials
+        activeUser?.initials
+          ? activeUser.initials.toUpperCase()
           : "OH",
 
       avatarBg: "#d7eee9",
@@ -188,7 +194,7 @@ const Sidebar = ({ role = "admin", isOpen = false, onClose }) => {
           className="
             fixed
             inset-0
-            z-[35]
+            z-[45]
             bg-[rgba(16,42,67,0.5)]
             lg:hidden
           "
@@ -209,7 +215,7 @@ const Sidebar = ({ role = "admin", isOpen = false, onClose }) => {
           ${sidebarPosition}
           top-0
           bottom-0
-          z-40
+          z-50
 
           flex
           w-[256px]
@@ -246,39 +252,50 @@ const Sidebar = ({ role = "admin", isOpen = false, onClose }) => {
             mb-6
             flex
             items-center
-            gap-3
+            justify-between
             px-2
             shrink-0
           "
         >
-          <img
-            src={logoImg}
-            alt={`${APP_NAME} Logo`}
-            className="
-              h-8
-              w-8
-              shrink-0
-              rounded-xl
-            "
-          />
+          <div className="flex items-center gap-3">
+            <img
+              src={logoImg}
+              alt={`${APP_NAME} Logo`}
+              className="
+                h-8
+                w-8
+                shrink-0
+                rounded-xl
+              "
+            />
 
-          <span
-            className="
-              text-lg
-              font-bold
-              tracking-tight
-              text-white
-            "
-          >
-            {BRAND_NAME.prefix}
             <span
-              style={{
-                color: BRAND_NAME.suffixColor,
-              }}
+              className="
+                text-lg
+                font-bold
+                tracking-tight
+                text-white
+              "
             >
-              {BRAND_NAME.suffix}
+              {BRAND_NAME.prefix}
+              <span
+                style={{
+                  color: BRAND_NAME.suffixColor,
+                }}
+              >
+                {BRAND_NAME.suffix}
+              </span>
             </span>
-          </span>
+          </div>
+
+          <button
+            type="button"
+            onClick={onClose}
+            className="lg:hidden p-1.5 text-[#9fb3c8] hover:text-white rounded-lg hover:bg-[#294861] transition cursor-pointer"
+            aria-label="Close Sidebar"
+          >
+            <FiX size={18} />
+          </button>
         </div>
 
         {/* =========================

@@ -63,23 +63,37 @@
       "workEmail": "Work Email",
       "emailPlaceholder": "name@company.com",
       "sendCode": "Send Verification Code",
+      "sending": "Sending...",
       "backToSignIn": "← Back to Sign In",
-      "emailRequired": "Please enter your work email.",
-      "otpSent": "OTP sent to {{email}}"
+      "emailRequired": "Please enter your email address.",
+      "invalidEmail": "Please enter a valid email address.",
+      "otpSent": "OTP sent successfully!",
+      "emailNotFound": "This email address was not found.",
+      "tooManyRequests": "Too many attempts. Please try again later.",
+      "errorGeneric": "Something went wrong. Please try again."
     },
     "verifyOtp": {
       "title": "Verify Your Email",
       "subtitle": "Enter the 6-digit verification code sent to your email.",
       "codeLabel": "Verification Code",
       "verifyButton": "Verify Code",
+      "verifying": "Verifying...",
       "resendCode": "Resend Code",
       "resendPrompt": "Resend code",
       "resendIn": "in {{time}}",
       "didntReceive": "Didn't receive the code?",
+      "sending": "Sending...",
       "backToSignIn": "← Back to Sign In",
+      "emailSentTo": "We sent the verification code to",
+      "emailNotFound": "Email not found. Please request a new OTP.",
       "codeLengthError": "Please enter the 6-digit verification code.",
+      "validationError": "Invalid or expired OTP.",
       "verifiedSuccess": "OTP verified successfully!",
       "resendSuccess": "A new verification code has been sent!",
+      "resendError": "Unable to resend OTP. Please try again.",
+      "tooManyRequests": "Too many attempts. Please try again later.",
+      "errorGeneric": "Something went wrong. Please try again.",
+      "resetTokenMissing": "Reset token was not received.",
       "verify": "Verify Code"
     },
     "resetPassword": {
@@ -98,6 +112,7 @@
       "errorRequirements": "Please meet all password requirements.",
       "errorMismatch": "Passwords do not match.",
       "errorGeneric": "Something went wrong. Please try again.",
+      "success": "Password reset successfully!",
       "resetting": "Resetting...",
       "resetButton": "Reset password"
     },
@@ -137,7 +152,7 @@
       "errorRequired": "Please fill in all required fields.",
       "errorRequirements": "Please make sure your password meets all requirements.",
       "errorMismatch": "Passwords do not match.",
-      "successMessage": "Account created successfully for {{firstName}} {{lastName}}.",
+      "successMessage": "Account created successfully.",
       "showPassword": "Show password",
       "hidePassword": "Hide password",
       "showConfirmPassword": "Show confirm password",
@@ -463,7 +478,10 @@
       "plans": "Plans",
       "contact": "Contact",
       "signIn": "Sign In",
-      "getStarted": "Get Started"
+      "getStarted": "Get Started",
+      "dashboard": "Dashboard",
+      "mobileAccount": "Account",
+      "mobileWelcome": "Welcome"
     },
     "hero": {
       "badge": "Unified People Operations Platform",
@@ -483,7 +501,17 @@
         "pendingRequestsVal": "12 items",
         "aiInsightTitle": "Workforce Talent Insight",
         "aiInsightText": "3 engineers match Senior Fullstack requirements based on Q3 skill progression.",
-        "quickAction": "Review Candidates"
+        "quickAction": "Review Candidates",
+        "shiftScheduled": "Shift Scheduled",
+        "shiftTime": "Today, 09:00 AM • Main Branch",
+        "portalLabel": "Enterprise Operations",
+        "activeQuarter": "Active Q3",
+        "systemOperational": "System Operational",
+        "weeklyPresence": "Weekly Workforce Presence",
+        "weeklyTrend": "+4.2% this week",
+        "insightLabel": "Insight:",
+        "leaveApproved": "Leave Request Approved",
+        "leaveEmployee": "Sarah Jenkins • Annual Leave"
       }
     },
     "about": {
@@ -494,6 +522,14 @@
       "problemDesc": "HR departments struggle with scattered employee data, disconnected attendance tools, delayed review cycles, and blind talent matching without actionable data.",
       "solutionTitle": "The WiseWork Solution",
       "solutionDesc": "A single, unified workspace combining core HR administration with cutting-edge talent intelligence and intuitive self-service portals.",
+      "clarityTitle": "Real-Time Operational Clarity",
+      "clarityDesc": "Everything from attendance punches to leave balances update live across all departments.",
+      "stat1Value": "0 Silos",
+      "stat1Label": "Unified workforce records",
+      "stat2Value": "45% Faster",
+      "stat2Label": "Daily approval workflows",
+      "stat3Value": "100% Audit-Ready",
+      "stat3Label": "Compliance & policy tracking",
       "pills": [
         {
           "title": "Zero Data Silos",
@@ -513,6 +549,15 @@
       "badge": "Core Platform Capabilities",
       "title": "Everything You Need to Run HR at Scale",
       "subtitle": "Built with calm, operational clarity to empower both HR leaders and their employees.",
+      "platformLabel": "WiseWork Platform",
+      "badges": {
+        "employees": "Employee Management",
+        "attendance": "Attendance & Time",
+        "leaves": "Leave Management",
+        "performance": "Performance KPIs",
+        "reports": "Reports & Analytics",
+        "aiInsights": "Talent Intelligence"
+      },
       "items": {
         "employees": {
           "title": "Employee Directory & Profiles",
@@ -544,6 +589,26 @@
       "badge": "Tailored Experience",
       "title": "Designed for Every Stakeholder",
       "subtitle": "WiseWork adapts to each user role, providing relevant tools and clean interfaces without clutter.",
+      "preview": {
+        "hr": {
+          "section": "HR Overview",
+          "title": "Operational Dashboard"
+        },
+        "employee": {
+          "section": "Employee Portal",
+          "greeting": "Good morning",
+          "leaveBalance": "Leave Balance",
+          "leaveDays": "14 days",
+          "attendance": "Attendance",
+          "goalProgress": "Goal progress",
+          "requestLeave": "Request Leave"
+        },
+        "manager": {
+          "section": "Manager Workspace",
+          "title": "Approval Center",
+          "teamAttendance": "Team attendance"
+        }
+      },
       "aiBanner": {
         "kicker": "SMARTER DECISIONS, POWERED BY DATA",
         "titlePart1": "Turn HR data into ",
@@ -673,8 +738,10 @@
       "subtitle": "Choose the ideal tier for your organization. Upgrade or customize anytime as your team expands.",
       "recommendedBadge": "Most Popular",
       "period": "/month",
+      "whatsIncluded": "What's included",
       "basic": {
         "name": "Starter",
+        "audience": "For teams getting started",
         "price": "",
         "userPeriod": "per employee / month",
         "desc": "Essential people operations for small teams and startups.",
@@ -688,6 +755,7 @@
       },
       "pro": {
         "name": "Professional",
+        "audience": "For growing organizations",
         "price": "",
         "userPeriod": "per employee / month",
         "desc": "Complete workforce management with performance & AI insights.",
@@ -703,6 +771,7 @@
       },
       "enterprise": {
         "name": "Enterprise",
+        "audience": "For large enterprise teams",
         "price": "Custom",
         "userPeriod": "tailored for your organization",
         "desc": "Maximum flexibility, dedicated infrastructure, and SLA guarantee.",
@@ -739,6 +808,7 @@
     },
     "footer": {
       "tagline": "Corporate, trustworthy, and operational workforce management system built for modern teams.",
+      "enterpriseLabel": "Enterprise Grade People Operations Platform",
       "platformTitle": "Platform",
       "resourcesTitle": "Resources",
       "companyTitle": "Company",
@@ -780,6 +850,7 @@
     ]
   },
   "portal": {
+    "dashboardTitle": "Dashboard",
     "holidays": "Holidays & Seasons",
     "aiInsights": "AI Insights",
     "performanceMetrics": "Performance Metrics",
@@ -826,6 +897,7 @@
     "users": "Users",
     "performance": "Performance & Goals",
     "myPerformance": "My Performance",
+    "myGoals": "My Goals",
     "auditLogs": "Audit Logs",
     "administration": "Administration",
     "wiseWork": "WiseWork",
@@ -1093,8 +1165,35 @@
     "department": "Department",
     "cancel": "Cancel",
     "createUser": "Create user",
+    "creating": "Creating...",
     "exportSuccessTitle": "Export successful",
-    "exportSuccessMessage": "User configuration exported successfully."
+    "exportSuccessMessage": "User configuration exported successfully.",
+    "colPhone": "PHONE",
+    "colJobTitle": "JOB TITLE",
+    "colPermissions": "PERMISSIONS",
+    "jobTitle": "Job title",
+    "jobTitlePlaceholder": "e.g. Software Engineer",
+    "password": "Password",
+    "passwordPlaceholder": "Minimum 8 characters",
+    "employmentType": "Employment type",
+    "fullTime": "Full-time",
+    "partTime": "Part-time",
+    "contract": "Contract",
+    "startDate": "Start date",
+    "phone": "Phone number",
+    "phonePlaceholder": "e.g. +201234567890",
+    "address": "Address",
+    "addressPlaceholder": "e.g. Cairo, Egypt",
+    "permissions": "Permissions",
+    "selectPermissions": "Select permissions",
+    "loadingPermissions": "Loading permissions...",
+    "noPermissionsFound": "No permissions available.",
+    "loadingEmployees": "Loading employees...",
+    "noEmployeesFound": "No employees found.",
+    "createSuccess": "Employee created successfully.",
+    "createError": "Failed to create employee.",
+    "validationError": "Please fill in all required fields.",
+    "filterOwner": "Owner"
   },
   "auditLogs": {
     "title": "Audit Logs",
@@ -1164,6 +1263,8 @@
     "jobTitleLabel": "Job title",
     "cancelEdit": "Cancel",
     "saveChanges": "Save changes",
+    "addressLabel": "Address",
+    "avatarLabel": "Profile Image",
     "logoutConfirmTitle": "Confirm Logout",
     "logoutConfirmMessage": "Are you sure you want to log out of your account?",
     "confirmLogout": "Log out",
@@ -1482,6 +1583,46 @@
       "lastReview": "Annual Performance Review",
       "lastReviewDate": "December 2025 • Rating: Meets Expectations (4.2/5.0)",
       "close": "Close"
+    }
+  },
+  "employeeGoals": {
+    "eyebrow": "GROWTH & DEVELOPMENT",
+    "title": "My goals",
+    "subtitle": "Track your professional goals and development milestones.",
+    "filters": {
+      "all": "All",
+      "active": "Active",
+      "completed": "Completed",
+      "cancelled": "Cancelled"
+    },
+    "status": {
+      "active": "Active",
+      "completed": "Completed",
+      "cancelled": "Cancelled"
+    },
+    "loading": "Loading goals...",
+    "retry": "Try again",
+    "viewDetails": "View details",
+    "markCompleted": "Mark as completed",
+    "completing": "Completing...",
+    "completedSuccess": "Goal marked as completed successfully.",
+    "targetDate": "Target",
+    "overdue": "Overdue",
+    "created": "Created",
+    "noGoals": "No goals found",
+    "noGoalsDesc": "No goals match the selected filter.",
+    "showing": "Showing",
+    "of": "of",
+    "goalsLabel": "goals",
+    "loadingDetails": "Loading details...",
+    "goalDetails": "GOAL DETAILS",
+    "description": "Description",
+    "targetDateLabel": "Target date",
+    "createdAt": "Created at",
+    "errors": {
+      "fetchFailed": "Failed to retrieve goals.",
+      "detailFailed": "Failed to retrieve goal details.",
+      "completeFailed": "Failed to mark goal as completed."
     }
   },
   "hrDashboard": {
@@ -2158,6 +2299,57 @@
       "totalDaysPlaceholder": "Total days off",
       "cancel": "Cancel",
       "save": "Save changes"
+    }
+  },
+  "manager": {
+    "goals": {
+      "breadcrumb": "Manager · Team Goals",
+      "title": "Team Goals & OKRs",
+      "description": "Assign, track, and manage goals for your team members.",
+      "creating": "Creating...",
+      "createGoal": "Create Goal",
+      "editGoal": "Edit Goal",
+      "createNewGoal": "Create New Goal",
+      "updateGoalDetails": "Update the goal details below.",
+      "assignGoal": "Assign a new goal to a team member.",
+      "employee": "Employee",
+      "loadingEmployees": "Loading employees...",
+      "selectEmployee": "Select an employee",
+      "goalTitle": "Goal Title",
+      "enterGoalTitle": "Enter goal title...",
+      "descriptionLabel": "Description",
+      "enterGoalDescription": "Describe the goal and expected outcomes...",
+      "targetDate": "Target Date",
+      "status": "Status",
+      "statuses": {
+        "active": "Active",
+        "completed": "Completed",
+        "cancelled": "Cancelled",
+        "unknown": "Unknown"
+      },
+      "saving": "Saving...",
+      "saveChanges": "Save Changes",
+      "selectEmployeeError": "Please select an employee.",
+      "titleRequired": "Goal title is required.",
+      "dateRequired": "Target date is required.",
+      "cannotModify": "Completed or cancelled goals cannot be modified.",
+      "createSuccess": "Goal created successfully!",
+      "createError": "Failed to create goal. Please try again.",
+      "updateSuccess": "Goal updated successfully!",
+      "updateError": "Failed to update goal. Please try again.",
+      "loading": "Loading goals...",
+      "loadError": "Failed to Load Goals",
+      "loadErrorDescription": "Something went wrong while loading team goals. Please try again.",
+      "tryAgain": "Try Again",
+      "updating": "Refreshing...",
+      "noGoals": "No Goals Yet",
+      "createGoalDescription": "Start by creating a new goal and assigning it to a team member.",
+      "assignedTo": "Assigned to",
+      "unknownEmployee": "Unknown Employee",
+      "noDescription": "No description provided.",
+      "created": "Created",
+      "editGoalTitle": "Edit this goal",
+      "unknownStatus": "Unknown"
     }
   }
 }

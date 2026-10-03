@@ -160,7 +160,10 @@
       "fullName": "Full Name",
       "fullNamePlaceholder": "John Doe",
       "workEmail": "Work Email",
-      "emailPlaceholder": "name@company.com"
+      "emailPlaceholder": "name@company.com",
+      "creatingAccount": "Creating Account...",
+      "tooManyRequests": "Too many attempts. Please try again later.",
+      "errorGeneric": "Something went wrong. Please try again."
     },
     "verifyEmail": {
       "title": "Verify Your Email",

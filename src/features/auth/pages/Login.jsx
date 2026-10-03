@@ -7,6 +7,7 @@ import toast from "react-hot-toast";
 import { motion } from "framer-motion";
 import { useAuth } from "../../../context/AuthContext";
 import { ROLE_ROUTES } from "../../../utils/roleRoutes";
+import { parseBackendMessages } from "../../../utils/parseBackendMessages";
 
 import {
   FiMail,
@@ -184,22 +185,9 @@ export default function Login({ isOwner }) {
       ========================= */
 
       onError: (error) => {
-        console.log("=================================");
-        console.log("LOGIN ERROR");
-        console.log("=================================");
-
-        console.log("Login error:", error);
-        console.log("Status:", error?.response?.status);
-        console.log("Backend response:", error?.response?.data);
-        console.log("Validation errors:", error?.response?.data?.errors);
-
         const status = error?.response?.status;
-
         const responseData = error?.response?.data;
-
         const backendMessage = responseData?.message;
-
-        const validationErrors = responseData?.errors;
 
         /* =========================
            403
@@ -221,23 +209,43 @@ export default function Login({ isOwner }) {
         /* =========================
            422
            VALIDATION / INVALID CREDENTIALS
+           Backend combines multiple validation messages into one string.
         ========================= */
 
         if (status === 422) {
-          const emailError = validationErrors?.email?.[0];
+          if (backendMessage) {
+            const messages = parseBackendMessages(backendMessage);
 
-          if (emailError) {
-            toast.error(emailError);
-            return;
-          }
-
-          toast.error(
-            backendMessage ||
+            if (messages.length > 1) {
+              // Render as a bulleted list inside the toast
+              toast.error(
+                (t_ref) => (
+                  <ul
+                    style={{
+                      margin: 0,
+                      paddingLeft: "1.1rem",
+                      fontSize: "13px",
+                      lineHeight: 1.6,
+                    }}
+                  >
+                    {messages.map((msg, i) => (
+                      <li key={i}>{msg}</li>
+                    ))}
+                  </ul>
+                ),
+                { duration: 5000 },
+              );
+            } else {
+              toast.error(messages[0]);
+            }
+          } else {
+            toast.error(
               t(
                 "auth.login.invalidCredentials",
                 "These credentials do not match our records.",
               ),
-          );
+            );
+          }
 
           return;
         }

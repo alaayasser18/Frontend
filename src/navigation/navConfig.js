@@ -23,6 +23,7 @@ import {
   FiBookOpen,
   FiUser,
   FiBell,
+  FiTarget,
 } from "react-icons/fi";
 
 import {
@@ -309,6 +310,12 @@ export const navConfig = {
       title: "My Performance",
       path: "/employee/performance",
       icon: FiTrendingUp,
+    },
+    {
+      titleKey: "portal.myGoals",
+      title: "My Goals",
+      path: "/employee/goals",
+      icon: FiTarget,
     },
     {
       titleKey: "portal.aiAssistant",

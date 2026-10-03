@@ -897,6 +897,7 @@
     "users": "Users",
     "performance": "Performance & Goals",
     "myPerformance": "My Performance",
+    "myGoals": "My Goals",
     "auditLogs": "Audit Logs",
     "administration": "Administration",
     "wiseWork": "WiseWork",
@@ -1584,6 +1585,46 @@
       "close": "Close"
     }
   },
+  "employeeGoals": {
+    "eyebrow": "GROWTH & DEVELOPMENT",
+    "title": "My goals",
+    "subtitle": "Track your professional goals and development milestones.",
+    "filters": {
+      "all": "All",
+      "active": "Active",
+      "completed": "Completed",
+      "cancelled": "Cancelled"
+    },
+    "status": {
+      "active": "Active",
+      "completed": "Completed",
+      "cancelled": "Cancelled"
+    },
+    "loading": "Loading goals...",
+    "retry": "Try again",
+    "viewDetails": "View details",
+    "markCompleted": "Mark as completed",
+    "completing": "Completing...",
+    "completedSuccess": "Goal marked as completed successfully.",
+    "targetDate": "Target",
+    "overdue": "Overdue",
+    "created": "Created",
+    "noGoals": "No goals found",
+    "noGoalsDesc": "No goals match the selected filter.",
+    "showing": "Showing",
+    "of": "of",
+    "goalsLabel": "goals",
+    "loadingDetails": "Loading details...",
+    "goalDetails": "GOAL DETAILS",
+    "description": "Description",
+    "targetDateLabel": "Target date",
+    "createdAt": "Created at",
+    "errors": {
+      "fetchFailed": "Failed to retrieve goals.",
+      "detailFailed": "Failed to retrieve goal details.",
+      "completeFailed": "Failed to mark goal as completed."
+    }
+  },
   "hrDashboard": {
     "title": "HR Command Center",
     "subtitle": "A live operational view of workforce health, approvals, and payroll readiness.",
@@ -2258,6 +2299,57 @@
       "totalDaysPlaceholder": "Total days off",
       "cancel": "Cancel",
       "save": "Save changes"
+    }
+  },
+  "manager": {
+    "goals": {
+      "breadcrumb": "Manager · Team Goals",
+      "title": "Team Goals & OKRs",
+      "description": "Assign, track, and manage goals for your team members.",
+      "creating": "Creating...",
+      "createGoal": "Create Goal",
+      "editGoal": "Edit Goal",
+      "createNewGoal": "Create New Goal",
+      "updateGoalDetails": "Update the goal details below.",
+      "assignGoal": "Assign a new goal to a team member.",
+      "employee": "Employee",
+      "loadingEmployees": "Loading employees...",
+      "selectEmployee": "Select an employee",
+      "goalTitle": "Goal Title",
+      "enterGoalTitle": "Enter goal title...",
+      "descriptionLabel": "Description",
+      "enterGoalDescription": "Describe the goal and expected outcomes...",
+      "targetDate": "Target Date",
+      "status": "Status",
+      "statuses": {
+        "active": "Active",
+        "completed": "Completed",
+        "cancelled": "Cancelled",
+        "unknown": "Unknown"
+      },
+      "saving": "Saving...",
+      "saveChanges": "Save Changes",
+      "selectEmployeeError": "Please select an employee.",
+      "titleRequired": "Goal title is required.",
+      "dateRequired": "Target date is required.",
+      "cannotModify": "Completed or cancelled goals cannot be modified.",
+      "createSuccess": "Goal created successfully!",
+      "createError": "Failed to create goal. Please try again.",
+      "updateSuccess": "Goal updated successfully!",
+      "updateError": "Failed to update goal. Please try again.",
+      "loading": "Loading goals...",
+      "loadError": "Failed to Load Goals",
+      "loadErrorDescription": "Something went wrong while loading team goals. Please try again.",
+      "tryAgain": "Try Again",
+      "updating": "Refreshing...",
+      "noGoals": "No Goals Yet",
+      "createGoalDescription": "Start by creating a new goal and assigning it to a team member.",
+      "assignedTo": "Assigned to",
+      "unknownEmployee": "Unknown Employee",
+      "noDescription": "No description provided.",
+      "created": "Created",
+      "editGoalTitle": "Edit this goal",
+      "unknownStatus": "Unknown"
     }
   }
 }

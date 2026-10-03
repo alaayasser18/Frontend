@@ -59,41 +59,27 @@
     },
     "forgotPassword": {
       "title": "نسيت كلمة المرور؟",
-      "subtitle": "أدخل بريدك الإلكتروني وسنرسل لك رمز التحقق.",
-      "workEmail": "البريد الإلكتروني",
+      "subtitle": "أدخل بريدك الإلكتروني للعمل وسنرسل لك رمز التحقق.",
+      "workEmail": "البريد الإلكتروني للعمل",
       "emailPlaceholder": "name@company.com",
       "sendCode": "إرسال رمز التحقق",
-      "sending": "جارٍ الإرسال...",
-      "backToSignIn": "← العودة لتسجيل الدخول",
-      "emailRequired": "من فضلك أدخل بريدك الإلكتروني.",
-      "invalidEmail": "من فضلك أدخل بريدًا إلكترونيًا صحيحًا.",
-      "otpSent": "تم إرسال رمز التحقق بنجاح!",
-      "emailNotFound": "هذا البريد الإلكتروني غير موجود.",
-      "tooManyRequests": "تم تجاوز عدد المحاولات المسموح بها. يرجى المحاولة لاحقًا.",
-      "errorGeneric": "حدث خطأ ما. يرجى المحاولة مرة أخرى."
+      "backToSignIn": "← العودة إلى تسجيل الدخول",
+      "emailRequired": "يرجى إدخال بريدك الإلكتروني للعمل.",
+      "otpSent": "تم إرسال رمز التحقق إلى {{email}}"
     },
     "verifyOtp": {
       "title": "تأكيد بريدك الإلكتروني",
       "subtitle": "أدخل رمز التحقق المكون من 6 أرقام المرسل إلى بريدك الإلكتروني.",
       "codeLabel": "رمز التحقق",
       "verifyButton": "تأكيد الرمز",
-      "verifying": "جارٍ التحقق...",
       "resendCode": "إعادة إرسال الرمز",
       "resendPrompt": "إعادة إرسال الرمز",
       "resendIn": "خلال {{time}}",
       "didntReceive": "لم يصلك الرمز؟",
-      "sending": "جارٍ الإرسال...",
       "backToSignIn": "← العودة إلى تسجيل الدخول",
-      "emailSentTo": "تم إرسال رمز التحقق إلى",
-      "emailNotFound": "البريد الإلكتروني غير موجود. يرجى طلب رمز جديد.",
       "codeLengthError": "يرجى إدخال رمز التحقق المكون من 6 أرقام.",
-      "validationError": "رمز التحقق غير صحيح أو منتهي الصلاحية.",
       "verifiedSuccess": "تم التحقق من الرمز بنجاح!",
       "resendSuccess": "تم إرسال رمز تحقق جديد بنجاح!",
-      "resendError": "تعذر إعادة إرسال الرمز. يرجى المحاولة مرة أخرى.",
-      "tooManyRequests": "محاولات كثيرة. يرجى المحاولة مرة أخرى لاحقًا.",
-      "errorGeneric": "حدث خطأ ما. يرجى المحاولة مرة أخرى.",
-      "resetTokenMissing": "لم يتم استلام رمز إعادة التعيين.",
       "verify": "تأكيد الرمز"
     },
     "resetPassword": {
@@ -112,7 +98,6 @@
       "errorRequirements": "يرجى استيفاء جميع شروط كلمة المرور.",
       "errorMismatch": "كلمتا المرور غير متطابقتين.",
       "errorGeneric": "حدث خطأ ما. يرجى المحاولة مرة أخرى.",
-      "success": "تم تغيير كلمة المرور بنجاح!",
       "resetting": "جاري إعادة التعيين...",
       "resetButton": "إعادة تعيين كلمة المرور"
     },
@@ -152,7 +137,7 @@
       "errorRequired": "يرجى ملء جميع الحقول المطلوبة.",
       "errorRequirements": "يرجى التأكد من استيفاء كلمة المرور لجميع الشروط.",
       "errorMismatch": "كلمتا المرور غير متطابقتين.",
-      "successMessage": "تم إنشاء الحساب بنجاح",
+      "successMessage": "تم إنشاء الحساب بنجاح لـ {{firstName}} {{lastName}}.",
       "showPassword": "إظهار كلمة المرور",
       "hidePassword": "إخفاء كلمة المرور",
       "showConfirmPassword": "إظهار تأكيد كلمة المرور",
@@ -181,6 +166,74 @@
     "recentActivity": "النشاط الأخير",
     "quickActions": "إجراءات سريعة",
     "welcomeMessage": "مرحبًا بعودتك إلى مساحة عملك"
+  },
+  "employees": {
+    "title": "الموظفون",
+    "subtitle": "إدارة سجلات الموظفين والأدوار وخطوط التقارير.",
+    "addEmployee": "إضافة موظف",
+    "records": "{{count}} سجل موظف",
+    "search": "البحث بالاسم أو الرقم التعريفي أو الوظيفة أو القسم",
+    "viewProfile": "عرض الملف الشخصي",
+    "noResults": "لم يتم العثور على موظفين.",
+    "table": {
+      "employee": "الموظف",
+      "role": "الوظيفة",
+      "department": "القسم",
+      "branch": "الفرع",
+      "status": "الحالة",
+      "action": "الإجراء"
+    },
+    "status": {
+      "present": "حاضر",
+      "late": "متأخر",
+      "onLeave": "في إجازة",
+      "absent": "غائب"
+    },
+    "data": {
+      "youssef": {
+        "name": "يوسف لطفي",
+        "role": "مصمم منتجات أول",
+        "department": "التصميم",
+        "branch": "المقر الرئيسي بالقاهرة"
+      },
+      "mariam": {
+        "name": "مريم حسن",
+        "role": "مدير هندسة",
+        "department": "الهندسة",
+        "branch": "المقر الرئيسي بالقاهرة"
+      },
+      "omar": {
+        "name": "عمر خالد",
+        "role": "تنفيذي مبيعات",
+        "department": "المبيعات",
+        "branch": "فرع الإسكندرية"
+      },
+      "nour": {
+        "name": "نور عادل",
+        "role": "أخصائي عمليات الأفراد",
+        "department": "الأفراد والثقافة",
+        "branch": "المقر الرئيسي بالقاهرة"
+      },
+      "karim": {
+        "name": "كريم أشرف",
+        "role": "قائد العمليات",
+        "department": "العمليات",
+        "branch": "فرع الإسكندرية"
+      }
+    },
+    "form": {
+      "subtitle": "أدخل بيانات الموظف أدناه.",
+      "name": "اسم الموظف",
+      "namePlaceholder": "الاسم الكامل",
+      "id": "الرقم التعريفي للموظف",
+      "role": "الوظيفة",
+      "rolePlaceholder": "المسمى الوظيفي",
+      "department": "القسم",
+      "departmentPlaceholder": "القسم",
+      "branch": "الفرع",
+      "branchPlaceholder": "الفرع",
+      "status": "الحالة"
+    }
   },
   "attendance": {
     "title": "الحضور والانصراف",
@@ -220,16 +273,6 @@
       "inProgress": "قيد التنفيذ",
       "underReview": "قيد المراجعة",
       "completed": "مكتملة"
-    },
-    "employeeTasks": {
-      "t1Title": "تقرير كفاءة العمليات للربع الثاني",
-      "t1Date": "موعد التسليم: 12 يونيو 2026",
-      "t2Title": "تطوير قائمة تأهيل وتدريب الموردين",
-      "t2Date": "موعد التسليم: 15 يونيو 2026",
-      "t3Title": "تحليل واستخلاص رؤى العملاء",
-      "t3Date": "موعد التسليم: 18 يونيو 2026",
-      "newTaskUpdate": "تحديث مهمة جديدة",
-      "submitReview": "إرسال للمراجعة"
     },
     "priority": {
       "high": "أولوية عالية",
@@ -374,9 +417,7 @@
     "score": "النتيجة",
     "improvementPlan": "خطة التحسين",
     "metrics": "المقاييس",
-    "operations": "العمليات",
-    "exportSuccessTitle": "تم التصدير بنجاح",
-    "exportSuccessMessage": "تم تصدير إعدادات الأداء بنجاح."
+    "operations": "العمليات"
   },
   "aiInsights": {
     "title": "رؤى الذكاء الاصطناعي",
@@ -478,10 +519,7 @@
       "plans": "الباقات",
       "contact": "تواصل معنا",
       "signIn": "تسجيل الدخول",
-      "getStarted": "ابدأ الآن",
-      "dashboard": "لوحة التحكم",
-      "mobileAccount": "الحساب",
-      "mobileWelcome": "مرحباً"
+      "getStarted": "ابدأ الآن"
     },
     "hero": {
       "badge": "المنظومة المتكاملة لإدارة الموارد البشرية",
@@ -501,17 +539,7 @@
         "pendingRequestsVal": "12 طلب",
         "aiInsightTitle": "تحليل ذكي للكفاءات",
         "aiInsightText": "3 مهندسين يطابقون متطلبات وظيفة مطور أول بناءً على مؤشرات الأداء للربع الثالث.",
-        "quickAction": "مراجعة المرشحين",
-        "shiftScheduled": "وردية مجدولة",
-        "shiftTime": "اليوم، 09:00 صباحاً • الفرع الرئيسي",
-        "portalLabel": "عمليات المؤسسة",
-        "activeQuarter": "الربع الثالث نشط",
-        "systemOperational": "النظام يعمل بكفاءة",
-        "weeklyPresence": "حضور القوى العاملة الأسبوعي",
-        "weeklyTrend": "+4.2% هذا الأسبوع",
-        "insightLabel": "رؤية:",
-        "leaveApproved": "تمت الموافقة على طلب الإجازة",
-        "leaveEmployee": "سارة جنكينز • إجازة سنوية"
+        "quickAction": "مراجعة المرشحين"
       }
     },
     "about": {
@@ -522,14 +550,6 @@
       "problemDesc": "تواجه أقسام الموارد البشرية تشتت بيانات الموظفين، أنظمة حضور منفصلة، تأخر في دورات التقييم، وغياب الرؤية الواضحة لمطابقة المهارات مع الفرص المناسبة.",
       "solutionTitle": "حل WiseWork المتكامل",
       "solutionDesc": "بيئة عمل موحدة تجمع العمليات الإدارية الأساسية مع تحليلات كفاءات متقدمة وبوابات خدمة ذاتية مريحة للموظفين.",
-      "clarityTitle": "وضوح تشغيلي فوري",
-      "clarityDesc": "كل شيء من تسجيل الحضور إلى أرصدة الإجازات يتحدث فوراً عبر جميع الأقسام.",
-      "stat1Value": "0 صوامع",
-      "stat1Label": "سجلات قوى عاملة موحدة",
-      "stat2Value": "45% أسرع",
-      "stat2Label": "سير عمل الموافقة اليومية",
-      "stat3Value": "100% جاهز للتدقيق",
-      "stat3Label": "تتبع الامتثال والسياسات",
       "pills": [
         {
           "title": "بيانات موحدة بلا تشتت",
@@ -549,15 +569,6 @@
       "badge": "إمكانيات المنصة",
       "title": "كل ما تحتاجه لإدارة منظومة العمل باحترافية",
       "subtitle": "واجهة تشغيلية هادئة وسلسة صُممت لتمكين مسؤولي الموارد البشرية والموظفين معاً.",
-      "platformLabel": "منصة WiseWork",
-      "badges": {
-        "employees": "إدارة الموظفين",
-        "attendance": "الحضور والوقت",
-        "leaves": "إدارة الإجازات",
-        "performance": "مؤشرات الأداء",
-        "reports": "التقارير والتحليلات",
-        "aiInsights": "استخبارات المواهب"
-      },
       "items": {
         "employees": {
           "title": "دليل وملفات الموظفين",
@@ -589,26 +600,6 @@
       "badge": "تجربة مخصصة",
       "title": "مصمم خصيصاً لكل دور في المنشأة",
       "subtitle": "يتكيف نظام WiseWork مع طبيعة صلاحيات كل مستخدم ليقدم الأدوات المناسبة دون تعقيد.",
-      "preview": {
-        "hr": {
-          "section": "لوحة الموارد البشرية",
-          "title": "لوحة العمليات"
-        },
-        "employee": {
-          "section": "بوابة الموظف",
-          "greeting": "صباح الخير",
-          "leaveBalance": "رصيد الإجازات",
-          "leaveDays": "14 يوماً",
-          "attendance": "الحضور",
-          "goalProgress": "تقدم الأهداف",
-          "requestLeave": "طلب إجازة"
-        },
-        "manager": {
-          "section": "بيئة عمل المدير",
-          "title": "مركز الموافقات",
-          "teamAttendance": "حضور الفريق"
-        }
-      },
       "aiBanner": {
         "kicker": "قرارات أذكى، مدعومة بالبيانات",
         "titlePart1": "حوّل بيانات الموارد البشرية إلى ",
@@ -738,10 +729,8 @@
       "subtitle": "اختر الخطة المناسبة لمنشأتك الآن، مع إمكانية الترقية أو التخصيص في أي وقت.",
       "recommendedBadge": "الأكثر اختياراً",
       "period": "/شهرياً",
-      "whatsIncluded": "ما يشمله الاشتراك",
       "basic": {
         "name": "الأساسية",
-        "audience": "للفرق في مرحلة الانطلاق",
         "price": "",
         "userPeriod": "لكل موظف / شهرياً",
         "desc": "العمليات الأساسية للشركات الناشئة والفرق الصغيرة.",
@@ -755,7 +744,6 @@
       },
       "pro": {
         "name": "المتقدمة",
-        "audience": "للمنشآت في مرحلة النمو",
         "price": "",
         "userPeriod": "لكل موظف / شهرياً",
         "desc": "إدارة متكاملة مع تقييم الأداء ومطابقة المهارات الذكية.",
@@ -771,7 +759,6 @@
       },
       "enterprise": {
         "name": "المؤسسات",
-        "audience": "للمنشآت الكبيرة والمؤسسات",
         "price": "مخصص",
         "userPeriod": "مصممة حسب متطلبات منشأتك",
         "desc": "مرونة قصوى، بنية تحتية مخصصة، واتفاقية مستوى خدمة SLA.",
@@ -808,7 +795,6 @@
     },
     "footer": {
       "tagline": "منظومة إدارة الموارد البشرية والعمليات المتكاملة الموثوقة لفرق العمل العصرية.",
-      "enterpriseLabel": "منصة متكاملة لعمليات الموارد البشرية على مستوى المؤسسات",
       "platformTitle": "المنصة",
       "resourcesTitle": "المصادر",
       "companyTitle": "الشركة",
@@ -850,7 +836,6 @@
     ]
   },
   "portal": {
-    "dashboardTitle": "لوحة التحكم",
     "holidays": "العطلات والمواسم",
     "aiInsights": "رؤى الذكاء الاصطناعي",
     "performanceMetrics": "مؤشرات الأداء",
@@ -941,57 +926,6 @@
     "notif3Desc": "تمت مزامنة أحدث قواعد وسياسات مساحة العمل بنجاح عبر منصة WiseWork.",
     "notif4Title": "تحديث صلاحيات الأدوار",
     "notif4Desc": "قامت سارة أحمد بتحديث الصلاحيات الإدارية لمساحة عمل الأفراد والثقافة.",
-    "notifSara1Title": "طلب وصول بصلاحيات المسؤول",
-    "notifSara1Desc": "طلب أحمد ناصر صلاحيات إدارية مرتفعة لوحدة المالية. بانتظار موافقتك.",
-    "notifSara2Title": "تقرير الموارد البشرية الشهري جاهز",
-    "notifSara2Desc": "تم إنشاء تقرير أداء الموارد البشرية لشهر سبتمبر 2026 وهو جاهز للمراجعة.",
-    "notifSara3Title": "صيانة مجدولة للنظام",
-    "notifSara3Desc": "ستخضع منصة WiseWork لصيانة مجدولة في 20 سبتمبر 2026 من 2:00 صباحاً حتى 4:00 صباحاً.",
-    "notifMostafa1Title": "5 طلبات إجازة بانتظار الموافقة",
-    "notifMostafa1Desc": "توجد 5 طلبات إجازة لموظفين بانتظار موافقتك. يرجى مراجعتها قبل نهاية اليوم.",
-    "notifMostafa2Title": "تهيئة موظف جديد",
-    "notifMostafa2Desc": "تمت إضافة 3 موظفين جدد إلى النظام وبانتظار تعيين إجراءات التهيئة والانضمام.",
-    "notifMostafa3Title": "تذكير بالموعد النهائي لمسير الرواتب",
-    "notifMostafa3Desc": "الموعد النهائي لمعالجة الرواتب الشهرية خلال 3 أيام. يرجى تدقيق جميع سجلات الحضور.",
-    "notifMostafa4Title": "تقرير حضور وانصراف الأقسام جاهز",
-    "notifMostafa4Desc": "تم تجميع تقرير حالات عدم انتظام الحضور لشهر سبتمبر لمقر القاهرة وهو جاهز للمراجعة.",
-    "notifMgr1Title": "طلب إجازة جديد بانتظار الموافقة",
-    "notifMgr1Desc": "قدمت سلمى نبيل طلب إجازة سنوية للفترة من 2 إلى 5 أكتوبر. يتطلب مراجعتك.",
-    "notifMgr2Title": "تسليم مهمة بانتظار المراجعة",
-    "notifMgr2Desc": "قام يوسف لطفي بتسليم مهمة 'تنفيذ مسار OAuth2' للمراجعة والاعتماد.",
-    "notifMgr3Title": "تذكير بتقييم أداء الفريق للربع الثالث",
-    "notifMgr3Desc": "أكمل 3 من أعضاء الفريق تقييماتهم الذاتية. يرجى إتمام مراجعات المدير قبل 15 أكتوبر.",
-    "notifMgr4Title": "تنبيه توزيع أعباء العمل",
-    "notifMgr4Desc": "اكتشف المساعد الذكي عبء عمل مرتفع في الدورة الحالية على مهندسين. يُنصح بإعادة توزيع المهام.",
-    "notifLayla1Title": "تمت الموافقة على طلب الإجازة",
-    "notifLayla1Desc": "تمت الموافقة على طلب الإجازة السنوية الخاص بك للفترة من 22 إلى 25 سبتمبر من قبل مديرك.",
-    "notifLayla2Title": "قسيمة راتب شهر سبتمبر متاحة",
-    "notifLayla2Desc": "قسيمة راتب شهر سبتمبر 2026 متاحة الآن ويمكنك تنزيلها من قسم الرواتب.",
-    "notifLayla3Title": "تذكير بالتقييم الذاتي للربع الثالث",
-    "notifLayla3Desc": "يرجى ملء نموذج التقييم الذاتي للربع الثالث قبل 25 سبتمبر 2026. يستغرق حوالي 10 دقائق.",
-    "notifEmp4Title": "تم إسناد مهمة جديدة لك",
-    "notifEmp4Desc": "تم إسناد مهمة 'تحديثات نظام التصميم' بأولوية عالية والمستحقة هذا الخميس.",
-    "twentyFiveMinAgo": "منذ 25 دقيقة",
-    "twoHoursAgo": "منذ ساعتين",
-    "threeHoursAgo": "منذ 3 ساعات",
-    "oneHourAgo": "منذ ساعة",
-    "sep16": "16 سبتمبر 2026",
-    "sep17": "17 سبتمبر 2026",
-    "sep18": "18 سبتمبر 2026",
-    "sep19": "19 سبتمبر 2026",
-    "reviewRequest": "مراجعة الطلب",
-    "reviewSubmission": "مراجعة التسليم",
-    "reviewLeaves": "مراجعة الإجازات",
-    "startOnboarding": "بدء التهيئة",
-    "viewPayroll": "عرض الرواتب",
-    "startEvaluation": "بدء التقييم",
-    "startReviews": "بدء المراجعات",
-    "viewLeave": "عرض الإجازة",
-    "viewPayslip": "عرض قسيمة الراتب",
-    "viewTask": "عرض المهمة",
-    "salmaNabil": "سلمى نبيل (مهندسة واجهات)",
-    "youssefLotfy": "يوسف لطفي (مهندس خلفيات برمجية)",
-    "engineeringTeam": "فريق الهندسة والبرمجيات",
     "cycleDetailsText": "دورة تقييم الأداء للربع الثالث 2026 نشطة حالياً في جميع أقسام وفروع الشركة.",
     "cycleNameLabel": "اسم الدورة:",
     "cycleNameVal": "مراجعة أداء الربع الثالث Q3 2026",
@@ -1050,7 +984,9 @@
     "noNotifications": "لا توجد إشعارات حتى الآن",
     "seeAll": "عرض جميع الإشعارات",
     "details": "التفاصيل",
-    "status": "الحالة"
+    "status": "الحالة",
+    "myGoals": "أهدافي",
+    "General": "عام"
   },
   "adminDashboard": {
     "dashboard": "لوحة التحكم",
@@ -1098,14 +1034,7 @@
     "employee": "موظف",
     "manager": "مدير",
     "hrManager": "مدير موارد بشرية",
-    "administrator": "مسؤول النظام",
-    "exportSuccessTitle": "تم التصدير بنجاح",
-    "exportSuccessMessage": "تم تصدير تقرير لوحة التحكم بنجاح.",
-    "refreshSuccessTitle": "تم تحديث البيانات",
-    "refreshSuccessMessage": "تم تحديث بيانات لوحة التحكم بنجاح.",
-    "refreshing": "جاري تحديث البيانات...",
-    "rangeUpdatedTitle": "تم تحديث النطاق",
-    "rangeUpdatedMessage": "تم تحديث نطاق نمو المستخدمين بنجاح."
+    "administrator": "مسؤول النظام"
   },
   "branchesPage": {
     "breadcrumbApp": "WiseWork",
@@ -1127,15 +1056,7 @@
     "geofenceRadiusLabel": "نطاق السياج الجغرافي (بالمتر)",
     "cancel": "إلغاء",
     "toggleGpsAriaLabel": "تبديل فرض تحديد الموقع للفرع {{name}}",
-    "closeModal": "إغلاق النافذة",
-    "exportSuccessTitle": "تم التصدير بنجاح",
-    "exportSuccessMessage": "تم تصدير إعدادات الفروع بنجاح.",
-    "branchAddedToastTitle": "تمت إضافة الفرع",
-    "branchAddedToastMessage": "تمت إضافة الفرع الجديد بنجاح.",
-    "gpsEnabledToastTitle": "تم تفعيل GPS",
-    "gpsEnabledToastMessage": "تم تفعيل نظام تحديد الموقع للفرع {{name}}.",
-    "gpsDisabledToastTitle": "تم تعطيل GPS",
-    "gpsDisabledToastMessage": "تم تعطيل نظام تحديد الموقع للفرع {{name}}."
+    "closeModal": "إغلاق النافذة"
   },
   "usersPage": {
     "title": "المستخدمون",
@@ -1163,36 +1084,7 @@
     "role": "الدور",
     "department": "القسم",
     "cancel": "إلغاء",
-    "createUser": "إنشاء المستخدم",
-    "creating": "جاري الإنشاء...",
-    "exportSuccessTitle": "تم التصدير بنجاح",
-    "exportSuccessMessage": "تم تصدير إعدادات المستخدمين بنجاح.",
-    "colPhone": "الهاتف",
-    "colJobTitle": "المسمى الوظيفي",
-    "colPermissions": "الصلاحيات",
-    "jobTitle": "المسمى الوظيفي",
-    "jobTitlePlaceholder": "مثال: مهندس برمجيات",
-    "password": "كلمة المرور",
-    "passwordPlaceholder": "8 أحرف على الأقل",
-    "employmentType": "نوع التوظيف",
-    "fullTime": "دوام كامل",
-    "partTime": "دوام جزئي",
-    "contract": "عقد",
-    "startDate": "تاريخ البدء",
-    "phone": "رقم الهاتف",
-    "phonePlaceholder": "مثال: +201234567890",
-    "address": "العنوان",
-    "addressPlaceholder": "مثال: القاهرة، مصر",
-    "permissions": "الصلاحيات",
-    "selectPermissions": "اختر الصلاحيات",
-    "loadingPermissions": "جاري تحميل الصلاحيات...",
-    "noPermissionsFound": "لا توجد صلاحيات متاحة.",
-    "loadingEmployees": "جاري تحميل الموظفين...",
-    "noEmployeesFound": "لم يتم العثور على موظفين.",
-    "createSuccess": "تم إنشاء الموظف بنجاح.",
-    "createError": "فشل إنشاء الموظف.",
-    "validationError": "يرجى ملء جميع الحقول المطلوبة.",
-    "filterOwner": "المالك"
+    "createUser": "إنشاء المستخدم"
   },
   "auditLogs": {
     "title": "سجلات التدقيق",
@@ -1200,6 +1092,7 @@
     "breadcrumbAdmin": "الإدارة",
     "breadcrumbApp": "WiseWork",
     "exportConfig": "تصدير التكوين",
+    "exportSuccess": "تم تصدير إعدادات السجل بنجاح.",
     "cardTitle": "سجلات التدقيق",
     "cardSubtitle": "مراجعة الإجراءات الإدارية وأحداث النظام.",
     "searchPlaceholder": "البحث في السجلات...",
@@ -1208,7 +1101,6 @@
     "filterWarning": "تحذير",
     "filterInfo": "معلومات",
     "colAction": "الإجراء",
-    "exportSuccess": "تم تصدير سجل النشاط بنجاح.",
     "colActor": "المنفذ",
     "colTimestamp": "الوقت والتاريخ",
     "colSeverity": "مستوى الأهمية",
@@ -1262,8 +1154,6 @@
     "jobTitleLabel": "المسمى الوظيفي",
     "cancelEdit": "إلغاء",
     "saveChanges": "حفظ التغييرات",
-    "addressLabel": "العنوان",
-    "avatarLabel": "صورة الملف الشخصي",
     "logoutConfirmTitle": "تأكيد تسجيل الخروج",
     "logoutConfirmMessage": "هل أنت متأكد من رغبتك في تسجيل الخروج من حسابك؟",
     "confirmLogout": "تسجيل الخروج",
@@ -1277,7 +1167,8 @@
       "needAHand": "هل تحتاج إلى مساعدة؟",
       "askAi": "اسأل المساعد الذكي",
       "userName": "عمر حداد",
-      "userRole": "محلل منتجات أول"
+      "userRole": "محلل منتجات أول",
+      "goals": "الأهداف"
     },
     "home": {
       "date": "الاثنين، 9 يونيو 2026",
@@ -1721,74 +1612,6 @@
       }
     }
   },
-  "employees": {
-    "title": "الموظفون",
-    "subtitle": "إدارة سجلات الموظفين والأدوار وخطوط التقارير.",
-    "addEmployee": "إضافة موظف",
-    "records": "{{count}} سجل موظف",
-    "search": "البحث بالاسم أو الرقم التعريفي أو الوظيفة أو القسم",
-    "viewProfile": "عرض الملف الشخصي",
-    "noResults": "لم يتم العثور على موظفين.",
-    "table": {
-      "employee": "الموظف",
-      "role": "الوظيفة",
-      "department": "القسم",
-      "branch": "الفرع",
-      "status": "الحالة",
-      "action": "الإجراء"
-    },
-    "status": {
-      "present": "حاضر",
-      "late": "متأخر",
-      "onLeave": "في إجازة",
-      "absent": "غائب"
-    },
-    "data": {
-      "youssef": {
-        "name": "يوسف لطفي",
-        "role": "مصمم منتجات أول",
-        "department": "التصميم",
-        "branch": "المقر الرئيسي بالقاهرة"
-      },
-      "mariam": {
-        "name": "مريم حسن",
-        "role": "مدير هندسة",
-        "department": "الهندسة",
-        "branch": "المقر الرئيسي بالقاهرة"
-      },
-      "omar": {
-        "name": "عمر خالد",
-        "role": "تنفيذي مبيعات",
-        "department": "المبيعات",
-        "branch": "فرع الإسكندرية"
-      },
-      "nour": {
-        "name": "نور عادل",
-        "role": "أخصائي عمليات الأفراد",
-        "department": "الأفراد والثقافة",
-        "branch": "المقر الرئيسي بالقاهرة"
-      },
-      "karim": {
-        "name": "كريم أشرف",
-        "role": "قائد العمليات",
-        "department": "العمليات",
-        "branch": "فرع الإسكندرية"
-      }
-    },
-    "form": {
-      "subtitle": "أدخل بيانات الموظف أدناه.",
-      "name": "اسم الموظف",
-      "namePlaceholder": "الاسم الكامل",
-      "id": "الرقم التعريفي للموظف",
-      "role": "الوظيفة",
-      "rolePlaceholder": "المسمى الوظيفي",
-      "department": "القسم",
-      "departmentPlaceholder": "القسم",
-      "branch": "الفرع",
-      "branchPlaceholder": "الفرع",
-      "status": "الحالة"
-    }
-  },
   "departments": {
     "title": "الأقسام والفرق",
     "subtitle": "إدارة الهيكل التنظيمي والقادة ومسارات العمل.",
@@ -1899,7 +1722,8 @@
     "paymentTestsName": "اختبارات الدفع",
     "youssefLotfy": "يوسف لطفي",
     "salmaNabil": "سلمى نبيل",
-    "karimAshraf": "كريم أشرف"
+    "karimAshraf": "كريم أشرف",
+    "breadcrumb": "بوابة المدير / لوحة تحكم الفريق"
   },
   "managerTasks": {
     "title": "إدارة المهام",
@@ -1939,7 +1763,8 @@
     "clearFilter": "إلغاء التصفية",
     "filteredBy": "مصفى حسب",
     "reassignTask": "إعادة تعيين المهمة",
-    "reassignTo": "إعادة التعيين إلى"
+    "reassignTo": "إعادة التعيين إلى",
+    "breadcrumb": "بوابة المدير / إدارة المهام"
   },
   "managerSubmissions": {
     "title": "مراجعة التسليمات",
@@ -1955,12 +1780,20 @@
     "sendChangeRequest": "إرسال طلب التعديل",
     "toastApproved": "تم اعتماد التسليم وإنهاء المهمة",
     "toastRejected": "تم رفض التسليم",
+    "toastChangeRequested": "تم إرسال طلب التعديل",
     "youssefLotfy": "يوسف لطفي",
     "salmaNabil": "سلمى نبيل",
+    "karimAshraf": "كريم أشرف",
     "submissionOauth2Title": "تطوير مسار OAuth2",
     "submissionOauth2Notes": "تمت إضافة تدوير رمز التحديث وتغطية الحالات الطرفية الخاصة بالـ callback في اختبارات التكامل.",
     "submissionQ3ReleaseNotesTitle": "ملاحظات إصدار الربع الثالث",
-    "dateSep16": "16 سبتمبر 2026"
+    "submissionQ3ReleaseNotesNotes": "تم تحديث سجل التغييرات الربع سنوي وملخص الإصدار.",
+    "submissionPaymentTestsTitle": "اختبارات تكامل الدفع",
+    "submissionPaymentTestsNotes": "تم إكمال تغطية الحالات الطرفية للمدفوعات المتكررة.",
+    "dateSep15": "15 سبتمبر 2026",
+    "dateSep16": "16 سبتمبر 2026",
+    "dateSep17": "17 سبتمبر 2026",
+    "breadcrumb": "بوابة المدير / مراجعة التسليمات"
   },
   "managerEvaluations": {
     "activeCycle": "دورة التقييم الحالية",
@@ -1999,6 +1832,7 @@
     "breadcrumb": "بوابة المدير / رؤى الفريق بالذكاء الاصطناعي",
     "title": "رؤى الفريق بالذكاء الاصطناعي",
     "subtitle": "حافظ على توافق فريقك ودعمه واستمراره في التقدم.",
+    "suggestedAction": "الإجراء المقترح",
     "skillGapCard": {
       "eyebrow": "ذكاء إداري قائم على البيانات",
       "title": "تحليل فجوات مهارات الفريق",
@@ -2007,13 +1841,13 @@
     "skillGaps": {
       "systemDesign": "تصميم الأنظمة",
       "systemDesignBadge": "عضوان يحتاجان إلى تدريب",
-      "systemDesignAction": "الإجراء المقترح: العمل بشكل ثنائي في مراجعات هندسة الأنظمة",
+      "systemDesignAction": "العمل بشكل ثنائي في مراجعات هندسة الأنظمة",
       "mentorship": "الإرشاد والتوجيه",
       "mentorshipBadge": "تغطية منخفضة خلال هذه الدورة",
-      "mentorshipAction": "الإجراء المقترح: تعيين زميل للتوجيه بالتناوب",
+      "mentorshipAction": "تعيين زميل للتوجيه بالتناوب",
       "testStrategy": "استراتيجية الاختبار",
       "testStrategyBadge": "منطقة تحتاج إلى تطوير",
-      "testStrategyAction": "الإجراء المقترح: تنظيم ورشة عمل متخصصة في اختبار الجودة"
+      "testStrategyAction": "تنظيم ورشة عمل متخصصة في اختبار الجودة"
     },
     "burnoutCard": {
       "eyebrow": "توازن أعباء العمل",
@@ -2024,6 +1858,8 @@
       "high": "مرتفع",
       "watch": "مراقبة",
       "balanced": "متوازن",
+      "sprintLoad": "من حمل الـ Sprint",
+      "suggestedCheckIn": "يُنصح بإجراء متابعة",
       "loadDescription": "{{load}}% من حمل الـ Sprint · يُنصح بإجراء متابعة"
     }
   },
@@ -2032,6 +1868,13 @@
     "title": "الموافقة على إجازات الفريق",
     "subtitle": "حافظ على توافق فريقك ودعمه واستمراره في التقدم.",
     "searchPlaceholder": "ابحث عن أعضاء الفريق...",
+    "table": {
+      "member": "العضو",
+      "leaveType": "نوع الإجازة",
+      "dates": "التواريخ",
+      "days": "الأيام",
+      "reason": "السبب"
+    },
     "filters": {
       "all": "الحالة"
     },
@@ -2054,11 +1897,13 @@
     },
     "actions": {
       "approve": "موافقة",
-      "reject": "رفض"
+      "decline": "رفض"
     },
+    "statusApproved": "تمت الموافقة",
+    "statusDeclined": "مرفوض",
     "empty": {
-      "title": "لا توجد طلبات إجازات",
-      "description": "لا توجد طلبات إجازات تطابق البحث أو الفلتر الحالي."
+      "title": "لا توجد طلبات إجازات معلقة",
+      "description": "تمت مراجعة جميع طلبات إجازات الفريق."
     }
   },
   "managerAttendance": {
@@ -2086,6 +1931,7 @@
     "subtitle": "حافظ على توافق فريقك ودعمه واستمراره في التقدم.",
     "departmentCompetencyDistribution": "توزيع كفاءات القسم",
     "teamPerformanceIndex": "مؤشر أداء الفريق",
+    "velocity": "معدل الأداء",
     "competencies": {
       "technicalExecution": "التنفيذ التقني",
       "communication": "التواصل",
@@ -2258,6 +2104,97 @@
       "totalDaysPlaceholder": "إجمالي أيام الإجازة",
       "cancel": "إلغاء",
       "save": "حفظ التغييرات"
+    }
+  },
+  "employeeGoals": {
+    "eyebrow": "التطور والنمو",
+    "title": "أهدافي",
+    "subtitle": "تابع أهدافك المهنية ومراحل تطورك.",
+    "filters": {
+      "all": "الكل",
+      "active": "نشطة",
+      "completed": "مكتملة",
+      "cancelled": "ملغاة"
+    },
+    "status": {
+      "active": "نشطة",
+      "completed": "مكتملة",
+      "cancelled": "ملغاة"
+    },
+    "loading": "جارٍ تحميل الأهداف...",
+    "retry": "حاول مرة أخرى",
+    "viewDetails": "عرض التفاصيل",
+    "markCompleted": "تحديد كمكتمل",
+    "completing": "جارٍ الإكمال...",
+    "completedSuccess": "تم تحديد الهدف كمكتمل بنجاح.",
+    "targetDate": "الموعد المستهدف",
+    "overdue": "متأخر",
+    "created": "تاريخ الإنشاء",
+    "noGoals": "لا توجد أهداف",
+    "noGoalsDesc": "لا توجد أهداف تطابق الفلتر المحدد.",
+    "showing": "عرض",
+    "of": "من",
+    "goalsLabel": "أهداف",
+    "loadingDetails": "جارٍ تحميل التفاصيل...",
+    "goalDetails": "تفاصيل الهدف",
+    "description": "الوصف",
+    "targetDateLabel": "الموعد المستهدف",
+    "createdAt": "تاريخ الإنشاء",
+    "errors": {
+      "fetchFailed": "تعذر تحميل الأهداف.",
+      "detailFailed": "تعذر تحميل تفاصيل الهدف.",
+      "completeFailed": "تعذر تحديد الهدف كمكتمل."
+    }
+  },
+  "manager": {
+    "goals": {
+      "breadcrumb": "المدير · أهداف الفريق",
+      "title": "أهداف الفريق والنتائج الرئيسية",
+      "description": "تعيين وتتبع وإدارة أهداف أعضاء فريقك.",
+      "creating": "جارٍ الإنشاء...",
+      "createGoal": "إنشاء هدف",
+      "editGoal": "تعديل الهدف",
+      "createNewGoal": "إنشاء هدف جديد",
+      "updateGoalDetails": "قم بتحديث تفاصيل الهدف أدناه.",
+      "assignGoal": "تعيين هدف جديد لأحد أعضاء الفريق.",
+      "employee": "الموظف",
+      "loadingEmployees": "جارٍ تحميل الموظفين...",
+      "selectEmployee": "اختر موظفًا",
+      "goalTitle": "عنوان الهدف",
+      "enterGoalTitle": "أدخل عنوان الهدف...",
+      "descriptionLabel": "الوصف",
+      "enterGoalDescription": "اوصف الهدف والنتائج المتوقعة...",
+      "targetDate": "الموعد المستهدف",
+      "status": "الحالة",
+      "statuses": {
+        "active": "نشط",
+        "completed": "مكتمل",
+        "cancelled": "ملغى",
+        "unknown": "غير معروف"
+      },
+      "saving": "جارٍ الحفظ...",
+      "saveChanges": "حفظ التغييرات",
+      "selectEmployeeError": "يرجى اختيار موظف.",
+      "titleRequired": "عنوان الهدف مطلوب.",
+      "dateRequired": "الموعد المستهدف مطلوب.",
+      "cannotModify": "لا يمكن تعديل الأهداف المكتملة أو الملغاة.",
+      "createSuccess": "تم إنشاء الهدف بنجاح!",
+      "createError": "فشل إنشاء الهدف. يرجى المحاولة مرة أخرى.",
+      "updateSuccess": "تم تحديث الهدف بنجاح!",
+      "updateError": "فشل تحديث الهدف. يرجى المحاولة مرة أخرى.",
+      "loading": "جارٍ تحميل الأهداف...",
+      "loadError": "فشل تحميل الأهداف",
+      "loadErrorDescription": "حدث خطأ أثناء تحميل أهداف الفريق. يرجى المحاولة مرة أخرى.",
+      "tryAgain": "حاول مرة أخرى",
+      "updating": "جارٍ التحديث...",
+      "noGoals": "لا توجد أهداف بعد",
+      "createGoalDescription": "ابدأ بإنشاء هدف جديد وتعيينه لأحد أعضاء الفريق.",
+      "assignedTo": "مُعيَّن إلى",
+      "unknownEmployee": "موظف غير معروف",
+      "noDescription": "لم يتم تقديم وصف.",
+      "created": "تاريخ الإنشاء",
+      "editGoalTitle": "تعديل هذا الهدف",
+      "unknownStatus": "غير معروف"
     }
   }
 }

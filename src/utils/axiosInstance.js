@@ -5,15 +5,13 @@ console.log("API URL:", import.meta.env.VITE_API_BASE_URL);
 const axiosInstance = axios.create({
   baseURL:
     import.meta.env.VITE_API_BASE_URL ||
-    "https://hr-system.iptvdemo.serv5group.com/api",
+    "https://nontelepathically-pamphletary-cyndi.ngrok-free.dev/api/",
   timeout: 15000,
-
   headers: {
-    "Content-Type": "application/json",
     Accept: "application/json",
+    "ngrok-skip-browser-warning": "true", // <-- ده المهم
   },
 });
-
 axiosInstance.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem("token");
@@ -32,7 +30,6 @@ axiosInstance.interceptors.response.use(
 
   (error) => {
     if (error.response?.status === 401) {
-      // Clear central authentication state from storage
       localStorage.removeItem("token");
       localStorage.removeItem("user");
       localStorage.removeItem("role");
@@ -43,10 +40,10 @@ axiosInstance.interceptors.response.use(
       localStorage.removeItem("rememberMe");
 
       if (typeof window !== "undefined") {
-        // Notify React AuthContext to immediately reset state
         window.dispatchEvent(new CustomEvent("auth:unauthorized"));
 
         const path = window.location.pathname;
+
         const isAuthPage =
           path.includes("/login") ||
           path.includes("/register") ||
@@ -58,6 +55,7 @@ axiosInstance.interceptors.response.use(
           const redirectTo = path.startsWith("/admin")
             ? "/owner/login"
             : "/login";
+
           window.location.href = redirectTo;
         }
       }

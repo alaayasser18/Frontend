@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+
 import {
   FiPlus,
   FiX,
@@ -11,37 +12,24 @@ import {
   FiChevronRight,
   FiRefreshCw,
 } from "react-icons/fi";
+
 import toast from "react-hot-toast";
 import { useTranslation } from "react-i18next";
 import { motion, AnimatePresence } from "framer-motion";
-import { useEmployees } from "../hooks/useEmployees";
-import { useCreateGoal, useHrGoals, useUpdateGoal } from "../hooks/useGoals";
+
+import { useGoals, useCreateGoal, useUpdateGoal } from "../hooks/useGoals";
+
+import axiosInstance from "../../../utils/axiosInstance";
 
 // =====================================================
 // DEPARTMENTS
 // =====================================================
 
 const DEPARTMENTS = [
-  {
-    id: 1,
-    name: "Engineering",
-    nameAr: "الهندسة",
-  },
-  {
-    id: 2,
-    name: "People & Culture",
-    nameAr: "الأفراد والثقافة",
-  },
-  {
-    id: 3,
-    name: "Sales",
-    nameAr: "المبيعات",
-  },
-  {
-    id: 4,
-    name: "Logistics",
-    nameAr: "اللوجستيات",
-  },
+  { id: 1, name: "Engineering", nameAr: "الهندسة" },
+  { id: 2, name: "People & Culture", nameAr: "الأفراد والثقافة" },
+  { id: 3, name: "Sales", nameAr: "المبيعات" },
+  { id: 4, name: "Logistics", nameAr: "اللوجستيات" },
 ];
 
 // =====================================================
@@ -80,17 +68,12 @@ const normalizeEmployee = (employee, t) => {
     generatedName ||
     t("hrGoals.form.employeeFallback", {
       id,
-      defaultValue: `Employee #${id}`,
+      defaultValue: "Employee #{{id}}",
     });
 
   return {
     id,
     name,
-    email: employee?.email || "",
-    employee_code: employee?.employee_code || "",
-    department: employee?.department || null,
-    status: employee?.status || "",
-    role: employee?.role || "",
   };
 };
 
@@ -109,7 +92,6 @@ const getErrorMessage = (error, fallback) => {
     return responseData.error;
   }
 
-  // Laravel validation errors
   if (responseData?.errors) {
     const messages = Object.values(responseData.errors).flat().filter(Boolean);
 
@@ -129,10 +111,11 @@ const getErrorMessage = (error, fallback) => {
 // COMPONENT
 // =====================================================
 
-const EvaluationsGoals = () => {
+const Goals = () => {
   const { t, i18n } = useTranslation();
 
   const isArabic = i18n.language?.toLowerCase().startsWith("ar");
+
   const lang = isArabic ? "ar" : "en";
 
   // =====================================================
@@ -146,7 +129,14 @@ const EvaluationsGoals = () => {
   const [currentPage, setCurrentPage] = useState(1);
 
   // =====================================================
-  // GOAL MODAL
+  // EMPLOYEES
+  // =====================================================
+
+  const [employees, setEmployees] = useState([]);
+  const [employeesLoading, setEmployeesLoading] = useState(false);
+
+  // =====================================================
+  // MODAL
   // =====================================================
 
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -196,57 +186,7 @@ const EvaluationsGoals = () => {
     isError,
     error,
     refetch,
-  } = useHrGoals(goalParams, lang);
-
-  // =====================================================
-  // GET EMPLOYEES FROM API
-  // GET /api/employees
-  // =====================================================
-
-  const {
-    data: employeesResponse,
-    isLoading: employeesLoading,
-    isFetching: employeesFetching,
-    isError: employeesError,
-  } = useEmployees(
-    {
-      page: 1,
-      per_page: 100,
-    },
-    lang,
-  );
-
-  // =====================================================
-  // NORMALIZE EMPLOYEES RESPONSE
-  //
-  // API RESPONSE:
-  //
-  // {
-  //   success: true,
-  //   message: "...",
-  //   data: {
-  //     current_page: 1,
-  //     last_page: 2,
-  //     total: 22,
-  //     employees: [...]
-  //   }
-  // }
-  //
-  // useEmployees returns response.data
-  // So:
-  //
-  // employeesResponse.data.employees
-  // =====================================================
-
-  const employees = useMemo(() => {
-    const employeesArray = Array.isArray(employeesResponse?.data?.employees)
-      ? employeesResponse.data.employees
-      : [];
-
-    return employeesArray
-      .map((employee) => normalizeEmployee(employee, t))
-      .filter((employee) => employee.id);
-  }, [employeesResponse, t]);
+  } = useGoals(goalParams, lang);
 
   // =====================================================
   // MUTATIONS
@@ -273,10 +213,82 @@ const EvaluationsGoals = () => {
   const totalGoals = Number(meta?.total ?? goals.length ?? 0);
 
   // =====================================================
-  // OPEN CREATE MODAL
+  // LOAD ALL EMPLOYEES
   // =====================================================
 
-  const openCreateModal = () => {
+  const loadEmployees = async () => {
+    try {
+      setEmployeesLoading(true);
+
+      let allEmployees = [];
+      let currentEmployeePage = 1;
+      let lastEmployeePage = 1;
+
+      do {
+        const response = await axiosInstance.get("/employees", {
+          params: {
+            page: currentEmployeePage,
+            per_page: 100,
+          },
+
+          headers: {
+            Accept: "application/json",
+            "Accept-Language": lang,
+          },
+        });
+
+        /*
+         * Swagger response:
+         *
+         * {
+         *   success: true,
+         *   message: "...",
+         *   data: {
+         *     current_page: 1,
+         *     last_page: 2,
+         *     total: 22,
+         *     employees: [...]
+         *   }
+         * }
+         */
+
+        const responseData = response?.data?.data;
+
+        const employeesPage = Array.isArray(responseData?.employees)
+          ? responseData.employees
+          : [];
+
+        allEmployees = [...allEmployees, ...employeesPage];
+
+        lastEmployeePage = Number(responseData?.last_page || 1);
+
+        currentEmployeePage += 1;
+      } while (currentEmployeePage <= lastEmployeePage);
+
+      const normalizedEmployees = allEmployees
+        .map((employee) => normalizeEmployee(employee, t))
+        .filter((employee) => employee.id);
+
+      setEmployees(normalizedEmployees);
+    } catch (err) {
+      console.error("Failed to load employees:", err);
+
+      toast.error(
+        getErrorMessage(
+          err,
+          t("hrGoals.errors.employees", "Failed to load employees."),
+        ),
+      );
+    } finally {
+      setEmployeesLoading(false);
+    }
+  };
+
+  // =====================================================
+  // OPEN CREATE
+  // =====================================================
+
+  const openCreateModal = async () => {
     setEditingGoal(null);
 
     setForm({
@@ -288,13 +300,17 @@ const EvaluationsGoals = () => {
     });
 
     setIsModalOpen(true);
+
+    if (employees.length === 0) {
+      await loadEmployees();
+    }
   };
 
   // =====================================================
   // OPEN EDIT
   // =====================================================
 
-  const openEditModal = (goal) => {
+  const openEditModal = async (goal) => {
     const status = normalizeStatus(goal?.status);
 
     if (status === "completed" || status === "cancelled") {
@@ -306,6 +322,10 @@ const EvaluationsGoals = () => {
       );
 
       return;
+    }
+
+    if (employees.length === 0) {
+      await loadEmployees();
     }
 
     setEditingGoal(goal);
@@ -341,7 +361,7 @@ const EvaluationsGoals = () => {
   };
 
   // =====================================================
-  // FORM CHANGE
+  // INPUT CHANGE
   // =====================================================
 
   const handleInputChange = (event) => {
@@ -398,9 +418,9 @@ const EvaluationsGoals = () => {
     };
 
     try {
-      // ===============================================
+      // =================================================
       // UPDATE
-      // ===============================================
+      // =================================================
 
       if (editingGoal) {
         await updateGoalMutation.mutateAsync({
@@ -417,9 +437,9 @@ const EvaluationsGoals = () => {
         );
       }
 
-      // ===============================================
+      // =================================================
       // CREATE
-      // ===============================================
+      // =================================================
       else {
         await createGoalMutation.mutateAsync(payload);
 
@@ -544,7 +564,7 @@ const EvaluationsGoals = () => {
     >
       {/* =================================================
           HEADER
-      ================================================== */}
+      ================================================= */}
 
       <motion.div
         initial={{
@@ -597,7 +617,7 @@ const EvaluationsGoals = () => {
 
       {/* =================================================
           OVERVIEW
-      ================================================== */}
+      ================================================= */}
 
       <motion.div
         initial={{
@@ -702,7 +722,7 @@ const EvaluationsGoals = () => {
 
       {/* =================================================
           FILTERS
-      ================================================== */}
+      ================================================= */}
 
       <div className="rounded-2xl border border-[#e2e8f0]/80 bg-white p-5 shadow-[0_1px_3px_rgba(0,0,0,0.03)]">
         <div className="mb-4 flex items-center justify-between gap-3">
@@ -785,11 +805,11 @@ const EvaluationsGoals = () => {
               setEmployeeFilter(event.target.value);
               setCurrentPage(1);
             }}
-            disabled={employeesLoading || employeesFetching}
+            disabled={employeesLoading}
             className="w-full rounded-lg border border-[#e2e8f0] bg-white px-3 py-2.5 text-sm text-[#334155] outline-none focus:border-[#94a3b8] disabled:bg-[#f8fafc]"
           >
             <option value="">
-              {employeesLoading || employeesFetching
+              {employeesLoading
                 ? t("hrGoals.filters.loadingEmployees", "Loading employees...")
                 : t("hrGoals.filters.allEmployees", "All Employees")}
             </option>
@@ -801,19 +821,11 @@ const EvaluationsGoals = () => {
             ))}
           </select>
         </div>
-
-        {/* EMPLOYEES ERROR */}
-
-        {employeesError && (
-          <p className="mt-3 text-xs text-[#dc2626]">
-            {t("hrGoals.errors.employees", "Failed to load employees.")}
-          </p>
-        )}
       </div>
 
       {/* =================================================
-          GOALS
-      ================================================== */}
+          GOALS TABLE
+      ================================================= */}
 
       <motion.div
         initial={{
@@ -830,8 +842,6 @@ const EvaluationsGoals = () => {
         }}
         className="w-full overflow-hidden rounded-2xl border border-[#e2e8f0]/80 bg-white shadow-[0_1px_3px_rgba(0,0,0,0.03)]"
       >
-        {/* HEADER */}
-
         <div className="flex items-center justify-between border-b border-[#f1f5f9] px-5 py-5 sm:px-6">
           <div>
             <h2 className="text-base font-bold text-[#1e293b] sm:text-lg">
@@ -870,6 +880,8 @@ const EvaluationsGoals = () => {
             </div>
           </div>
         ) : isError ? (
+          /* ERROR */
+
           <div className="flex min-h-[300px] flex-col items-center justify-center px-5 text-center">
             <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-[#fef2f2] text-[#dc2626]">
               <FiX />
@@ -891,6 +903,8 @@ const EvaluationsGoals = () => {
             </button>
           </div>
         ) : goals.length === 0 ? (
+          /* EMPTY */
+
           <div className="flex min-h-[300px] flex-col items-center justify-center px-5 text-center">
             <FiTrendingUp className="h-8 w-8 text-[#94a3b8]" />
 
@@ -907,7 +921,9 @@ const EvaluationsGoals = () => {
           </div>
         ) : (
           <>
-            {/* DESKTOP */}
+            {/* =================================================
+                DESKTOP
+            ================================================= */}
 
             <div className="hidden w-full overflow-x-auto lg:block">
               <table className="w-full min-w-[900px] border-collapse">
@@ -959,6 +975,8 @@ const EvaluationsGoals = () => {
                         key={goal.id}
                         className="border-t border-[#f1f5f9] hover:bg-[#fafbfc]"
                       >
+                        {/* EMPLOYEE */}
+
                         <td
                           className={`px-5 py-5 ${
                             isArabic ? "text-right" : "text-left"
@@ -972,6 +990,8 @@ const EvaluationsGoals = () => {
                             ID: {getGoalEmployeeId(goal) || "-"}
                           </p>
                         </td>
+
+                        {/* GOAL */}
 
                         <td
                           className={`max-w-[280px] px-4 py-5 ${
@@ -989,9 +1009,13 @@ const EvaluationsGoals = () => {
                           )}
                         </td>
 
+                        {/* TARGET DATE */}
+
                         <td className="px-4 py-5 text-center text-xs font-semibold text-[#475569]">
                           {goal.target_date || "-"}
                         </td>
+
+                        {/* STATUS */}
 
                         <td className="px-4 py-5 text-center">
                           <span
@@ -1005,9 +1029,13 @@ const EvaluationsGoals = () => {
                           </span>
                         </td>
 
+                        {/* CREATED */}
+
                         <td className="px-4 py-5 text-center text-xs text-[#64748b]">
                           {goal.created_at || "-"}
                         </td>
+
+                        {/* ACTION */}
 
                         <td className="px-4 py-5 text-center">
                           <button
@@ -1026,7 +1054,9 @@ const EvaluationsGoals = () => {
               </table>
             </div>
 
-            {/* MOBILE */}
+            {/* =================================================
+                MOBILE
+            ================================================= */}
 
             <div className="divide-y divide-[#f1f5f9] lg:hidden">
               {goals.map((goal) => {
@@ -1106,7 +1136,9 @@ const EvaluationsGoals = () => {
               })}
             </div>
 
-            {/* PAGINATION */}
+            {/* =================================================
+                PAGINATION
+            ================================================= */}
 
             <div className="flex items-center justify-between border-t border-[#f1f5f9] px-5 py-4 sm:px-6">
               <p className="text-xs text-[#64748b]">
@@ -1143,12 +1175,14 @@ const EvaluationsGoals = () => {
       </motion.div>
 
       {/* =================================================
-          CREATE / EDIT MODAL
-      ================================================== */}
+          MODAL
+      ================================================= */}
 
       <AnimatePresence>
         {isModalOpen && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            {/* BACKDROP */}
+
             <motion.div
               initial={{
                 opacity: 0,
@@ -1162,6 +1196,8 @@ const EvaluationsGoals = () => {
               onClick={closeModal}
               className="absolute inset-0 bg-[#0f172a]/40 backdrop-blur-[2px]"
             />
+
+            {/* MODAL */}
 
             <motion.div
               initial={{
@@ -1234,14 +1270,12 @@ const EvaluationsGoals = () => {
                       name="employee_id"
                       value={form.employee_id}
                       onChange={handleInputChange}
-                      disabled={
-                        submitting || employeesLoading || employeesFetching
-                      }
+                      disabled={submitting || employeesLoading}
                       required
                       className="w-full rounded-lg border border-[#e2e8f0] bg-white px-3 py-2.5 text-sm outline-none disabled:bg-[#f8fafc]"
                     >
                       <option value="">
-                        {employeesLoading || employeesFetching
+                        {employeesLoading
                           ? t(
                               "hrGoals.form.loadingEmployees",
                               "Loading employees...",
@@ -1255,15 +1289,6 @@ const EvaluationsGoals = () => {
                         </option>
                       ))}
                     </select>
-
-                    {employeesError && (
-                      <p className="mt-1.5 text-xs text-[#dc2626]">
-                        {t(
-                          "hrGoals.errors.employees",
-                          "Failed to load employees.",
-                        )}
-                      </p>
-                    )}
                   </div>
 
                   {/* TITLE */}
@@ -1329,7 +1354,7 @@ const EvaluationsGoals = () => {
                     />
                   </div>
 
-                  {/* STATUS - EDIT ONLY */}
+                  {/* STATUS */}
 
                   {editingGoal && (
                     <div>
@@ -1429,4 +1454,4 @@ const TableHead = ({ label, rtl = false, center = false }) => {
   );
 };
 
-export default EvaluationsGoals;
+export default Goals;

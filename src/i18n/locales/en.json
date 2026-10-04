@@ -895,9 +895,10 @@
     "notifications": "Notifications",
     "overview": "Overview",
     "users": "Users",
-    "performance": "Performance & Goals",
+    "performance": "Performance",
+    "goals": "Goals",
     "myPerformance": "My Performance",
-    "myGoals": "My Goals",
+
     "auditLogs": "Audit Logs",
     "administration": "Administration",
     "wiseWork": "WiseWork",
@@ -1655,6 +1656,88 @@
     "readiness3": "Q3 evaluations",
     "readiness4": "Payroll reconciliation"
   },
+  "hrGoals": {
+    "eyebrow": "GOALS & DEVELOPMENT",
+    "title": "Employee Goals",
+    "subtitle": "Manage and track employee goals across the company.",
+    "createGoal": "Create Goal",
+    "editGoal": "Edit Goal",
+    "createSubtitle": "Create a goal and assign it to an employee.",
+    "editSubtitle": "Update the goal details below.",
+    "updateGoal": "Update Goal",
+    "cancel": "Cancel",
+    "edit": "Edit Goal",
+    "notEditable": "Not Editable",
+    "retry": "Try Again",
+    "loading": "Loading goals...",
+    "companyOverview": "COMPANY OVERVIEW",
+    "goalsProgress": "Goals Progress",
+    "goalsProgressSubtitle": "Track employee goal completion across the company.",
+    "completion": "Completion",
+    "completed": "Completed",
+    "active": "Active",
+    "cancelled": "Cancelled",
+    "employees": "Employees",
+    "companyGoals": "Company Goals",
+    "goalsFound": "goals found",
+    "status": {
+      "active": "Active",
+      "completed": "Completed",
+      "cancelled": "Cancelled"
+    },
+    "filters": {
+      "title": "Filters",
+      "subtitle": "Filter company goals by status, department or employee.",
+      "reset": "Reset",
+      "allStatuses": "All Statuses",
+      "allDepartments": "All Departments",
+      "allEmployees": "All Employees",
+      "loadingEmployees": "Loading employees..."
+    },
+    "table": {
+      "employee": "Employee",
+      "goal": "Goal",
+      "targetDate": "Target Date",
+      "status": "Status",
+      "created": "Created",
+      "actions": "Actions"
+    },
+    "empty": {
+      "title": "No goals found",
+      "subtitle": "There are no goals matching the current filters."
+    },
+    "pagination": {
+      "page": "Page",
+      "of": "of"
+    },
+    "form": {
+      "employee": "Employee",
+      "selectEmployee": "Select employee",
+      "loadingEmployees": "Loading employees...",
+      "employeeFallback": "Employee #{{id}}",
+      "title": "Goal Title",
+      "titlePlaceholder": "e.g. Complete React course",
+      "description": "Description",
+      "descriptionPlaceholder": "Describe what the employee needs to achieve...",
+      "targetDate": "Target Date",
+      "status": "Status"
+    },
+    "validation": {
+      "employee": "Please select an employee.",
+      "title": "Goal title is required.",
+      "date": "Target date is required."
+    },
+    "success": {
+      "created": "Goal created successfully.",
+      "updated": "Goal updated successfully."
+    },
+    "errors": {
+      "employees": "Failed to load employees.",
+      "completedCancelled": "Completed or cancelled goals cannot be modified.",
+      "generic": "Something went wrong. Please try again.",
+      "load": "Failed to load goals."
+    }
+  },
   "hrAttendance": {
     "title": "Attendance",
     "subtitle": "Real-time shift, punctuality, and exception management.",
@@ -2350,6 +2433,119 @@
       "created": "Created",
       "editGoalTitle": "Edit this goal",
       "unknownStatus": "Unknown"
+    }
+  },
+  "portal": {
+    "dashboard": "Dashboard",
+    "users": "Users",
+    "performance": "Performance",
+    "goals": "Goals",
+    "branches": "Branches",
+    "auditLogs": "Audit Logs",
+    "notifications": "Notifications",
+    "profileSettings": "Profile & Settings",
+    "employees": "Employees",
+    "departmentsTeams": "Departments & Teams",
+    "attendance": "Attendance",
+    "leaveRequests": "Leave Requests",
+    "advancesDeductions": "Advances & Deductions",
+    "payroll": "Payroll",
+    "rewardsBonuses": "Rewards & Bonuses",
+    "evaluationsGoals": "Evaluations & Goals",
+    "performanceMetrics": "Performance Metrics",
+    "aiInsights": "AI Insights",
+    "companyPolicies": "Company Policies",
+    "holidays": "Holidays & Seasons",
+    "reports": "Reports",
+    "teamDashboard": "Team Dashboard",
+    "taskManagement": "Task Management",
+    "submissionReviews": "Submission Reviews",
+    "teamEvaluations": "Team Evaluations",
+    "teamGoalsOkrs": "Team Goals & OKRs",
+    "performanceAnalytics": "Performance Analytics",
+    "teamAttendance": "Team Attendance",
+    "teamLeaveApprovals": "Team Leave Approvals",
+    "aiTeamInsights": "AI Team Insights",
+    "homeDashboard": "Home Dashboard",
+    "myAttendance": "My Attendance",
+    "myTasks": "My Tasks",
+    "leaveBalances": "Leave & Balances",
+    "myPerformance": "My Performance",
+    "myGoals": "My Goals",
+    "myFinancials": "My Financials",
+    "aiAssistant": "AI Assistant"
+  },
+  "employeeFinancial": {
+    "eyebrow": "FINANCIAL MANAGEMENT",
+    "title": "My Financials",
+    "subtitle": "Track your salary, advances, deductions, and bonuses.",
+    "requestAdvance": "Request Advance",
+    "loading": "Loading...",
+    "retry": "Try again",
+    "showing": "Showing",
+    "of": "of",
+    "records": "records",
+    "currency": "EGP",
+    "tabs": {
+      "salaries": "My Salaries",
+      "advances": "Advances",
+      "deductions": "Deductions",
+      "bonuses": "Bonuses"
+    },
+    "status": {
+      "approved": "Approved",
+      "rejected": "Rejected",
+      "pending": "Pending",
+      "finalized": "Finalized",
+      "queued": "Queued",
+      "cancelled": "Cancelled",
+      "manual": "Manual"
+    },
+    "salary": {
+      "basic": "Basic Salary",
+      "bonuses": "Bonuses",
+      "deductions": "Deductions",
+      "loan": "Loan",
+      "net": "Net Salary"
+    },
+    "advance": {
+      "amount": "Amount",
+      "months": "Months",
+      "monthly": "Monthly",
+      "newRequest": "NEW REQUEST",
+      "title": "Request Salary Advance",
+      "amountLabel": "Requested Amount",
+      "amountPlaceholder": "e.g. 5000",
+      "repaymentLabel": "Repayment Months",
+      "monthsPlaceholder": "e.g. 5",
+      "monthlyDeduction": "Monthly deduction",
+      "reasonLabel": "Reason",
+      "reasonPlaceholder": "Describe why you need this advance...",
+      "submit": "Submit Request",
+      "submitting": "Submitting...",
+      "success": "Advance request submitted successfully.",
+      "error": "Failed to submit advance request.",
+      "requiredFields": "All fields are required."
+    },
+    "bonus": {
+      "amount": "Amount",
+      "type": "Type",
+      "month": "Month",
+      "approvedBy": "Approved By",
+      "totalPool": "Total Bonus Pool Distributed"
+    },
+    "empty": {
+      "salaries": "No salary records",
+      "salariesDesc": "Your salary history will appear here once payroll is processed.",
+      "advances": "No advance requests",
+      "advancesDesc": "You haven't submitted any salary advance requests yet.",
+      "deductions": "No deductions",
+      "deductionsDesc": "You have no deductions or penalties on record.",
+      "bonuses": "No bonuses",
+      "bonusesDesc": "No bonuses or incentives have been recorded yet."
+    },
+    "errors": {
+      "fetchFailed": "Failed to retrieve data."
     }
   }
 }

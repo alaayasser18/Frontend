@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useTranslation } from "react-i18next";
+import CheckInOutWidget from "../../../components/CheckInOutWidget";
 
 const fadeUp = {
   hidden: { opacity: 0, y: 8 },
@@ -107,6 +108,11 @@ const TeamAttendance = () => {
             "Keep your team aligned, supported, and moving forward."
           )}
         </p>
+
+        {/* Personal Check-in / Check-out */}
+        <div className="mt-4">
+          <CheckInOutWidget compact />
+        </div>
       </motion.div>
 
       {/* =====================================================

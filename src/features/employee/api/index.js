@@ -121,7 +121,11 @@ export const createEmployeeLeaveRequest = async (requestData, lang = "en") => {
   return response.data;
 };
 
-export const uploadEmployeeLeaveAttachment = async (requestId, file, lang = "en") => {
+export const uploadEmployeeLeaveAttachment = async (
+  requestId,
+  file,
+  lang = "en",
+) => {
   const formData = new FormData();
   formData.append("file", file);
 

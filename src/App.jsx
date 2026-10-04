@@ -25,6 +25,7 @@ import ActivityLog from "./features/admin/pages/AuditLogs";
 import Users from "./features/admin/pages/Users";
 import AdminPerformance from "./features/admin/pages/PerformancePage";
 import AdminProfileSettings from "./features/admin/pages/ProfileSettings";
+import AdminAttendance from "./features/admin/pages/Attendance";
 
 // ==================== Employee Pages ====================
 import EmployeePerformance from "./features/employee/pages/Performance";
@@ -215,6 +216,7 @@ function App() {
               <Route path="/admin/performance" element={<AdminPerformance />} />
               <Route path="/admin/notifications" element={<Notification />} />
               <Route path="/admin/audit" element={<ActivityLog />} />
+              <Route path="/admin/attendance" element={<AdminAttendance />} />
               <Route path="/admin/profile" element={<AdminProfileSettings />} />
               <Route
                 path="/admin/settings"

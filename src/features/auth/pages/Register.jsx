@@ -7,6 +7,7 @@ import MainAuthForm from "../components/MainAuthForm";
 import { useRegister } from "../hooks/useRegister";
 import { useAuth } from "../../../context/AuthContext";
 import { ROLE_ROUTES } from "../../../utils/roleRoutes";
+import { parseBackendMessages } from "../../../utils/parseBackendMessages";
 
 /* =========================
    ANIMATION
@@ -75,6 +76,8 @@ export default function Register() {
   const [messageKey, setMessageKey] = useState("");
   const [messageText, setMessageText] = useState("");
   const [messageType, setMessageType] = useState("");
+  // messageList holds multiple parsed messages from a 422 response
+  const [messageList, setMessageList] = useState([]);
 
   /* =========================
      PASSWORD VALIDATION
@@ -95,6 +98,7 @@ export default function Register() {
     setMessageKey("");
     setMessageText("");
     setMessageType("");
+    setMessageList([]);
 
     // =========================
     // REQUIRED FIELDS
@@ -187,64 +191,44 @@ export default function Register() {
       // ==================================================
 
       onError: (error) => {
-        console.log("=================================");
-        console.log("REGISTER ERROR");
-        console.log("=================================");
-
-        console.log("Register error:", error);
-        console.log("Status:", error?.response?.status);
-
+        console.log("========== REGISTER ERROR ==========");
+        console.log("FULL ERROR:", error);
+        console.log("ERROR MESSAGE:", error?.message);
+        console.log("ERROR CODE:", error?.code);
+        console.log("ERROR RESPONSE:", error?.response);
+        console.log("RESPONSE STATUS:", error?.response?.status);
+        console.log("RESPONSE DATA:", error?.response?.data);
+        console.log("REQUEST CONFIG:", error?.config);
+        console.log("REQUEST URL:", error?.config?.url);
+        console.log("REQUEST METHOD:", error?.config?.method);
+        console.log("REQUEST DATA:", error?.config?.data);
+        console.log("====================================");
         const status = error?.response?.status;
         const responseData = error?.response?.data;
 
-        console.log("Backend response:", responseData);
-        console.log("Validation errors:", responseData?.errors);
-
         const backendMessage = responseData?.message;
-        const validationErrors = responseData?.errors;
 
         // Clear previous messages
         setMessageKey("");
         setMessageText("");
+        setMessageList([]);
 
         // =========================
         // 422 VALIDATION ERROR
+        // Backend now combines all validation errors into one message string.
         // =========================
 
         if (status === 422) {
-          const emailError = validationErrors?.email?.[0];
+          if (backendMessage) {
+            const messages = parseBackendMessages(backendMessage);
 
-          if (emailError) {
-            setMessageText(emailError);
-          } else {
-            const nameError = validationErrors?.name?.[0];
-
-            if (nameError) {
-              setMessageText(nameError);
+            if (messages.length > 1) {
+              setMessageList(messages);
             } else {
-              const passwordError = validationErrors?.password?.[0];
-
-              if (passwordError) {
-                setMessageText(passwordError);
-              } else {
-                const passwordConfirmationError =
-                  validationErrors?.password_confirmation?.[0];
-
-                if (passwordConfirmationError) {
-                  setMessageText(passwordConfirmationError);
-                } else {
-                  const phoneError = validationErrors?.phone?.[0];
-
-                  if (phoneError) {
-                    setMessageText(phoneError);
-                  } else if (backendMessage) {
-                    setMessageText(backendMessage);
-                  } else {
-                    setMessageKey("auth.register.errorGeneric");
-                  }
-                }
-              }
+              setMessageText(messages[0] || backendMessage);
             }
+          } else {
+            setMessageKey("auth.register.errorGeneric");
           }
 
           setMessageType("error");
@@ -634,25 +618,39 @@ export default function Register() {
           </motion.button>
 
           {/* =========================
-              MESSAGE
+              MESSAGE (single or list)
           ========================= */}
 
-          {(messageKey || messageText) && (
+          {messageList.length > 1 ? (
             <motion.div
               className={`form-message ${messageType}`}
-              initial={{
-                opacity: 0,
-                y: 10,
-                scale: 0.98,
-              }}
-              animate={{
-                opacity: 1,
-                y: 0,
-                scale: 1,
-              }}
-              transition={{
-                duration: 0.3,
-              }}
+              initial={{ opacity: 0, y: 10, scale: 0.98 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              transition={{ duration: 0.3 }}
+              style={{ alignItems: "flex-start" }}
+            >
+              <span className="message-icon" style={{ marginTop: "1px" }}>
+                !
+              </span>
+
+              <ul
+                style={{
+                  margin: 0,
+                  paddingLeft: "1rem",
+                  lineHeight: 1.6,
+                }}
+              >
+                {messageList.map((msg, i) => (
+                  <li key={i}>{msg}</li>
+                ))}
+              </ul>
+            </motion.div>
+          ) : (messageKey || messageText) ? (
+            <motion.div
+              className={`form-message ${messageType}`}
+              initial={{ opacity: 0, y: 10, scale: 0.98 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              transition={{ duration: 0.3 }}
             >
               <span className="message-icon">
                 {messageType === "success" ? "✓" : "!"}
@@ -660,7 +658,8 @@ export default function Register() {
 
               <span>{messageText || t(messageKey)}</span>
             </motion.div>
-          )}
+          ) : null}
+
 
           {/* =========================
               TERMS

@@ -2,6 +2,7 @@ import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { FiAlertCircle } from "react-icons/fi";
+import CheckInOutWidget from "../../../components/CheckInOutWidget";
 
 const fadeUp = {
   hidden: { opacity: 0, y: 10 },
@@ -64,6 +65,11 @@ const TeamDashboard = () => {
             "Keep your team aligned, supported, and moving forward.",
           )}
         </p>
+
+        {/* Check-in / Check-out */}
+        <div className="mt-4">
+          <CheckInOutWidget compact />
+        </div>
       </motion.div>
 
       {/* Metrics Cards */}

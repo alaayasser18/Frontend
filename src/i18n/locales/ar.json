@@ -145,7 +145,10 @@
       "fullName": "الاسم بالكامل",
       "fullNamePlaceholder": "محمد أحمد",
       "workEmail": "البريد الإلكتروني للعمل",
-      "emailPlaceholder": "name@company.com"
+      "emailPlaceholder": "name@company.com",
+      "creatingAccount": "جاري إنشاء الحساب...",
+      "tooManyRequests": "تم تجاوز عدد المحاولات المسموح بها. يرجى المحاولة لاحقًا.",
+      "errorGeneric": "حدث خطأ ما. يرجى المحاولة مرة أخرى."
     },
     "verifyEmail": {
       "title": "تأكيد البريد الإلكتروني",

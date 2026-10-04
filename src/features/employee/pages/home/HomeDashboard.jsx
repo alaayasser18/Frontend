@@ -17,6 +17,9 @@ import {
   FiCheck,
 } from "react-icons/fi";
 
+import { useTodayAttendance } from "../../hooks/useTodayAttendance";
+import { checkIn, checkOut } from "../../api/attendanceApi";
+
 const containerVariants = {
   hidden: { opacity: 0 },
   visible: {
@@ -34,43 +37,196 @@ const itemVariants = {
   },
 };
 
+const getCurrentLocation = () => {
+  return new Promise((resolve, reject) => {
+    if (!navigator.geolocation) {
+      reject(
+        new Error("Geolocation is not supported by this browser."),
+      );
+      return;
+    }
+
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        resolve({
+          latitude: position.coords.latitude,
+          longitude: position.coords.longitude,
+        });
+      },
+      (error) => {
+        reject(error);
+      },
+      {
+        enableHighAccuracy: true,
+        timeout: 10000,
+        maximumAge: 0,
+      },
+    );
+  });
+};
+
+const parseWorkedTime = (timeString) => {
+  if (!timeString) {
+    return 0;
+  }
+
+  const parts = timeString.split(":").map(Number);
+
+  if (parts.length !== 3 || parts.some(Number.isNaN)) {
+    return 0;
+  }
+
+  const [hours, minutes, seconds] = parts;
+
+  return hours * 3600 + minutes * 60 + seconds;
+};
+
+const formatTime = (totalSeconds) => {
+  const safeSeconds = Math.max(0, Number(totalSeconds) || 0);
+
+  const hours = String(Math.floor(safeSeconds / 3600)).padStart(
+    2,
+    "0",
+  );
+
+  const minutes = String(
+    Math.floor((safeSeconds % 3600) / 60),
+  ).padStart(2, "0");
+
+  const seconds = String(safeSeconds % 60).padStart(2, "0");
+
+  return `${hours}:${minutes}:${seconds}`;
+};
+
 export default function HomeDashboard() {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const [isCheckedIn, setIsCheckedIn] = useState(true);
+
+  const {
+    data: attendanceResponse,
+    isLoading: attendanceLoading,
+    isError: attendanceError,
+    refetch: refetchAttendance,
+  } = useTodayAttendance();
+
   const [showCalendarModal, setShowCalendarModal] = useState(false);
-  const [secondsWorked, setSecondsWorked] = useState(12051);
-  const [checkInTimeStr] = useState("08:45 AM");
+  const [secondsWorked, setSecondsWorked] = useState(0);
+  const [actionLoading, setActionLoading] = useState(false);
+  const [actionError, setActionError] = useState("");
+
+  const attendance = attendanceResponse?.data;
+
+  const isCheckedIn =
+    attendance?.can_check_out === true;
+
+  const canCheckIn =
+    attendance?.can_check_in === true;
+
+  const canCheckOut =
+    attendance?.can_check_out === true;
 
   useEffect(() => {
-    let timer;
-    if (isCheckedIn) {
-      timer = setInterval(() => {
-        setSecondsWorked((prev) => prev + 1);
-      }, 1000);
+    if (!attendance) {
+      return;
     }
+
+    const initialWorkedSeconds = parseWorkedTime(
+      attendance.worked_time,
+    );
+
+    setSecondsWorked(initialWorkedSeconds);
+  }, [
+    attendance?.worked_time,
+    attendance?.check_in_time,
+    attendance?.check_out_time,
+    attendance?.status,
+  ]);
+
+  useEffect(() => {
+    if (!isCheckedIn) {
+      return;
+    }
+
+    const timer = setInterval(() => {
+      setSecondsWorked((prev) => prev + 1);
+    }, 1000);
+
     return () => clearInterval(timer);
   }, [isCheckedIn]);
 
-  const formatTime = (totalSeconds) => {
-    const hours = String(Math.floor(totalSeconds / 3600)).padStart(2, "0");
-    const minutes = String(Math.floor((totalSeconds % 3600) / 60)).padStart(
-      2,
-      "0",
-    );
-    const seconds = String(totalSeconds % 60).padStart(2, "0");
-    return `${hours}:${minutes}:${seconds}`;
-  };
+  const handleCheckIn = async () => {
+    try {
+      setActionLoading(true);
+      setActionError("");
 
-  const handleToggleCheck = () => {
-    if (!isCheckedIn) {
-      setIsCheckedIn(true);
-      setSecondsWorked(0);
-    } else {
-      setIsCheckedIn(false);
-      setSecondsWorked(0);
+      const location = await getCurrentLocation();
+
+      await checkIn(location);
+
+      await refetchAttendance();
+    } catch (error) {
+      console.error("Check-in failed:", error);
+
+      const message =
+        error?.response?.data?.message ||
+        error?.message ||
+        "Unable to check in.";
+
+      setActionError(message);
+    } finally {
+      setActionLoading(false);
     }
   };
+
+  const handleCheckOut = async () => {
+    try {
+      setActionLoading(true);
+      setActionError("");
+
+      await checkOut();
+
+      await refetchAttendance();
+    } catch (error) {
+      console.error("Check-out failed:", error);
+
+      const message =
+        error?.response?.data?.message ||
+        error?.message ||
+        "Unable to check out.";
+
+      setActionError(message);
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleAttendanceAction = () => {
+    if (canCheckIn) {
+      return handleCheckIn();
+    }
+
+    if (canCheckOut) {
+      return handleCheckOut();
+    }
+
+    return;
+  };
+
+  const distanceText =
+    attendance?.distance_meters !== null &&
+    attendance?.distance_meters !== undefined
+      ? `${Number(attendance.distance_meters).toFixed(0)}m from office`
+      : "Location unavailable";
+
+  const locationStatus = attendance?.is_inside_radius
+    ? t(
+        "employee.home.insideRadius",
+        `Inside workplace radius · ${distanceText}`,
+      )
+    : t(
+        "employee.home.outsideRadius",
+        `Outside workplace radius · ${distanceText}`,
+      );
 
   return (
     <motion.div
@@ -86,13 +242,24 @@ export default function HomeDashboard() {
       >
         <div>
           <p className="text-[11px] font-bold tracking-wider text-[#5b8c6a] uppercase mb-1">
-            {t("employee.home.date", "MONDAY, JUNE 9, 2026")}
+            {t(
+              "employee.home.date",
+              "MONDAY, JUNE 9, 2026",
+            )}
           </p>
+
           <h1 className="text-2xl md:text-[28px] font-bold text-[#102a43] tracking-tight">
-            {t("employee.home.welcome", "Good morning, Omar")}
+            {t(
+              "employee.home.welcome",
+              "Good morning, Omar",
+            )}
           </h1>
+
           <p className="text-sm text-[#829ab1] mt-1 font-normal">
-            {t("employee.home.subtitle", "Here's your workday at a glance.")}
+            {t(
+              "employee.home.subtitle",
+              "Here's your workday at a glance.",
+            )}
           </p>
         </div>
 
@@ -104,7 +271,11 @@ export default function HomeDashboard() {
           className="inline-flex items-center gap-2 rounded-xl border border-[#d9e2ec] bg-white px-4 py-2.5 text-xs font-semibold text-[#102a43] hover:bg-[#f8fafc] transition shadow-sm shrink-0 self-start sm:self-auto"
         >
           <FiCalendar className="w-4 h-4 text-[#64748b]" />
-          {t("employee.home.viewCalendar", "View calendar")}
+
+          {t(
+            "employee.home.viewCalendar",
+            "View calendar",
+          )}
         </motion.button>
       </motion.div>
 
@@ -114,71 +285,167 @@ export default function HomeDashboard() {
         className="relative overflow-hidden rounded-2xl bg-[#1b344d] p-7 md:p-8 text-white shadow-sm"
       >
         <div className="pointer-events-none absolute -right-24 -top-32 h-[420px] w-[420px] rounded-full border border-white/[0.08]" />
+
         <div className="pointer-events-none absolute right-16 -top-16 h-[320px] w-[320px] rounded-full border border-white/[0.05]" />
 
         <div className="relative z-10 flex flex-col md:flex-row md:items-center md:justify-between gap-6">
           <div className="space-y-3.5">
-            {isCheckedIn ? (
+            {attendanceLoading ? (
+              <>
+                <div className="inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1 text-xs font-medium text-white/70">
+                  Loading attendance...
+                </div>
+
+                <div>
+                  <h2 className="text-2xl md:text-[26px] font-bold text-white tracking-tight">
+                    Loading your attendance
+                  </h2>
+
+                  <p className="text-xs text-white/70 mt-1">
+                    Please wait...
+                  </p>
+                </div>
+              </>
+            ) : attendanceError ? (
+              <>
+                <div className="inline-flex items-center gap-2 rounded-full bg-red-500/10 px-3 py-1 text-xs font-medium text-red-300">
+                  Attendance unavailable
+                </div>
+
+                <div>
+                  <h2 className="text-2xl md:text-[26px] font-bold text-white tracking-tight">
+                    Unable to load attendance
+                  </h2>
+
+                  <p className="text-xs text-white/70 mt-1">
+                    Please refresh and try again.
+                  </p>
+                </div>
+              </>
+            ) : isCheckedIn ? (
               <>
                 <div className="inline-flex items-center gap-2 rounded-full bg-[#163f30] px-3 py-1 text-xs font-medium text-[#4ade80]">
                   <span className="relative flex h-2 w-2">
                     <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#4ade80] opacity-75" />
+
                     <span className="relative inline-flex rounded-full h-2 w-2 bg-[#4ade80]" />
                   </span>
-                  <span>{t("employee.home.onShift", "On Shift")}</span>
-                  <span className="text-white/40">•</span>
+
+                  <span>
+                    {attendance?.status ||
+                      t(
+                        "employee.home.onShift",
+                        "On Shift",
+                      )}
+                  </span>
+
+                  <span className="text-white/40">
+                    •
+                  </span>
+
                   <span className="text-white/80">
-                    {t("employee.home.location", "Downtown Campus · Tower B")}
+                    {t(
+                      "employee.home.location",
+                      "Workplace",
+                    )}
                   </span>
                 </div>
 
                 <div>
                   <h2 className="text-2xl md:text-[26px] font-bold text-white tracking-tight">
-                    {t("employee.home.checkedIn", "You're checked in")}
+                    {t(
+                      "employee.home.checkedIn",
+                      "You're checked in",
+                    )}
                   </h2>
+
                   <p className="text-xs text-white/70 mt-1">
-                    {t("employee.home.checkedInAt", "Checked in at")}{" "}
-                    {checkInTimeStr}
+                    {t(
+                      "employee.home.checkedInAt",
+                      "Checked in at",
+                    )}{" "}
+                    {attendance?.check_in_time || "--"}
                   </p>
                 </div>
 
                 <div className="flex items-center gap-2 pt-1 text-xs text-white/80">
-                  <FiMapPin className="w-3.5 h-3.5 text-[#4ade80]" />
-                  <span>
-                    {t(
-                      "employee.home.insideRadius",
-                      "Inside workplace radius · 42m from office",
-                    )}
-                  </span>
+                  <FiMapPin
+                    className={`w-3.5 h-3.5 ${
+                      attendance?.is_inside_radius
+                        ? "text-[#4ade80]"
+                        : "text-red-400"
+                    }`}
+                  />
+
+                  <span>{locationStatus}</span>
                 </div>
               </>
             ) : (
               <>
                 <div className="inline-flex items-center gap-2 rounded-full bg-slate-800/80 px-3 py-1 text-xs font-medium text-slate-300">
                   <span className="h-1.5 w-1.5 rounded-full bg-slate-400" />
-                  <span>{t("employee.home.offShift", "Off Shift")}</span>
-                  <span className="text-white/40">•</span>
+
+                  <span>
+                    {attendance?.status ||
+                      t(
+                        "employee.home.offShift",
+                        "Off Shift",
+                      )}
+                  </span>
+
+                  <span className="text-white/40">
+                    •
+                  </span>
+
                   <span className="text-white/80">
-                    {t("employee.home.location", "Downtown Campus · Tower B")}
+                    {t(
+                      "employee.home.location",
+                      "Workplace",
+                    )}
                   </span>
                 </div>
 
                 <div>
                   <h2 className="text-2xl md:text-[26px] font-bold text-white tracking-tight">
-                    {t("employee.home.checkedOut", "You're checked out")}
+                    {attendance?.check_out_time
+                      ? t(
+                          "employee.home.checkedOut",
+                          "You're checked out",
+                        )
+                      : t(
+                          "employee.home.notCheckedIn",
+                          "You're not checked in",
+                        )}
                   </h2>
+
                   <p className="text-xs text-white/70 mt-1">
-                    {t("employee.home.shiftEnded", "Shift has ended for today")}
+                    {attendance?.check_out_time
+                      ? `${t(
+                          "employee.home.checkedOutAt",
+                          "Checked out at",
+                        )} ${
+                          attendance.check_out_time
+                        }`
+                      : t(
+                          "employee.home.checkInFromWorkplace",
+                          "Check in from your designated workplace",
+                        )}
                   </p>
                 </div>
 
                 <div className="flex items-center gap-2 pt-1 text-xs text-white/80">
                   <FiMapPin className="w-3.5 h-3.5 text-slate-400" />
+
                   <span>
-                    {t(
-                      "employee.home.checkInFromWorkplace",
-                      "Check in from your designated workplace",
-                    )}
+                    {attendance?.distance_meters !==
+                    null &&
+                    attendance?.distance_meters !==
+                      undefined
+                      ? distanceText
+                      : t(
+                          "employee.home.locationUnavailable",
+                          "Location unavailable",
+                        )}
                   </span>
                 </div>
               </>
@@ -187,32 +454,64 @@ export default function HomeDashboard() {
 
           <div className="flex flex-col items-start md:items-end gap-3 shrink-0">
             <span className="text-[11px] font-bold tracking-widest text-white/50 uppercase">
-              {t("employee.home.workedToday", "WORKED TODAY")}
-            </span>
-            <div className="font-mono text-3xl md:text-[34px] font-bold tracking-tight text-white">
-              {isCheckedIn ? formatTime(secondsWorked) : "00:00:00"}
-            </div>
-            <motion.button
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              type="button"
-              onClick={handleToggleCheck}
-              className="inline-flex items-center gap-2 rounded-xl bg-white px-5 py-2.5 text-xs font-semibold text-[#102a43] hover:bg-slate-50 transition shadow-sm"
-            >
-              {isCheckedIn ? (
-                <>
-                  {t("employee.home.checkOut", "Check out")}{" "}
-                  <FiArrowRight className="w-3.5 h-3.5" />
-                </>
-              ) : (
-                <>
-                  {t("employee.home.checkIn", "Check in")}{" "}
-                  <FiArrowRight className="w-3.5 h-3.5" />
-                </>
+              {t(
+                "employee.home.workedToday",
+                "WORKED TODAY",
               )}
-            </motion.button>
+            </span>
+
+            <div className="font-mono text-3xl md:text-[34px] font-bold tracking-tight text-white">
+              {attendanceLoading
+                ? "--:--:--"
+                : formatTime(secondsWorked)}
+            </div>
+
+          <motion.button
+  whileHover={
+    canCheckIn || canCheckOut
+      ? { scale: 1.02 }
+      : undefined
+  }
+  whileTap={
+    canCheckIn || canCheckOut
+      ? { scale: 0.98 }
+      : undefined
+  }
+  type="button"
+  onClick={handleAttendanceAction}
+  disabled={
+    attendanceLoading ||
+    actionLoading ||
+    (!canCheckIn && !canCheckOut)
+  }
+  className={`inline-flex items-center gap-2 rounded-xl px-5 py-2.5 text-xs font-semibold transition shadow-sm ${
+    canCheckIn || canCheckOut
+      ? "bg-white text-[#102a43] hover:bg-slate-50 cursor-pointer"
+      : "bg-white/40 text-white/60 cursor-not-allowed"
+  }`}
+>
+  {actionLoading ? (
+    "Processing..."
+  ) : canCheckOut ? (
+    <>
+      {t("employee.home.checkOut", "Check out")}
+      <FiArrowRight className="w-3.5 h-3.5" />
+    </>
+  ) : (
+    <>
+      {t("employee.home.checkIn", "Check in")}
+      <FiArrowRight className="w-3.5 h-3.5" />
+    </>
+  )}
+</motion.button>
           </div>
         </div>
+
+        {actionError && (
+          <div className="relative z-10 mt-5 rounded-xl border border-red-400/20 bg-red-500/10 px-4 py-3 text-xs text-red-200">
+            {actionError}
+          </div>
+        )}
       </motion.div>
 
       {/* 3. Summary Cards Grid */}
@@ -228,15 +527,27 @@ export default function HomeDashboard() {
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#eff6ff] text-[#3b82f6]">
               <FiCheckSquare className="w-4 h-4" />
             </div>
+
             <span className="text-[11px] font-bold tracking-wider text-[#94a3b8] uppercase">
-              {t("employee.home.pendingTasks", "PENDING TASKS")}
+              {t(
+                "employee.home.pendingTasks",
+                "PENDING TASKS",
+              )}
             </span>
           </div>
+
           <h3 className="text-xl font-bold text-[#102a43]">
-            {t("employee.home.tasksCount", "3 tasks")}
+            {t(
+              "employee.home.tasksCount",
+              "3 tasks",
+            )}
           </h3>
+
           <p className="text-xs text-[#64748b] mt-1">
-            {t("employee.home.highPriority", "1 high priority")}
+            {t(
+              "employee.home.highPriority",
+              "1 high priority",
+            )}
           </p>
         </motion.div>
 
@@ -248,13 +559,22 @@ export default function HomeDashboard() {
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#fefce8] text-[#d97706]">
               <FiClock className="w-4 h-4" />
             </div>
+
             <span className="text-[11px] font-bold tracking-wider text-[#94a3b8] uppercase">
-              {t("employee.home.nextDeadline", "NEXT DEADLINE")}
+              {t(
+                "employee.home.nextDeadline",
+                "NEXT DEADLINE",
+              )}
             </span>
           </div>
+
           <h3 className="text-xl font-bold text-[#102a43]">
-            {t("employee.home.deadlineDate", "Jun 12")}
+            {t(
+              "employee.home.deadlineDate",
+              "Jun 12",
+            )}
           </h3>
+
           <p className="text-xs text-[#64748b] mt-1">
             {t(
               "employee.home.operationsReport",
@@ -271,25 +591,44 @@ export default function HomeDashboard() {
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#ecfdf5] text-[#059669]">
               <FiCalendar className="w-4 h-4" />
             </div>
+
             <span className="text-[11px] font-bold tracking-wider text-[#94a3b8] uppercase">
-              {t("employee.home.leaveBalance", "LEAVE BALANCE")}
+              {t(
+                "employee.home.leaveBalance",
+                "LEAVE BALANCE",
+              )}
             </span>
           </div>
+
           <h3 className="text-xl font-bold text-[#102a43]">
-            {t("employee.home.daysCount", "13 days")}
+            {t(
+              "employee.home.daysCount",
+              "13 days",
+            )}
           </h3>
+
           <p className="text-xs text-[#64748b] mt-1">
-            {t("employee.home.annualCasual", "Annual + Casual")}
+            {t(
+              "employee.home.annualCasual",
+              "Annual + Casual",
+            )}
           </p>
         </motion.div>
       </motion.div>
 
       {/* 4. Quick Actions */}
-      <motion.div variants={itemVariants} className="space-y-3">
+      <motion.div
+        variants={itemVariants}
+        className="space-y-3"
+      >
         <div>
           <h3 className="text-base font-bold text-[#102a43]">
-            {t("employee.home.quickActions", "Quick actions")}
+            {t(
+              "employee.home.quickActions",
+              "Quick actions",
+            )}
           </h3>
+
           <p className="text-xs text-[#829ab1] mt-0.5">
             {t(
               "employee.home.shortcuts",
@@ -309,10 +648,15 @@ export default function HomeDashboard() {
               <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-[#ecfdf5] text-[#059669]">
                 <FiCalendar className="w-4 h-4" />
               </div>
+
               <span className="text-xs font-semibold text-[#102a43]">
-                {t("employee.home.requestLeave", "Request leave")}
+                {t(
+                  "employee.home.requestLeave",
+                  "Request leave",
+                )}
               </span>
             </div>
+
             <FiArrowRight className="w-4 h-4 text-[#cbd5e1] group-hover:text-[#102a43] transition-transform group-hover:translate-x-0.5" />
           </motion.div>
 
@@ -326,10 +670,15 @@ export default function HomeDashboard() {
               <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-[#eff6ff] text-[#3b82f6]">
                 <FiUploadCloud className="w-4 h-4" />
               </div>
+
               <span className="text-xs font-semibold text-[#102a43]">
-                {t("employee.home.submitTask", "Submit task")}
+                {t(
+                  "employee.home.submitTask",
+                  "Submit task",
+                )}
               </span>
             </div>
+
             <FiArrowRight className="w-4 h-4 text-[#cbd5e1] group-hover:text-[#102a43] transition-transform group-hover:translate-x-0.5" />
           </motion.div>
 
@@ -343,10 +692,15 @@ export default function HomeDashboard() {
               <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-[#ecfdf5] text-[#059669]">
                 <FiCalendar className="w-4 h-4" />
               </div>
+
               <span className="text-xs font-semibold text-[#102a43]">
-                {t("employee.home.viewCalendar", "View calendar")}
+                {t(
+                  "employee.home.viewCalendar",
+                  "View calendar",
+                )}
               </span>
             </div>
+
             <FiArrowRight className="w-4 h-4 text-[#cbd5e1] group-hover:text-[#102a43] transition-transform group-hover:translate-x-0.5" />
           </motion.div>
 
@@ -359,10 +713,15 @@ export default function HomeDashboard() {
               <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-[#ecfdf5] text-[#059669]">
                 <FiCpu className="w-4 h-4" />
               </div>
+
               <span className="text-xs font-semibold text-[#102a43]">
-                {t("employee.home.aiAssistant", "AI HR Assistant")}
+                {t(
+                  "employee.home.aiAssistant",
+                  "AI HR Assistant",
+                )}
               </span>
             </div>
+
             <FiArrowRight className="w-4 h-4 text-[#cbd5e1] group-hover:text-[#102a43] transition-transform group-hover:translate-x-0.5" />
           </motion.div>
         </div>
@@ -377,8 +736,12 @@ export default function HomeDashboard() {
           <div className="flex items-center justify-between mb-4">
             <div>
               <h3 className="text-base font-bold text-[#102a43]">
-                {t("employee.home.todaysSchedule", "Today's schedule")}
+                {t(
+                  "employee.home.todaysSchedule",
+                  "Today's schedule",
+                )}
               </h3>
+
               <p className="text-xs text-[#829ab1] mt-0.5">
                 {t(
                   "employee.home.upcomingEvents",
@@ -386,12 +749,17 @@ export default function HomeDashboard() {
                 )}
               </p>
             </div>
+
             <button
               type="button"
               onClick={() => setShowCalendarModal(true)}
               className="inline-flex items-center gap-1 text-xs font-medium text-[#64748b] hover:text-[#102a43] transition"
             >
-              {t("employee.home.viewAll", "View all")}{" "}
+              {t(
+                "employee.home.viewAll",
+                "View all",
+              )}
+
               <FiArrowRight className="w-3.5 h-3.5" />
             </button>
           </div>
@@ -401,13 +769,22 @@ export default function HomeDashboard() {
               <span className="font-medium text-[#829ab1] w-16 shrink-0">
                 10:30 AM
               </span>
+
               <span className="h-2 w-2 rounded-full bg-[#3b82f6] shrink-0" />
+
               <div className="min-w-0">
                 <p className="font-semibold text-[#102a43]">
-                  {t("employee.home.productSync", "Product sync")}
+                  {t(
+                    "employee.home.productSync",
+                    "Product sync",
+                  )}
                 </p>
+
                 <p className="text-[#829ab1]">
-                  {t("employee.home.meetingRoom", "Meeting room 4B · 45 min")}
+                  {t(
+                    "employee.home.meetingRoom",
+                    "Meeting room 4B · 45 min",
+                  )}
                 </p>
               </div>
             </div>
@@ -416,11 +793,17 @@ export default function HomeDashboard() {
               <span className="font-medium text-[#829ab1] w-16 shrink-0">
                 02:00 PM
               </span>
+
               <span className="h-2 w-2 rounded-full bg-[#10b981] shrink-0" />
+
               <div className="min-w-0">
                 <p className="font-semibold text-[#102a43]">
-                  {t("employee.home.focusTime", "Focus time")}
+                  {t(
+                    "employee.home.focusTime",
+                    "Focus time",
+                  )}
                 </p>
+
                 <p className="text-[#829ab1]">
                   {t(
                     "employee.home.operationsReportShort",
@@ -436,8 +819,12 @@ export default function HomeDashboard() {
           <div className="flex items-center justify-between mb-4">
             <div>
               <h3 className="text-base font-bold text-[#102a43]">
-                {t("employee.home.recentActivity", "Recent activity")}
+                {t(
+                  "employee.home.recentActivity",
+                  "Recent activity",
+                )}
               </h3>
+
               <p className="text-xs text-[#829ab1] mt-0.5">
                 {t(
                   "employee.home.latestUpdates",
@@ -445,11 +832,16 @@ export default function HomeDashboard() {
                 )}
               </p>
             </div>
+
             <button
               type="button"
               className="inline-flex items-center gap-1 text-xs font-medium text-[#64748b] hover:text-[#102a43] transition"
             >
-              {t("employee.home.seeAll", "See all")}{" "}
+              {t(
+                "employee.home.seeAll",
+                "See all",
+              )}
+
               <FiArrowRight className="w-3.5 h-3.5" />
             </button>
           </div>
@@ -460,6 +852,7 @@ export default function HomeDashboard() {
                 <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-[#eff6ff] text-[#3b82f6] shrink-0">
                   <FiActivity className="w-3.5 h-3.5" />
                 </div>
+
                 <div className="min-w-0">
                   <p className="font-semibold text-[#102a43] truncate">
                     {t(
@@ -467,11 +860,16 @@ export default function HomeDashboard() {
                       "Vendor checklist submitted",
                     )}
                   </p>
+
                   <p className="text-[#829ab1]">
-                    {t("employee.home.yesterdayAt432", "Yesterday at 4:32 PM")}
+                    {t(
+                      "employee.home.yesterdayAt432",
+                      "Yesterday at 4:32 PM",
+                    )}
                   </p>
                 </div>
               </div>
+
               <div className="flex h-4 w-4 items-center justify-center rounded-full border border-slate-200 text-slate-400 shrink-0">
                 <FiCheck className="w-2.5 h-2.5" />
               </div>
@@ -482,15 +880,24 @@ export default function HomeDashboard() {
                 <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-[#eff6ff] text-[#3b82f6] shrink-0">
                   <FiBell className="w-3.5 h-3.5" />
                 </div>
+
                 <div className="min-w-0">
                   <p className="font-semibold text-[#102a43] truncate">
-                    {t("employee.home.leaveUpdated", "Leave balance updated")}
+                    {t(
+                      "employee.home.leaveUpdated",
+                      "Leave balance updated",
+                    )}
                   </p>
+
                   <p className="text-[#829ab1]">
-                    {t("employee.home.yesterdayAt910", "Yesterday at 9:10 AM")}
+                    {t(
+                      "employee.home.yesterdayAt910",
+                      "Yesterday at 9:10 AM",
+                    )}
                   </p>
                 </div>
               </div>
+
               <div className="flex h-4 w-4 items-center justify-center rounded-full border border-slate-200 text-slate-400 shrink-0">
                 <FiCheck className="w-2.5 h-2.5" />
               </div>
@@ -510,9 +917,21 @@ export default function HomeDashboard() {
             className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 p-4 backdrop-blur-sm"
           >
             <motion.div
-              initial={{ opacity: 0, scale: 0.96, y: 10 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.96, y: 10 }}
+              initial={{
+                opacity: 0,
+                scale: 0.96,
+                y: 10,
+              }}
+              animate={{
+                opacity: 1,
+                scale: 1,
+                y: 0,
+              }}
+              exit={{
+                opacity: 0,
+                scale: 0.96,
+                y: 10,
+              }}
               transition={{ duration: 0.2 }}
               onClick={(e) => e.stopPropagation()}
               className="w-full max-w-lg rounded-2xl bg-white p-6 shadow-xl"
@@ -524,9 +943,14 @@ export default function HomeDashboard() {
                 >
                   <FiChevronLeft className="w-4 h-4" />
                 </button>
+
                 <h3 className="text-sm font-bold text-[#102a43]">
-                  {t("employee.home.monthName", "June 2026")}
+                  {t(
+                    "employee.home.monthName",
+                    "June 2026",
+                  )}
                 </h3>
+
                 <button
                   type="button"
                   className="flex h-8 w-8 items-center justify-center rounded-lg border border-[#e2e8f0] text-[#64748b] hover:bg-[#f8fafc] transition"
@@ -546,7 +970,10 @@ export default function HomeDashboard() {
               </div>
 
               <div className="grid grid-cols-7 text-center gap-1 py-3 text-xs font-medium text-[#1e293b]">
-                <span className="py-2 text-[#cbd5e1]">31</span>
+                <span className="py-2 text-[#cbd5e1]">
+                  31
+                </span>
+
                 <span className="py-2">1</span>
                 <span className="py-2">2</span>
                 <span className="py-2">3</span>
@@ -555,9 +982,11 @@ export default function HomeDashboard() {
                 <span className="py-2">6</span>
                 <span className="py-2">7</span>
                 <span className="py-2">8</span>
+
                 <span className="py-2 font-bold text-[#059669] bg-[#ecfdf5] rounded-lg">
                   9
                 </span>
+
                 <span className="py-2">10</span>
                 <span className="py-2">11</span>
                 <span className="py-2">12</span>
@@ -585,20 +1014,38 @@ export default function HomeDashboard() {
                 <div className="flex items-center gap-3 text-xs text-[#64748b]">
                   <div className="flex items-center gap-1.5">
                     <span className="h-2 w-2 rounded-full bg-[#10b981]" />
-                    <span>{t("employee.home.today", "Today")}</span>
+
+                    <span>
+                      {t(
+                        "employee.home.today",
+                        "Today",
+                      )}
+                    </span>
                   </div>
+
                   <div className="flex items-center gap-1.5">
                     <span className="h-2 w-2 rounded-full bg-[#3b82f6]" />
-                    <span>{t("employee.home.event", "Events")}</span>
+
+                    <span>
+                      {t(
+                        "employee.home.event",
+                        "Events",
+                      )}
+                    </span>
                   </div>
                 </div>
 
                 <button
                   type="button"
-                  onClick={() => setShowCalendarModal(false)}
+                  onClick={() =>
+                    setShowCalendarModal(false)
+                  }
                   className="rounded-xl bg-[#102a43] px-4 py-2 text-xs font-semibold text-white hover:bg-[#1c364f] transition"
                 >
-                  {t("employee.home.close", "Close")}
+                  {t(
+                    "employee.home.close",
+                    "Close",
+                  )}
                 </button>
               </div>
             </motion.div>

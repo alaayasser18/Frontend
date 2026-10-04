@@ -8,6 +8,7 @@ import {
   markNotificationAsRead,
   markAllNotificationsAsRead,
   clearAllNotifications as apiClearAll,
+  deleteNotification as apiDeleteOne,
 } from "../api";
 import echo from "../../../utils/echo";
 
@@ -56,7 +57,7 @@ export const useNotifications = (currentUserId) => {
     queryFn: async () => {
       const res = await fetchNotifications(1, 100);
 
-      return (res?.data?.data || []).map(normalizeNotification);
+      return (res?.data?.notifications || []).map(normalizeNotification);
     },
     enabled: isAuthenticated,
   });
@@ -225,6 +226,43 @@ export const useNotifications = (currentUserId) => {
     },
   });
 
+  const deleteOneMutation = useMutation({
+    mutationFn: apiDeleteOne,
+
+    onMutate: async (id) => {
+      await queryClient.cancelQueries({ queryKey: ["notifications"] });
+      await queryClient.cancelQueries({ queryKey: ["notifications", "unreadCount"] });
+
+      const previousNotifications = queryClient.getQueryData(["notifications"]);
+      const previousUnreadCount = queryClient.getQueryData(["notifications", "unreadCount"]);
+
+      // optimistic: remove from cache immediately
+      queryClient.setQueryData(["notifications"], (old) => {
+        const target = old?.find((n) => n.id === id);
+        if (target && !target.isRead) {
+          queryClient.setQueryData(
+            ["notifications", "unreadCount"],
+            (count) => Math.max(0, (count || 0) - 1)
+          );
+        }
+        return old?.filter((n) => n.id !== id);
+      });
+
+      return { previousNotifications, previousUnreadCount };
+    },
+
+    onError: (err, id, context) => {
+      if (!context) return;
+      queryClient.setQueryData(["notifications"], context.previousNotifications);
+      queryClient.setQueryData(["notifications", "unreadCount"], context.previousUnreadCount);
+    },
+
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ["notifications"] });
+      queryClient.invalidateQueries({ queryKey: ["notifications", "unreadCount"] });
+    },
+  });
+
   // ── Functions ─────────────────────────────────────────────
   const markAsRead = useCallback(
     (id) => markAsReadMutation.mutateAsync(id),
@@ -242,21 +280,8 @@ export const useNotifications = (currentUserId) => {
   );
 
   const clearNotification = useCallback(
-    (id) => {
-      queryClient.setQueryData(["notifications"], (old) => {
-        const target = old?.find((n) => n.id === id);
-
-        if (target && !target.isRead) {
-          queryClient.setQueryData(
-            ["notifications", "unreadCount"],
-            (count) => Math.max(0, (count || 0) - 1)
-          );
-        }
-
-        return old?.filter((n) => n.id !== id);
-      });
-    },
-    [queryClient]
+    (id) => deleteOneMutation.mutateAsync(id),
+    [deleteOneMutation]
   );
 
   const toggleNotificationRead = useCallback(

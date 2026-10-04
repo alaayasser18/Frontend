@@ -23,6 +23,7 @@ import {
   FiBookOpen,
   FiUser,
   FiBell,
+  FiTarget,
 } from "react-icons/fi";
 
 import {
@@ -80,10 +81,10 @@ export const navConfig = {
       icon: MdNotifications,
     },
     {
-      titleKey: "portal.settings",
-      title: "Settings",
+      titleKey: "portal.profileSettings",
+      title: "Profile & Settings",
       path: "/admin/settings",
-      icon: MdSettings,
+      icon: FiUser,
     },
   ],
 
@@ -193,6 +194,13 @@ export const navConfig = {
       icon: MdNotifications,
       section: "GROWTH & GOVERNANCE",
     },
+    {
+      titleKey: "portal.profileSettings",
+      title: "Profile & Settings",
+      path: "/hr/settings",
+      icon: FiUser,
+      section: "GROWTH & GOVERNANCE",
+    },
   ],
 
   // ==================================================
@@ -260,6 +268,12 @@ export const navConfig = {
       path: "/manager/notifications",
       icon: MdNotifications,
     },
+    {
+      titleKey: "portal.profileSettings",
+      title: "Profile & Settings",
+      path: "/manager/profile",
+      icon: FiUser,
+    },
   ],
 
   // ==================================================
@@ -296,6 +310,12 @@ export const navConfig = {
       title: "My Performance",
       path: "/employee/performance",
       icon: FiTrendingUp,
+    },
+    {
+      titleKey: "portal.myGoals",
+      title: "My Goals",
+      path: "/employee/goals",
+      icon: FiTarget,
     },
     {
       titleKey: "portal.aiAssistant",

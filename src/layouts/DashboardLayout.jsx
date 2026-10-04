@@ -36,15 +36,14 @@ const DashboardInner = () => {
 
         <div
           className="
-            ml-[256px]
+            ml-0
+            lg:ml-[256px]
             flex min-h-screen min-w-0 flex-1 flex-col
             bg-[#f5f7f8]
 
-            max-[760px]:ml-0
-
             rtl:ml-0
-            rtl:mr-[256px]
-            rtl:max-[760px]:mr-0
+            rtl:mr-0
+            rtl:lg:mr-[256px]
           "
         >
           <Header
@@ -57,17 +56,9 @@ const DashboardInner = () => {
           <main
             className="
               flex-1
-              px-[38px]
-              pt-[34px]
-              pb-[50px]
-
-              max-[1050px]:px-[22px]
-              max-[1050px]:pt-[28px]
-              max-[1050px]:pb-[28px]
-
-              max-[760px]:px-[15px]
-              max-[760px]:pt-[24px]
-              max-[760px]:pb-[40px]
+              px-4 sm:px-6 lg:px-[38px]
+              py-5 sm:py-6 lg:pt-[34px] lg:pb-[50px]
+              w-full max-w-full
             "
           >
             <Outlet />

@@ -35,6 +35,7 @@ import HomeDashboard from "./features/employee/pages/home/HomeDashboard";
 import Attendance from "./features/employee/pages/attendance/Attendance";
 import LeaveBalances from "./features/employee/pages/Leave & balances";
 import AIAssistant from "./features/employee/pages/AI Assistant";
+import EmployeeGoals from "./features/employee/pages/Goals";
 
 // ==================== Manager Pages ====================
 import TeamDashboard from "./features/manager/pages/TeamDashboard";
@@ -325,6 +326,7 @@ function App() {
                 element={<Notification />}
               />
               <Route path="/employee/policies" element={<CompanyPolicies />} />
+              <Route path="/employee/goals" element={<EmployeeGoals />} />
               <Route
                 path="/employee/profile"
                 element={<EmployeeProfileSettings />}

@@ -322,7 +322,11 @@ const Users = () => {
         role: user.role,
         phone: user.phone || null,
         job_title: user.job_title || null,
-        department: user.department?.name || user.department_name || user.department || null,
+        department:
+          user.department?.name ||
+          user.department_name ||
+          user.department ||
+          null,
         status: user.status || "Active",
         permissions: user.permissions || [],
         access:
@@ -520,7 +524,7 @@ const Users = () => {
       accessMap[user.id] !== undefined
         ? accessMap[user.id]
         : user.status
-          ? (user.status.toLowerCase() === "active" || user.status === "نشط")
+          ? user.status.toLowerCase() === "active" || user.status === "نشط"
           : true;
 
     const nextActive = !isCurrentlyActive;
@@ -539,8 +543,12 @@ const Users = () => {
       });
       toast.success(
         nextActive
-          ? (isRtl ? "تم تفعيل الحساب بنجاح" : "Account activated successfully")
-          : (isRtl ? "تم تعطيل الحساب بنجاح" : "Account deactivated successfully"),
+          ? isRtl
+            ? "تم تفعيل الحساب بنجاح"
+            : "Account activated successfully"
+          : isRtl
+            ? "تم تعطيل الحساب بنجاح"
+            : "Account deactivated successfully",
       );
       refetchEmployees();
     } catch (err) {
@@ -941,7 +949,7 @@ const Users = () => {
             initial="hidden"
             animate="visible"
             exit="exit"
-            className="fixed inset-0 z-50 flex items-center justify-center bg-[#102a43]/40 p-4"
+            className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-[#102a43]/40 px-4 py-4 sm:py-5"
             onClick={(e) => e.target === e.currentTarget && handleCloseModal()}
           >
             <motion.div
@@ -950,9 +958,9 @@ const Users = () => {
               initial="hidden"
               animate="visible"
               exit="exit"
-              className="w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-2xl bg-white p-6 shadow-xl"
+              className="flex w-full max-w-[704px] max-h-[calc(100vh-32px)] flex-col overflow-hidden rounded-2xl bg-white shadow-2xl sm:max-h-[calc(100vh-40px)]"
             >
-              <div className="flex items-center justify-between mb-6 pb-3 border-b border-[#eef1f4]">
+              <div className="flex shrink-0 items-center justify-between border-b border-[#eef1f4] px-6 py-4 sm:px-7 sm:py-5">
                 <h3 className="text-[18px] font-bold text-[#243B53] leading-[1.3]">
                   {t("usersPage.addUserAccount", "Add user account")}
                 </h3>
@@ -967,7 +975,10 @@ const Users = () => {
                 </button>
               </div>
 
-              <form onSubmit={handleCreateUser} className="space-y-4">
+              <form
+                onSubmit={handleCreateUser}
+                className="min-h-0 overflow-y-auto px-6 py-5 sm:px-7 sm:py-6 space-y-4"
+              >
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   {/* Full name */}
                   <div>

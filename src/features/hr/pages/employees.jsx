@@ -1,5 +1,7 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
+import toast from "react-hot-toast";
+import { getDepartments } from "../api/index";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   FiSearch,
@@ -14,6 +16,8 @@ import {
   FiEdit2,
   FiPower,
   FiSave,
+  FiEye,
+  FiEyeOff,
 } from "react-icons/fi";
 
 import {
@@ -102,33 +106,170 @@ function EmployeesPage() {
 
   const isArabic = currentLang.toLowerCase().startsWith("ar");
 
+  // API accepts only ar / en
+  const apiLang = isArabic ? "ar" : "en";
+
   // =====================================================
   // API / REACT QUERY
   // =====================================================
 
-  const { data: employeesResponse } = useEmployees({}, currentLang);
+  const {
+    data: employeesResponse,
+    isLoading: employeesLoading,
+    isError: employeesError,
+    error: employeesQueryError,
+    refetch: refetchEmployees,
+  } = useEmployees({ per_page: 100 }, apiLang);
 
-  const { data: permissionsResponse } = usePermissions(currentLang);
+  const {
+    data: permissionsResponse,
+    isLoading: permissionsLoading,
+    isError: permissionsQueryFailed,
+    error: permissionsQueryError,
+    refetch: refetchPermissions,
+  } = usePermissions(apiLang);
 
-  const createEmployeeMutation = useCreateEmployee(currentLang);
-  const updateEmployeeMutation = useUpdateEmployeeHrFields(currentLang);
+  const createEmployeeMutation = useCreateEmployee(apiLang);
+
+  const updateEmployeeMutation = useUpdateEmployeeHrFields(apiLang);
+
+  const changeStatusMutation = useChangeEmployeeAccountStatus(apiLang);
 
   const { role, hasPermission, currentUser } = useAuth();
+
   const canUpdateHrFields =
     role === "Admin" ||
     role === "HR" ||
     role === "Owner" ||
     (typeof hasPermission === "function" && hasPermission("Update HR fields"));
 
-  const changeStatusMutation = useChangeEmployeeAccountStatus(currentLang);
-
   const [selectedEmployee, setSelectedEmployee] = useState(null);
 
-  // GET /api/employees/{id} - retrieve detailed profile for selected employee
+  // GET /api/employees/{id}
   const { data: employeeDetails } = useEmployee(
     selectedEmployee?.id,
-    currentLang,
+    apiLang,
   );
+
+  // =====================================================
+  // DEPARTMENTS
+  // =====================================================
+
+  const [departments, setDepartments] = useState([]);
+
+  const [departmentsLoading, setDepartmentsLoading] = useState(false);
+
+  const [departmentError, setDepartmentError] = useState("");
+
+  const [departmentRefreshKey, setDepartmentRefreshKey] = useState(0);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const loadDepartments = async () => {
+      try {
+        setDepartmentsLoading(true);
+        setDepartmentError("");
+
+        const departmentList = [];
+        let page = 1;
+        let lastPage = 1;
+
+        do {
+          const response = await getDepartments(apiLang, {
+            page,
+            per_page: 100,
+          });
+          const currentPageDepartments = [
+            response?.data?.departments,
+            response?.departments,
+            response?.data,
+            response?.data?.data?.departments,
+            response?.data?.data,
+            response,
+          ].find(Array.isArray);
+
+          if (!currentPageDepartments) {
+            throw new Error(
+              isArabic
+                ? "استجابة الأقسام من الخادم غير صالحة."
+                : "The departments response from the server is invalid.",
+            );
+          }
+
+          departmentList.push(...currentPageDepartments);
+
+          const pagination =
+            response?.data?.meta ||
+            response?.meta ||
+            response?.data ||
+            response;
+          const responseLastPage = Number(pagination?.last_page);
+
+          lastPage =
+            Number.isFinite(responseLastPage) && responseLastPage >= page
+              ? responseLastPage
+              : page;
+          page += 1;
+        } while (page <= lastPage);
+
+        const normalizedDepartments = departmentList
+          .filter(
+            (department) =>
+              department &&
+              department.id !== undefined &&
+              department.id !== null,
+          )
+          .map((department) => ({
+            ...department,
+            id: Number(department.id),
+            name: department.name || "",
+          }))
+          .filter(
+            (department) => Number.isFinite(department.id) && department.name,
+          );
+
+        if (!cancelled) {
+          setDepartments(normalizedDepartments);
+
+          if (normalizedDepartments.length === 0) {
+            setDepartmentError(
+              isArabic
+                ? "لم يتم العثور على أي أقسام."
+                : "No departments were returned from the server.",
+            );
+          }
+        }
+      } catch (error) {
+        if (!cancelled) {
+          setDepartments([]);
+
+          setDepartmentError(
+            getApiErrorMessage(
+              error,
+              isArabic ? "فشل تحميل الأقسام." : "Failed to load departments.",
+            ),
+          );
+        }
+      } finally {
+        if (!cancelled) {
+          setDepartmentsLoading(false);
+        }
+      }
+    };
+
+    loadDepartments();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [apiLang, isArabic, departmentRefreshKey]);
+
+  // =====================================================
+  // MODAL
+  // =====================================================
+
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   // =====================================================
   // EDIT HR FORM
@@ -148,10 +289,11 @@ function EmployeesPage() {
   const [formData, setFormData] = useState({
     email: "",
     password: "",
-    role: "Employee",
-    employment_type: "Full-time",
+    role: "",
+    employment_type: "",
     department_id: "",
     start_date: "",
+    salary: "",
     phone: "",
     address: "",
     permissions: [],
@@ -233,21 +375,91 @@ function EmployeesPage() {
       : "We couldn't find any employees matching your search.",
 
     editHrFields: isArabic ? "تعديل بيانات الموارد البشرية" : "Edit HR Fields",
+
     editHrFieldsModalTitle: isArabic
       ? "تحديث بيانات الموارد البشرية للموظف"
       : "Update Employee HR Fields",
+
     jobTitleLabel: isArabic ? "المسمى الوظيفي" : "Job Title",
+
     employmentTypeLabel: isArabic ? "نوع التوظيف" : "Employment Type",
+
     statusLabelText: isArabic ? "الحالة" : "Status",
-    departmentIdLabel: isArabic ? "معرف القسم" : "Department ID",
+
+    departmentIdLabel: isArabic ? "القسم" : "Department",
+
     saveHrFields: isArabic ? "حفظ التعديلات" : "Save Changes",
+
+    salaryLabel: isArabic ? "الراتب" : "Salary",
+
+    salaryPlaceholder: isArabic ? "أدخل الراتب" : "Enter salary",
+
+    salaryHelper: isArabic
+      ? "أدخل الراتب الأساسي للموظف."
+      : "Enter the employee's basic salary.",
+
+    invalidPassword: isArabic
+      ? "كلمة المرور يجب أن تكون 8 أحرف على الأقل."
+      : "Password must be at least 8 characters.",
+
+    invalidSalary: isArabic
+      ? "من فضلك أدخل راتبًا صحيحًا أكبر من صفر."
+      : "Please enter a valid salary greater than zero.",
+
+    departmentRequired: isArabic
+      ? "القسم مطلوب للموظف والمدير."
+      : "Department is required for Employee and Manager.",
+
+    updateError: isArabic
+      ? "حدث خطأ أثناء تحديث بيانات الموظف."
+      : "Failed to update employee.",
+
+    statusError: isArabic
+      ? "حدث خطأ أثناء تغيير حالة الموظف."
+      : "Failed to change employee status.",
+
+    updating: isArabic ? "جاري التحديث..." : "Updating...",
+
+    deactivate: isArabic ? "تعطيل الحساب" : "Deactivate Account",
+
+    activate: isArabic ? "تفعيل الحساب" : "Activate Account",
+
+    saveChanges: isArabic ? "حفظ التعديلات" : "Save Changes",
+
+    fullTime: isArabic ? "دوام كامل" : "Full-time",
+
+    partTime: isArabic ? "دوام جزئي" : "Part-time",
+
+    contract: isArabic ? "تعاقد" : "Contract",
+
+    active: isArabic ? "نشط" : "Active",
+
+    inactive: isArabic ? "غير نشط" : "Inactive",
+
+    selectDepartment: isArabic ? "اختر القسم" : "Select department",
+
+    selectRole: isArabic ? "اختر الدور" : "Select role",
+
+    selectEmploymentType: isArabic
+      ? "اختر نوع التوظيف"
+      : "Select employment type",
+
+    showPassword: isArabic ? "إظهار كلمة المرور" : "Show password",
+
+    hidePassword: isArabic ? "إخفاء كلمة المرور" : "Hide password",
+
+    loadingDepartments: isArabic
+      ? "جاري تحميل الأقسام..."
+      : "Loading departments...",
+
+    noDepartments: isArabic
+      ? "لا توجد أقسام متاحة"
+      : "No departments available",
   };
 
   // =====================================================
   // UI STATE
   // =====================================================
-
-  const [isModalOpen, setIsModalOpen] = useState(false);
 
   const [isSuccess, setIsSuccess] = useState(false);
 
@@ -261,15 +473,27 @@ function EmployeesPage() {
 
   const [isEditMode, setIsEditMode] = useState(false);
 
+  const [fieldErrors, setFieldErrors] = useState({});
+
+  const [showCreatePassword, setShowCreatePassword] = useState(false);
+
   // =====================================================
   // EMPLOYEES FROM API
   // =====================================================
 
   const employees = useMemo(() => {
     const response = employeesResponse;
+    const employeeList = [
+      response?.data?.employees,
+      response?.data?.data?.employees,
+      response?.data?.data,
+      response?.data,
+      response?.employees,
+      response,
+    ].find(Array.isArray);
 
-    if (Array.isArray(response?.data)) {
-      return response.data.map((employee) => {
+    if (employeeList) {
+      return employeeList.map((employee) => {
         const normalizedStatus = String(employee.status || "").toLowerCase();
 
         let statusType = "info";
@@ -286,6 +510,8 @@ function EmployeesPage() {
           id: employee.id,
 
           name: employee.name || "-",
+
+          email: employee.email || "",
 
           code: employee.employee_code || employee.code || employee.id || "-",
 
@@ -323,12 +549,26 @@ function EmployeesPage() {
   // =====================================================
 
   const permissions = useMemo(() => {
-    if (Array.isArray(permissionsResponse?.data)) {
+    if (
+      Array.isArray(permissionsResponse?.data) &&
+      permissionsResponse.data.every(
+        (permission) => typeof permission === "string",
+      )
+    ) {
       return permissionsResponse.data;
     }
 
     return [];
   }, [permissionsResponse]);
+
+  const permissionsResponseInvalid =
+    !permissionsLoading &&
+    !permissionsQueryFailed &&
+    permissionsResponse !== undefined &&
+    (!Array.isArray(permissionsResponse?.data) ||
+      !permissionsResponse.data.every(
+        (permission) => typeof permission === "string",
+      ));
 
   // =====================================================
   // SEARCH
@@ -344,6 +584,7 @@ function EmployeesPage() {
     return employees.filter((employee) => {
       return (
         employee.name.toLowerCase().includes(value) ||
+        employee.email.toLowerCase().includes(value) ||
         employee.code.toString().toLowerCase().includes(value) ||
         employee.role.toLowerCase().includes(value) ||
         employee.department.toString().toLowerCase().includes(value) ||
@@ -399,7 +640,25 @@ function EmployeesPage() {
   // FORM CHANGE
   // =====================================================
 
+  const clearFieldError = (field) => {
+    setFieldErrors((prev) => {
+      if (!prev[field]) {
+        return prev;
+      }
+
+      const next = { ...prev };
+      delete next[field];
+      return next;
+    });
+  };
+
   const handleFormChange = (field, value) => {
+    clearFieldError(field);
+
+    if (field === "role") {
+      clearFieldError("department_id");
+    }
+
     setFormData((prev) => ({
       ...prev,
       [field]: value,
@@ -411,24 +670,126 @@ function EmployeesPage() {
   // =====================================================
 
   const handleSave = async () => {
-    if (
-      !details.trim() ||
-      !owner.trim() ||
-      !formData.email.trim() ||
-      !formData.password ||
-      !formData.start_date
-    ) {
+    setFieldErrors({});
+
+    if (createEmployeeMutation.isPending) {
       return;
     }
+
+    const validationErrors = {};
+    const email = formData.email.trim();
+    const phone = formData.phone.trim();
+    const allowedRoles = ["Employee", "Manager", "HR"];
+    const allowedEmploymentTypes = ["Full-time", "Part-time", "Contract"];
+
+    if (!details.trim()) {
+      validationErrors.name =
+        isArabic ? "أدخل اسم الموظف." : "Enter the employee name.";
+    }
+
+    if (!owner.trim()) {
+      validationErrors.job_title =
+        isArabic ? "أدخل المسمى الوظيفي." : "Enter the job title.";
+    }
+
+    if (!email) {
+      validationErrors.email =
+        isArabic ? "أدخل البريد الإلكتروني." : "Enter the email address.";
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      validationErrors.email =
+        isArabic
+          ? "أدخل بريدًا إلكترونيًا صالحًا."
+          : "Enter a valid email address.";
+    }
+
+    if (!formData.password) {
+      validationErrors.password =
+        isArabic ? "أدخل كلمة المرور." : "Enter the password.";
+    } else if (formData.password.length < 8) {
+      validationErrors.password = t.invalidPassword;
+    }
+
+    if (!allowedRoles.includes(formData.role)) {
+      validationErrors.role =
+        isArabic ? "اختر دورًا صالحًا." : "Select a valid role.";
+    }
+
+    if (!allowedEmploymentTypes.includes(formData.employment_type)) {
+      validationErrors.employment_type =
+        isArabic
+          ? "اختر نوع توظيف صالحًا."
+          : "Select a valid employment type.";
+    }
+
+    const departmentId = formData.department_id
+      ? Number(formData.department_id)
+      : null;
 
     if (
       (formData.role === "Employee" || formData.role === "Manager") &&
-      !formData.department_id
+      !departmentId
     ) {
-      return;
+      validationErrors.department_id = t.departmentRequired;
     }
 
-    if (formData.password.length < 8) {
+    if (
+      formData.department_id &&
+      (!Number.isInteger(departmentId) ||
+        !departments.some((department) => department.id === departmentId))
+    ) {
+      validationErrors.department_id =
+        isArabic ? "اختر قسمًا صالحًا." : "Select a valid department.";
+    }
+
+    const [year, month, day] = formData.start_date.split("-").map(Number);
+    const parsedStartDate = new Date(Date.UTC(year, month - 1, day));
+    const isValidStartDate =
+      /^\d{4}-\d{2}-\d{2}$/.test(formData.start_date) &&
+      parsedStartDate.getUTCFullYear() === year &&
+      parsedStartDate.getUTCMonth() === month - 1 &&
+      parsedStartDate.getUTCDate() === day;
+
+    if (!isValidStartDate) {
+      validationErrors.start_date =
+        isArabic ? "اختر تاريخ بدء صالحًا." : "Select a valid start date.";
+    }
+
+    const salary = Number(formData.salary);
+
+    if (
+      !formData.salary.trim() ||
+      !Number.isFinite(salary) ||
+      salary <= 0
+    ) {
+      validationErrors.salary = t.invalidSalary;
+    }
+
+    const phoneDigits = phone.replace(/\D/g, "");
+    if (
+      phone &&
+      (!/^\+?[0-9\s().-]+$/.test(phone) ||
+        phoneDigits.length < 7 ||
+        phoneDigits.length > 15)
+    ) {
+      validationErrors.phone =
+        isArabic
+          ? "أدخل رقم هاتف صالحًا (من 7 إلى 15 رقمًا)."
+          : "Enter a valid phone number (7 to 15 digits).";
+    }
+
+    if (
+      formData.permissions.some(
+        (permission) => !permissions.includes(permission),
+      )
+    ) {
+      validationErrors.permissions =
+        isArabic
+          ? "قائمة الصلاحيات تغيرت. حدّث الصلاحيات ثم حاول مرة أخرى."
+          : "The permissions list has changed. Refresh it and try again.";
+    }
+
+    if (Object.keys(validationErrors).length > 0) {
+      setFieldErrors(validationErrors);
       return;
     }
 
@@ -447,15 +808,17 @@ function EmployeesPage() {
 
       start_date: formData.start_date,
 
-      department_id: formData.department_id
-        ? Number(formData.department_id)
-        : null,
+      salary,
+
+      department_id: departmentId,
 
       phone: formData.phone.trim() || null,
 
       address: formData.address.trim() || null,
 
       permissions: formData.permissions,
+
+      locale: apiLang,
     };
 
     try {
@@ -468,10 +831,11 @@ function EmployeesPage() {
       setFormData({
         email: "",
         password: "",
-        role: "Employee",
-        employment_type: "Full-time",
+        role: "",
+        employment_type: "",
         department_id: "",
         start_date: "",
+        salary: "",
         phone: "",
         address: "",
         permissions: [],
@@ -479,9 +843,25 @@ function EmployeesPage() {
 
       setIsPermissionsOpen(false);
 
+      setFieldErrors({});
+      setShowCreatePassword(false);
+
       setIsSuccess(true);
+      toast.success(t.successText);
     } catch (error) {
-      console.error("Create employee failed:", error);
+      const apiFieldErrors = getApiFieldErrors(error);
+      if (Object.keys(apiFieldErrors).length > 0) {
+        setFieldErrors(apiFieldErrors);
+        return;
+      }
+
+      const errorMessage = getApiErrorMessage(
+        error,
+        isArabic
+          ? "حدث خطأ أثناء إضافة الموظف."
+          : "Failed to create employee.",
+      );
+      toast.error(errorMessage);
     }
   };
 
@@ -497,10 +877,11 @@ function EmployeesPage() {
     setFormData({
       email: "",
       password: "",
-      role: "Employee",
-      employment_type: "Full-time",
+      role: "",
+      employment_type: "",
       department_id: "",
       start_date: "",
+      salary: "",
       phone: "",
       address: "",
       permissions: [],
@@ -509,6 +890,10 @@ function EmployeesPage() {
     setIsPermissionsOpen(false);
 
     createEmployeeMutation.reset();
+
+    setFieldErrors({});
+
+    setShowCreatePassword(false);
 
     setIsSuccess(false);
 
@@ -537,14 +922,19 @@ function EmployeesPage() {
     setFormData({
       email: "",
       password: "",
-      role: "Employee",
-      employment_type: "Full-time",
+      role: "",
+      employment_type: "",
       department_id: "",
       start_date: "",
+      salary: "",
       phone: "",
       address: "",
       permissions: [],
     });
+
+    setFieldErrors({});
+
+    setShowCreatePassword(false);
 
     createEmployeeMutation.reset();
   };
@@ -568,7 +958,10 @@ function EmployeesPage() {
           ? "inactive"
           : "active",
 
-      department_id: employee.departmentId || "",
+      department_id:
+        employee.departmentId != null && employee.departmentId !== ""
+          ? String(employee.departmentId)
+          : "",
     });
   };
 
@@ -602,17 +995,24 @@ function EmployeesPage() {
   // =====================================================
 
   const openEditMode = () => {
-    if (!employeeDetails) return;
+    if (!employeeDetails) {
+      return;
+    }
+
+    const departmentId =
+      employeeDetails.department?.id ?? employeeDetails.department_id ?? "";
 
     setEditFormData({
       job_title: employeeDetails.job_title || "",
+
       employment_type: employeeDetails.employment_type || "Full-time",
+
       status:
         String(employeeDetails.status || "").toLowerCase() === "inactive"
           ? "inactive"
           : "active",
-      department_id:
-        employeeDetails.department?.id || employeeDetails.department_id || "",
+
+      department_id: departmentId !== "" ? String(departmentId) : "",
     });
 
     setIsEditMode(true);
@@ -645,9 +1045,9 @@ function EmployeesPage() {
       return;
     }
 
-    if (!editFormData.department_id) {
-      return;
-    }
+    const departmentId = editFormData.department_id
+      ? Number(editFormData.department_id)
+      : null;
 
     const payload = {
       job_title: editFormData.job_title.trim(),
@@ -656,7 +1056,7 @@ function EmployeesPage() {
 
       status: editFormData.status,
 
-      department_id: Number(editFormData.department_id),
+      department_id: departmentId,
     };
 
     try {
@@ -667,8 +1067,6 @@ function EmployeesPage() {
 
       const updatedEmployee = response?.data || response;
 
-      // Update selected employee locally so
-      // modal reflects the latest values immediately.
       if (updatedEmployee) {
         setSelectedEmployee((prev) => ({
           ...prev,
@@ -712,6 +1110,7 @@ function EmployeesPage() {
       setIsEditMode(false);
     } catch (error) {
       console.error("Update employee HR fields failed:", error);
+      return;
     }
   };
 
@@ -724,7 +1123,7 @@ function EmployeesPage() {
       return;
     }
 
-    if (currentUser?.id === selectedEmployee?.id) {
+    if (String(currentUser?.id) === String(selectedEmployee?.id)) {
       return;
     }
 
@@ -733,13 +1132,15 @@ function EmployeesPage() {
         selectedEmployee.id,
       );
 
-      const updatedEmployee = response?.data || response;
-
       const currentStatus = String(selectedEmployee.status || "").toLowerCase();
-
       const fallbackStatus = currentStatus === "active" ? "Inactive" : "Active";
-
-      const newStatus = updatedEmployee?.status || fallbackStatus;
+      const newStatus =
+        response?.status ||
+        response?.data?.status ||
+        response?.data?.employee?.status ||
+        response?.data?.user?.status ||
+        response?.data?.data?.status ||
+        fallbackStatus;
 
       const normalizedStatus = String(newStatus).toLowerCase();
 
@@ -752,8 +1153,36 @@ function EmployeesPage() {
       }));
     } catch (error) {
       console.error("Change employee account status failed:", error);
+      return;
     }
   };
+
+  // =====================================================
+  // DEPARTMENT OPTIONS
+  // =====================================================
+
+  const departmentOptions = [
+    {
+      value: "",
+      disabled: true,
+
+      label: departmentsLoading
+        ? t.loadingDepartments
+        : departmentError
+          ? isArabic
+            ? "تعذر تحميل الأقسام"
+            : "Unable to load departments"
+          : departments.length === 0
+            ? t.noDepartments
+            : t.selectDepartment,
+    },
+
+    ...departments.map((department) => ({
+      value: String(department.id),
+
+      label: department.name,
+    })),
+  ];
 
   // =====================================================
   // RENDER
@@ -768,9 +1197,7 @@ function EmployeesPage() {
       dir={isArabic ? "rtl" : "ltr"}
     >
       <div className="w-full">
-        {/* =================================================
-            HEADER
-        ================================================= */}
+        {/* HEADER */}
 
         <motion.div
           variants={containerVariants}
@@ -812,9 +1239,7 @@ function EmployeesPage() {
           </motion.button>
         </motion.div>
 
-        {/* =================================================
-            MAIN CONTAINER
-        ================================================= */}
+        {/* MAIN CONTAINER */}
 
         <motion.div
           initial={{
@@ -901,61 +1326,59 @@ function EmployeesPage() {
             </motion.div>
           </div>
 
-          {/* =================================================
-              DESKTOP TABLE
-          ================================================= */}
+          {(employeesLoading || employeesError) && (
+            <div className="flex flex-col gap-3 px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
+              {employeesLoading ? (
+                <p className="text-sm text-[#64748b]" role="status">
+                  {isArabic
+                    ? "جاري تحميل الموظفين..."
+                    : "Loading employees..."}
+                </p>
+              ) : (
+                <ApiError
+                  message={
+                    employeesQueryError?.response?.data?.message ||
+                    (isArabic
+                      ? "تعذر تحميل الموظفين."
+                      : "Failed to load employees.")
+                  }
+                />
+              )}
+              {employeesError && (
+                <button
+                  type="button"
+                  onClick={() => refetchEmployees()}
+                  className="self-start rounded-lg border border-[#e2e8f0] px-3 py-2 text-sm font-semibold text-[#475569] transition hover:bg-[#f8fafc]"
+                >
+                  {isArabic ? "إعادة المحاولة" : "Retry"}
+                </button>
+              )}
+            </div>
+          )}
+
+          {/* DESKTOP TABLE */}
 
           <div className="hidden overflow-x-auto lg:block">
             <table className="w-full min-w-[900px]">
               <thead>
                 <tr className="border-b border-[#f1f5f9] bg-[#f8fafc]">
-                  <th
-                    className={`px-5 py-4 text-[11px] font-bold tracking-wider text-[#94a3b8] ${
-                      isArabic ? "text-right" : "text-left"
-                    }`}
-                  >
-                    {t.employeeHeader}
-                  </th>
-
-                  <th
-                    className={`px-5 py-4 text-[11px] font-bold tracking-wider text-[#94a3b8] ${
-                      isArabic ? "text-right" : "text-left"
-                    }`}
-                  >
-                    {t.roleHeader}
-                  </th>
-
-                  <th
-                    className={`px-5 py-4 text-[11px] font-bold tracking-wider text-[#94a3b8] ${
-                      isArabic ? "text-right" : "text-left"
-                    }`}
-                  >
-                    {t.departmentHeader}
-                  </th>
-
-                  <th
-                    className={`px-5 py-4 text-[11px] font-bold tracking-wider text-[#94a3b8] ${
-                      isArabic ? "text-right" : "text-left"
-                    }`}
-                  >
-                    {t.branchHeader}
-                  </th>
-
-                  <th
-                    className={`px-5 py-4 text-[11px] font-bold tracking-wider text-[#94a3b8] ${
-                      isArabic ? "text-right" : "text-left"
-                    }`}
-                  >
-                    {t.statusHeader}
-                  </th>
-
-                  <th
-                    className={`px-5 py-4 text-[11px] font-bold tracking-wider text-[#94a3b8] ${
-                      isArabic ? "text-right" : "text-left"
-                    }`}
-                  >
-                    {t.actionHeader}
-                  </th>
+                  {[
+                    t.employeeHeader,
+                    t.roleHeader,
+                    t.departmentHeader,
+                    t.branchHeader,
+                    t.statusHeader,
+                    t.actionHeader,
+                  ].map((header) => (
+                    <th
+                      key={header}
+                      className={`px-5 py-4 text-[11px] font-bold tracking-wider text-[#94a3b8] ${
+                        isArabic ? "text-right" : "text-left"
+                      }`}
+                    >
+                      {header}
+                    </th>
+                  ))}
                 </tr>
               </thead>
 
@@ -1054,9 +1477,7 @@ function EmployeesPage() {
             </table>
           </div>
 
-          {/* =================================================
-              MOBILE CARDS
-          ================================================= */}
+          {/* MOBILE CARDS */}
 
           <div className="grid gap-4 p-5 lg:hidden">
             <AnimatePresence mode="popLayout">
@@ -1148,13 +1569,15 @@ function EmployeesPage() {
 
           {/* EMPTY STATE */}
 
-          {filteredEmployees.length === 0 && (
-            <EmptyState
-              title={t.noResults}
-              text={t.noResultsText}
-              isArabic={isArabic}
-            />
-          )}
+          {!employeesLoading &&
+            !employeesError &&
+            filteredEmployees.length === 0 && (
+              <EmptyState
+                title={t.noResults}
+                text={t.noResultsText}
+                isArabic={isArabic}
+              />
+            )}
         </motion.div>
       </div>
 
@@ -1224,10 +1647,14 @@ function EmployeesPage() {
                       <FormInput
                         label={t.detailsLabel}
                         value={details}
-                        onChange={(value) => setDetails(value)}
+                        onChange={(value) => {
+                          clearFieldError("name");
+                          setDetails(value);
+                        }}
                         placeholder={t.detailsPlaceholder}
                         required
                         isArabic={isArabic}
+                        error={fieldErrors.name}
                       />
 
                       <FormInput
@@ -1238,6 +1665,7 @@ function EmployeesPage() {
                         placeholder="example@email.com"
                         required
                         isArabic={isArabic}
+                        error={fieldErrors.email}
                       />
                     </div>
 
@@ -1246,26 +1674,52 @@ function EmployeesPage() {
                     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                       <FormInput
                         label={isArabic ? "كلمة المرور" : "Password"}
-                        type="password"
+                        type={showCreatePassword ? "text" : "password"}
                         value={formData.password}
                         onChange={(value) =>
                           handleFormChange("password", value)
                         }
                         placeholder="••••••••"
+                        endAdornment={
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setShowCreatePassword((visible) => !visible)
+                            }
+                            className="text-[#64748b] transition hover:text-[#1e293b]"
+                            aria-label={
+                              showCreatePassword
+                                ? t.hidePassword
+                                : t.showPassword
+                            }
+                            aria-pressed={showCreatePassword}
+                          >
+                            {showCreatePassword ? (
+                              <FiEyeOff className="h-4 w-4" />
+                            ) : (
+                              <FiEye className="h-4 w-4" />
+                            )}
+                          </button>
+                        }
                         required
                         isArabic={isArabic}
                         helper={
                           isArabic ? "8 أحرف على الأقل" : "Minimum 8 characters"
                         }
+                        error={fieldErrors.password}
                       />
 
                       <FormInput
                         label={t.ownerLabel}
                         value={owner}
-                        onChange={(value) => setOwner(value)}
+                        onChange={(value) => {
+                          clearFieldError("job_title");
+                          setOwner(value);
+                        }}
                         placeholder={t.ownerPlaceholder}
                         required
                         isArabic={isArabic}
+                        error={fieldErrors.job_title}
                       />
                     </div>
 
@@ -1277,7 +1731,8 @@ function EmployeesPage() {
                         value={formData.role}
                         onChange={(value) => handleFormChange("role", value)}
                         required
-                        isArabic={isArabic}
+                        placeholder={t.selectRole}
+                        error={fieldErrors.role}
                         options={[
                           {
                             value: "Employee",
@@ -1301,7 +1756,8 @@ function EmployeesPage() {
                           handleFormChange("employment_type", value)
                         }
                         required
-                        isArabic={isArabic}
+                        placeholder={t.selectEmploymentType}
+                        error={fieldErrors.employment_type}
                         options={[
                           {
                             value: "Full-time",
@@ -1322,28 +1778,47 @@ function EmployeesPage() {
                     {/* DEPARTMENT + START DATE */}
 
                     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                      <FormInput
-                        label={isArabic ? "رقم القسم" : "Department ID"}
-                        type="number"
-                        value={formData.department_id}
-                        onChange={(value) =>
-                          handleFormChange("department_id", value)
-                        }
-                        placeholder="1"
-                        required={
-                          formData.role === "Employee" ||
-                          formData.role === "Manager"
-                        }
-                        isArabic={isArabic}
-                        helper={
-                          formData.role === "Employee" ||
-                          formData.role === "Manager"
-                            ? isArabic
-                              ? "مطلوب للموظف والمدير"
-                              : "Required for Employee and Manager"
-                            : undefined
-                        }
-                      />
+                      <div>
+                        <FormSelect
+                          label={t.departmentLabel}
+                          value={formData.department_id}
+                          onChange={(value) =>
+                            handleFormChange("department_id", value)
+                          }
+                          required={
+                            formData.role === "Employee" ||
+                            formData.role === "Manager"
+                          }
+                          options={departmentOptions}
+                          error={fieldErrors.department_id}
+                        />
+
+                        {departmentError && (
+                          <div className="mt-1.5 flex items-center justify-between gap-2">
+                            <p className="text-[11px] font-medium text-red-600">
+                              {departmentError}
+                            </p>
+                            <button
+                              type="button"
+                              onClick={() =>
+                                setDepartmentRefreshKey((key) => key + 1)
+                              }
+                              disabled={departmentsLoading}
+                              className="shrink-0 text-[11px] font-semibold text-[#315d80] underline disabled:opacity-50"
+                            >
+                              {isArabic ? "إعادة المحاولة" : "Retry"}
+                            </button>
+                          </div>
+                        )}
+
+                        {departments.length > 0 && (
+                          <p className="mt-1.5 text-[11px] text-[#94a3b8]">
+                            {isArabic
+                              ? "سيتم إرسال رقم القسم إلى الخادم."
+                              : "The department ID will be sent to the server."}
+                          </p>
+                        )}
+                      </div>
 
                       <FormInput
                         label={isArabic ? "تاريخ البدء" : "Start Date"}
@@ -1354,12 +1829,26 @@ function EmployeesPage() {
                         }
                         required
                         isArabic={isArabic}
+                        error={fieldErrors.start_date}
                       />
                     </div>
 
-                    {/* PHONE + ADDRESS */}
+                    {/* SALARY + PHONE */}
 
                     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                      <FormInput
+                        label={t.salaryLabel}
+                        type="number"
+                        min="0"
+                        value={formData.salary}
+                        onChange={(value) => handleFormChange("salary", value)}
+                        placeholder={t.salaryPlaceholder}
+                        required
+                        isArabic={isArabic}
+                        helper={t.salaryHelper}
+                        error={fieldErrors.salary}
+                      />
+
                       <FormInput
                         label={isArabic ? "رقم الهاتف" : "Phone"}
                         type="tel"
@@ -1367,18 +1856,19 @@ function EmployeesPage() {
                         onChange={(value) => handleFormChange("phone", value)}
                         placeholder="01xxxxxxxxx"
                         isArabic={isArabic}
-                      />
-
-                      <FormInput
-                        label={isArabic ? "العنوان" : "Address"}
-                        value={formData.address}
-                        onChange={(value) => handleFormChange("address", value)}
-                        placeholder={
-                          isArabic ? "اكتب العنوان" : "Enter address"
-                        }
-                        isArabic={isArabic}
+                        error={fieldErrors.phone}
                       />
                     </div>
+
+                    {/* ADDRESS */}
+
+                    <FormInput
+                      label={isArabic ? "العنوان" : "Address"}
+                      value={formData.address}
+                      onChange={(value) => handleFormChange("address", value)}
+                      placeholder={isArabic ? "اكتب العنوان" : "Enter address"}
+                      isArabic={isArabic}
+                    />
 
                     {/* PERMISSIONS */}
 
@@ -1400,7 +1890,7 @@ function EmployeesPage() {
                         <button
                           type="button"
                           onClick={() => setIsPermissionsOpen((prev) => !prev)}
-                          disabled={permissions.length === 0}
+                          disabled={permissions.length === 0 || permissionsLoading}
                           className={`flex min-h-11 w-full items-center justify-between gap-3 rounded-lg border border-[#e2e8f0] bg-white px-3.5 py-2.5 text-sm text-[#1e293b] outline-none transition hover:bg-[#f8fafc] focus:border-[#cbd5e1] focus:ring-2 focus:ring-[#f1f5f9] disabled:cursor-not-allowed disabled:bg-[#f8fafc] ${
                             isArabic ? "text-right" : "text-left"
                           }`}
@@ -1466,6 +1956,7 @@ function EmployeesPage() {
                                       type="checkbox"
                                       checked={checked}
                                       onChange={() => {
+                                        clearFieldError("permissions");
                                         setFormData((prev) => ({
                                           ...prev,
                                           permissions: checked
@@ -1501,6 +1992,7 @@ function EmployeesPage() {
                               <button
                                 type="button"
                                 onClick={() => {
+                                  clearFieldError("permissions");
                                   setFormData((prev) => ({
                                     ...prev,
                                     permissions: prev.permissions.filter(
@@ -1517,28 +2009,62 @@ function EmployeesPage() {
                         </div>
                       )}
 
-                      {permissions.length === 0 && (
+                      {fieldErrors.permissions && (
+                        <p
+                          className="mt-1.5 text-[11px] font-medium text-red-600"
+                          role="alert"
+                        >
+                          {fieldErrors.permissions}
+                        </p>
+                      )}
+
+                      {permissionsLoading && (
+                        <p className="mt-1.5 text-[11px] text-[#64748b]" role="status">
+                          {isArabic
+                            ? "جاري تحميل الصلاحيات..."
+                            : "Loading permissions..."}
+                        </p>
+                      )}
+
+                      {permissionsQueryFailed && (
+                        <div className="mt-1.5 flex items-center justify-between gap-2">
+                          <p className="text-[11px] font-medium text-red-600">
+                            {getApiErrorMessage(
+                              permissionsQueryError,
+                              isArabic
+                                ? "تعذر تحميل الصلاحيات."
+                                : "Failed to load permissions.",
+                            )}
+                          </p>
+                          <button
+                            type="button"
+                            onClick={() => refetchPermissions()}
+                            className="shrink-0 text-[11px] font-semibold text-[#315d80] underline"
+                          >
+                            {isArabic ? "إعادة المحاولة" : "Retry"}
+                          </button>
+                        </div>
+                      )}
+
+                      {permissionsResponseInvalid && (
+                        <p className="mt-1.5 text-[11px] font-medium text-red-600">
+                          {isArabic
+                            ? "استجابة الصلاحيات من الخادم غير صالحة."
+                            : "The permissions response from the server is invalid."}
+                        </p>
+                      )}
+
+                      {!permissionsLoading &&
+                        !permissionsQueryFailed &&
+                        !permissionsResponseInvalid &&
+                        permissions.length === 0 && (
                         <p className="mt-1.5 text-[11px] text-[#94a3b8]">
                           {isArabic
                             ? "لا توجد صلاحيات متاحة"
                             : "No permissions available"}
                         </p>
-                      )}
+                        )}
                     </div>
-
-                    {/* API ERROR */}
-
-                    {createEmployeeMutation.isError && (
-                      <ApiError
-                        message={
-                          createEmployeeMutation.error?.response?.data
-                            ?.message ||
-                          (isArabic
-                            ? "حدث خطأ أثناء إضافة الموظف."
-                            : "Failed to create employee.")
-                        }
-                      />
-                    )}
                   </div>
 
                   {/* FOOTER */}
@@ -1559,18 +2085,7 @@ function EmployeesPage() {
                       whileTap={{
                         scale: 0.98,
                       }}
-                      disabled={
-                        createEmployeeMutation.isPending ||
-                        !details.trim() ||
-                        !owner.trim() ||
-                        !formData.email.trim() ||
-                        !formData.password ||
-                        formData.password.length < 8 ||
-                        !formData.start_date ||
-                        ((formData.role === "Employee" ||
-                          formData.role === "Manager") &&
-                          !formData.department_id)
-                      }
+                      disabled={createEmployeeMutation.isPending}
                       className="rounded-lg bg-[#243B53] px-5 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-[#1c2f42] disabled:cursor-not-allowed disabled:opacity-50"
                     >
                       {createEmployeeMutation.isPending
@@ -1714,15 +2229,16 @@ function EmployeesPage() {
                         selectedEmployee.branch
                       }
                     />
+
                     <ProfileRow
                       icon={<FiCheck size={15} />}
                       label={t.statusLabel}
                       value={getStatusLabel(
-                        employeeDetails?.status || selectedEmployee.status,
+                        selectedEmployee.status || employeeDetails?.status,
                       )}
                       valueClass={getStatusClasses(
                         String(
-                          employeeDetails?.status || selectedEmployee.status,
+                          selectedEmployee.status || employeeDetails?.status,
                         ).toLowerCase() === "active"
                           ? "success"
                           : "danger",
@@ -1742,7 +2258,7 @@ function EmployeesPage() {
                       >
                         <FiEdit2 size={15} />
 
-                        {t.editHrFields || t.editEmployee}
+                        {t.editHrFields}
                       </button>
                     )}
 
@@ -1754,8 +2270,8 @@ function EmployeesPage() {
                           disabled={changeStatusMutation.isPending}
                           className={`flex w-full items-center justify-center gap-2 rounded-lg border py-2.5 text-sm font-semibold transition disabled:cursor-not-allowed disabled:opacity-50 ${
                             String(
+                            selectedEmployee.status ||
                               employeeDetails?.status ||
-                                selectedEmployee.status ||
                                 "",
                             ).toLowerCase() === "active"
                               ? "border-red-100 bg-red-50 text-red-700 hover:bg-red-100"
@@ -1767,8 +2283,8 @@ function EmployeesPage() {
                           {changeStatusMutation.isPending
                             ? t.updating
                             : String(
-                                  employeeDetails?.status ||
-                                    selectedEmployee.status ||
+                                  selectedEmployee.status ||
+                                    employeeDetails?.status ||
                                     "",
                                 ).toLowerCase() === "active"
                               ? t.deactivate
@@ -1815,7 +2331,7 @@ function EmployeesPage() {
                     {/* JOB TITLE */}
 
                     <FormInput
-                      label={t.jobTitle}
+                      label={t.jobTitleLabel}
                       value={editFormData.job_title}
                       onChange={(value) =>
                         handleEditFormChange("job_title", value)
@@ -1830,13 +2346,12 @@ function EmployeesPage() {
                     {/* EMPLOYMENT TYPE */}
 
                     <FormSelect
-                      label={t.employmentType}
+                      label={t.employmentTypeLabel}
                       value={editFormData.employment_type}
                       onChange={(value) =>
                         handleEditFormChange("employment_type", value)
                       }
                       required
-                      isArabic={isArabic}
                       options={[
                         {
                           value: "Full-time",
@@ -1856,13 +2371,12 @@ function EmployeesPage() {
                     {/* STATUS */}
 
                     <FormSelect
-                      label={t.accountStatus}
+                      label={t.statusLabelText}
                       value={editFormData.status}
                       onChange={(value) =>
                         handleEditFormChange("status", value)
                       }
                       required
-                      isArabic={isArabic}
                       options={[
                         {
                           value: "active",
@@ -1877,18 +2391,16 @@ function EmployeesPage() {
 
                     {/* DEPARTMENT */}
 
-                    <FormInput
-                      label={t.departmentId}
-                      type="number"
-                      min="1"
+                    <FormSelect
+                      label={t.departmentLabel}
                       value={editFormData.department_id}
                       onChange={(value) =>
                         handleEditFormChange("department_id", value)
                       }
-                      placeholder="1"
-                      required
-                      isArabic={isArabic}
+                      options={departmentOptions}
                     />
+
+                    {departmentError && <ApiError message={departmentError} />}
 
                     {/* ERROR */}
 
@@ -1922,8 +2434,7 @@ function EmployeesPage() {
                       }}
                       disabled={
                         updateEmployeeMutation.isPending ||
-                        !editFormData.job_title.trim() ||
-                        !editFormData.department_id
+                        !editFormData.job_title.trim()
                       }
                       className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-[#243B53] py-2.5 text-sm font-semibold text-white transition hover:bg-[#1c2f42] disabled:cursor-not-allowed disabled:opacity-50"
                     >
@@ -1948,6 +2459,87 @@ function EmployeesPage() {
 // FORM INPUT
 // =====================================================
 
+function getApiErrorMessage(error, fallback) {
+  const responseData = error?.response?.data;
+  const validationErrors =
+    responseData?.errors || responseData?.data?.errors || {};
+  const validationMessages = Object.values(validationErrors)
+    .flat(Infinity)
+    .filter((message) => typeof message === "string");
+
+  if (validationMessages.length > 0) {
+    return validationMessages.join(" ");
+  }
+
+  const responseMessage =
+    responseData?.message ||
+    responseData?.data?.message ||
+    (typeof responseData === "string" ? responseData : "");
+
+  if (responseMessage) {
+    return error?.response?.status
+      ? `${responseMessage} (HTTP ${error.response.status})`
+      : responseMessage;
+  }
+
+  if (error?.response?.status) {
+    return `${fallback} (HTTP ${error.response.status})`;
+  }
+
+  return error?.message || fallback;
+}
+
+function getApiFieldErrors(error) {
+  const responseData = error?.response?.data;
+  const apiErrors = responseData?.errors || responseData?.data?.errors || {};
+  const fieldNames = {
+    address: "address",
+    department_id: "department_id",
+    email: "email",
+    employment_type: "employment_type",
+    job_title: "job_title",
+    name: "name",
+    password: "password",
+    phone: "phone",
+    role: "role",
+    salary: "salary",
+    start_date: "start_date",
+  };
+  const fieldErrors = {};
+
+  Object.entries(apiErrors).forEach(([key, value]) => {
+    const normalizedKey = key.toLowerCase();
+    const field = /^permissions(?:\.\d+)?$/.test(normalizedKey)
+      ? "permissions"
+      : fieldNames[normalizedKey];
+    const messages = Array.isArray(value) ? value.flat(Infinity) : [value];
+    const message = messages.find((item) => typeof item === "string");
+
+    if (field && message) {
+      fieldErrors[field] = message;
+    }
+  });
+
+  const responseMessage =
+    responseData?.message || responseData?.data?.message || "";
+  const invalidFieldMatch = responseMessage.match(
+    /\b(name|email|password|role|job_title|employment_type|start_date|department_id|salary|phone|address|permissions)(?:\.\d+)?\b/i,
+  );
+
+  if (
+    invalidFieldMatch &&
+    /invalid|required|must|already|taken/i.test(responseMessage)
+  ) {
+    const matchedField = invalidFieldMatch[1].toLowerCase();
+    const field = matchedField.startsWith("permissions")
+      ? "permissions"
+      : fieldNames[matchedField] || matchedField;
+    fieldErrors[field] ||= responseMessage;
+  }
+
+  return fieldErrors;
+}
+
 function FormInput({
   label,
   value,
@@ -1959,6 +2551,8 @@ function FormInput({
   isArabic = false,
   min,
   maxLength,
+  error,
+  endAdornment,
 }) {
   return (
     <div>
@@ -1968,17 +2562,35 @@ function FormInput({
         {required && <span className="ml-1 text-red-500">*</span>}
       </label>
 
-      <input
-        type={type}
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        placeholder={placeholder}
-        min={min}
-        maxLength={maxLength}
-        className={`h-11 w-full rounded-lg border border-[#e2e8f0] bg-white px-3.5 text-sm text-[#1e293b] outline-none transition placeholder:text-[#94a3b8] focus:border-[#cbd5e1] focus:ring-2 focus:ring-[#f1f5f9] ${
-          isArabic ? "text-right" : "text-left"
-        }`}
-      />
+      <div className="relative">
+        <input
+          type={type}
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          placeholder={placeholder}
+          min={min}
+          maxLength={maxLength}
+          aria-invalid={Boolean(error)}
+          className={`h-11 w-full rounded-lg border ${
+            error ? "border-red-500" : "border-[#e2e8f0]"
+          } bg-white px-3.5 ${
+            endAdornment ? "pe-10" : ""
+          } text-sm text-[#1e293b] outline-none transition placeholder:text-[#94a3b8] focus:border-[#cbd5e1] focus:ring-2 focus:ring-[#f1f5f9] ${
+            isArabic ? "text-right" : "text-left"
+          }`}
+        />
+        {endAdornment && (
+          <span className="absolute inset-y-0 end-0 flex items-center px-3">
+            {endAdornment}
+          </span>
+        )}
+      </div>
+
+      {error && (
+        <p className="mt-1.5 text-[11px] font-medium text-red-600" role="alert">
+          {error}
+        </p>
+      )}
 
       {helper && <p className="mt-1.5 text-[11px] text-[#94a3b8]">{helper}</p>}
     </div>
@@ -1995,6 +2607,8 @@ function FormSelect({
   onChange,
   options = [],
   required = false,
+  placeholder,
+  error,
 }) {
   return (
     <div>
@@ -2005,16 +2619,35 @@ function FormSelect({
       </label>
 
       <select
-        value={value}
+        value={value ?? ""}
         onChange={(e) => onChange(e.target.value)}
-        className="h-11 w-full rounded-lg border border-[#e2e8f0] bg-white px-3.5 text-sm text-[#1e293b] outline-none transition focus:border-[#cbd5e1] focus:ring-2 focus:ring-[#f1f5f9]"
+        required={required}
+        aria-invalid={Boolean(error)}
+        className={`h-11 w-full rounded-lg border ${
+          error ? "border-red-500" : "border-[#e2e8f0]"
+        } bg-white px-3.5 text-sm text-[#1e293b] outline-none transition focus:border-[#cbd5e1] focus:ring-2 focus:ring-[#f1f5f9]`}
       >
+        {placeholder && (
+          <option value="" disabled>
+            {placeholder}
+          </option>
+        )}
         {options.map((option) => (
-          <option key={option.value} value={option.value}>
+          <option
+            key={option.value}
+            value={option.value}
+            disabled={option.disabled}
+          >
             {option.label}
           </option>
         ))}
       </select>
+
+      {error && (
+        <p className="mt-1.5 text-[11px] font-medium text-red-600" role="alert">
+          {error}
+        </p>
+      )}
     </div>
   );
 }

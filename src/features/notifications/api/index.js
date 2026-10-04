@@ -30,7 +30,14 @@ export const markAllNotificationsAsRead = async () => {
 };
 
 export const clearAllNotifications = async () => {
-  const response = await axiosInstance.delete("/notifications", {
+  const response = await axiosInstance.delete("/notifications/clear-all", {
+    headers: { Accept: "application/json" },
+  });
+  return response.data;
+};
+
+export const deleteNotification = async (id) => {
+  const response = await axiosInstance.delete(`/notifications/${id}`, {
     headers: { Accept: "application/json" },
   });
   return response.data;

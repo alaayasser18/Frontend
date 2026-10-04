@@ -145,7 +145,10 @@
       "fullName": "الاسم بالكامل",
       "fullNamePlaceholder": "محمد أحمد",
       "workEmail": "البريد الإلكتروني للعمل",
-      "emailPlaceholder": "name@company.com"
+      "emailPlaceholder": "name@company.com",
+      "creatingAccount": "جاري إنشاء الحساب...",
+      "tooManyRequests": "تم تجاوز عدد المحاولات المسموح بها. يرجى المحاولة لاحقًا.",
+      "errorGeneric": "حدث خطأ ما. يرجى المحاولة مرة أخرى."
     },
     "verifyEmail": {
       "title": "تأكيد البريد الإلكتروني",
@@ -1334,7 +1337,7 @@
     "subtitle": "خطط لأوقات إجازتك وتابع رصيدك المتبقي بكل سهولة.",
     "viewCalendar": "عرض التقويم",
     "calendarModalTitle": "تقويم الإجازات وفريق العمل",
-    "calendarModalSubtitle": "استعراض الإجازات المجدولة والعطلات الرسمية القادمة.",
+    "calendarModalSubtitle": "استعراض طلبات إجازاتك المعلّقة والمقبولة.",
     "annualLeave": "الإجازة السنوية",
     "casualLeave": "الإجازة العارضة",
     "sickLeave": "الإجازة المرضية",
@@ -1349,6 +1352,8 @@
     "casual": "إجازة عارضة",
     "sick": "إجازة مرضية",
     "unpaid": "إجازة بدون راتب",
+    "emergency": "إجازة طارئة",
+    "newTypeSuffix": "جديدة",
     "duration": "المدة",
     "fullDay": "يوم كامل",
     "halfDayMorning": "نصف يوم (صباحي)",
@@ -1373,6 +1378,31 @@
     "toastInvalidDates": "تاريخ الانتهاء لا يمكن أن يسبق تاريخ البدء.",
     "toastInsufficientBalance": "رصيدك المتبقي غير كافٍ لتقديم هذا الطلب.",
     "toastSubmitted": "تم تقديم طلب الإجازة بنجاح!",
+    "toastSubmitError": "تعذر تقديم طلب الإجازة.",
+    "attachmentUploadError": "تم إنشاء الطلب، لكن تعذر رفع المرفق.",
+    "attachmentLinkError": "تم إنشاء الطلب، لكن تعذر ربط المرفق به.",
+    "uploadingAttachment": "جارٍ رفع المرفق...",
+    "submitting": "جارٍ الإرسال...",
+    "loadingTypes": "جارٍ تحميل أنواع الإجازات...",
+    "loadingBalances": "جارٍ تحميل أرصدة الإجازات...",
+    "loadingRequests": "جارٍ تحميل طلبات الإجازات...",
+    "typeLoadError": "تعذر تحميل أنواع الإجازات.",
+    "balanceLoadError": "تعذر تحميل أرصدة الإجازات.",
+    "requestHistoryError": "تعذر تحميل طلباتك.",
+    "noLeaveTypes": "لا توجد أنواع إجازات متاحة.",
+    "noBalances": "لا توجد أرصدة إجازات متاحة.",
+    "retry": "إعادة المحاولة",
+    "statusCancelled": "ملغي",
+    "validation": {
+      "leaveType": "اختر نوع الإجازة.",
+      "startDate": "اختر تاريخ البدء.",
+      "endDate": "اختر تاريخ الانتهاء.",
+      "reason": "اكتب سبب طلب الإجازة.",
+      "attachment": "يتطلب نوع الإجازة هذا إرفاق مستند داعم.",
+      "balanceLoading": "انتظر حتى نتحقق من رصيد الإجازة.",
+      "balanceUnavailable": "تعذر التحقق من رصيد إجازتك. أعد تحميل الأرصدة.",
+      "balanceMissing": "لا يوجد رصيد مخصص لنوع الإجازة هذا. تواصل مع الموارد البشرية لإضافته."
+    },
     "calendarLegendUpcoming": "إجازة قادمة",
     "calendarLegendHoliday": "عطلة رسمية",
     "calendarLegendToday": "اليوم",
@@ -1566,52 +1596,20 @@
     "title": "طلبات الإجازات",
     "subtitle": "مراجعة طلبات إجازات الموظفين والموافقة عليها وتوثيق القرارات.",
     "export": "تصدير قائمة الطلبات",
-    "stats": {
-      "pending": "4 طلبات قيد المراجعة",
-      "approved": "12 تمت الموافقة عليها هذا الشهر",
-      "rejected": "2 مرفوضة"
-    },
     "queue": "طلبات الموافقة",
     "table": {
       "employee": "الموظف",
       "roleDepartment": "الوظيفة / القسم",
       "category": "نوع الإجازة",
       "duration": "المدة",
-      "balance": "الرصيد",
-      "reason": "السبب والمرفق",
+      "days": "الأيام المطلوبة",
+      "reason": "السبب",
       "actions": "الإجراءات"
     },
-    "categories": {
-      "annual": "سنوية",
-      "emergency": "طارئة",
-      "medical": "مرضية"
-    },
-    "viewReason": "عرض السبب.pdf",
     "approve": "موافقة",
     "reject": "رفض مع ملاحظة",
-    "requestsEmployees": {
-      "mariam": {
-        "name": "مريم حسن",
-        "role": "مدير هندسة",
-        "department": "الهندسة",
-        "dates": "18 سبتمبر – 20 سبتمبر · 3 أيام",
-        "balance": "متبقي 14 يومًا"
-      },
-      "omar": {
-        "name": "عمر خالد",
-        "role": "تنفيذي مبيعات",
-        "department": "المبيعات",
-        "dates": "22 سبتمبر · يوم واحد",
-        "balance": "متبقي 8 أيام"
-      },
-      "nour": {
-        "name": "نور عادل",
-        "role": "أخصائي عمليات الأفراد",
-        "department": "الأفراد والثقافة",
-        "dates": "25 سبتمبر – 26 سبتمبر · يومان",
-        "balance": "متبقي 11 يومًا"
-      }
-    }
+    "approveSuccess": "تمت الموافقة على طلب الإجازة بنجاح.",
+    "rejectSuccess": "تم رفض طلب الإجازة بنجاح."
   },
   "departments": {
     "title": "الأقسام والفرق",

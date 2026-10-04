@@ -292,10 +292,10 @@ export default function Notification() {
             ) : filteredNotifications.length > 0 ? (
               filteredNotifications.map((item) => {
 
-                const title = t(item.titleKey, item.defaultTitle);
-                const desc = t(item.descKey, item.defaultDesc);
-                const badge = t(item.badgeKey, item.defaultBadge);
-                const time = t(item.timestampKey, item.timestamp);
+                const title = item.titleKey ? t(item.titleKey, item.defaultTitle) : item.defaultTitle;
+                const desc = item.descKey ? t(item.descKey, item.defaultDesc) : item.defaultDesc;
+                const badge = item.badgeKey ? t(item.badgeKey, item.defaultBadge) : item.defaultBadge;
+                const time = item.timestampKey ? t(item.timestampKey, item.timestamp) : item.timestamp;
                 const actionLabel = item.actionKey
                   ? t(item.actionKey, item.defaultAction)
                   : item.defaultAction;
@@ -429,10 +429,10 @@ export default function Notification() {
 
               <div className="py-4 space-y-2">
                 <h3 className="text-base md:text-lg font-bold text-[#102a43]">
-                  {t(selectedNotification.titleKey, selectedNotification.defaultTitle)}
+                  {selectedNotification.titleKey ? t(selectedNotification.titleKey, selectedNotification.defaultTitle) : selectedNotification.defaultTitle}
                 </h3>
                 <p className="text-xs md:text-sm text-[#64748b] leading-relaxed">
-                  {t(selectedNotification.descKey, selectedNotification.defaultDesc)}
+                  {selectedNotification.descKey ? t(selectedNotification.descKey, selectedNotification.defaultDesc) : selectedNotification.defaultDesc}
                 </p>
               </div>
 

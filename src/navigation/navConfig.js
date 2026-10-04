@@ -107,6 +107,12 @@ export const navConfig = {
       section: "GROWTH & GOVERNANCE",
     },
     {
+      titleKey: "portal.attendance",
+      title: "Attendance",
+      path: "/admin/attendance",
+      icon: MdCalendarMonth,
+    },
+    {
       titleKey: "portal.auditLogs",
       title: "Audit Logs",
       path: "/admin/audit",

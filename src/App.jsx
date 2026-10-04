@@ -29,6 +29,7 @@ import Goals from "./features/admin/pages/Goals";
 import AdminPayroll from "./features/admin/pages/Payroll";
 import AdminAdvances from "./features/admin/pages/AdvancesDeductions";
 import AdminRewards from "./features/admin/pages/Rewards";
+import AdminAttendance from "./features/admin/pages/Attendance";
 
 // ==================== Employee Pages ====================
 import EmployeePerformance from "./features/employee/pages/Performance";
@@ -223,6 +224,7 @@ function App() {
               <Route path="/admin/performance" element={<AdminPerformance />} />
               <Route path="/admin/notifications" element={<Notification />} />
               <Route path="/admin/audit" element={<ActivityLog />} />
+              <Route path="/admin/attendance" element={<AdminAttendance />} />
               <Route path="/admin/profile" element={<AdminProfileSettings />} />
               <Route path="/admin/goals" element={<Goals />} />
               <Route
@@ -342,7 +344,10 @@ function App() {
               />
               <Route path="/employee/policies" element={<CompanyPolicies />} />
               <Route path="/employee/goals" element={<EmployeeGoals />} />
-              <Route path="/employee/financial" element={<EmployeeFinancial />} />
+              <Route
+                path="/employee/financial"
+                element={<EmployeeFinancial />}
+              />
               <Route
                 path="/employee/profile"
                 element={<EmployeeProfileSettings />}

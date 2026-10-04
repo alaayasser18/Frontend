@@ -160,7 +160,10 @@
       "fullName": "Full Name",
       "fullNamePlaceholder": "John Doe",
       "workEmail": "Work Email",
-      "emailPlaceholder": "name@company.com"
+      "emailPlaceholder": "name@company.com",
+      "creatingAccount": "Creating Account...",
+      "tooManyRequests": "Too many attempts. Please try again later.",
+      "errorGeneric": "Something went wrong. Please try again."
     },
     "verifyEmail": {
       "title": "Verify Your Email",
@@ -1401,7 +1404,7 @@
     "subtitle": "Plan time away and keep track of your remaining allowance.",
     "viewCalendar": "View calendar",
     "calendarModalTitle": "Team & Leave Calendar",
-    "calendarModalSubtitle": "Review scheduled time off and upcoming company holidays.",
+    "calendarModalSubtitle": "Review your pending and approved leave requests.",
     "annualLeave": "ANNUAL LEAVE",
     "casualLeave": "CASUAL LEAVE",
     "sickLeave": "SICK LEAVE",
@@ -1416,6 +1419,8 @@
     "casual": "Casual leave",
     "sick": "Sick leave",
     "unpaid": "Unpaid leave",
+    "emergency": "Emergency leave",
+    "newTypeSuffix": "new",
     "duration": "Duration",
     "fullDay": "Full day",
     "halfDayMorning": "Half day (Morning)",
@@ -1440,6 +1445,31 @@
     "toastInvalidDates": "End date cannot be earlier than start date.",
     "toastInsufficientBalance": "You do not have enough remaining balance for this request.",
     "toastSubmitted": "Leave request submitted successfully!",
+    "toastSubmitError": "Could not submit the leave request.",
+    "attachmentUploadError": "The request was created, but the attachment could not be uploaded.",
+    "attachmentLinkError": "The request was created, but its attachment could not be linked.",
+    "uploadingAttachment": "Uploading attachment...",
+    "submitting": "Submitting...",
+    "loadingTypes": "Loading leave types...",
+    "loadingBalances": "Loading leave balances...",
+    "loadingRequests": "Loading your leave requests...",
+    "typeLoadError": "Could not load leave types.",
+    "balanceLoadError": "Could not load leave balances.",
+    "requestHistoryError": "Could not load your leave requests.",
+    "noLeaveTypes": "No leave types are available.",
+    "noBalances": "No leave balances are available.",
+    "retry": "Retry",
+    "statusCancelled": "Cancelled",
+    "validation": {
+      "leaveType": "Select a leave type.",
+      "startDate": "Select a start date.",
+      "endDate": "Select an end date.",
+      "reason": "Enter a reason for your request.",
+      "attachment": "This leave type requires a supporting document.",
+      "balanceLoading": "Wait while your leave balance is checked.",
+      "balanceUnavailable": "Your leave balance could not be verified. Retry loading balances.",
+      "balanceMissing": "No balance is set up for this leave type. Contact HR to set it up."
+    },
     "calendarLegendUpcoming": "Upcoming Leave",
     "calendarLegendHoliday": "Official Holiday",
     "calendarLegendToday": "Today",
@@ -1798,52 +1828,20 @@
     "title": "Leave Requests",
     "subtitle": "Review, approve, and document employee leave decisions.",
     "export": "Export queue",
-    "stats": {
-      "pending": "4 Pending Reviews",
-      "approved": "12 Approved this Month",
-      "rejected": "2 Rejected"
-    },
     "queue": "Approval queue",
     "table": {
       "employee": "Employee",
       "roleDepartment": "Role / Department",
       "category": "Category",
       "duration": "Duration",
-      "balance": "Balance",
-      "reason": "Reason & Attachment",
+      "days": "Requested days",
+      "reason": "Reason",
       "actions": "Actions"
     },
-    "categories": {
-      "annual": "Annual",
-      "emergency": "Emergency",
-      "medical": "Medical"
-    },
-    "viewReason": "View reason.pdf",
     "approve": "Approve",
     "reject": "Reject with Note",
-    "requestsEmployees": {
-      "mariam": {
-        "name": "Mariam Hassan",
-        "role": "Engineering Manager",
-        "department": "Engineering",
-        "dates": "Sep 18 – Sep 20 · 3 Days",
-        "balance": "14 Days left"
-      },
-      "omar": {
-        "name": "Omar Khaled",
-        "role": "Sales Executive",
-        "department": "Sales",
-        "dates": "Sep 22 · 1 Day",
-        "balance": "8 Days left"
-      },
-      "nour": {
-        "name": "Nour Adel",
-        "role": "People Ops Specialist",
-        "department": "People & Culture",
-        "dates": "Sep 25 – Sep 26 · 2 Days",
-        "balance": "11 Days left"
-      }
-    }
+    "approveSuccess": "Leave request approved successfully.",
+    "rejectSuccess": "Leave request rejected successfully."
   },
   "employees": {
     "title": "Employees",

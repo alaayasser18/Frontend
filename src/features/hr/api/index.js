@@ -1,4 +1,3 @@
-
 import axiosInstance from "../../../utils/axiosInstance";
 
 // =====================================================
@@ -6,8 +5,10 @@ import axiosInstance from "../../../utils/axiosInstance";
 // Supports Arabic / English
 // =====================================================
 export const getEmployees = async (params = {}) => {
+  const { lang, ...filters } = params;
   const response = await axiosInstance.get("/employees", {
-    params,
+    params: filters,
+    headers: lang ? { "Accept-Language": lang } : undefined,
   });
 
   return response.data;
@@ -20,6 +21,9 @@ export const getEmployees = async (params = {}) => {
 export const createEmployee = async (employeeData, lang = "en") => {
   const response = await axiosInstance.post("/employees", employeeData, {
     params: { lang },
+    headers: {
+      "Accept-Language": lang,
+    },
   });
 
   return response.data;
@@ -32,6 +36,9 @@ export const createEmployee = async (employeeData, lang = "en") => {
 export const getPermissions = async (lang = "en") => {
   const response = await axiosInstance.get("/permissions", {
     params: { lang },
+    headers: {
+      "Accept-Language": lang,
+    },
   });
 
   return response.data;
@@ -42,16 +49,11 @@ export const getPermissions = async (lang = "en") => {
 // PATCH /employees/{id}/hr-fields
 // Owner / HR only
 // =====================================================
-export const updateEmployeeHRFields = async (
-  id,
-  employeeData,
-  lang = "en",
-) => {
+export const updateEmployeeHRFields = async (id, employeeData, lang = "en") => {
   const response = await axiosInstance.patch(
     `/employees/${id}/hr-fields`,
     employeeData,
     {
-      params: { lang },
       headers: {
         "Accept-Language": lang,
       },
@@ -70,9 +72,8 @@ export const updateEmployeeHRFields = async (
 export const changeEmployeeAccountStatus = async (id, lang = "en") => {
   const response = await axiosInstance.patch(
     `/employees/${id}/change-account-status`,
-    null,
+    undefined,
     {
-      params: { lang },
       headers: {
         "Accept-Language": lang,
       },
@@ -102,6 +103,98 @@ export const getEmployeeById = async (id, lang = "en") => {
   return response.data?.data || response.data;
 };
 
-// Aliases for compatibility
+// =====================================================
+// ALIASES FOR COMPATIBILITY
+// =====================================================
 export const updateEmployeeHrFields = updateEmployeeHRFields;
 
+// =====================================================
+// GET DEPARTMENTS
+// Supports Arabic / English
+// =====================================================
+export const getDepartments = async (lang = "en", params = {}) => {
+  const response = await axiosInstance.get("/departments", {
+    params,
+    headers: {
+      "Accept-Language": lang,
+    },
+  });
+
+  return response.data;
+};
+
+// =====================================================
+// CREATE DEPARTMENT
+// =====================================================
+export const createDepartment = async (departmentData, lang = "en") => {
+  const response = await axiosInstance.post("/departments", departmentData, {
+    headers: {
+      "Accept-Language": lang,
+    },
+  });
+
+  return response.data;
+};
+
+// =====================================================
+// GET DEPARTMENT MANAGERS
+// =====================================================
+export const getDepartmentManagers = async (lang = "en") => {
+  const response = await axiosInstance.get("/departments/managers-dropdown", {
+    headers: {
+      "Accept-Language": lang,
+    },
+  });
+
+  return response.data;
+};
+
+// =====================================================
+// GET HR PENDING LEAVE REQUESTS
+// =====================================================
+export const getHrPendingLeaveRequests = async (lang = "en") => {
+  const response = await axiosInstance.get("/leaves/leave-requests/hr/pending", {
+    params: { lang },
+    headers: {
+      "Accept-Language": lang,
+    },
+  });
+
+  return response.data;
+};
+
+// =====================================================
+// APPROVE LEAVE REQUEST
+// =====================================================
+export const approveLeaveRequest = async (id, lang = "en") => {
+  const response = await axiosInstance.patch(
+    `/leaves/leave-requests/${id}/approve`,
+    undefined,
+    {
+      params: { lang },
+      headers: {
+        "Accept-Language": lang,
+      },
+    },
+  );
+
+  return response.data;
+};
+
+// =====================================================
+// REJECT LEAVE REQUEST
+// =====================================================
+export const rejectLeaveRequest = async (id, rejectionReason, lang = "en") => {
+  const response = await axiosInstance.patch(
+    `/leaves/leave-requests/${id}/reject`,
+    { rejection_reason: rejectionReason },
+    {
+      params: { lang },
+      headers: {
+        "Accept-Language": lang,
+      },
+    },
+  );
+
+  return response.data;
+};

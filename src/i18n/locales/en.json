@@ -1715,52 +1715,20 @@
     "title": "Leave Requests",
     "subtitle": "Review, approve, and document employee leave decisions.",
     "export": "Export queue",
-    "stats": {
-      "pending": "4 Pending Reviews",
-      "approved": "12 Approved this Month",
-      "rejected": "2 Rejected"
-    },
     "queue": "Approval queue",
     "table": {
       "employee": "Employee",
       "roleDepartment": "Role / Department",
       "category": "Category",
       "duration": "Duration",
-      "balance": "Balance",
-      "reason": "Reason & Attachment",
+      "days": "Requested days",
+      "reason": "Reason",
       "actions": "Actions"
     },
-    "categories": {
-      "annual": "Annual",
-      "emergency": "Emergency",
-      "medical": "Medical"
-    },
-    "viewReason": "View reason.pdf",
     "approve": "Approve",
     "reject": "Reject with Note",
-    "requestsEmployees": {
-      "mariam": {
-        "name": "Mariam Hassan",
-        "role": "Engineering Manager",
-        "department": "Engineering",
-        "dates": "Sep 18 – Sep 20 · 3 Days",
-        "balance": "14 Days left"
-      },
-      "omar": {
-        "name": "Omar Khaled",
-        "role": "Sales Executive",
-        "department": "Sales",
-        "dates": "Sep 22 · 1 Day",
-        "balance": "8 Days left"
-      },
-      "nour": {
-        "name": "Nour Adel",
-        "role": "People Ops Specialist",
-        "department": "People & Culture",
-        "dates": "Sep 25 – Sep 26 · 2 Days",
-        "balance": "11 Days left"
-      }
-    }
+    "approveSuccess": "Leave request approved successfully.",
+    "rejectSuccess": "Leave request rejected successfully."
   },
   "employees": {
     "title": "Employees",

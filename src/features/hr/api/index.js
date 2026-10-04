@@ -6,6 +6,7 @@ import axiosInstance from "../../../utils/axiosInstance";
 // =====================================================
 export const getEmployees = async (params = {}) => {
   const { lang, ...filters } = params;
+
   const response = await axiosInstance.get("/employees", {
     params: filters,
     headers: lang ? { "Accept-Language": lang } : undefined,
@@ -178,6 +179,7 @@ export const updateEmployeeHrFields = updateEmployeeHRFields;
 // =====================================================
 // HR FINANCIALS
 // =====================================================
+
 /**
  * GET /api/financial/advances
  * List salary advance requests (HR / Owner / All Roles)
@@ -187,8 +189,17 @@ export const getFinancialAdvances = async (params = {}, lang = "en") => {
     params,
     headers: {
       Accept: "application/json",
+      "Accept-Language": lang,
+    },
+  });
+
+  return response.data;
+};
+
+// =====================================================
 // DEPARTMENTS
 // =====================================================
+
 // GET DEPARTMENTS
 // Supports Arabic / English
 export const getDepartments = async (lang = "en", params = {}) => {
@@ -197,28 +208,11 @@ export const getDepartments = async (lang = "en", params = {}) => {
     headers: {
       "Accept-Language": lang,
     },
+  });
 
   return response.data;
 };
 
-/**
- * PUT /api/financial/advances/{advance}/status
- * Update salary advance request status (HR / Owner)
- * @param {number|string} advanceId
- * @param {string} status 'approved' | 'rejected'
- * @param {string} lang
- */
-export const updateAdvanceStatus = async (advanceId, status, lang = "en") => {
-  if (!advanceId) {
-    throw new Error("Advance ID is required");
-  }
-
-  const response = await axiosInstance.put(
-    `/financial/advances/${advanceId}/status`,
-    { status },
-    {
-      headers: {
-        Accept: "application/json",
 // CREATE DEPARTMENT
 export const createDepartment = async (departmentData, lang = "en") => {
   const response = await axiosInstance.post("/departments", departmentData, {
@@ -242,17 +236,51 @@ export const getDepartmentManagers = async (lang = "en") => {
 };
 
 // =====================================================
+// FINANCIAL ADVANCES STATUS
+// =====================================================
+
+/**
+ * PUT /api/financial/advances/{advance}/status
+ * Update salary advance request status (HR / Owner)
+ *
+ * @param {number|string} advanceId
+ * @param {string} status 'approved' | 'rejected'
+ * @param {string} lang
+ */
+export const updateAdvanceStatus = async (advanceId, status, lang = "en") => {
+  if (!advanceId) {
+    throw new Error("Advance ID is required");
+  }
+
+  const response = await axiosInstance.put(
+    `/financial/advances/${advanceId}/status`,
+    { status },
+    {
+      headers: {
+        Accept: "application/json",
+        "Accept-Language": lang,
+      },
+    },
+  );
+
+  return response.data;
+};
+
+// =====================================================
 // LEAVE REQUESTS
 // =====================================================
 
 // GET HR PENDING LEAVE REQUESTS
 export const getHrPendingLeaveRequests = async (lang = "en") => {
-  const response = await axiosInstance.get("/leaves/leave-requests/hr/pending", {
-    params: { lang },
-    headers: {
-      "Accept-Language": lang,
+  const response = await axiosInstance.get(
+    "/leaves/leave-requests/hr/pending",
+    {
+      params: { lang },
+      headers: {
+        "Accept-Language": lang,
+      },
     },
-  });
+  );
 
   return response.data;
 };
@@ -273,6 +301,28 @@ export const approveLeaveRequest = async (id, lang = "en") => {
   return response.data;
 };
 
+// REJECT LEAVE REQUEST
+export const rejectLeaveRequest = async (id, rejectionReason, lang = "en") => {
+  const response = await axiosInstance.patch(
+    `/leaves/leave-requests/${id}/reject`,
+    {
+      rejection_reason: rejectionReason,
+    },
+    {
+      params: { lang },
+      headers: {
+        "Accept-Language": lang,
+      },
+    },
+  );
+
+  return response.data;
+};
+
+// =====================================================
+// FINANCIAL DEDUCTIONS
+// =====================================================
+
 /**
  * GET /api/financial/deductions
  * List deductions and penalties (HR / Owner / All Roles)
@@ -289,9 +339,15 @@ export const getFinancialDeductions = async (params = {}, lang = "en") => {
   return response.data;
 };
 
+// =====================================================
+// FINANCIAL PAYROLL
+// =====================================================
+
 /**
  * GET /api/financial/payroll
- * Calculates or retrieves company payroll for a given month (Owner / HR)
+ * Calculates or retrieves company payroll for a given month
+ * Owner / HR
+ *
  * @param {Object} params - { month_year, page, per_page }
  * @param {string} lang - 'ar' | 'en'
  */
@@ -310,16 +366,21 @@ export const getFinancialPayroll = async (params = {}, lang = "en") => {
 /**
  * POST /api/financial/payroll/finalize
  * Finalize and close monthly payroll (Owner / HR)
+ *
  * @param {Object} data - { month_year }
  * @param {string} lang - 'ar' | 'en'
  */
 export const finalizeFinancialPayroll = async (data = {}, lang = "en") => {
-  const response = await axiosInstance.post("/financial/payroll/finalize", data, {
-    headers: {
-      Accept: "application/json",
-      "Accept-Language": lang,
+  const response = await axiosInstance.post(
+    "/financial/payroll/finalize",
+    data,
+    {
+      headers: {
+        Accept: "application/json",
+        "Accept-Language": lang,
+      },
     },
-  });
+  );
 
   return response.data;
 };
@@ -327,7 +388,8 @@ export const finalizeFinancialPayroll = async (data = {}, lang = "en") => {
 /**
  * GET /api/financial/payroll/{payroll}/payslip
  * Download employee payslip PDF (Owner / HR)
- * @param {number|string} payrollId - Unique ID of finalized payroll record
+ *
+ * @param {number|string} payrollId
  * @param {string} lang - 'ar' | 'en'
  */
 export const downloadFinancialPayslip = async (payrollId, lang = "en") => {
@@ -341,23 +403,12 @@ export const downloadFinancialPayslip = async (payrollId, lang = "en") => {
       responseType: "blob",
       headers: {
         Accept: "application/pdf",
-// REJECT LEAVE REQUEST
-export const rejectLeaveRequest = async (id, rejectionReason, lang = "en") => {
-  const response = await axiosInstance.patch(
-    `/leaves/leave-requests/${id}/reject`,
-    { rejection_reason: rejectionReason },
-    {
-      params: { lang },
-      headers: {
         "Accept-Language": lang,
       },
     },
   );
 
   return response;
-};
-
-  return response.data;
 };
 
 // =====================================================
@@ -461,9 +512,11 @@ export const exportHrMonthlySummary = async ({
 
   // Build a filename from Content-Disposition or a default
   const disposition = response.headers?.["content-disposition"] || "";
+
   let filename = `attendance-${year}-${String(month).padStart(2, "0")}.xlsx`;
 
   const match = disposition.match(/filename[^;=\n]*=(['"]?)([^'"\n]+)\1/);
+
   if (match?.[2]) {
     filename = match[2].trim();
   }
@@ -471,11 +524,14 @@ export const exportHrMonthlySummary = async ({
   // Trigger browser download
   const url = URL.createObjectURL(new Blob([response.data]));
   const link = document.createElement("a");
+
   link.href = url;
   link.setAttribute("download", filename);
+
   document.body.appendChild(link);
   link.click();
   link.remove();
+
   URL.revokeObjectURL(url);
 
   return { success: true, filename };

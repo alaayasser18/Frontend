@@ -80,13 +80,6 @@ export const getEmployeeById = async (id, lang = "en") => {
 export const getAdvances = async (params = {}, lang = "en") => {
   const response = await axiosInstance.get("/financial/advances", {
     params,
-   LEAVE REQUESTS
-========================================================= 
-*/
-
-export const getEmployeeLeaveTypes = async (lang = "en") => {
-  const response = await axiosInstance.get("/leaves/leave-types", {
-    params: { lang },
     headers: {
       "Accept-Language": lang,
     },
@@ -101,9 +94,6 @@ export const getEmployeeLeaveTypes = async (lang = "en") => {
  */
 export const createAdvance = async (data, lang = "en") => {
   const response = await axiosInstance.post("/financial/advances", data, {
-export const getEmployeeLeaveBalances = async (year, lang = "en") => {
-  const response = await axiosInstance.get("/leaves/leave-balances", {
-    params: { lang, year },
     headers: {
       "Accept-Language": lang,
     },
@@ -119,9 +109,6 @@ export const getEmployeeLeaveBalances = async (year, lang = "en") => {
 export const getDeductions = async (params = {}, lang = "en") => {
   const response = await axiosInstance.get("/financial/deductions", {
     params,
-export const getEmployeeLeaveRequests = async (year, lang = "en") => {
-  const response = await axiosInstance.get("/leaves/leave-requests", {
-    params: { lang, year },
     headers: {
       "Accept-Language": lang,
     },
@@ -163,6 +150,7 @@ export const getMySalaries = async (params = {}, lang = "en") => {
 /**
  * GET /api/financial/payroll/{payroll}/payslip
  * Download employee payslip PDF
+ *
  * @param {number|string} payrollId
  * @param {string} lang
  */
@@ -177,13 +165,6 @@ export const downloadFinancialPayslip = async (payrollId, lang = "en") => {
       responseType: "blob",
       headers: {
         Accept: "application/pdf",
-export const createEmployeeLeaveRequest = async (requestData, lang = "en") => {
-  const response = await axiosInstance.post(
-    "/leaves/leave-requests",
-    requestData,
-    {
-      params: { lang },
-      headers: {
         "Accept-Language": lang,
       },
     },
@@ -192,22 +173,104 @@ export const createEmployeeLeaveRequest = async (requestData, lang = "en") => {
   return response;
 };
 
+/* =========================================================
+   LEAVE REQUESTS
+========================================================= */
+
+/**
+ * GET /api/leaves/leave-types
+ * Get available employee leave types
+ */
+export const getEmployeeLeaveTypes = async (lang = "en") => {
+  const response = await axiosInstance.get("/leaves/leave-types", {
+    params: {
+      lang,
+    },
+    headers: {
+      "Accept-Language": lang,
+    },
+  });
+
   return response.data;
 };
 
+/**
+ * GET /api/leaves/leave-balances
+ * Get employee leave balances
+ */
+export const getEmployeeLeaveBalances = async (year, lang = "en") => {
+  const response = await axiosInstance.get("/leaves/leave-balances", {
+    params: {
+      lang,
+      year,
+    },
+    headers: {
+      "Accept-Language": lang,
+    },
+  });
+
+  return response.data;
+};
+
+/**
+ * GET /api/leaves/leave-requests
+ * Get employee leave requests
+ */
+export const getEmployeeLeaveRequests = async (year, lang = "en") => {
+  const response = await axiosInstance.get("/leaves/leave-requests", {
+    params: {
+      lang,
+      year,
+    },
+    headers: {
+      "Accept-Language": lang,
+    },
+  });
+
+  return response.data;
+};
+
+/**
+ * POST /api/leaves/leave-requests
+ * Create employee leave request
+ */
+export const createEmployeeLeaveRequest = async (requestData, lang = "en") => {
+  const response = await axiosInstance.post(
+    "/leaves/leave-requests",
+    requestData,
+    {
+      params: {
+        lang,
+      },
+      headers: {
+        "Accept-Language": lang,
+      },
+    },
+  );
+
+  return response.data;
+};
+
+/**
+ * POST /api/leaves/leave-requests/{id}/attachments
+ * Upload leave request attachment
+ */
 export const uploadEmployeeLeaveAttachment = async (
   requestId,
   file,
   lang = "en",
 ) => {
   const formData = new FormData();
+
   formData.append("file", file);
 
   const response = await axiosInstance.post(
     `/leaves/leave-requests/${requestId}/attachments`,
     formData,
     {
-      params: { lang },
+      params: {
+        lang,
+      },
       headers: {
         "Accept-Language": lang,
       },

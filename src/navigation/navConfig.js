@@ -5,7 +5,6 @@ import {
   MdAttachMoney,
   MdLocationCity,
   MdEventNote,
-  MdSettings,
   MdNotifications,
   MdAssessment,
   MdHistory,
@@ -35,6 +34,7 @@ import {
   MdInsights,
   MdCalendarToday,
   MdEventAvailable,
+  MdDateRange,
 } from "react-icons/md";
 
 import { LuSparkles } from "react-icons/lu";
@@ -118,6 +118,18 @@ export const navConfig = {
       title: "Attendance",
       path: "/admin/attendance",
       icon: MdCalendarMonth,
+    },
+    {
+      titleKey: "portal.leaveRequests",
+      title: "Leave Requests",
+      path: "/admin/leave-requests",
+      icon: MdEventNote,
+    },
+    {
+      titleKey: "portal.holidays",
+      title: "Holidays & Seasons",
+      path: "/admin/holidays",
+      icon: MdEventAvailable,
     },
     {
       titleKey: "portal.auditLogs",
@@ -318,6 +330,12 @@ export const navConfig = {
       icon: MdEventAvailable,
     },
     {
+      titleKey: "portal.holidays",
+      title: "Official Holidays",
+      path: "/manager/holidays",
+      icon: MdDateRange,
+    },
+    {
       titleKey: "portal.aiTeamInsights",
       title: "AI Team Insights",
       path: "/manager/ai-insights",
@@ -365,6 +383,12 @@ export const navConfig = {
       title: "Leave & Balances",
       path: "/employee/leaves",
       icon: FiCalendar,
+    },
+    {
+      titleKey: "portal.holidays",
+      title: "Company Holidays",
+      path: "/employee/holidays",
+      icon: MdEventAvailable,
     },
     {
       titleKey: "portal.myPerformance",

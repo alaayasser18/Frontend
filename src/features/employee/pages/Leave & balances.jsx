@@ -34,9 +34,12 @@ const itemVariants = {
   visible: { opacity: 1, y: 0, transition: { duration: 0.35, ease: "easeOut" } },
 };
 
+import { useHolidays } from "../../../hooks/useHolidays";
+
 export default function LeaveBalances() {
   const { t, i18n } = useTranslation();
   const isRtl = i18n.language?.startsWith("ar");
+  const { data: holidaysList } = useHolidays();
   const lang = isRtl ? "ar" : "en";
   const year = new Date().getFullYear();
   const leaveTypesQuery = useEmployeeLeaveTypes(lang);
@@ -867,6 +870,22 @@ export default function LeaveBalances() {
                     return <div key={`empty-${idx}`} className="h-9 rounded-lg" />;
                   }
 
+                  const currentDayDate = new Date(
+                    calendarMonth.getFullYear(),
+                    calendarMonth.getMonth(),
+                    item.day,
+                  );
+                  const holidayItem = (holidaysList || []).find((h) => {
+                    if (!h.start_date) return false;
+                    const start = new Date(h.start_date);
+                    const end = h.end_date ? new Date(h.end_date) : start;
+                    const cur = currentDayDate.getTime();
+                    return (
+                      cur >= new Date(start.getFullYear(), start.getMonth(), start.getDate()).getTime() &&
+                      cur <= new Date(end.getFullYear(), end.getMonth(), end.getDate()).getTime()
+                    );
+                  });
+
                   const dayKey = [
                     calendarMonth.getFullYear(),
                     String(calendarMonth.getMonth() + 1).padStart(2, "0"),
@@ -883,22 +902,30 @@ export default function LeaveBalances() {
                   const isApprovedLeave =
                     String(leaveOnDay?.status || "").toLowerCase() === "approved";
 
+                  const cellTitle = holidayItem
+                    ? leaveOnDay
+                      ? `${holidayItem.name} · ${getLocalizedLeaveTypeName(
+                          leaveOnDay.leave_type?.name,
+                          isRtl,
+                          t,
+                        )} (${leaveOnDay.status})`
+                      : holidayItem.name
+                    : leaveOnDay
+                    ? `${getLocalizedLeaveTypeName(
+                        leaveOnDay.leave_type?.name,
+                        isRtl,
+                        t,
+                      )} ${leaveOnDay.status}`
+                    : undefined;
+
                   return (
                     <div
                       key={`day-${item.day}`}
-                      title={
-                        leaveOnDay
-                          ? `${getLocalizedLeaveTypeName(
-                              leaveOnDay.leave_type?.name,
-                              isRtl,
-                              t,
-                            )} ${
-                              leaveOnDay.status
-                            }`
-                          : undefined
-                      }
+                      title={cellTitle}
                       className={`relative flex h-9 flex-col items-center justify-center rounded-lg text-xs font-semibold transition ${
-                        leaveOnDay && isApprovedLeave
+                        holidayItem
+                          ? "bg-amber-50 text-amber-800 font-bold border border-amber-200"
+                          : leaveOnDay && isApprovedLeave
                           ? "border border-[#a7f3d0] bg-[#ecfdf5] font-bold text-[#059669]"
                           : leaveOnDay
                           ? "border border-[#bfdbfe] bg-[#eff6ff] font-bold text-[#2563eb]"
@@ -906,6 +933,9 @@ export default function LeaveBalances() {
                       }`}
                     >
                       <span>{item.day}</span>
+                      {holidayItem && (
+                        <span className="w-1.5 h-1.5 rounded-full bg-amber-500 absolute bottom-1" />
+                      )}
                     </div>
                   );
                 })}
@@ -913,7 +943,11 @@ export default function LeaveBalances() {
 
               {/* Footer */}
               <div className="flex items-center justify-between pt-4 mt-4 border-t border-[#f1f5f9]">
-                <div className="flex items-center gap-3 text-xs text-[#64748b]">
+                <div className="flex flex-wrap items-center gap-3 text-xs text-[#64748b]">
+                  <div className="flex items-center gap-1.5">
+                    <span className="w-2.5 h-2.5 rounded-full bg-amber-100 border border-amber-300" />
+                    <span>Official Holiday</span>
+                  </div>
                   <div className="flex items-center gap-1.5">
                     <span className="w-2.5 h-2.5 rounded-full bg-[#ecfdf5] border border-[#a7f3d0]" />
                     <span>{t("leaveBalances.statusApproved", "Approved")}</span>

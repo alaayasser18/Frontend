@@ -556,3 +556,23 @@ export const updateAttendanceExceptionStatus = async ({
 
   return response.data;
 };
+
+// =====================================================
+// HOLIDAYS
+// =====================================================
+
+// GET /holidays
+export const getHolidays = async (params = {}) => {
+  const response = await axiosInstance.get("/holidays", {
+    params,
+  });
+
+  return response.data;
+};
+
+// POST /holidays
+// Allowed for HR, Owner
+export const createHoliday = async (holidayData) => {
+  const response = await axiosInstance.post("/holidays", holidayData);
+  return response.data;
+};

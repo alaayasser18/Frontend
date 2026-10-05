@@ -30,6 +30,7 @@ import AdminPayroll from "./features/admin/pages/Payroll";
 import AdminAdvances from "./features/admin/pages/AdvancesDeductions";
 import AdminRewards from "./features/admin/pages/Rewards";
 import AdminAttendance from "./features/admin/pages/Attendance";
+import AdminHolidays from "./features/admin/pages/Holidays";
 
 // ==================== Employee Pages ====================
 import EmployeePerformance from "./features/employee/pages/Performance";
@@ -54,6 +55,7 @@ import TeamAttendance from "./features/manager/pages/TeamAttendance";
 import TeamLeaveApprovals from "./features/manager/pages/TeamLeaveApprovals";
 import AITeamInsights from "./features/manager/pages/AITeamInsights";
 import ProfileSetting from "./features/manager/pages/ProfileSetting";
+import ManagerHolidays from "./features/manager/pages/Holidays";
 
 // ==================== HR Pages ====================
 import HrDashboard from "./features/hr/pages/hrDashboard";
@@ -68,26 +70,32 @@ import HrEvaluationsGoals from "./features/hr/pages/evaluations&goals";
 import PerformanceMetrics from "./features/hr/pages/performanceMatrics";
 import AIInsights from "./features/hr/pages/aiInsights";
 import HrCompanyPolicies from "./features/hr/pages/companyPolicies";
-import Holidays from "./features/hr/pages/holidays";
+import HrHolidays from "./features/hr/pages/holidays";
+import EmployeeHolidays from "./features/employee/pages/Holidays";
 import Reports from "./features/hr/pages/reports";
 import HrProfileSettings from "./features/hr/pages/ProfileSettings";
 
 // ==================== Layout ====================
 import DashboardLayout from "./layouts/DashboardLayout";
 
-
 // ==================== Google OAuth hash handler ====================
 (function handleGoogleHash() {
   const hash = window.location.hash;
+
   if (!hash.includes("token=")) return;
 
   const token = new URLSearchParams(hash.replace(/^#/, "")).get("token");
+
   if (!token) return;
 
   try {
     const b64 = token.split(".")[1].replace(/-/g, "+").replace(/_/g, "/");
+
     const payload = JSON.parse(atob(b64));
-    const user = { id: payload.sub, role: payload.role };
+    const user = {
+      id: payload.sub,
+      role: payload.role,
+    };
 
     localStorage.setItem("token", token);
     localStorage.setItem("user", JSON.stringify(user));
@@ -101,25 +109,6 @@ import DashboardLayout from "./layouts/DashboardLayout";
 
   window.history.replaceState(null, "", window.location.pathname);
 })();
-
-
-// ==================== Dashboard Placeholder ====================
-function DashboardPlaceholder({ messageKey, defaultMessage }) {
-  const { t } = useTranslation();
-
-  return (
-    <div
-      style={{
-        padding: "40px 24px",
-        textAlign: "center",
-        color: "#64748b",
-        fontSize: "16px",
-      }}
-    >
-      {t(messageKey, defaultMessage)}
-    </div>
-  );
-}
 
 function App() {
   const { i18n } = useTranslation();
@@ -158,7 +147,8 @@ function App() {
           <Route path="/" element={<Home />} />
 
           {/* ==================== Authentication ==================== */}
-          {/* Normal Login: for Employee, HR, Manager (Google login hidden, no register link) */}
+
+          {/* Normal Login: Employee, HR, Manager */}
           <Route
             path="/login"
             element={
@@ -168,7 +158,7 @@ function App() {
             }
           />
 
-          {/* Owner Login: for System Owner (Google login visible, register link points to /owner/register) */}
+          {/* Owner Login */}
           <Route
             path="/owner/login"
             element={
@@ -184,7 +174,7 @@ function App() {
             element={<Navigate to="/owner/login" replace />}
           />
 
-          {/* Owner Register: intended for Owner only */}
+          {/* Owner Register */}
           <Route
             path="/owner/register"
             element={
@@ -194,13 +184,14 @@ function App() {
             }
           />
 
-          {/* Backward compatibility for /register: redirect to /owner/register */}
+          {/* Backward compatibility for /register */}
           <Route
             path="/register"
             element={<Navigate to="/owner/register" replace />}
           />
 
           {/* ==================== Password Reset ==================== */}
+
           <Route
             path="/ForgotPassword"
             element={
@@ -209,6 +200,7 @@ function App() {
               </PublicRoute>
             }
           />
+
           <Route
             path="/VerifyOTP"
             element={
@@ -217,6 +209,7 @@ function App() {
               </PublicRoute>
             }
           />
+
           <Route
             path="/ResetPassword"
             element={
@@ -240,6 +233,7 @@ function App() {
             {/* ================================================== */}
             {/* ==================== ADMIN (Owner Only) ========== */}
             {/* ================================================== */}
+
             <Route element={<ProtectedRoute allowedRoles={["Owner"]} />}>
               <Route
                 path="/admin"
@@ -247,48 +241,78 @@ function App() {
               />
 
               <Route path="/admin/dashboard" element={<AdminDashboard />} />
+
               <Route path="/admin/users" element={<Users />} />
+
               <Route path="/admin/branches" element={<Branches />} />
+
               <Route path="/admin/performance" element={<AdminPerformance />} />
+
               <Route path="/admin/notifications" element={<Notification />} />
+
               <Route path="/admin/audit" element={<ActivityLog />} />
+
               <Route path="/admin/attendance" element={<AdminAttendance />} />
+
+              <Route
+                path="/admin/leave-requests"
+                element={<HrLeaveRequests role="owner" />}
+              />
+
+              <Route path="/admin/holidays" element={<AdminHolidays />} />
+
               <Route path="/admin/profile" element={<AdminProfileSettings />} />
+
               <Route path="/admin/goals" element={<Goals />} />
+
               <Route
                 path="/admin/settings"
                 element={<AdminProfileSettings />}
               />
+
               <Route path="/admin/payroll" element={<AdminPayroll />} />
+
               <Route
                 path="/admin/advances-deductions"
                 element={<AdminAdvances />}
               />
+
               <Route path="/admin/rewards" element={<AdminRewards />} />
               <Route
                 path="/admin/submissions"
                 element={<SubmissionReviews role="Owner" />}
               />
+
               <Route path="/branches" element={<Branches />} />
             </Route>
 
             {/* ================================================== */}
             {/* ====================== HR (HR Only) ============== */}
             {/* ================================================== */}
+
             <Route element={<ProtectedRoute allowedRoles={["HR"]} />}>
               <Route path="/hr" element={<HrLayout />}>
                 <Route
                   index
                   element={<Navigate to="/hr/dashboard" replace />}
                 />
+
                 <Route path="dashboard" element={<HrDashboard />} />
+
                 <Route path="employees" element={<HrEmployees />} />
+
                 <Route path="departments" element={<HrDepartments />} />
+
                 <Route path="attendance" element={<HrAttendance />} />
+
                 <Route path="leave-requests" element={<HrLeaveRequests />} />
+
                 <Route path="advances-deductions" element={<HrAdvances />} />
+
                 <Route path="payroll" element={<HrPayroll />} />
+
                 <Route path="rewards" element={<HrRewards />} />
+
                 <Route
                   path="submissions"
                   element={<SubmissionReviews role="HR" />}
@@ -297,19 +321,27 @@ function App() {
                   path="evaluations-goals"
                   element={<HrEvaluationsGoals />}
                 />
+
                 <Route
                   path="performance-metrics"
                   element={<PerformanceMetrics />}
                 />
+
                 <Route path="ai-insights" element={<AIInsights />} />
+
                 <Route
                   path="company-policies"
                   element={<HrCompanyPolicies />}
                 />
-                <Route path="holidays" element={<Holidays />} />
+
+                <Route path="holidays" element={<HrHolidays />} />
+
                 <Route path="reports" element={<Reports />} />
+
                 <Route path="notifications" element={<Notification />} />
+
                 <Route path="profile" element={<HrProfileSettings />} />
+
                 <Route path="settings" element={<HrProfileSettings />} />
               </Route>
             </Route>
@@ -317,6 +349,7 @@ function App() {
             {/* ================================================== */}
             {/* ==================== MANAGER (Manager Only) ====== */}
             {/* ================================================== */}
+
             <Route element={<ProtectedRoute allowedRoles={["Manager"]} />}>
               <Route
                 path="/manager"
@@ -324,33 +357,46 @@ function App() {
               />
 
               <Route path="/manager/dashboard" element={<TeamDashboard />} />
+
               <Route path="/manager/tasks" element={<TaskManagement />} />
+
               <Route
                 path="/manager/submissions"
                 element={<SubmissionReviews />}
               />
+
               <Route
                 path="/manager/evaluations"
                 element={<TeamEvaluations />}
               />
+
               <Route path="/manager/goals" element={<TeamGoals />} />
+
               <Route
                 path="/manager/analytics"
                 element={<PerformanceAnalytics />}
               />
+
               <Route path="/manager/attendance" element={<TeamAttendance />} />
+
               <Route
                 path="/manager/leave-approvals"
                 element={<TeamLeaveApprovals />}
               />
+
+              <Route path="/manager/holidays" element={<ManagerHolidays />} />
+
               <Route path="/manager/ai-insights" element={<AITeamInsights />} />
+
               <Route path="/manager/notifications" element={<Notification />} />
+
               <Route path="/manager/profile" element={<ProfileSetting />} />
             </Route>
 
             {/* ================================================== */}
             {/* ==================== EMPLOYEE (Employee Only) ==== */}
             {/* ================================================== */}
+
             <Route element={<ProtectedRoute allowedRoles={["Employee"]} />}>
               <Route
                 path="/employee"
@@ -358,32 +404,46 @@ function App() {
               />
 
               <Route path="/employee/dashboard" element={<HomeDashboard />} />
+
               <Route path="/employee/attendance" element={<Attendance />} />
+
               <Route path="/employee/tasks" element={<Tasks />} />
+
               <Route
                 path="/employee/performance"
                 element={<EmployeePerformance />}
               />
+
               <Route path="/employee/leaves" element={<LeaveBalances />} />
+
               <Route
                 path="/employee/leave-balances"
                 element={<Navigate to="/employee/leaves" replace />}
               />
+
+              <Route path="/employee/holidays" element={<EmployeeHolidays />} />
+
               <Route path="/employee/ai-assistant" element={<AIAssistant />} />
+
               <Route
                 path="/employee/assistant"
                 element={<Navigate to="/employee/ai-assistant" replace />}
               />
+
               <Route
                 path="/employee/notifications"
                 element={<Notification />}
               />
+
               <Route path="/employee/policies" element={<CompanyPolicies />} />
+
               <Route path="/employee/goals" element={<EmployeeGoals />} />
+
               <Route
                 path="/employee/financial"
                 element={<EmployeeFinancial />}
               />
+
               <Route
                 path="/employee/profile"
                 element={<EmployeeProfileSettings />}

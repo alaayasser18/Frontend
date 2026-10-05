@@ -2,10 +2,17 @@ import axios from "axios";
 
 console.log("API URL:", import.meta.env.VITE_API_BASE_URL);
 
+const rawBaseUrl =
+  import.meta.env.VITE_API_BASE_URL ||
+  "https://nontelepathically-pamphletary-cyndi.ngrok-free.dev/api";
+
+const getBaseUrl = () => {
+  const trimmed = (rawBaseUrl || "").trim().replace(/\/+$/, "");
+  return trimmed.endsWith("/api") ? trimmed : `${trimmed}/api`;
+};
+
 const axiosInstance = axios.create({
-  baseURL:
-    import.meta.env.VITE_API_BASE_URL ||
-    "https://nontelepathically-pamphletary-cyndi.ngrok-free.dev/api/",
+  baseURL: getBaseUrl(),
   timeout: 15000,
   headers: {
     Accept: "application/json",

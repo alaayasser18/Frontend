@@ -1,9 +1,11 @@
 import axios from "axios";
 
+console.log("API URL:", import.meta.env.VITE_API_BASE_URL);
+
 const axiosInstance = axios.create({
   baseURL:
     import.meta.env.VITE_API_BASE_URL ||
-    "https://nontelepathically-pamphletary-cyndi.ngrok-free.dev/api",
+    "https://nontelepathically-pamphletary-cyndi.ngrok-free.dev/api/",
   timeout: 15000,
   headers: {
     Accept: "application/json",

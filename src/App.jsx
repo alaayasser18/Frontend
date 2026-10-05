@@ -25,6 +25,10 @@ import ActivityLog from "./features/admin/pages/AuditLogs";
 import Users from "./features/admin/pages/Users";
 import AdminPerformance from "./features/admin/pages/PerformancePage";
 import AdminProfileSettings from "./features/admin/pages/ProfileSettings";
+import Goals from "./features/admin/pages/Goals";
+import AdminPayroll from "./features/admin/pages/Payroll";
+import AdminAdvances from "./features/admin/pages/AdvancesDeductions";
+import AdminRewards from "./features/admin/pages/Rewards";
 import AdminAttendance from "./features/admin/pages/Attendance";
 import AdminHolidays from "./features/admin/pages/Holidays";
 
@@ -38,6 +42,7 @@ import Attendance from "./features/employee/pages/attendance/Attendance";
 import LeaveBalances from "./features/employee/pages/Leave & balances";
 import AIAssistant from "./features/employee/pages/AI Assistant";
 import EmployeeGoals from "./features/employee/pages/Goals";
+import EmployeeFinancial from "./features/employee/pages/Financial";
 
 // ==================== Manager Pages ====================
 import TeamDashboard from "./features/manager/pages/TeamDashboard";
@@ -72,6 +77,34 @@ import HrProfileSettings from "./features/hr/pages/ProfileSettings";
 
 // ==================== Layout ====================
 import DashboardLayout from "./layouts/DashboardLayout";
+
+
+// ==================== Google OAuth hash handler ====================
+(function handleGoogleHash() {
+  const hash = window.location.hash;
+  if (!hash.includes("token=")) return;
+
+  const token = new URLSearchParams(hash.replace(/^#/, "")).get("token");
+  if (!token) return;
+
+  try {
+    const b64 = token.split(".")[1].replace(/-/g, "+").replace(/_/g, "/");
+    const payload = JSON.parse(atob(b64));
+    const user = { id: payload.sub, role: payload.role };
+
+    localStorage.setItem("token", token);
+    localStorage.setItem("user", JSON.stringify(user));
+    localStorage.setItem("currentUser", JSON.stringify(user));
+    localStorage.setItem("role", payload.role);
+    localStorage.setItem("permissions", JSON.stringify([]));
+    localStorage.setItem("rememberMe", "true");
+  } catch (e) {
+    console.error("Google token parse failed", e);
+  }
+
+  window.history.replaceState(null, "", window.location.pathname);
+})();
+
 
 // ==================== Dashboard Placeholder ====================
 function DashboardPlaceholder({ messageKey, defaultMessage }) {
@@ -149,7 +182,10 @@ function App() {
           />
 
           {/* Owner redirect helper */}
-          <Route path="/owner" element={<Navigate to="/owner/login" replace />} />
+          <Route
+            path="/owner"
+            element={<Navigate to="/owner/login" replace />}
+          />
 
           {/* Owner Register: intended for Owner only */}
           <Route
@@ -222,10 +258,17 @@ function App() {
               <Route path="/admin/attendance" element={<AdminAttendance />} />
               <Route path="/admin/holidays" element={<AdminHolidays />} />
               <Route path="/admin/profile" element={<AdminProfileSettings />} />
+              <Route path="/admin/goals" element={<Goals />} />
               <Route
                 path="/admin/settings"
                 element={<AdminProfileSettings />}
               />
+              <Route path="/admin/payroll" element={<AdminPayroll />} />
+              <Route
+                path="/admin/advances-deductions"
+                element={<AdminAdvances />}
+              />
+              <Route path="/admin/rewards" element={<AdminRewards />} />
               <Route path="/branches" element={<Branches />} />
             </Route>
 
@@ -234,7 +277,10 @@ function App() {
             {/* ================================================== */}
             <Route element={<ProtectedRoute allowedRoles={["HR"]} />}>
               <Route path="/hr" element={<HrLayout />}>
-                <Route index element={<Navigate to="/hr/dashboard" replace />} />
+                <Route
+                  index
+                  element={<Navigate to="/hr/dashboard" replace />}
+                />
                 <Route path="dashboard" element={<HrDashboard />} />
                 <Route path="employees" element={<HrEmployees />} />
                 <Route path="departments" element={<HrDepartments />} />
@@ -260,10 +306,7 @@ function App() {
                 <Route path="reports" element={<Reports />} />
                 <Route path="notifications" element={<Notification />} />
                 <Route path="profile" element={<HrProfileSettings />} />
-                <Route
-                  path="settings"
-                  element={<HrProfileSettings />}
-                />
+                <Route path="settings" element={<HrProfileSettings />} />
               </Route>
             </Route>
 
@@ -335,6 +378,10 @@ function App() {
               />
               <Route path="/employee/policies" element={<CompanyPolicies />} />
               <Route path="/employee/goals" element={<EmployeeGoals />} />
+              <Route
+                path="/employee/financial"
+                element={<EmployeeFinancial />}
+              />
               <Route
                 path="/employee/profile"
                 element={<EmployeeProfileSettings />}

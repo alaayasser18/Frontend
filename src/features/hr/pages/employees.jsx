@@ -16,6 +16,8 @@ import {
   FiEdit2,
   FiPower,
   FiSave,
+  FiEye,
+  FiEyeOff,
 } from "react-icons/fi";
 
 import {
@@ -288,7 +290,7 @@ function EmployeesPage() {
     email: "",
     password: "",
     role: "",
-    employment_type: "Full-time",
+    employment_type: "",
     department_id: "",
     start_date: "",
     salary: "",
@@ -438,6 +440,14 @@ function EmployeesPage() {
 
     selectRole: isArabic ? "اختر الدور" : "Select role",
 
+    selectEmploymentType: isArabic
+      ? "اختر نوع التوظيف"
+      : "Select employment type",
+
+    showPassword: isArabic ? "إظهار كلمة المرور" : "Show password",
+
+    hidePassword: isArabic ? "إخفاء كلمة المرور" : "Hide password",
+
     loadingDepartments: isArabic
       ? "جاري تحميل الأقسام..."
       : "Loading departments...",
@@ -464,6 +474,8 @@ function EmployeesPage() {
   const [isEditMode, setIsEditMode] = useState(false);
 
   const [fieldErrors, setFieldErrors] = useState({});
+
+  const [showCreatePassword, setShowCreatePassword] = useState(false);
 
   // =====================================================
   // EMPLOYEES FROM API
@@ -820,7 +832,7 @@ function EmployeesPage() {
         email: "",
         password: "",
         role: "",
-        employment_type: "Full-time",
+        employment_type: "",
         department_id: "",
         start_date: "",
         salary: "",
@@ -832,6 +844,7 @@ function EmployeesPage() {
       setIsPermissionsOpen(false);
 
       setFieldErrors({});
+      setShowCreatePassword(false);
 
       setIsSuccess(true);
       toast.success(t.successText);
@@ -865,7 +878,7 @@ function EmployeesPage() {
       email: "",
       password: "",
       role: "",
-      employment_type: "Full-time",
+      employment_type: "",
       department_id: "",
       start_date: "",
       salary: "",
@@ -879,6 +892,8 @@ function EmployeesPage() {
     createEmployeeMutation.reset();
 
     setFieldErrors({});
+
+    setShowCreatePassword(false);
 
     setIsSuccess(false);
 
@@ -908,7 +923,7 @@ function EmployeesPage() {
       email: "",
       password: "",
       role: "",
-      employment_type: "Full-time",
+      employment_type: "",
       department_id: "",
       start_date: "",
       salary: "",
@@ -918,6 +933,8 @@ function EmployeesPage() {
     });
 
     setFieldErrors({});
+
+    setShowCreatePassword(false);
 
     createEmployeeMutation.reset();
   };
@@ -1657,12 +1674,33 @@ function EmployeesPage() {
                     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                       <FormInput
                         label={isArabic ? "كلمة المرور" : "Password"}
-                        type="password"
+                        type={showCreatePassword ? "text" : "password"}
                         value={formData.password}
                         onChange={(value) =>
                           handleFormChange("password", value)
                         }
                         placeholder="••••••••"
+                        endAdornment={
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setShowCreatePassword((visible) => !visible)
+                            }
+                            className="text-[#64748b] transition hover:text-[#1e293b]"
+                            aria-label={
+                              showCreatePassword
+                                ? t.hidePassword
+                                : t.showPassword
+                            }
+                            aria-pressed={showCreatePassword}
+                          >
+                            {showCreatePassword ? (
+                              <FiEyeOff className="h-4 w-4" />
+                            ) : (
+                              <FiEye className="h-4 w-4" />
+                            )}
+                          </button>
+                        }
                         required
                         isArabic={isArabic}
                         helper={
@@ -1718,6 +1756,7 @@ function EmployeesPage() {
                           handleFormChange("employment_type", value)
                         }
                         required
+                        placeholder={t.selectEmploymentType}
                         error={fieldErrors.employment_type}
                         options={[
                           {
@@ -2513,6 +2552,7 @@ function FormInput({
   min,
   maxLength,
   error,
+  endAdornment,
 }) {
   return (
     <div>
@@ -2522,20 +2562,29 @@ function FormInput({
         {required && <span className="ml-1 text-red-500">*</span>}
       </label>
 
-      <input
-        type={type}
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        placeholder={placeholder}
-        min={min}
-        maxLength={maxLength}
-        aria-invalid={Boolean(error)}
-        className={`h-11 w-full rounded-lg border ${
-          error ? "border-red-500" : "border-[#e2e8f0]"
-        } bg-white px-3.5 text-sm text-[#1e293b] outline-none transition placeholder:text-[#94a3b8] focus:border-[#cbd5e1] focus:ring-2 focus:ring-[#f1f5f9] ${
-          isArabic ? "text-right" : "text-left"
-        }`}
-      />
+      <div className="relative">
+        <input
+          type={type}
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          placeholder={placeholder}
+          min={min}
+          maxLength={maxLength}
+          aria-invalid={Boolean(error)}
+          className={`h-11 w-full rounded-lg border ${
+            error ? "border-red-500" : "border-[#e2e8f0]"
+          } bg-white px-3.5 ${
+            endAdornment ? "pe-10" : ""
+          } text-sm text-[#1e293b] outline-none transition placeholder:text-[#94a3b8] focus:border-[#cbd5e1] focus:ring-2 focus:ring-[#f1f5f9] ${
+            isArabic ? "text-right" : "text-left"
+          }`}
+        />
+        {endAdornment && (
+          <span className="absolute inset-y-0 end-0 flex items-center px-3">
+            {endAdornment}
+          </span>
+        )}
+      </div>
 
       {error && (
         <p className="mt-1.5 text-[11px] font-medium text-red-600" role="alert">

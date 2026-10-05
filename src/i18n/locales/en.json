@@ -55,7 +55,21 @@
       "quickSignInAlert": "Biometric Sign-In clicked!",
       "showPassword": "Show password",
       "hidePassword": "Hide password",
-      "googleSignIn": "Sign in with Google"
+      "googleSignIn": "Sign in with Google",
+      "googleError": "Failed to initiate Google login.",
+      "googleSuccess": "Signed in with Google successfully.",
+      "googleNotAuthorized": "You are not authorized to log in with Google.",
+      "googleAuthFailed": "An error occurred during Google authentication. Please try again.",
+      "googleErrorGeneric": "Google authentication failed. Please try again.",
+      "signingIn": "Signing in...",
+      "loginSuccess": "Logged in successfully.",
+      "invalidCredentials": "These credentials do not match our records.",
+      "accountInactive": "Your account is inactive. Please activate your account first.",
+      "tooManyRequests": "Too many login attempts. Please try again later.",
+      "serverError": "Something went wrong on the server. Please try again later.",
+      "tokenMissing": "Login succeeded, but authentication data was incomplete.",
+      "errorGeneric": "Something went wrong. Please try again.",
+      "portalSubtitle": "Enter your credentials to access your portal"
     },
     "forgotPassword": {
       "title": "Forgot Password?",
@@ -160,10 +174,7 @@
       "fullName": "Full Name",
       "fullNamePlaceholder": "John Doe",
       "workEmail": "Work Email",
-      "emailPlaceholder": "name@company.com",
-      "creatingAccount": "Creating Account...",
-      "tooManyRequests": "Too many attempts. Please try again later.",
-      "errorGeneric": "Something went wrong. Please try again."
+      "emailPlaceholder": "name@company.com"
     },
     "verifyEmail": {
       "title": "Verify Your Email",
@@ -898,9 +909,10 @@
     "notifications": "Notifications",
     "overview": "Overview",
     "users": "Users",
-    "performance": "Performance & Goals",
+    "performance": "Performance",
+    "goals": "Goals",
     "myPerformance": "My Performance",
-    "myGoals": "My Goals",
+
     "auditLogs": "Audit Logs",
     "administration": "Administration",
     "wiseWork": "WiseWork",
@@ -1405,7 +1417,7 @@
     "subtitle": "Plan time away and keep track of your remaining allowance.",
     "viewCalendar": "View calendar",
     "calendarModalTitle": "Team & Leave Calendar",
-    "calendarModalSubtitle": "Review scheduled time off and upcoming company holidays.",
+    "calendarModalSubtitle": "Review your pending and approved leave requests.",
     "annualLeave": "ANNUAL LEAVE",
     "casualLeave": "CASUAL LEAVE",
     "sickLeave": "SICK LEAVE",
@@ -1420,6 +1432,8 @@
     "casual": "Casual leave",
     "sick": "Sick leave",
     "unpaid": "Unpaid leave",
+    "emergency": "Emergency leave",
+    "newTypeSuffix": "new",
     "duration": "Duration",
     "fullDay": "Full day",
     "halfDayMorning": "Half day (Morning)",
@@ -1444,6 +1458,31 @@
     "toastInvalidDates": "End date cannot be earlier than start date.",
     "toastInsufficientBalance": "You do not have enough remaining balance for this request.",
     "toastSubmitted": "Leave request submitted successfully!",
+    "toastSubmitError": "Could not submit the leave request.",
+    "attachmentUploadError": "The request was created, but the attachment could not be uploaded.",
+    "attachmentLinkError": "The request was created, but its attachment could not be linked.",
+    "uploadingAttachment": "Uploading attachment...",
+    "submitting": "Submitting...",
+    "loadingTypes": "Loading leave types...",
+    "loadingBalances": "Loading leave balances...",
+    "loadingRequests": "Loading your leave requests...",
+    "typeLoadError": "Could not load leave types.",
+    "balanceLoadError": "Could not load leave balances.",
+    "requestHistoryError": "Could not load your leave requests.",
+    "noLeaveTypes": "No leave types are available.",
+    "noBalances": "No leave balances are available.",
+    "retry": "Retry",
+    "statusCancelled": "Cancelled",
+    "validation": {
+      "leaveType": "Select a leave type.",
+      "startDate": "Select a start date.",
+      "endDate": "Select an end date.",
+      "reason": "Enter a reason for your request.",
+      "attachment": "This leave type requires a supporting document.",
+      "balanceLoading": "Wait while your leave balance is checked.",
+      "balanceUnavailable": "Your leave balance could not be verified. Retry loading balances.",
+      "balanceMissing": "No balance is set up for this leave type. Contact HR to set it up."
+    },
     "calendarLegendUpcoming": "Upcoming Leave",
     "calendarLegendHoliday": "Official Holiday",
     "calendarLegendToday": "Today",
@@ -1659,6 +1698,88 @@
     "readiness2": "Leave approvals",
     "readiness3": "Q3 evaluations",
     "readiness4": "Payroll reconciliation"
+  },
+  "hrGoals": {
+    "eyebrow": "GOALS & DEVELOPMENT",
+    "title": "Employee Goals",
+    "subtitle": "Manage and track employee goals across the company.",
+    "createGoal": "Create Goal",
+    "editGoal": "Edit Goal",
+    "createSubtitle": "Create a goal and assign it to an employee.",
+    "editSubtitle": "Update the goal details below.",
+    "updateGoal": "Update Goal",
+    "cancel": "Cancel",
+    "edit": "Edit Goal",
+    "notEditable": "Not Editable",
+    "retry": "Try Again",
+    "loading": "Loading goals...",
+    "companyOverview": "COMPANY OVERVIEW",
+    "goalsProgress": "Goals Progress",
+    "goalsProgressSubtitle": "Track employee goal completion across the company.",
+    "completion": "Completion",
+    "completed": "Completed",
+    "active": "Active",
+    "cancelled": "Cancelled",
+    "employees": "Employees",
+    "companyGoals": "Company Goals",
+    "goalsFound": "goals found",
+    "status": {
+      "active": "Active",
+      "completed": "Completed",
+      "cancelled": "Cancelled"
+    },
+    "filters": {
+      "title": "Filters",
+      "subtitle": "Filter company goals by status, department or employee.",
+      "reset": "Reset",
+      "allStatuses": "All Statuses",
+      "allDepartments": "All Departments",
+      "allEmployees": "All Employees",
+      "loadingEmployees": "Loading employees..."
+    },
+    "table": {
+      "employee": "Employee",
+      "goal": "Goal",
+      "targetDate": "Target Date",
+      "status": "Status",
+      "created": "Created",
+      "actions": "Actions"
+    },
+    "empty": {
+      "title": "No goals found",
+      "subtitle": "There are no goals matching the current filters."
+    },
+    "pagination": {
+      "page": "Page",
+      "of": "of"
+    },
+    "form": {
+      "employee": "Employee",
+      "selectEmployee": "Select employee",
+      "loadingEmployees": "Loading employees...",
+      "employeeFallback": "Employee #{{id}}",
+      "title": "Goal Title",
+      "titlePlaceholder": "e.g. Complete React course",
+      "description": "Description",
+      "descriptionPlaceholder": "Describe what the employee needs to achieve...",
+      "targetDate": "Target Date",
+      "status": "Status"
+    },
+    "validation": {
+      "employee": "Please select an employee.",
+      "title": "Goal title is required.",
+      "date": "Target date is required."
+    },
+    "success": {
+      "created": "Goal created successfully.",
+      "updated": "Goal updated successfully."
+    },
+    "errors": {
+      "employees": "Failed to load employees.",
+      "completedCancelled": "Completed or cancelled goals cannot be modified.",
+      "generic": "Something went wrong. Please try again.",
+      "load": "Failed to load goals."
+    }
   },
   "hrAttendance": {
     "title": "Attendance",
@@ -2323,6 +2444,119 @@
       "created": "Created",
       "editGoalTitle": "Edit this goal",
       "unknownStatus": "Unknown"
+    }
+  },
+  "portal": {
+    "dashboard": "Dashboard",
+    "users": "Users",
+    "performance": "Performance",
+    "goals": "Goals",
+    "branches": "Branches",
+    "auditLogs": "Audit Logs",
+    "notifications": "Notifications",
+    "profileSettings": "Profile & Settings",
+    "employees": "Employees",
+    "departmentsTeams": "Departments & Teams",
+    "attendance": "Attendance",
+    "leaveRequests": "Leave Requests",
+    "advancesDeductions": "Advances & Deductions",
+    "payroll": "Payroll",
+    "rewardsBonuses": "Rewards & Bonuses",
+    "evaluationsGoals": "Evaluations & Goals",
+    "performanceMetrics": "Performance Metrics",
+    "aiInsights": "AI Insights",
+    "companyPolicies": "Company Policies",
+    "holidays": "Holidays & Seasons",
+    "reports": "Reports",
+    "teamDashboard": "Team Dashboard",
+    "taskManagement": "Task Management",
+    "submissionReviews": "Submission Reviews",
+    "teamEvaluations": "Team Evaluations",
+    "teamGoalsOkrs": "Team Goals & OKRs",
+    "performanceAnalytics": "Performance Analytics",
+    "teamAttendance": "Team Attendance",
+    "teamLeaveApprovals": "Team Leave Approvals",
+    "aiTeamInsights": "AI Team Insights",
+    "homeDashboard": "Home Dashboard",
+    "myAttendance": "My Attendance",
+    "myTasks": "My Tasks",
+    "leaveBalances": "Leave & Balances",
+    "myPerformance": "My Performance",
+    "myGoals": "My Goals",
+    "myFinancials": "My Financials",
+    "aiAssistant": "AI Assistant"
+  },
+  "employeeFinancial": {
+    "eyebrow": "FINANCIAL MANAGEMENT",
+    "title": "My Financials",
+    "subtitle": "Track your salary, advances, deductions, and bonuses.",
+    "requestAdvance": "Request Advance",
+    "loading": "Loading...",
+    "retry": "Try again",
+    "showing": "Showing",
+    "of": "of",
+    "records": "records",
+    "currency": "EGP",
+    "tabs": {
+      "salaries": "My Salaries",
+      "advances": "Advances",
+      "deductions": "Deductions",
+      "bonuses": "Bonuses"
+    },
+    "status": {
+      "approved": "Approved",
+      "rejected": "Rejected",
+      "pending": "Pending",
+      "finalized": "Finalized",
+      "queued": "Queued",
+      "cancelled": "Cancelled",
+      "manual": "Manual"
+    },
+    "salary": {
+      "basic": "Basic Salary",
+      "bonuses": "Bonuses",
+      "deductions": "Deductions",
+      "loan": "Loan",
+      "net": "Net Salary"
+    },
+    "advance": {
+      "amount": "Amount",
+      "months": "Months",
+      "monthly": "Monthly",
+      "newRequest": "NEW REQUEST",
+      "title": "Request Salary Advance",
+      "amountLabel": "Requested Amount",
+      "amountPlaceholder": "e.g. 5000",
+      "repaymentLabel": "Repayment Months",
+      "monthsPlaceholder": "e.g. 5",
+      "monthlyDeduction": "Monthly deduction",
+      "reasonLabel": "Reason",
+      "reasonPlaceholder": "Describe why you need this advance...",
+      "submit": "Submit Request",
+      "submitting": "Submitting...",
+      "success": "Advance request submitted successfully.",
+      "error": "Failed to submit advance request.",
+      "requiredFields": "All fields are required."
+    },
+    "bonus": {
+      "amount": "Amount",
+      "type": "Type",
+      "month": "Month",
+      "approvedBy": "Approved By",
+      "totalPool": "Total Bonus Pool Distributed"
+    },
+    "empty": {
+      "salaries": "No salary records",
+      "salariesDesc": "Your salary history will appear here once payroll is processed.",
+      "advances": "No advance requests",
+      "advancesDesc": "You haven't submitted any salary advance requests yet.",
+      "deductions": "No deductions",
+      "deductionsDesc": "You have no deductions or penalties on record.",
+      "bonuses": "No bonuses",
+      "bonusesDesc": "No bonuses or incentives have been recorded yet."
+    },
+    "errors": {
+      "fetchFailed": "Failed to retrieve data."
     }
   }
 }

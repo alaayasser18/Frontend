@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   FiFileText,
   FiChevronDown,
@@ -8,6 +8,14 @@ import {
   FiCheckCircle,
 } from "react-icons/fi";
 import { useTranslation } from "react-i18next";
+
+// =========================
+// API CONFIG
+// =========================
+// لو Vite:
+const API_BASE_URL = import.meta.env.VITE_API_URL || "";
+// لو Create React App استبدل السطر اللي فوق بـ:
+// const API_BASE_URL = process.env.REACT_APP_API_URL || "";
 
 const Performance = () => {
   const { t, i18n } = useTranslation();
@@ -22,17 +30,14 @@ const Performance = () => {
   const [yearMenuOpen, setYearMenuOpen] = useState(false);
   const [reviewModalOpen, setReviewModalOpen] = useState(false);
 
-  // =========================
-  // YEARS
-  // =========================
-
-  const years = ["2026", "2025", "2024"];
-
-  // =========================
-  // GOALS
-  // =========================
-
-  const goals = [
+  const [overallScore, setOverallScore] = useState(87);
+  const [scoreChange, setScoreChange] = useState("+5% from last month");
+  const [breakdown, setBreakdown] = useState({
+    tasks: 92,
+    quality: 88,
+    attendance: 95,
+  });
+  const [goals, setGoals] = useState([
     {
       title: t(
         "employeePerformance.goals.completeFlutterTraining",
@@ -57,154 +62,127 @@ const Performance = () => {
       due: isArabic ? "01 نوفمبر" : "Nov 01",
       progress: 30,
     },
-  ];
+  ]);
+  const [loading, setLoading] = useState(false);
+
+  // =========================
+  // FETCH DATA FROM BACKEND
+  // =========================
+  useEffect(() => {
+    const controller = new AbortController();
+
+    const fetchPerformanceData = async () => {
+      setLoading(true);
+      try {
+        const response = await fetch(
+          `${API_BASE_URL}/api/performance?year=${selectedYear}`,
+          {
+            signal: controller.signal,
+            headers: {
+              "Content-Type": "application/json",
+              // ✅ ضروري مع ngrok المجاني حتى لا يرجع صفحة تحذير HTML بدل JSON
+              "ngrok-skip-browser-warning": "true",
+            },
+          },
+        );
+
+        // ✅ لو مفيش بيانات للسنة دي → سيب البيانات الافتراضية و mattلقيش error
+        if (response.status === 404) {
+          console.warn(`No performance data for year: ${selectedYear}`);
+          return;
+        }
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        // ✅ تأكد إن الرد JSON فعلاً (ngrok ساعات بيرجع HTML)
+        const contentType = response.headers.get("content-type") || "";
+        if (!contentType.includes("application/json")) {
+          throw new Error("Server did not return JSON");
+        }
+
+        const data = await response.json();
+
+        if (data) {
+          if (data.overallScore != null) setOverallScore(data.overallScore);
+          if (data.scoreChange) setScoreChange(data.scoreChange);
+          if (data.breakdown) setBreakdown(data.breakdown);
+          if (data.goals) setGoals(data.goals);
+        }
+      } catch (error) {
+        if (error.name === "AbortError") return; // تجاهل إلغاء الطلب
+        console.error("Error fetching performance data:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchPerformanceData();
+
+    // ✅ تنظيف الطلب لو الـ component اتقفل
+    return () => controller.abort();
+  }, [selectedYear]);
+
+  // =========================
+  // YEARS
+  // =========================
+
+  const years = ["2026", "2025", "2024"];
 
   return (
     <>
-      {/* =====================================================
-          ANIMATIONS
-      ====================================================== */}
-
       <style>
         {`
-          /* =========================
-             Overall Score Animation
-          ========================== */
-
           @keyframes scoreCircle {
-            from {
-              transform: scale(0.85);
-              opacity: 0.3;
-            }
-
-            to {
-              transform: scale(1);
-              opacity: 1;
-            }
+            from { transform: scale(0.85); opacity: 0.3; }
+            to { transform: scale(1); opacity: 1; }
           }
+          .score-animation { animation: scoreCircle 0.8s ease-out forwards; }
 
-          .score-animation {
-            animation: scoreCircle 0.8s ease-out forwards;
-          }
-
-          /* =========================
-             Progress Bars
-          ========================== */
-
-          @keyframes progressFill {
-            from {
-              width: 0;
-            }
-          }
-
-          .progress-animation {
-            animation: progressFill 1.1s ease-out both;
-          }
-
-          /* =========================
-             Chart
-          ========================== */
+          @keyframes progressFill { from { width: 0; } }
+          .progress-animation { animation: progressFill 1.1s ease-out both; }
 
           @keyframes chartLine {
-            from {
-              stroke-dashoffset: 700;
-              opacity: 0;
-            }
-
-            to {
-              stroke-dashoffset: 0;
-              opacity: 1;
-            }
+            from { stroke-dashoffset: 700; opacity: 0; }
+            to { stroke-dashoffset: 0; opacity: 1; }
           }
-
           .chart-line-animation {
             stroke-dasharray: 700;
             animation: chartLine 1.4s ease-out forwards;
           }
 
-          @keyframes chartArea {
-            from {
-              opacity: 0;
-            }
-
-            to {
-              opacity: 1;
-            }
-          }
-
-          .chart-area-animation {
-            animation: chartArea 1.2s ease-out forwards;
-          }
-
-          /* =========================
-             Cards
-          ========================== */
+          @keyframes chartArea { from { opacity: 0; } to { opacity: 1; } }
+          .chart-area-animation { animation: chartArea 1.2s ease-out forwards; }
 
           @keyframes fadeUp {
-            from {
-              opacity: 0;
-              transform: translateY(8px);
-            }
-
-            to {
-              opacity: 1;
-              transform: translateY(0);
-            }
+            from { opacity: 0; transform: translateY(8px); }
+            to { opacity: 1; transform: translateY(0); }
           }
-
-          .performance-card {
-            animation: fadeUp 0.45s ease-out both;
-          }
-
-          /* =========================
-             Modal
-          ========================== */
+          .performance-card { animation: fadeUp 0.45s ease-out both; }
 
           @keyframes modalIn {
-            from {
-              opacity: 0;
-              transform: translateY(10px) scale(0.98);
-            }
-
-            to {
-              opacity: 1;
-              transform: translateY(0) scale(1);
-            }
+            from { opacity: 0; transform: translateY(10px) scale(0.98); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
           }
-
-          .review-modal-animation {
-            animation: modalIn 0.2s ease-out forwards;
-          }
+          .review-modal-animation { animation: modalIn 0.2s ease-out forwards; }
         `}
       </style>
-
-      {/* =====================================================
-          PAGE
-      ====================================================== */}
 
       <div
         dir={isArabic ? "rtl" : "ltr"}
         className="min-h-screen bg-[#f5f7f8] text-[#243b53]"
       >
-        {/* =====================================================
-            PAGE HEADER
-        ====================================================== */}
-
+        {/* PAGE HEADER */}
         <div className="mb-7 flex items-end justify-between gap-4">
           <div>
-            {/* Eyebrow */}
-
             <p className="mb-2 text-[11px] font-bold uppercase tracking-[0.16em] text-[#5b8c6a]">
               {t("employeePerformance.eyebrow", "GROWTH & DEVELOPMENT")}
             </p>
 
-            {/* Title */}
-
             <h1 className="text-[29px] font-bold leading-[1.15] tracking-[-0.7px] text-[#102a43]">
               {t("employeePerformance.title", "My performance")}
             </h1>
-
-            {/* Subtitle */}
 
             <p className="mt-1 text-[13px] text-[#627d98]">
               {t(
@@ -214,51 +192,34 @@ const Performance = () => {
             </p>
           </div>
 
-          {/* =====================================================
-              REVIEW HISTORY BUTTON
-          ====================================================== */}
-
           <button
             type="button"
             onClick={() => setReviewModalOpen(true)}
             className="flex h-[46px] items-center gap-2 rounded-[7px] border border-[#d9e2ec] bg-white px-4 text-[12px] font-semibold text-[#243b53] transition-all duration-200 hover:bg-[#f8fafb] hover:shadow-sm active:scale-[0.98]"
           >
             <FiFileText className="h-4 w-4 text-[#486581]" />
-
             <span>
-              {t(
-                "employeePerformance.viewReviewHistory",
-                "View review history",
-              )}
+              {t("employeePerformance.viewReviewHistory", "View review history")}
             </span>
           </button>
         </div>
 
-        {/* =====================================================
-            TOP CARDS
-        ====================================================== */}
-
+        {/* TOP CARDS */}
         <div
           dir="ltr"
           className="grid grid-cols-1 gap-4 xl:grid-cols-[248px_310px_minmax(0,1fr)]"
         >
-          {/* =====================================================
-              OVERALL SCORE
-          ====================================================== */}
-
+          {/* OVERALL SCORE */}
           <div
             dir={isArabic ? "rtl" : "ltr"}
             className="performance-card min-h-[300px] rounded-[11px] border border-[#d9e2ec] bg-white p-[22px]"
             style={{ animationDelay: "0.05s" }}
           >
-            {/* Card Header */}
-
             <div className="flex items-start justify-between">
               <div>
                 <h2 className="text-[15px] font-medium text-[#243b53]">
                   {t("employeePerformance.overallScore", "Overall score")}
                 </h2>
-
                 <p className="mt-1 text-[11px] text-[#627d98]">
                   {t(
                     "employeePerformance.currentPerformancePeriod",
@@ -266,39 +227,32 @@ const Performance = () => {
                   )}
                 </p>
               </div>
-
               <FiTrendingUp className="mt-1 h-[18px] w-[18px] text-[#829ab1]" />
             </div>
 
-            {/* =================================================
-                ORIGINAL SCORE CIRCLE
-            ================================================== */}
-
             <div className="mt-[21px] flex justify-center">
               <div
-                className="score-animation relative flex h-[150px] w-[150px] items-center justify-center rounded-full"
+                className="score-animation relative flex h-[150px] w-[150px] items-center justify-center rounded-full transition-all duration-700"
                 style={{
-                  background:
-                    "conic-gradient(#5b8c6a 0deg 313deg, #e7eef0 313deg 360deg)",
+                  // ✅ الدايرة بقت ديناميكية حسب overallScore بدل 313deg ثابتة
+                  background: `conic-gradient(#5b8c6a 0deg ${
+                    overallScore * 3.6
+                  }deg, #e7eef0 ${overallScore * 3.6}deg 360deg)`,
                 }}
               >
-                {/* Inner Circle */}
-
                 <div className="flex h-[132px] w-[132px] flex-col items-center justify-center rounded-full bg-white">
-                  {/* Number */}
-
                   <div className="flex items-start leading-none">
-                    <span className="text-[31px] font-bold tracking-[-1px] text-[#102a43]">
-                      87
+                    <span
+                      className={`text-[31px] font-bold tracking-[-1px] text-[#102a43] transition-opacity ${
+                        loading ? "opacity-40" : ""
+                      }`}
+                    >
+                      {overallScore}
                     </span>
-
                     <span className="mt-[3px] text-[14px] font-semibold text-[#243b53]">
                       %
                     </span>
                   </div>
-
-                  {/* Label */}
-
                   <span className="mt-1 text-[10px] text-[#627d98]">
                     {t("employeePerformance.overallScore", "Overall score")}
                   </span>
@@ -306,21 +260,13 @@ const Performance = () => {
               </div>
             </div>
 
-            {/* Score Change */}
-
             <div className="mt-[21px] flex items-center justify-center gap-1.5 text-[11px] font-semibold text-[#4f8563]">
               <FiTrendingUp className="h-[14px] w-[14px]" />
-
-              <span>
-                {t("employeePerformance.fromLastMonth", "+5% from last month")}
-              </span>
+              <span>{scoreChange}</span>
             </div>
           </div>
 
-          {/* =====================================================
-              AT A GLANCE
-          ====================================================== */}
-
+          {/* AT A GLANCE */}
           <div
             dir={isArabic ? "rtl" : "ltr"}
             className="performance-card min-h-[300px] rounded-[11px] border border-[#d9e2ec] bg-white p-[22px]"
@@ -329,7 +275,6 @@ const Performance = () => {
             <h2 className="text-[15px] font-medium text-[#243b53]">
               {t("employeePerformance.atAGlance", "At a glance")}
             </h2>
-
             <p className="mt-1 text-[11px] text-[#627d98]">
               {t(
                 "employeePerformance.performanceBreakdown",
@@ -338,90 +283,45 @@ const Performance = () => {
             </p>
 
             <div className="mt-[25px] space-y-[21px]">
-              {/* =================================================
-                  TASKS
-              ================================================== */}
-
-              <div>
-                <div className="mb-[8px] flex items-center justify-between">
-                  <span className="text-[11px] text-[#627d98]">
-                    {t("employeePerformance.tasksCompleted", "Tasks completed")}
-                  </span>
-
-                  <span className="text-[10px] font-bold text-[#102a43]">
-                    92%
-                  </span>
+              {[
+                {
+                  label: t("employeePerformance.tasksCompleted", "Tasks completed"),
+                  value: breakdown.tasks,
+                  color: "bg-[#5b8c6a]",
+                  delay: "0.2s",
+                },
+                {
+                  label: t("employeePerformance.qualityOfWork", "Quality of work"),
+                  value: breakdown.quality,
+                  color: "bg-[#70a5c3]",
+                  delay: "0.35s",
+                },
+                {
+                  label: t("employeePerformance.attendance", "Attendance"),
+                  value: breakdown.attendance,
+                  color: "bg-[#d3a054]",
+                  delay: "0.5s",
+                },
+              ].map((item, index) => (
+                <div key={index}>
+                  <div className="mb-[8px] flex items-center justify-between">
+                    <span className="text-[11px] text-[#627d98]">{item.label}</span>
+                    <span className="text-[10px] font-bold text-[#102a43]">
+                      {item.value}%
+                    </span>
+                  </div>
+                  <div className="h-[6px] overflow-hidden rounded-full bg-[#edf2f4]">
+                    <div
+                      className={`progress-animation h-full rounded-full ${item.color}`}
+                      style={{ width: `${item.value}%`, animationDelay: item.delay }}
+                    />
+                  </div>
                 </div>
-
-                <div className="h-[6px] overflow-hidden rounded-full bg-[#edf2f4]">
-                  <div
-                    className="progress-animation h-full rounded-full bg-[#5b8c6a]"
-                    style={{
-                      width: "92%",
-                      animationDelay: "0.2s",
-                    }}
-                  />
-                </div>
-              </div>
-
-              {/* =================================================
-                  QUALITY
-              ================================================== */}
-
-              <div>
-                <div className="mb-[8px] flex items-center justify-between">
-                  <span className="text-[11px] text-[#627d98]">
-                    {t("employeePerformance.qualityOfWork", "Quality of work")}
-                  </span>
-
-                  <span className="text-[10px] font-bold text-[#102a43]">
-                    88%
-                  </span>
-                </div>
-
-                <div className="h-[6px] overflow-hidden rounded-full bg-[#edf2f4]">
-                  <div
-                    className="progress-animation h-full rounded-full bg-[#70a5c3]"
-                    style={{
-                      width: "88%",
-                      animationDelay: "0.35s",
-                    }}
-                  />
-                </div>
-              </div>
-
-              {/* =================================================
-                  ATTENDANCE
-              ================================================== */}
-
-              <div>
-                <div className="mb-[8px] flex items-center justify-between">
-                  <span className="text-[11px] text-[#627d98]">
-                    {t("employeePerformance.attendance", "Attendance")}
-                  </span>
-
-                  <span className="text-[10px] font-bold text-[#102a43]">
-                    95%
-                  </span>
-                </div>
-
-                <div className="h-[6px] overflow-hidden rounded-full bg-[#edf2f4]">
-                  <div
-                    className="progress-animation h-full rounded-full bg-[#d3a054]"
-                    style={{
-                      width: "95%",
-                      animationDelay: "0.5s",
-                    }}
-                  />
-                </div>
-              </div>
+              ))}
             </div>
           </div>
 
-          {/* =====================================================
-              PERFORMANCE TREND
-          ====================================================== */}
-
+          {/* PERFORMANCE TREND */}
           <div
             dir={isArabic ? "rtl" : "ltr"}
             className="performance-card min-h-[300px] rounded-[11px] border border-[#d9e2ec] bg-white p-[22px]"
@@ -430,12 +330,8 @@ const Performance = () => {
             <div className="flex items-start justify-between">
               <div>
                 <h2 className="text-[15px] font-medium text-[#243b53]">
-                  {t(
-                    "employeePerformance.performanceTrend",
-                    "Performance trend",
-                  )}
+                  {t("employeePerformance.performanceTrend", "Performance trend")}
                 </h2>
-
                 <p className="mt-1 text-[11px] text-[#627d98]">
                   {t(
                     "employeePerformance.performanceLastSixMonths",
@@ -444,10 +340,6 @@ const Performance = () => {
                 </p>
               </div>
 
-              {/* =================================================
-                  YEAR DROPDOWN
-              ================================================== */}
-
               <div className="relative">
                 <button
                   type="button"
@@ -455,15 +347,12 @@ const Performance = () => {
                   className="flex h-[38px] items-center gap-3 rounded-[7px] border border-[#d9e2ec] bg-white px-3 text-[11px] font-medium text-[#243b53] transition-all duration-200 hover:border-[#b8c8d6] hover:shadow-sm active:scale-[0.98]"
                 >
                   <span>{selectedYear}</span>
-
                   <FiChevronDown
                     className={`h-3.5 w-3.5 transition-transform duration-200 ${
                       yearMenuOpen ? "rotate-180" : ""
                     }`}
                   />
                 </button>
-
-                {/* Year Menu */}
 
                 {yearMenuOpen && (
                   <div
@@ -493,83 +382,23 @@ const Performance = () => {
               </div>
             </div>
 
-            {/* =================================================
-                CHART
-            ================================================== */}
-
             <div className="mt-[23px]">
               <svg
                 viewBox="0 0 500 145"
                 className="h-[145px] w-full"
                 preserveAspectRatio="none"
               >
-                {/* Grid */}
-
-                <line
-                  x1="0"
-                  y1="25"
-                  x2="500"
-                  y2="25"
-                  stroke="#edf2f4"
-                  strokeWidth="1"
-                  strokeDasharray="2 3"
-                />
-
-                <line
-                  x1="0"
-                  y1="62"
-                  x2="500"
-                  y2="62"
-                  stroke="#edf2f4"
-                  strokeWidth="1"
-                  strokeDasharray="2 3"
-                />
-
-                <line
-                  x1="0"
-                  y1="99"
-                  x2="500"
-                  y2="99"
-                  stroke="#edf2f4"
-                  strokeWidth="1"
-                  strokeDasharray="2 3"
-                />
-
-                {/* Area */}
+                <line x1="0" y1="25" x2="500" y2="25" stroke="#edf2f4" strokeWidth="1" strokeDasharray="2 3" />
+                <line x1="0" y1="62" x2="500" y2="62" stroke="#edf2f4" strokeWidth="1" strokeDasharray="2 3" />
+                <line x1="0" y1="99" x2="500" y2="99" stroke="#edf2f4" strokeWidth="1" strokeDasharray="2 3" />
 
                 <path
-                  d="
-                    M 0 101
-                    C 28 97, 40 94, 75 91
-                    C 102 88, 112 88, 140 78
-                    C 162 71, 173 80, 198 75
-                    C 225 70, 238 67, 265 66
-                    C 293 65, 305 70, 330 58
-                    C 354 47, 374 51, 397 45
-                    C 421 39, 430 30, 455 29
-                    C 475 28, 487 25, 500 22
-                    L 500 125
-                    L 0 125
-                    Z
-                  "
+                  d="M 0 101 C 28 97, 40 94, 75 91 C 102 88, 112 88, 140 78 C 162 71, 173 80, 198 75 C 225 70, 238 67, 265 66 C 293 65, 305 70, 330 58 C 354 47, 374 51, 397 45 C 421 39, 430 30, 455 29 C 475 28, 487 25, 500 22 L 500 125 L 0 125 Z"
                   fill="#eef5f1"
                   className="chart-area-animation"
                 />
-
-                {/* Main Line */}
-
                 <path
-                  d="
-                    M 0 101
-                    C 28 97, 40 94, 75 91
-                    C 102 88, 112 88, 140 78
-                    C 162 71, 173 80, 198 75
-                    C 225 70, 238 67, 265 66
-                    C 293 65, 305 70, 330 58
-                    C 354 47, 374 51, 397 45
-                    C 421 39, 430 30, 455 29
-                    C 475 28, 487 25, 500 22
-                  "
+                  d="M 0 101 C 28 97, 40 94, 75 91 C 102 88, 112 88, 140 78 C 162 71, 173 80, 198 75 C 225 70, 238 67, 265 66 C 293 65, 305 70, 330 58 C 354 47, 374 51, 397 45 C 421 39, 430 30, 455 29 C 475 28, 487 25, 500 22"
                   fill="none"
                   stroke="#5b8c6a"
                   strokeWidth="2"
@@ -577,125 +406,53 @@ const Performance = () => {
                   className="chart-line-animation"
                 />
 
-                {/* Points */}
-
-                <circle
-                  cx="0"
-                  cy="101"
-                  r="3"
-                  fill="white"
-                  stroke="#5b8c6a"
-                  strokeWidth="2"
-                />
-
-                <circle
-                  cx="75"
-                  cy="91"
-                  r="3"
-                  fill="white"
-                  stroke="#5b8c6a"
-                  strokeWidth="2"
-                />
-
-                <circle
-                  cx="140"
-                  cy="78"
-                  r="3"
-                  fill="white"
-                  stroke="#5b8c6a"
-                  strokeWidth="2"
-                />
-
-                <circle
-                  cx="265"
-                  cy="66"
-                  r="3"
-                  fill="white"
-                  stroke="#5b8c6a"
-                  strokeWidth="2"
-                />
-
-                <circle
-                  cx="397"
-                  cy="45"
-                  r="3"
-                  fill="white"
-                  stroke="#5b8c6a"
-                  strokeWidth="2"
-                />
-
-                <circle
-                  cx="500"
-                  cy="22"
-                  r="3"
-                  fill="white"
-                  stroke="#5b8c6a"
-                  strokeWidth="2"
-                />
+                <circle cx="0" cy="101" r="3" fill="white" stroke="#5b8c6a" strokeWidth="2" />
+                <circle cx="75" cy="91" r="3" fill="white" stroke="#5b8c6a" strokeWidth="2" />
+                <circle cx="140" cy="78" r="3" fill="white" stroke="#5b8c6a" strokeWidth="2" />
+                <circle cx="265" cy="66" r="3" fill="white" stroke="#5b8c6a" strokeWidth="2" />
+                <circle cx="397" cy="45" r="3" fill="white" stroke="#5b8c6a" strokeWidth="2" />
+                <circle cx="500" cy="22" r="3" fill="white" stroke="#5b8c6a" strokeWidth="2" />
               </svg>
-
-              {/* =================================================
-                  MONTHS
-              ================================================== */}
 
               <div className="mt-[2px] flex justify-between px-[1px] text-[10px] text-[#627d98]">
                 <span>{t("employeePerformance.months.apr", "Apr")}</span>
-
                 <span>{t("employeePerformance.months.may", "May")}</span>
-
                 <span>{t("employeePerformance.months.jun", "Jun")}</span>
-
                 <span>{t("employeePerformance.months.jul", "Jul")}</span>
-
                 <span>{t("employeePerformance.months.aug", "Aug")}</span>
-
                 <span>{t("employeePerformance.months.sep", "Sep")}</span>
               </div>
             </div>
           </div>
         </div>
 
-        {/* =====================================================
-            CURRENT GOALS
-        ====================================================== */}
-
+        {/* CURRENT GOALS */}
         <div
-          className="performance-card mt-0 rounded-[11px] border border-[#d9e2ec] bg-white px-[22px] pb-[15px]"
+          className="performance-card mt-4 rounded-[11px] border border-[#d9e2ec] bg-white px-[22px] pb-[15px]"
           style={{ animationDelay: "0.2s" }}
         >
-          {/* Header */}
-
           <div className="flex items-start justify-between border-b border-[#e6edf2] py-[23px]">
             <div>
               <h2 className="text-[15px] font-medium text-[#243b53]">
                 {t("employeePerformance.currentGoals", "Current goals")}
               </h2>
-
               <p className="mt-1 text-[11px] text-[#627d98]">
                 {t("employeePerformance.developmentPlan", "Development plan")}
               </p>
             </div>
-
             <button
               type="button"
               className="flex items-center gap-2 pt-1 text-[11px] font-semibold text-[#4f8563] transition-opacity hover:opacity-75"
             >
               <span>{t("employeePerformance.viewAll", "View all")}</span>
-
-              <FiArrowRight
-                className={`h-4 w-4 ${isArabic ? "rotate-180" : ""}`}
-              />
+              <FiArrowRight className={`h-4 w-4 ${isArabic ? "rotate-180" : ""}`} />
             </button>
           </div>
-
-          {/* =================================================
-              GOALS
-          ================================================== */}
 
           <div>
             {goals.map((goal, index) => (
               <div
-                key={goal.title}
+                key={index}
                 className={`flex min-h-[67px] items-center justify-between gap-5 ${
                   index !== goals.length - 1 ? "border-b border-[#e6edf2]" : ""
                 }`}
@@ -704,12 +461,10 @@ const Performance = () => {
                   <h3 className="text-[12px] font-semibold text-[#102a43]">
                     {goal.title}
                   </h3>
-
                   <p className="mt-1 text-[10px] text-[#627d98]">
                     {t("employeePerformance.due", "Due")} {goal.due}
                   </p>
                 </div>
-
                 <div className="flex items-center gap-4">
                   <span className="min-w-[35px] text-right text-[11px] font-semibold text-[#315b82]">
                     {goal.progress}%
@@ -721,10 +476,7 @@ const Performance = () => {
         </div>
       </div>
 
-      {/* =====================================================
-          REVIEW HISTORY MODAL
-      ====================================================== */}
-
+      {/* REVIEW HISTORY MODAL */}
       {reviewModalOpen && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-[#102a43]/40 px-4 backdrop-blur-[2px]"
@@ -735,31 +487,18 @@ const Performance = () => {
             className="review-modal-animation w-full max-w-[480px] rounded-[14px] border border-[#d9e2ec] bg-white p-6 shadow-xl"
             onClick={(event) => event.stopPropagation()}
           >
-            {/* Modal Header */}
-
             <div className="flex items-start justify-between border-b border-[#e6edf2] pb-4">
               <div>
                 <div className="mb-1 flex items-center gap-2">
                   <FiFileText className="h-4 w-4 text-[#5b8c6a]" />
-
                   <h2 className="text-[16px] font-semibold text-[#102a43]">
-                    {t(
-                      "employeePerformance.reviewHistory.title",
-                      "Review history",
-                    )}
+                    {t("employeePerformance.reviewHistory.title", "Review history")}
                   </h2>
                 </div>
-
                 <p className="text-[11px] text-[#627d98]">
-                  {t(
-                    "employeePerformance.reviewHistory.subtitle",
-                    "Previous reviews",
-                  )}
+                  {t("employeePerformance.reviewHistory.subtitle", "Previous reviews")}
                 </p>
               </div>
-
-              {/* Close Icon */}
-
               <button
                 type="button"
                 onClick={() => setReviewModalOpen(false)}
@@ -769,75 +508,41 @@ const Performance = () => {
               </button>
             </div>
 
-            {/* =================================================
-                REVIEW 1
-            ================================================== */}
-
             <div className="mt-4 space-y-3">
               <div className="flex items-center justify-between rounded-[9px] border border-[#e6edf2] p-4">
                 <div className="flex items-center gap-3">
                   <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#eef5f1]">
                     <FiCheckCircle className="h-4 w-4 text-[#5b8c6a]" />
                   </div>
-
                   <div>
                     <p className="text-[12px] font-semibold text-[#102a43]">
-                      {t(
-                        "employeePerformance.reviewHistory.midYear",
-                        "Mid-year review",
-                      )}
+                      {t("employeePerformance.reviewHistory.midYear", "Mid-year review")}
                     </p>
-
                     <p className="mt-1 text-[10px] text-[#627d98]">
-                      {t(
-                        "employeePerformance.reviewHistory.midYearDate",
-                        "June 2026",
-                      )}
+                      {t("employeePerformance.reviewHistory.midYearDate", "June 2026")}
                     </p>
                   </div>
                 </div>
-
-                <span className="text-[12px] font-bold text-[#5b8c6a]">
-                  87%
-                </span>
+                <span className="text-[12px] font-bold text-[#5b8c6a]">87%</span>
               </div>
-
-              {/* =================================================
-                  REVIEW 2
-              ================================================== */}
 
               <div className="flex items-center justify-between rounded-[9px] border border-[#e6edf2] p-4">
                 <div className="flex items-center gap-3">
                   <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#eef5f1]">
                     <FiCheckCircle className="h-4 w-4 text-[#5b8c6a]" />
                   </div>
-
                   <div>
                     <p className="text-[12px] font-semibold text-[#102a43]">
-                      {t(
-                        "employeePerformance.reviewHistory.lastReview",
-                        "Last review",
-                      )}
+                      {t("employeePerformance.reviewHistory.lastReview", "Last review")}
                     </p>
-
                     <p className="mt-1 text-[10px] text-[#627d98]">
-                      {t(
-                        "employeePerformance.reviewHistory.lastReviewDate",
-                        "January 2026",
-                      )}
+                      {t("employeePerformance.reviewHistory.lastReviewDate", "January 2026")}
                     </p>
                   </div>
                 </div>
-
-                <span className="text-[12px] font-bold text-[#5b8c6a]">
-                  82%
-                </span>
+                <span className="text-[12px] font-bold text-[#5b8c6a]">82%</span>
               </div>
             </div>
-
-            {/* =================================================
-                CLOSE BUTTON
-            ================================================== */}
 
             <button
               type="button"

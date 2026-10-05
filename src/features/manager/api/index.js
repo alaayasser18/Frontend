@@ -122,6 +122,19 @@ export const updateGoal = async (id, data) => {
 };
 
 // =====================================================
+// GET MANAGER DASHBOARD
+// GET /api/manager/dashboard
+// Manager only (permission: manager.dashboard.view)
+// Language is sent via the App-Language header (ar | en)
+// =====================================================
+export const getManagerDashboard = async (lang) => {
+  const response = await axiosInstance.get("/manager/dashboard", {
+    headers: lang ? { "App-Language": lang } : undefined,
+  });
+
+  return response.data;
+};
+// =====================================================
 // TASK SUBMISSIONS API (Manager / HR / Owner / Employee)
 // =====================================================
 export * from "../../../services/submissionsApi";

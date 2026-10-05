@@ -1049,7 +1049,23 @@
     "employee": "موظف",
     "manager": "مدير",
     "hrManager": "مدير موارد بشرية",
-    "administrator": "مسؤول النظام"
+    "administrator": "مسؤول النظام",
+    "branchLocations": "مواقع الفروع",
+    "reviewCompletion": "اكتمال المراجعات",
+    "quickViewUsers": "نظرة سريعة على المستخدمين",
+    "quickViewUsersSubtitle": "أحدث مستخدمي مساحة العمل",
+    "noUsers": "لا يوجد مستخدمون لعرضهم.",
+    "noActivity": "لا يوجد نشاط حديث.",
+    "loading": "جارٍ تحميل لوحة التحكم...",
+    "loadError": "تعذر تحميل بيانات لوحة التحكم.",
+    "retry": "حاول مرة أخرى",
+    "exportSuccessTitle": "تم التصدير بنجاح",
+    "exportSuccessMessage": "تم تصدير تقرير لوحة التحكم بنجاح.",
+    "refreshSuccessTitle": "تم تحديث البيانات",
+    "refreshSuccessMessage": "تم تحديث بيانات لوحة التحكم بنجاح.",
+    "refreshing": "جارٍ تحديث البيانات...",
+    "rangeUpdatedTitle": "تم تحديث النطاق",
+    "rangeUpdatedMessage": "تم تحديث نطاق نمو المستخدمين بنجاح."
   },
   "branchesPage": {
     "breadcrumbApp": "WiseWork",
@@ -1547,7 +1563,14 @@
     "readiness1": "التحقق من الحضور",
     "readiness2": "موافقات الإجازات",
     "readiness3": "تقييمات الربع الثالث",
-    "readiness4": "تسوية الرواتب"
+    "readiness4": "تسوية الرواتب",
+    "breadcrumb": "بوابة الموارد البشرية / مركز القيادة",
+    "loading": "جارٍ تحميل لوحة التحكم...",
+    "loadError": "تعذر تحميل بيانات لوحة التحكم.",
+    "retry": "حاول مرة أخرى",
+    "noSignals": "لا يوجد موظفون يحتاجون إلى متابعة حالياً.",
+    "presentTodayPct": "{{percentage}}٪ من القوى العاملة حاضرون",
+    "pendingReviewsDetail": "{{leaves}} إجازات · {{advances}} سلف"
   },
   "hrAttendance": {
     "title": "الحضور والانصراف",
@@ -1735,7 +1758,11 @@
     "youssefLotfy": "يوسف لطفي",
     "salmaNabil": "سلمى نبيل",
     "karimAshraf": "كريم أشرف",
-    "breadcrumb": "بوابة المدير / لوحة تحكم الفريق"
+    "breadcrumb": "بوابة المدير / لوحة تحكم الفريق",
+    "loadError": "تعذر تحميل بيانات لوحة التحكم.",
+    "retry": "حاول مرة أخرى",
+    "noWorkloadAlert": "لا توجد تنبيهات لعبء العمل حاليًا. يبدو أن توزيع العمل على فريقك متوازن.",
+    "noPendingSubmissions": "لا توجد تسليمات معلقة تحتاج إلى مراجعتك."
   },
   "managerTasks": {
     "title": "إدارة المهام",
@@ -2093,7 +2120,6 @@
     "omarKhaled": "عمر خالد",
     "karimAshraf": "كريم أشرف"
   },
-
   "hrCommandCenter": {
     "title": "مركز قيادة الموارد البشرية",
     "subtitle": "عرض تشغيلي مباشر لحالة الموظفين والموافقات والاستعداد للرواتب.",

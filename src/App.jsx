@@ -1,5 +1,12 @@
-import { useEffect } from "react";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { useEffect, useRef } from "react";
+import {
+  BrowserRouter,
+  Routes,
+  Route,
+  Navigate,
+  useLocation,
+  useNavigate,
+} from "react-router-dom";
 import { Toaster } from "react-hot-toast";
 import { useTranslation } from "react-i18next";
 import { AuthProvider } from "./context/AuthContext";
@@ -53,6 +60,7 @@ import TeamGoals from "./features/manager/pages/TeamGoals";
 import PerformanceAnalytics from "./features/manager/pages/PerformanceAnalytics";
 import TeamAttendance from "./features/manager/pages/TeamAttendance";
 import TeamLeaveApprovals from "./features/manager/pages/TeamLeaveApprovals";
+import DepartmentDirectory from "./features/departments/pages/DepartmentDirectory";
 import AITeamInsights from "./features/manager/pages/AITeamInsights";
 import ProfileSetting from "./features/manager/pages/ProfileSetting";
 import ManagerHolidays from "./features/manager/pages/Holidays";
@@ -92,6 +100,7 @@ import DashboardLayout from "./layouts/DashboardLayout";
     const b64 = token.split(".")[1].replace(/-/g, "+").replace(/_/g, "/");
 
     const payload = JSON.parse(atob(b64));
+
     const user = {
       id: payload.sub,
       role: payload.role,
@@ -110,6 +119,66 @@ import DashboardLayout from "./layouts/DashboardLayout";
   window.history.replaceState(null, "", window.location.pathname);
 })();
 
+// ==================== Language <-> URL (?lang=ar|en) ====================
+function LanguageUrlSync() {
+  const { i18n } = useTranslation();
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  const current = i18n.language?.startsWith("ar") ? "ar" : "en";
+
+  const prevLang = useRef(current);
+
+  const rawUrlLang = new URLSearchParams(location.search).get("lang");
+
+  const urlLang =
+    rawUrlLang === "ar" || rawUrlLang === "en" ? rawUrlLang : null;
+
+  // URL -> i18n
+  // أول تحميل / تعديل الرابط يدوي / back
+  useEffect(() => {
+    if (urlLang && urlLang !== current) {
+      i18n.changeLanguage(urlLang);
+    }
+
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [urlLang]);
+
+  // i18n -> URL
+  // تغيير اللغة من الـ switcher أو التنقل بين الصفحات
+  useEffect(() => {
+    const langChanged = prevLang.current !== current;
+
+    prevLang.current = current;
+
+    if (urlLang === current) return;
+
+    if (urlLang && !langChanged) {
+      return;
+    }
+
+    const params = new URLSearchParams(location.search);
+
+    params.set("lang", current);
+
+    navigate(
+      {
+        pathname: location.pathname,
+        search: `?${params.toString()}`,
+        hash: location.hash,
+      },
+      {
+        replace: true,
+      },
+    );
+
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [current, location.pathname, location.search]);
+
+  return null;
+}
+
+// ==================== App ====================
 function App() {
   const { i18n } = useTranslation();
 
@@ -118,6 +187,7 @@ function App() {
 
     // HTML direction
     document.documentElement.dir = isArabic ? "rtl" : "ltr";
+
     document.documentElement.lang = isArabic ? "ar" : "en";
 
     // Body direction
@@ -125,14 +195,18 @@ function App() {
 
     // Language classes
     document.documentElement.classList.toggle("rtl", isArabic);
+
     document.body.classList.toggle("rtl", isArabic);
 
     document.documentElement.classList.toggle("arabic-mode", isArabic);
+
     document.documentElement.classList.toggle("english-mode", !isArabic);
   }, [i18n.language]);
 
   return (
     <BrowserRouter>
+      <LanguageUrlSync />
+
       <AuthProvider>
         {/* ==================== Toast Notifications ==================== */}
         <Toaster
@@ -255,6 +329,11 @@ function App() {
               <Route path="/admin/attendance" element={<AdminAttendance />} />
 
               <Route
+                path="/admin/departments"
+                element={<HrDepartments role="owner" />}
+              />
+
+              <Route
                 path="/admin/leave-requests"
                 element={<HrLeaveRequests role="owner" />}
               />
@@ -278,6 +357,7 @@ function App() {
               />
 
               <Route path="/admin/rewards" element={<AdminRewards />} />
+
               <Route
                 path="/admin/submissions"
                 element={<SubmissionReviews role="Owner" />}
@@ -321,6 +401,7 @@ function App() {
                   path="submissions"
                   element={<SubmissionReviews role="HR" />}
                 />
+
                 <Route
                   path="tasks"
                   element={<TaskManagement role="HR" />}
@@ -388,6 +469,11 @@ function App() {
               <Route path="/manager/attendance" element={<TeamAttendance />} />
 
               <Route
+                path="/manager/departments"
+                element={<DepartmentDirectory />}
+              />
+
+              <Route
                 path="/manager/leave-approvals"
                 element={<TeamLeaveApprovals />}
               />
@@ -414,6 +500,11 @@ function App() {
               <Route path="/employee/dashboard" element={<HomeDashboard />} />
 
               <Route path="/employee/attendance" element={<Attendance />} />
+
+              <Route
+                path="/employee/departments"
+                element={<DepartmentDirectory />}
+              />
 
               <Route path="/employee/tasks" element={<Tasks />} />
 

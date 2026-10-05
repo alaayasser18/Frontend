@@ -113,7 +113,6 @@ import DashboardLayout from "./layouts/DashboardLayout";
   window.history.replaceState(null, "", window.location.pathname);
 })();
 
-<<<<<<< HEAD
 
 // ==================== Dashboard Placeholder ====================
 function DashboardPlaceholder({ messageKey, defaultMessage }) {
@@ -176,8 +175,6 @@ function LanguageUrlSync() {
 
   return null;
 }
-=======
->>>>>>> 65f0126ff586a4fec0b8bdae96182af7e9cca2fa
 function App() {
   const { i18n } = useTranslation();
 

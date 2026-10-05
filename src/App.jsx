@@ -43,6 +43,8 @@ import LeaveBalances from "./features/employee/pages/Leave & balances";
 import AIAssistant from "./features/employee/pages/AI Assistant";
 import EmployeeGoals from "./features/employee/pages/Goals";
 import EmployeeFinancial from "./features/employee/pages/Financial";
+import EmployeeEvaluations from "./features/employee/pages/Evaluations";
+import AdminEvaluations from "./features/admin/pages/Evaluations";
 
 // ==================== Manager Pages ====================
 import TeamDashboard from "./features/manager/pages/TeamDashboard";
@@ -66,7 +68,8 @@ import HrEmployees from "./features/hr/pages/employees";
 import HrLeaveRequests from "./features/hr/pages/leaveRequests";
 import HrPayroll from "./features/hr/pages/payroll";
 import HrRewards from "./features/hr/pages/rewards&Bonuses";
-import HrEvaluationsGoals from "./features/hr/pages/evaluations&goals";
+import HrGoals from "./features/hr/pages/goals";
+import HrEvaluations from "./features/hr/pages/evaluations";
 import PerformanceMetrics from "./features/hr/pages/performanceMatrics";
 import AIInsights from "./features/hr/pages/aiInsights";
 import HrCompanyPolicies from "./features/hr/pages/companyPolicies";
@@ -260,6 +263,10 @@ function App() {
               <Route path="/admin/profile" element={<AdminProfileSettings />} />
               <Route path="/admin/goals" element={<Goals />} />
               <Route
+                path="/admin/evaluations"
+                element={<AdminEvaluations />}
+              />
+              <Route
                 path="/admin/settings"
                 element={<AdminProfileSettings />}
               />
@@ -289,9 +296,11 @@ function App() {
                 <Route path="advances-deductions" element={<HrAdvances />} />
                 <Route path="payroll" element={<HrPayroll />} />
                 <Route path="rewards" element={<HrRewards />} />
+                <Route path="goals" element={<HrGoals />} />
+                <Route path="evaluations" element={<HrEvaluations />} />
                 <Route
                   path="evaluations-goals"
-                  element={<HrEvaluationsGoals />}
+                  element={<Navigate to="/hr/evaluations" replace />}
                 />
                 <Route
                   path="performance-metrics"
@@ -378,6 +387,10 @@ function App() {
               />
               <Route path="/employee/policies" element={<CompanyPolicies />} />
               <Route path="/employee/goals" element={<EmployeeGoals />} />
+              <Route
+                path="/employee/evaluations"
+                element={<EmployeeEvaluations />}
+              />
               <Route
                 path="/employee/financial"
                 element={<EmployeeFinancial />}

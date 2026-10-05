@@ -2,10 +2,10 @@ import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { getTodayAttendance } from "../api/attendanceApi";
 
-const getCurrentLocation = () => {
-  return new Promise((resolve, reject) => {
-    if (!navigator.geolocation) {
-      reject(new Error("Geolocation is not supported by this browser."));
+export const getCurrentLocation = () => {
+  return new Promise((resolve) => {
+    if (typeof window === "undefined" || !navigator.geolocation) {
+      resolve({ latitude: null, longitude: null });
       return;
     }
 
@@ -17,13 +17,14 @@ const getCurrentLocation = () => {
         });
       },
       (error) => {
-        reject(error);
+        console.warn("Geolocation not available or permission denied:", error?.message);
+        resolve({ latitude: null, longitude: null });
       },
       {
         enableHighAccuracy: true,
-        timeout: 10000,
-        maximumAge: 0,
-      },
+        timeout: 6000,
+        maximumAge: 60000,
+      }
     );
   });
 };
@@ -33,18 +34,15 @@ export const useTodayAttendance = () => {
 
   return useQuery({
     queryKey: ["attendance", "today", i18n.language],
-
     queryFn: async () => {
       const location = await getCurrentLocation();
-
       return getTodayAttendance({
-        ...location,
+        latitude: location.latitude,
+        longitude: location.longitude,
         lang: i18n.language,
       });
     },
-
-    retry: false,
-
     staleTime: 30 * 1000,
+    refetchOnWindowFocus: true,
   });
 };

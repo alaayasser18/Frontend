@@ -10,42 +10,16 @@ import {
   FiRefreshCw,
 } from "react-icons/fi";
 
-import { useTodayAttendance } from "../../hooks/useTodayAttendance";
+import {
+  useTodayAttendance,
+  getCurrentLocation,
+} from "../../hooks/useTodayAttendance";
 import { useAttendanceHistory } from "../../hooks/useAttendanceHistory";
 import {
   checkIn,
   checkOut,
 } from "../../api/attendanceApi";
-
-const getCurrentLocation = () => {
-  return new Promise((resolve, reject) => {
-    if (!navigator.geolocation) {
-      reject(
-        new Error(
-          "Geolocation is not supported by this browser.",
-        ),
-      );
-      return;
-    }
-
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        resolve({
-          latitude: position.coords.latitude,
-          longitude: position.coords.longitude,
-        });
-      },
-      (error) => {
-        reject(error);
-      },
-      {
-        enableHighAccuracy: true,
-        timeout: 10000,
-        maximumAge: 0,
-      },
-    );
-  });
-};
+import toast from "react-hot-toast";
 
 export default function Attendance() {
   const { t } = useTranslation();
@@ -186,11 +160,21 @@ export default function Attendance() {
   const isInsideRadius =
     attendance?.is_inside_radius === true;
 
-  const canCheckIn =
-    attendance?.can_check_in === true;
+  const hasCheckedIn  = Boolean(attendance?.check_in_time);
+  const hasCheckedOut = Boolean(attendance?.check_out_time);
 
-  const canCheckOut =
-    attendance?.can_check_out === true;
+  // ── أولوية لقيم الـ API، ثم fallback من البيانات الفعلية ──
+  const canCheckIn = attendance
+    ? attendance.can_check_in === true
+    : false;
+
+  const canCheckOut = attendance
+    ? attendance.can_check_out === true ||
+      (hasCheckedIn && !hasCheckedOut && attendance.can_check_in !== true)
+    : false;
+
+  // الشيفت انتهى لما يكون الموظف دخل وخرج
+  const isShiftFinished = hasCheckedIn && hasCheckedOut;
 
   const isOnShift =
     canCheckOut ||
@@ -226,10 +210,15 @@ export default function Attendance() {
     try {
       const location = await getCurrentLocation();
 
-      await checkIn({
+      const res = await checkIn({
         latitude: location.latitude,
         longitude: location.longitude,
       });
+
+      toast.success(
+        res?.message ||
+          t("attendance.checkedInSuccess", "Checked in successfully!")
+      );
 
       await refetchToday();
       await refetchHistory();
@@ -243,6 +232,7 @@ export default function Attendance() {
         );
 
       setActionError(message);
+      toast.error(message);
     } finally {
       setActionLoading(false);
     }
@@ -261,7 +251,12 @@ export default function Attendance() {
     setActionError("");
 
     try {
-      await checkOut();
+      const res = await checkOut();
+
+      toast.success(
+        res?.message ||
+          t("attendance.checkedOutSuccess", "Checked out successfully!")
+      );
 
       await refetchToday();
       await refetchHistory();
@@ -275,6 +270,7 @@ export default function Attendance() {
         );
 
       setActionError(message);
+      toast.error(message);
     } finally {
       setActionLoading(false);
     }
@@ -531,76 +527,76 @@ export default function Attendance() {
               </p>
 
               <p className="mt-2 text-2xl font-bold tracking-tight text-[#1c364f]">
-                {attendance?.worked_time ||
-                  "00:00:00"}
+                {attendance?.worked_time || "00:00:00"}
               </p>
             </div>
 
-            {canCheckIn && (
-              <button
-                type="button"
-                onClick={handleCheckIn}
-                disabled={actionLoading}
-                className="mt-5 flex w-full items-center justify-center gap-2 rounded-xl bg-[#1c364f] px-4 py-3 text-xs font-semibold text-white shadow-sm transition hover:bg-[#24425f] disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                {actionLoading ? (
-                  <>
-                    <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+            <div className="mt-5 flex flex-col gap-2.5">
+              {/* ── زرار Check In ── */}
+              {canCheckIn && (
+                <button
+                  type="button"
+                  onClick={handleCheckIn}
+                  disabled={actionLoading || todayLoading}
+                  className="flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-600 px-4 py-3 text-xs font-semibold text-white shadow-sm transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  {actionLoading ? (
+                    <>
+                      <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+                      {t("common.loading", "Loading...")}
+                    </>
+                  ) : (
+                    <>
+                      {t("employee.attendancePage.checkIn", "Check in")}
+                      <FiArrowRight className="h-3.5 w-3.5" />
+                    </>
+                  )}
+                </button>
+              )}
 
-                    {t(
-                      "common.loading",
-                      "Loading...",
-                    )}
-                  </>
-                ) : (
-                  <>
-                    {t(
-                      "employee.attendancePage.checkIn",
-                      "Check in",
-                    )}
+              {/* ── زرار Check Out ── */}
+              {canCheckOut && (
+                <button
+                  type="button"
+                  onClick={handleCheckOut}
+                  disabled={actionLoading || todayLoading}
+                  className="flex w-full items-center justify-center gap-2 rounded-xl bg-rose-600 px-4 py-3 text-xs font-semibold text-white shadow-sm transition hover:bg-rose-700 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  {actionLoading ? (
+                    <>
+                      <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+                      {t("common.loading", "Loading...")}
+                    </>
+                  ) : (
+                    <>
+                      {t("employee.attendancePage.checkOut", "Check out")}
+                      <FiArrowRight className="h-3.5 w-3.5" />
+                    </>
+                  )}
+                </button>
+              )}
 
-                    <FiArrowRight className="h-3.5 w-3.5" />
-                  </>
-                )}
-              </button>
-            )}
+              {/* ── الشيفت انتهى ── */}
+              {isShiftFinished && (
+                <div className="flex w-full items-center justify-center gap-2 rounded-xl bg-slate-100 px-4 py-3 text-xs font-semibold text-slate-500">
+                  <span>✓</span>
+                  {t(
+                    "employee.attendancePage.shiftComplete",
+                    "Shift complete for today",
+                  )}
+                </div>
+              )}
 
-           <button
-  type="button"
-  onClick={canCheckOut ? handleCheckOut : handleCheckIn}
-  disabled={
-    todayLoading ||
-    actionLoading ||
-    (!canCheckIn && !canCheckOut)
-  }
-  className="mt-5 flex w-full items-center justify-center gap-2 rounded-xl bg-[#1c364f] px-4 py-3 text-xs font-semibold text-white shadow-sm transition hover:bg-[#24425f] disabled:cursor-not-allowed disabled:opacity-50"
->
-  {actionLoading ? (
-    <>
-      <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-white/30 border-t-white" />
-
-      {t("common.loading", "Loading...")}
-    </>
-  ) : canCheckOut ? (
-    <>
-      {t(
-        "employee.attendancePage.checkOut",
-        "Check out",
-      )}
-
-      <FiArrowRight className="h-3.5 w-3.5" />
-    </>
-  ) : (
-    <>
-      {t(
-        "employee.attendancePage.checkIn",
-        "Check in",
-      )}
-
-      <FiArrowRight className="h-3.5 w-3.5" />
-    </>
-  )}
-</button>
+              {/* ── لا توجد بيانات بعد ── */}
+              {!canCheckIn && !canCheckOut && !isShiftFinished && (
+                <div className="flex w-full items-center justify-center gap-2 rounded-xl bg-slate-100 px-4 py-3 text-xs font-semibold text-slate-400">
+                  {t(
+                    "employee.attendancePage.noAttendanceToday",
+                    "No attendance record yet",
+                  )}
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </motion.div>

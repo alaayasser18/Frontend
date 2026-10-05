@@ -17,8 +17,12 @@ import {
   FiCheck,
 } from "react-icons/fi";
 
-import { useTodayAttendance } from "../../hooks/useTodayAttendance";
+import {
+  useTodayAttendance,
+  getCurrentLocation,
+} from "../../hooks/useTodayAttendance";
 import { checkIn, checkOut } from "../../api/attendanceApi";
+import toast from "react-hot-toast";
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -35,34 +39,6 @@ const itemVariants = {
     y: 0,
     transition: { duration: 0.35, ease: "easeOut" },
   },
-};
-
-const getCurrentLocation = () => {
-  return new Promise((resolve, reject) => {
-    if (!navigator.geolocation) {
-      reject(
-        new Error("Geolocation is not supported by this browser."),
-      );
-      return;
-    }
-
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        resolve({
-          latitude: position.coords.latitude,
-          longitude: position.coords.longitude,
-        });
-      },
-      (error) => {
-        reject(error);
-      },
-      {
-        enableHighAccuracy: true,
-        timeout: 10000,
-        maximumAge: 0,
-      },
-    );
-  });
 };
 
 const parseWorkedTime = (timeString) => {
@@ -114,17 +90,24 @@ export default function HomeDashboard() {
   const [actionLoading, setActionLoading] = useState(false);
   const [actionError, setActionError] = useState("");
 
-  const attendance = attendanceResponse?.data;
+  const attendance = attendanceResponse?.data || attendanceResponse;
   const widgets = attendance?.widgets;
 
-  const isCheckedIn =
-    attendance?.can_check_out === true;
-
-  const canCheckIn =
-    attendance?.can_check_in === true;
+  const hasCheckedIn = Boolean(attendance?.check_in_time);
+  const hasCheckedOut = Boolean(attendance?.check_out_time);
 
   const canCheckOut =
-    attendance?.can_check_out === true;
+    attendance?.can_check_out === true ||
+    (hasCheckedIn && !hasCheckedOut);
+
+  const isCheckedIn = canCheckOut;
+
+  const canCheckIn =
+    attendance?.can_check_in === true ||
+    (!hasCheckedIn && !canCheckOut);
+
+  const isShiftFinished =
+    hasCheckedIn && hasCheckedOut && attendance?.can_check_in === false;
 
   useEffect(() => {
     if (!attendance) {
@@ -162,8 +145,12 @@ export default function HomeDashboard() {
 
       const location = await getCurrentLocation();
 
-      await checkIn(location);
+      const res = await checkIn({
+        latitude: location.latitude,
+        longitude: location.longitude,
+      });
 
+      toast.success(res?.message || t("attendance.checkedInSuccess", "Checked in successfully!"));
       await refetchAttendance();
     } catch (error) {
       console.error("Check-in failed:", error);
@@ -174,6 +161,7 @@ export default function HomeDashboard() {
         "Unable to check in.";
 
       setActionError(message);
+      toast.error(message);
     } finally {
       setActionLoading(false);
     }
@@ -184,8 +172,9 @@ export default function HomeDashboard() {
       setActionLoading(true);
       setActionError("");
 
-      await checkOut();
+      const res = await checkOut();
 
+      toast.success(res?.message || t("attendance.checkedOutSuccess", "Checked out successfully!"));
       await refetchAttendance();
     } catch (error) {
       console.error("Check-out failed:", error);
@@ -196,21 +185,18 @@ export default function HomeDashboard() {
         "Unable to check out.";
 
       setActionError(message);
+      toast.error(message);
     } finally {
       setActionLoading(false);
     }
   };
 
   const handleAttendanceAction = () => {
-    if (canCheckIn) {
-      return handleCheckIn();
-    }
-
+    if (actionLoading) return;
     if (canCheckOut) {
       return handleCheckOut();
     }
-
-    return;
+    return handleCheckIn();
   };
 
   const distanceText =
@@ -467,44 +453,39 @@ export default function HomeDashboard() {
                 : formatTime(secondsWorked)}
             </div>
 
-          <motion.button
-  whileHover={
-    canCheckIn || canCheckOut
-      ? { scale: 1.02 }
-      : undefined
-  }
-  whileTap={
-    canCheckIn || canCheckOut
-      ? { scale: 0.98 }
-      : undefined
-  }
-  type="button"
-  onClick={handleAttendanceAction}
-  disabled={
-    attendanceLoading ||
-    actionLoading ||
-    (!canCheckIn && !canCheckOut)
-  }
-  className={`inline-flex items-center gap-2 rounded-xl px-5 py-2.5 text-xs font-semibold transition shadow-sm ${
-    canCheckIn || canCheckOut
-      ? "bg-white text-[#102a43] hover:bg-slate-50 cursor-pointer"
-      : "bg-white/40 text-white/60 cursor-not-allowed"
-  }`}
->
-  {actionLoading ? (
-    "Processing..."
-  ) : canCheckOut ? (
-    <>
-      {t("employee.home.checkOut", "Check out")}
-      <FiArrowRight className="w-3.5 h-3.5" />
-    </>
-  ) : (
-    <>
-      {t("employee.home.checkIn", "Check in")}
-      <FiArrowRight className="w-3.5 h-3.5" />
-    </>
-  )}
-</motion.button>
+          {isShiftFinished ? (
+            <div className="inline-flex items-center gap-2 rounded-xl bg-emerald-500/20 border border-emerald-400/30 px-4 py-2.5 text-xs font-bold text-emerald-300">
+              <FiCheck className="w-4 h-4" />
+              <span>{t("attendance.shiftFinished", "Shift Completed")}</span>
+            </div>
+          ) : (
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              type="button"
+              onClick={handleAttendanceAction}
+              disabled={actionLoading}
+              className={`inline-flex items-center gap-2 rounded-xl px-5 py-2.5 text-xs font-bold transition shadow-sm cursor-pointer disabled:opacity-60 ${
+                canCheckOut
+                  ? "bg-rose-500 text-white hover:bg-rose-600"
+                  : "bg-white text-[#102a43] hover:bg-slate-50"
+              }`}
+            >
+              {actionLoading ? (
+                <span>{t("attendance.loading", "Please wait...")}</span>
+              ) : canCheckOut ? (
+                <>
+                  <span>{t("employee.home.checkOut", "Check out")}</span>
+                  <FiArrowRight className="w-3.5 h-3.5" />
+                </>
+              ) : (
+                <>
+                  <span>{t("employee.home.checkIn", "Check in")}</span>
+                  <FiArrowRight className="w-3.5 h-3.5" />
+                </>
+              )}
+            </motion.button>
+          )}
           </div>
         </div>
 

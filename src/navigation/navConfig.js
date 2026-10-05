@@ -25,6 +25,7 @@ import {
   FiBell,
   FiTarget,
   FiDollarSign,
+  FiAward,
 } from "react-icons/fi";
 
 import {
@@ -105,6 +106,13 @@ export const navConfig = {
       title: "Goals",
       path: "/admin/goals",
       icon: MdAssessment,
+      section: "GROWTH & GOVERNANCE",
+    },
+    {
+      titleKey: "portal.evaluations",
+      title: "Evaluations",
+      path: "/admin/evaluations",
+      icon: MdTrackChanges,
       section: "GROWTH & GOVERNANCE",
     },
     {
@@ -201,10 +209,17 @@ export const navConfig = {
 
     // ================= GROWTH & GOVERNANCE =================
     {
-      titleKey: "portal.evaluationsGoals",
-      title: "Evaluations & Goals",
-      path: "/hr/evaluations-goals",
+      titleKey: "portal.goals",
+      title: "Goals",
+      path: "/hr/goals",
       icon: MdTrackChanges,
+      section: "GROWTH & GOVERNANCE",
+    },
+    {
+      titleKey: "portal.evaluations",
+      title: "Evaluations",
+      path: "/hr/evaluations",
+      icon: MdAssessment,
       section: "GROWTH & GOVERNANCE",
     },
     {
@@ -382,6 +397,12 @@ export const navConfig = {
       title: "My Goals",
       path: "/employee/goals",
       icon: FiTarget,
+    },
+    {
+      titleKey: "portal.myEvaluations",
+      title: "My Evaluations",
+      path: "/employee/evaluations",
+      icon: FiAward,
     },
     {
       titleKey: "portal.myFinancials",

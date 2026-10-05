@@ -14,6 +14,7 @@ import {
   useHrPendingLeaveRequests,
   useRejectLeaveRequest,
 } from "../hooks/useLeaveRequests";
+import { useOwnerPendingLeaveRequests } from "../../admin/hooks/useOwnerLeaveRequests";
 
 const categoryStyle =
   "bg-[#f5f3ff] text-[#7c3aed]";
@@ -82,13 +83,19 @@ const modalVariants = {
   },
 };
 
-const LeaveRequests = () => {
+const LeaveRequests = ({ role = "hr" }) => {
   const { t, i18n } = useTranslation();
 
   const isArabic = i18n.language?.toLowerCase().startsWith("ar");
   const lang = isArabic ? "ar" : "en";
 
-  const requestsQuery = useHrPendingLeaveRequests(lang);
+  const hrRequestsQuery = useHrPendingLeaveRequests(lang, role === "hr");
+  const ownerRequestsQuery = useOwnerPendingLeaveRequests(
+    lang,
+    role === "owner",
+  );
+  const requestsQuery =
+    role === "owner" ? ownerRequestsQuery : hrRequestsQuery;
   const approveMutation = useApproveLeaveRequest(lang);
   const rejectMutation = useRejectLeaveRequest(lang);
   const requests = useMemo(

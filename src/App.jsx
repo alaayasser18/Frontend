@@ -217,6 +217,10 @@ function App() {
               <Route path="/admin/notifications" element={<Notification />} />
               <Route path="/admin/audit" element={<ActivityLog />} />
               <Route path="/admin/attendance" element={<AdminAttendance />} />
+              <Route
+                path="/admin/leave-requests"
+                element={<HrLeaveRequests role="owner" />}
+              />
               <Route path="/admin/profile" element={<AdminProfileSettings />} />
               <Route
                 path="/admin/settings"

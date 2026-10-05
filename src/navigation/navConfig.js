@@ -75,6 +75,12 @@ export const navConfig = {
       icon: MdCalendarMonth,
     },
     {
+      titleKey: "portal.leaveRequests",
+      title: "Leave Requests",
+      path: "/admin/leave-requests",
+      icon: MdEventNote,
+    },
+    {
       titleKey: "portal.auditLogs",
       title: "Audit Logs",
       path: "/admin/audit",

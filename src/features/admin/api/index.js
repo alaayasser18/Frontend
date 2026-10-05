@@ -31,3 +31,18 @@ export const getDepartments = async (params = {}) => {
 
   return response.data;
 };
+
+// =====================================================
+// GET PENDING LEAVE REQUESTS
+// Owner access is served by the general leave request history endpoint.
+// =====================================================
+export const getOwnerPendingLeaveRequests = async (lang = "en") => {
+  const response = await axiosInstance.get("/leaves/leave-requests", {
+    params: { lang, status: "Pending" },
+    headers: {
+      "Accept-Language": lang,
+    },
+  });
+
+  return response.data;
+};

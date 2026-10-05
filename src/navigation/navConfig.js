@@ -67,6 +67,13 @@ export const navConfig = {
       icon: MdLocationCity,
       section: "OPERATIONS",
     },
+    {
+      titleKey: "portal.submissionReviews",
+      title: "Submission Reviews",
+      path: "/admin/submissions",
+      icon: MdDescription,
+      section: "OPERATIONS",
+    },
 
     // ================= FINANCIAL & REWARDS =================
     {
@@ -169,6 +176,13 @@ export const navConfig = {
       titleKey: "portal.leaveRequests",
       path: "/hr/leave-requests",
       icon: MdEventNote,
+      section: "OPERATIONS",
+    },
+    {
+      titleKey: "portal.submissionReviews",
+      title: "Submission Reviews",
+      path: "/hr/submissions",
+      icon: MdDescription,
       section: "OPERATIONS",
     },
 

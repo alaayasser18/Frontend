@@ -265,6 +265,10 @@ function App() {
                 element={<AdminAdvances />}
               />
               <Route path="/admin/rewards" element={<AdminRewards />} />
+              <Route
+                path="/admin/submissions"
+                element={<SubmissionReviews role="Owner" />}
+              />
               <Route path="/branches" element={<Branches />} />
             </Route>
 
@@ -285,6 +289,10 @@ function App() {
                 <Route path="advances-deductions" element={<HrAdvances />} />
                 <Route path="payroll" element={<HrPayroll />} />
                 <Route path="rewards" element={<HrRewards />} />
+                <Route
+                  path="submissions"
+                  element={<SubmissionReviews role="HR" />}
+                />
                 <Route
                   path="evaluations-goals"
                   element={<HrEvaluationsGoals />}

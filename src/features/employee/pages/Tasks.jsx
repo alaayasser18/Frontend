@@ -18,7 +18,15 @@ import {
   FiRefreshCw,
   FiActivity,
   FiFileText,
+  FiPaperclip,
+  FiExternalLink,
 } from "react-icons/fi";
+import {
+  submitTask,
+  attachSubmissionFile,
+  resubmitSubmission,
+  getSubmissionDetails,
+} from "../../../services/submissionsApi";
 
 // =========================
 // API CONFIG
@@ -52,6 +60,20 @@ const buildUrl = (path) => {
     ? `${API_ROOT.replace(/\/api$/, "")}${cleanPath}`
     : `${API_ROOT}${cleanPath}`;
 };
+
+const getFileUrl = (filePath) => {
+  if (!filePath) return "#";
+  if (
+    filePath.startsWith("http://") ||
+    filePath.startsWith("https://") ||
+    filePath.startsWith("blob:")
+  ) {
+    return filePath;
+  }
+  const root = API_ROOT.replace(/\/api\/?$/, "");
+  return `${root}/storage/${filePath.replace(/^\/+/, "")}`;
+};
+
 
 // =========================
 // Statuses
@@ -510,11 +532,18 @@ const Tasks = () => {
         throw new Error("Unexpected response from server.");
       }
 
+      const submissions = Array.isArray(apiTask.submissions)
+        ? apiTask.submissions
+        : apiTask.submission
+        ? [apiTask.submission]
+        : [];
+
       setDetailsTask({
         ...mapApiTask(apiTask, isRtl),
         createdBy: apiTask.created_by,
         createdAt: formatDateTime(apiTask.created_at, isRtl),
         updatedAt: formatDateTime(apiTask.updated_at, isRtl),
+        submissions,
       });
     } catch (e) {
       setDetailsError(e.message);
@@ -548,14 +577,21 @@ const Tasks = () => {
   }, [tasks, activeFilter]);
 
   // =====================================================
-  // SUBMIT PROGRESS — PUT /tasks/{id}/progress
+  // SUBMISSIONS & PROGRESS
+  // POST /api/tasks/{task}/submissions
+  // POST /api/tasks/submissions/{submission}/resubmit
+  // POST /api/tasks/submissions/{submission}/attachments
   // =====================================================
-  const handleOpenTaskUpdate = (task) => {
+  const [resubmissionTarget, setResubmissionTarget] = useState(null);
+  const [attachingFile, setAttachingFile] = useState(false);
+
+  const handleOpenTaskUpdate = (task, submission = null) => {
     if (!task) return;
     setSelectedTask(task);
-    setProgressVal(task.progress);
+    setResubmissionTarget(submission);
+    setProgressVal(task.progress || 0);
     setUploadedFile(null);
-    setNotes("");
+    setNotes(submission?.note || "");
     setProgressError(null);
     setShowTaskUpdate(true);
   };
@@ -564,6 +600,7 @@ const Tasks = () => {
     if (submittingProgress) return;
     setShowTaskUpdate(false);
     setSelectedTask(null);
+    setResubmissionTarget(null);
     setUploadedFile(null);
     setNotes("");
     setProgressError(null);
@@ -577,96 +614,140 @@ const Tasks = () => {
   const handleSubmitForReview = async () => {
     if (!selectedTask || submittingProgress) return;
 
+    if (!notes.trim()) {
+      setProgressError(
+        isRtl
+          ? "يرجى كتابة ملاحظات حول التسليم (مطلوبة)."
+          : "Please write notes about your deliverable (required)."
+      );
+      return;
+    }
+
     setSubmittingProgress(true);
     setProgressError(null);
 
     try {
-      const token = localStorage.getItem("token");
       const lang = i18n.language?.startsWith("ar") ? "ar" : "en";
+      const isResubmit = Boolean(resubmissionTarget?.id);
 
-      const response = await fetch(
-        `${buildUrl(`${ENDPOINT_TASKS}/${selectedTask.apiId}/progress`)}?lang=${lang}`,
-        {
-          method: "PUT",
-          headers: {
-            Accept: "application/json",
-            "Content-Type": "application/json",
-            "Accept-Language": lang,
-            ...(token ? { Authorization: `Bearer ${token}` } : {}),
-            "ngrok-skip-browser-warning": "true",
+      if (isResubmit) {
+        // 8. Resubmit after changes requested: POST /api/tasks/submissions/{submission}/resubmit
+        await resubmitSubmission(
+          resubmissionTarget.id,
+          {
+            note: notes.trim(),
+            files: uploadedFile ? [uploadedFile] : [],
           },
-          body: JSON.stringify({
-            progress: progressVal,
-          }),
-        }
-      );
-
-      const json = await response.json().catch(() => null);
-
-      if (response.ok) {
-        const updated = json?.data;
-
-        if (updated && updated.id) {
-          setTasks((prev) =>
-            prev.map((t) =>
-              t.apiId === updated.id ? mapApiTask(updated, isRtl) : t
-            )
-          );
-        } else {
-          await fetchTasks(new AbortController().signal);
-        }
-
-        setShowTaskUpdate(false);
-        setSelectedTask(null);
-        setUploadedFile(null);
-        setNotes("");
-
-        showToast(
-          json?.message || "Task progress updated successfully",
-          `"${updated?.title || selectedTask.defaultTitle}" is now at ${progressVal}%.`
+          { lang }
         );
-        return;
-      }
-
-      if (response.status === 403) {
-        setProgressError(
-          json?.message || "You are not authorized to update this task."
+      } else {
+        // 1. Submit a task: POST /api/tasks/{task}/submissions
+        await submitTask(
+          selectedTask.apiId,
+          {
+            note: notes.trim(),
+            files: uploadedFile ? [uploadedFile] : [],
+          },
+          { lang }
         );
-        return;
       }
 
-      if (response.status === 404) {
-        setProgressError(json?.message || "Task not found.");
-        return;
+      // Also sync progress if desired
+      try {
+        const token = localStorage.getItem("token");
+        await fetch(
+          `${buildUrl(`${ENDPOINT_TASKS}/${selectedTask.apiId}/progress`)}?lang=${lang}`,
+          {
+            method: "PUT",
+            headers: {
+              Accept: "application/json",
+              "Content-Type": "application/json",
+              "Accept-Language": lang,
+              ...(token ? { Authorization: `Bearer ${token}` } : {}),
+              "ngrok-skip-browser-warning": "true",
+            },
+            body: JSON.stringify({
+              progress: progressVal,
+            }),
+          }
+        );
+      } catch (syncErr) {
+        console.warn("Could not sync progress:", syncErr);
       }
 
-      if (response.status === 422) {
-        let firstError = null;
-        if (json?.errors && typeof json.errors === "object") {
-          const firstKey = Object.keys(json.errors)[0];
-          firstError = json.errors[firstKey]?.[0] ?? null;
-        }
-        setProgressError(firstError || json?.message || "Validation error.");
-        return;
+      // Refresh tasks list
+      await fetchTasks(new AbortController().signal);
+
+      // Refresh task details if currently open
+      if (detailsTask && detailsTask.apiId === selectedTask.apiId) {
+        openTaskDetails(selectedTask);
       }
 
-      if (response.status === 401) {
-        setProgressError("Unauthenticated — please login again.");
-        return;
-      }
+      setShowTaskUpdate(false);
+      setSelectedTask(null);
+      setResubmissionTarget(null);
+      setUploadedFile(null);
+      setNotes("");
 
-      if (response.status === 500) {
-        setProgressError(json?.message || "Something went wrong.");
-        return;
-      }
-
-      setProgressError(
-        json?.message || `Failed to update progress (${response.status})`
+      showToast(
+        isResubmit
+          ? isRtl
+            ? "تمت إعادة تسليم المهمة بنجاح"
+            : "Submission resubmitted successfully"
+          : isRtl
+          ? "تم تسليم المهمة بنجاح للمراجعة"
+          : "Deliverable submitted successfully for review",
+        `"${selectedTask.defaultTitle}" ${
+          isRtl ? "بانتظار مراجعة المسؤول" : "is now pending review"
+        }.`
       );
     } catch (e) {
-      setProgressError(e.message);
+      console.error("Submission failed:", e);
+      const errMsg =
+        e.response?.data?.message ||
+        e.response?.data?.errors?.note?.[0] ||
+        e.message ||
+        (isRtl ? "فشل تسليم المهمة" : "Failed to submit deliverable");
+      setProgressError(errMsg);
     } finally {
       setSubmittingProgress(false);
+    }
+  };
+
+  const handleAttachExtraFile = async (submissionId, file) => {
+    if (!submissionId || !file || attachingFile) return;
+    setAttachingFile(true);
+    try {
+      const lang = i18n.language?.startsWith("ar") ? "ar" : "en";
+      const res = await attachSubmissionFile(submissionId, file, { lang });
+      const newAttachment = res?.data;
+
+      if (detailsTask) {
+        setDetailsTask((prev) => ({
+          ...prev,
+          submissions: (prev.submissions || []).map((sub) =>
+            sub.id === submissionId
+              ? {
+                  ...sub,
+                  attachments: [...(sub.attachments || []), newAttachment],
+                }
+              : sub
+          ),
+        }));
+      }
+
+      showToast(
+        isRtl ? "تم إرفاق الملف بنجاح" : "File attached successfully",
+        file.name
+      );
+    } catch (err) {
+      console.error("Failed to attach file:", err);
+      showToast(
+        isRtl ? "فشل إرفاق الملف" : "Failed to attach file",
+        err.response?.data?.message || err.message
+      );
+    } finally {
+      setAttachingFile(false);
     }
   };
 
@@ -1415,7 +1496,7 @@ const Tasks = () => {
                 </button>
               </div>
 
-              {/* Tabs: Details | Activity */}
+              {/* Tabs: Details | Submissions | Activity */}
               <div className="flex gap-1 rounded-xl bg-[#f1f5f9] p-1 mb-5">
                 <button
                   type="button"
@@ -1428,6 +1509,24 @@ const Tasks = () => {
                 >
                   <FiFileText className="h-3.5 w-3.5" />
                   {t("tasks.tabs.details", "Details")}
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setDetailsTab("submissions")}
+                  className={`flex-1 inline-flex items-center justify-center gap-2 rounded-lg py-2 text-xs font-semibold transition ${
+                    detailsTab === "submissions"
+                      ? "bg-white text-[#102a43] shadow-sm"
+                      : "text-[#64748b] hover:text-[#102a43]"
+                  }`}
+                >
+                  <FiUploadCloud className="h-3.5 w-3.5" />
+                  {isRtl ? "التسليمات" : "Submissions"}
+                  {detailsTask?.submissions?.length > 0 && (
+                    <span className="inline-flex h-4 min-w-[16px] items-center justify-center rounded-full bg-[#e2e8f0] px-1 text-[10px] text-[#64748b]">
+                      {detailsTask.submissions.length}
+                    </span>
+                  )}
                 </button>
 
                 <button
@@ -1607,6 +1706,178 @@ const Tasks = () => {
                     </div>
                   )}
                 </>
+              )}
+
+              {/* ======== TAB: SUBMISSIONS & DELIVERABLES ======== */}
+              {detailsTab === "submissions" && (
+                <div className="space-y-4">
+                  {detailsTask?.submissions && detailsTask.submissions.length > 0 ? (
+                    detailsTask.submissions.map((sub, sIdx) => {
+                      const isPending = sub.status === "Pending Review";
+                      const isChangesReq = sub.status === "Changes Requested";
+                      const isApproved = sub.status === "Approved";
+                      const isRejected = sub.status === "Rejected";
+
+                      return (
+                        <div
+                          key={sub.id || sIdx}
+                          className="rounded-2xl border border-[#e2e8f0] bg-white p-4 space-y-3.5 shadow-sm"
+                        >
+                          {/* Submission Header */}
+                          <div className="flex items-center justify-between gap-3">
+                            <span
+                              className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-semibold ${
+                                isApproved
+                                  ? "bg-[#f0fdf4] text-[#15803d]"
+                                  : isChangesReq
+                                  ? "bg-[#fff7ed] text-[#c2410c]"
+                                  : isRejected
+                                  ? "bg-[#fef2f2] text-[#b91c1c]"
+                                  : "bg-[#fef3c7] text-[#b45309]"
+                              }`}
+                            >
+                              {sub.status || "Pending Review"}
+                            </span>
+                            <span className="text-[11px] text-[#94a3b8]">
+                              {formatDateTime(sub.submitted_at || sub.created_at, isRtl)}
+                            </span>
+                          </div>
+
+                          {/* Submitter Note */}
+                          {sub.note && (
+                            <div className="rounded-xl bg-[#f8fafc] p-3 text-xs text-[#334155]">
+                              <p className="font-semibold text-[#102a43] mb-1">
+                                {isRtl ? "ملاحظات التسليم:" : "Deliverable Note:"}
+                              </p>
+                              <p className="leading-relaxed">{sub.note}</p>
+                            </div>
+                          )}
+
+                          {/* Reviewer Feedback / Changes Requested Alert */}
+                          {isChangesReq && (
+                            <div className="rounded-xl border border-[#fed7aa] bg-[#fff7ed] p-3 text-xs text-[#9a3412] space-y-2">
+                              <div className="flex items-center gap-1.5 font-bold">
+                                <FiAlertCircle className="w-4 h-4 text-[#ea580c]" />
+                                <span>
+                                  {isRtl
+                                    ? "مطلوب تعديلات من المسؤول:"
+                                    : "Changes Requested by Reviewer:"}
+                                </span>
+                              </div>
+                              <p className="leading-relaxed">
+                                {sub.reviews?.[sub.reviews.length - 1]?.feedback ||
+                                  sub.feedback ||
+                                  (isRtl
+                                    ? "يرجى مراجعة التعديلات وإعادة الإرسال."
+                                    : "Please revise your work and resubmit.")}
+                              </p>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  closeTaskDetails();
+                                  handleOpenTaskUpdate(detailsTask, sub);
+                                }}
+                                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#ea580c] text-white text-xs font-bold hover:bg-[#c2410c] transition shadow-sm"
+                              >
+                                <FiRefreshCw className="w-3.5 h-3.5" />
+                                <span>
+                                  {isRtl
+                                    ? "إعادة التسليم بعد التعديل"
+                                    : "Resubmit Deliverable"}
+                                </span>
+                              </button>
+                            </div>
+                          )}
+
+                          {/* Attachments Section */}
+                          <div>
+                            <div className="flex items-center justify-between mb-2">
+                              <p className="text-[11px] font-bold uppercase tracking-wider text-[#94a3b8]">
+                                {isRtl ? "الملفات المرفقة" : "Attachments"}
+                              </p>
+
+                              {/* Upload additional attachment button */}
+                              <label className="cursor-pointer inline-flex items-center gap-1 text-[11px] font-bold text-[#2563eb] hover:underline">
+                                <FiPaperclip className="w-3 h-3" />
+                                <span>
+                                  {attachingFile
+                                    ? isRtl
+                                      ? "جارٍ الرفع..."
+                                      : "Uploading..."
+                                    : isRtl
+                                    ? "إرفاق ملف إضافي"
+                                    : "Attach File"}
+                                </span>
+                                <input
+                                  type="file"
+                                  disabled={attachingFile}
+                                  className="hidden"
+                                  onChange={(e) => {
+                                    const file = e.target.files?.[0];
+                                    if (file) handleAttachExtraFile(sub.id, file);
+                                    e.target.value = "";
+                                  }}
+                                />
+                              </label>
+                            </div>
+
+                            {sub.attachments && sub.attachments.length > 0 ? (
+                              <div className="flex flex-wrap gap-2">
+                                {sub.attachments.map((file) => (
+                                  <a
+                                    key={file.id || file.file_name}
+                                    href={getFileUrl(file.file_path)}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    download={file.file_name}
+                                    className="inline-flex items-center gap-2 rounded-xl bg-[#f1f5f9] hover:bg-[#e2e8f0] px-3 py-1.5 text-xs font-semibold text-[#334155] transition border border-[#e2e8f0]"
+                                  >
+                                    <FiFileText className="w-3.5 h-3.5 text-[#2563eb]" />
+                                    <span className="truncate max-w-[180px]">
+                                      {file.file_name}
+                                    </span>
+                                    <FiExternalLink className="w-3 h-3 text-[#94a3b8]" />
+                                  </a>
+                                ))}
+                              </div>
+                            ) : (
+                              <p className="text-xs text-[#94a3b8] italic">
+                                {isRtl ? "لا توجد ملفات مرفقة" : "No files attached"}
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })
+                  ) : (
+                    <div className="flex flex-col items-center justify-center py-10 text-center">
+                      <FiUploadCloud className="h-9 w-9 text-[#94a3b8] mb-2" />
+                      <p className="text-sm font-semibold text-[#102a43] m-0">
+                        {isRtl
+                          ? "لا توجد تسليمات لهذه المهمة بعد"
+                          : "No submissions for this task yet"}
+                      </p>
+                      <p className="text-xs text-[#829ab1] mt-1 max-w-xs">
+                        {isRtl
+                          ? "عند إكمال المهمة أو جزء منها، يمكنك إرسال تسليم ليراجعه المشرف."
+                          : "When you complete work on this task, submit your deliverable for review."}
+                      </p>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          closeTaskDetails();
+                          handleOpenTaskUpdate(detailsTask);
+                        }}
+                        className="mt-4 inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-[#1c364f] text-white text-xs font-semibold hover:bg-[#254360] transition shadow-sm"
+                      >
+                        <FiUploadCloud className="w-4 h-4" />
+                        <span>
+                          {t("tasks.submitDeliverable", "Submit Deliverable")}
+                        </span>
+                      </button>
+                    </div>
+                  )}
+                </div>
               )}
 
               {/* ======== TAB: ACTIVITY (GET /tasks/{id}/activities) ======== */}
@@ -2241,10 +2512,18 @@ const Tasks = () => {
               <div className="flex items-start justify-between pb-4">
                 <div>
                   <p className="text-[11px] font-bold uppercase tracking-wider text-[#94a3b8]">
-                    {t("tasks.taskUpdate", "TASK UPDATE")}
+                    {resubmissionTarget
+                      ? isRtl
+                        ? "إعادة تسليم المهمة"
+                        : "RESUBMISSION"
+                      : t("tasks.taskUpdate", "TASK UPDATE")}
                   </p>
                   <h2 className="text-lg font-bold text-[#102a43] mt-0.5">
-                    {t("tasks.submitDeliverable", "Submit deliverable")}
+                    {resubmissionTarget
+                      ? isRtl
+                        ? "إعادة تسليم العمل بعد التعديل"
+                        : "Resubmit Deliverable"
+                      : t("tasks.submitDeliverable", "Submit deliverable")}
                   </h2>
                 </div>
                 <button
@@ -2257,10 +2536,17 @@ const Tasks = () => {
                 </button>
               </div>
 
-              <div className="rounded-xl bg-[#f8fafc] px-4 py-3 border border-[#f1f5f9] mb-5">
+              <div className="rounded-xl bg-[#f8fafc] px-4 py-3 border border-[#f1f5f9] mb-4">
                 <p className="text-xs font-semibold text-[#102a43]">
                   {selectedTask.defaultTitle}
                 </p>
+                {resubmissionTarget && (
+                  <p className="text-[11px] text-[#c2410c] mt-1 font-medium">
+                    {isRtl
+                      ? "تقوم الآن بإعادة التسليم استجابة لطلب التعديلات من المشرف."
+                      : "You are resubmitting this deliverable following the change request."}
+                  </p>
+                )}
               </div>
 
               {progressError && (
@@ -2308,13 +2594,24 @@ const Tasks = () => {
 
               <div className="mb-5">
                 <label className="block text-xs font-semibold text-[#64748b] mb-1.5">
-                  {t("tasks.form.notes", "Notes")}
+                  {t("tasks.form.notes", "Notes")}{" "}
+                  <span className="text-[#dc2626]">*</span>
                 </label>
                 <textarea
                   rows={3}
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
-                  placeholder={t("tasks.form.notesPlaceholder", "Add notes about this deliverable...")}
+                  placeholder={
+                    resubmissionTarget
+                      ? isRtl
+                        ? "وضح ما قمت بتعديله في هذا التسليم الجديد..."
+                        : "Describe the changes made in this resubmission..."
+                      : t(
+                          "tasks.form.notesPlaceholder",
+                          "Add notes about this deliverable..."
+                        )
+                  }
+                  required
                   className="w-full resize-none rounded-xl border border-[#d9e2ec] px-3.5 py-2.5 text-xs text-[#102a43] placeholder:text-[#94a3b8] focus:outline-none focus:border-[#486581] focus:ring-1 focus:ring-[#486581] transition"
                 />
               </div>
@@ -2323,7 +2620,7 @@ const Tasks = () => {
                 <label className="flex cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-[#e2e8f0] bg-[#fafcfd] py-6 px-4 hover:bg-[#f8fafc] hover:border-[#cbd5e1] transition text-center">
                   <input
                     type="file"
-                    accept=".pdf,.docx,.png"
+                    accept=".pdf,.docx,.png,.zip"
                     onChange={handleFileChange}
                     className="hidden"
                   />
@@ -2362,10 +2659,18 @@ const Tasks = () => {
               >
                 <span>
                   {submittingProgress
-                    ? t("tasks.form.updating", "Updating...")
+                    ? isRtl
+                      ? "جارٍ الإرسال..."
+                      : "Submitting..."
+                    : resubmissionTarget
+                    ? isRtl
+                      ? "إعادة التسليم"
+                      : "Resubmit Deliverable"
                     : t("tasks.form.submitForReview", "Submit for review")}
                 </span>
-                {!submittingProgress && <span className="text-sm">{isRtl ? "←" : "→"}</span>}
+                {!submittingProgress && (
+                  <span className="text-sm">{isRtl ? "←" : "→"}</span>
+                )}
               </motion.button>
             </motion.div>
           </motion.div>

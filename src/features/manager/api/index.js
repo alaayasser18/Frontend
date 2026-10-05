@@ -102,3 +102,9 @@ export const updateGoal = async (id, data) => {
 
   return response.data;
 };
+
+// =====================================================
+// TASK SUBMISSIONS API (Manager / HR / Owner / Employee)
+// =====================================================
+export * from "../../../services/submissionsApi";
+

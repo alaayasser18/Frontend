@@ -912,7 +912,6 @@
     "performance": "Performance",
     "goals": "Goals",
     "myPerformance": "My Performance",
-
     "auditLogs": "Audit Logs",
     "administration": "Administration",
     "wiseWork": "WiseWork",
@@ -1121,7 +1120,16 @@
     "refreshSuccessMessage": "Dashboard data has been refreshed successfully.",
     "refreshing": "Refreshing data...",
     "rangeUpdatedTitle": "Range updated",
-    "rangeUpdatedMessage": "User growth range updated successfully."
+    "rangeUpdatedMessage": "User growth range updated successfully.",
+    "branchLocations": "Branch locations",
+    "reviewCompletion": "Review completion",
+    "quickViewUsers": "Quick view users",
+    "quickViewUsersSubtitle": "Recently added workspace users",
+    "noUsers": "No users to show.",
+    "noActivity": "No recent activity.",
+    "loading": "Loading dashboard...",
+    "loadError": "Failed to load dashboard data.",
+    "retry": "Try again"
   },
   "branchesPage": {
     "breadcrumbApp": "WiseWork",
@@ -1697,7 +1705,14 @@
     "readiness1": "Attendance verification",
     "readiness2": "Leave approvals",
     "readiness3": "Q3 evaluations",
-    "readiness4": "Payroll reconciliation"
+    "readiness4": "Payroll reconciliation",
+    "breadcrumb": "HR Portal / Command Center",
+    "loading": "Loading dashboard...",
+    "loadError": "Failed to load dashboard data.",
+    "retry": "Try again",
+    "noSignals": "No employees need attention right now.",
+    "presentTodayPct": "{{percentage}}% workforce present",
+    "pendingReviewsDetail": "{{leaves}} leaves · {{advances}} advances"
   },
   "hrGoals": {
     "eyebrow": "GOALS & DEVELOPMENT",
@@ -2090,6 +2105,16 @@
     "sendChangeRequest": "Send Change Request",
     "toastApproved": "Submission approved and task completed",
     "toastRejected": "Submission rejected",
+    "toastChangeRequested": "Change request sent",
+    "searchPlaceholder": "Search by task, member, or notes...",
+    "noSubmissions": "No submissions found",
+    "noSubmissionsDesc": "There are currently no deliverables in this queue awaiting review.",
+    "feedbackRequired": "Please enter feedback explaining the changes or reasons needed",
+    "rejectPlaceholder": "Provide clear feedback on why this submission was rejected...",
+    "errorApprove": "Failed to approve submission",
+    "errorReject": "Failed to reject submission",
+    "errorChangeRequest": "Failed to request changes",
+    "fetchError": "Failed to load review queue",
     "youssefLotfy": "Youssef Lotfy",
     "salmaNabil": "Salma Nabil",
     "submissionOauth2Title": "Implement OAuth2 Flow",

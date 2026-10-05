@@ -115,6 +115,7 @@ export default function HomeDashboard() {
   const [actionError, setActionError] = useState("");
 
   const attendance = attendanceResponse?.data;
+  const widgets = attendance?.widgets;
 
   const isCheckedIn =
     attendance?.can_check_out === true;
@@ -529,25 +530,21 @@ export default function HomeDashboard() {
             </div>
 
             <span className="text-[11px] font-bold tracking-wider text-[#94a3b8] uppercase">
-              {t(
-                "employee.home.pendingTasks",
-                "PENDING TASKS",
-              )}
+              {widgets?.pending_tasks?.label ||
+                t("employee.home.pendingTasks", "PENDING TASKS")}
             </span>
           </div>
 
           <h3 className="text-xl font-bold text-[#102a43]">
-            {t(
-              "employee.home.tasksCount",
-              "3 tasks",
-            )}
+            {widgets?.pending_tasks?.count != null
+              ? t("employee.home.taskCount", "{{count}} tasks", {
+                  count: widgets.pending_tasks.count,
+                })
+              : "—"}
           </h3>
 
           <p className="text-xs text-[#64748b] mt-1">
-            {t(
-              "employee.home.highPriority",
-              "1 high priority",
-            )}
+            {widgets?.pending_tasks?.subtext ?? "—"}
           </p>
         </motion.div>
 
@@ -561,25 +558,17 @@ export default function HomeDashboard() {
             </div>
 
             <span className="text-[11px] font-bold tracking-wider text-[#94a3b8] uppercase">
-              {t(
-                "employee.home.nextDeadline",
-                "NEXT DEADLINE",
-              )}
+              {widgets?.next_deadline?.label ||
+                t("employee.home.nextDeadline", "NEXT DEADLINE")}
             </span>
           </div>
 
           <h3 className="text-xl font-bold text-[#102a43]">
-            {t(
-              "employee.home.deadlineDate",
-              "Jun 12",
-            )}
+            {widgets?.next_deadline?.date ?? "—"}
           </h3>
 
           <p className="text-xs text-[#64748b] mt-1">
-            {t(
-              "employee.home.operationsReport",
-              "Q2 Operations efficiency report",
-            )}
+            {widgets?.next_deadline?.task_title ?? "—"}
           </p>
         </motion.div>
 
@@ -593,25 +582,21 @@ export default function HomeDashboard() {
             </div>
 
             <span className="text-[11px] font-bold tracking-wider text-[#94a3b8] uppercase">
-              {t(
-                "employee.home.leaveBalance",
-                "LEAVE BALANCE",
-              )}
+              {widgets?.leave_balance?.label ||
+                t("employee.home.leaveBalance", "LEAVE BALANCE")}
             </span>
           </div>
 
           <h3 className="text-xl font-bold text-[#102a43]">
-            {t(
-              "employee.home.daysCount",
-              "13 days",
-            )}
+            {widgets?.leave_balance?.days != null
+              ? t("employee.home.dayCount", "{{count}} days", {
+                  count: widgets.leave_balance.days,
+                })
+              : "—"}
           </h3>
 
           <p className="text-xs text-[#64748b] mt-1">
-            {t(
-              "employee.home.annualCasual",
-              "Annual + Casual",
-            )}
+            {widgets?.leave_balance?.subtext ?? "—"}
           </p>
         </motion.div>
       </motion.div>

@@ -1,4 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
 import { getTodayAttendance } from "../api/attendanceApi";
 
 const getCurrentLocation = () => {
@@ -28,13 +29,18 @@ const getCurrentLocation = () => {
 };
 
 export const useTodayAttendance = () => {
+  const { i18n } = useTranslation();
+
   return useQuery({
-    queryKey: ["attendance", "today"],
+    queryKey: ["attendance", "today", i18n.language],
 
     queryFn: async () => {
       const location = await getCurrentLocation();
 
-      return getTodayAttendance(location);
+      return getTodayAttendance({
+        ...location,
+        lang: i18n.language,
+      });
     },
 
     retry: false,

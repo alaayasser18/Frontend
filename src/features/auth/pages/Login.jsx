@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useLogin } from "../hooks/useLogin";
 import { googleRedirect } from "../api";
 import { Link, useNavigate, useLocation } from "react-router-dom";
@@ -69,12 +69,58 @@ export default function Login({ isOwner }) {
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(true);
 
+  // Prevent double-execution in React StrictMode
+  const googleCallbackHandled = useRef(false);
+
   // If already authenticated with a valid role, redirect directly to dashboard
   useEffect(() => {
     if (isAuthenticated && role && ROLE_ROUTES[role]) {
       navigate(ROLE_ROUTES[role], { replace: true });
     }
   }, [isAuthenticated, role, navigate]);
+
+  /* =========================
+     GOOGLE OAUTH CALLBACK HANDLER
+     Runs once on mount to process backend redirect after Google login.
+
+     SUCCESS: https://frontend/#token=ACCESS_TOKEN
+     FAILURE: https://frontend/?message=not_authorized
+              https://frontend/?message=auth_failed
+  ========================= */
+
+  useEffect(() => {
+    // Guard against double-execution (React StrictMode)
+    if (googleCallbackHandled.current) return;
+
+    const hash = window.location.hash;
+    const searchParams = new URLSearchParams(window.location.search);
+    const messageParam = searchParams.get("message");
+
+    // ---- SUCCESS: token in URL hash ----
+  
+
+    // ---- FAILURE: error message in query parameter ----
+    if (messageParam) {
+      googleCallbackHandled.current = true;
+
+      // Clean the query parameter from the URL without causing a page reload
+      const cleanUrl =
+        window.location.pathname +
+        (window.location.hash ? window.location.hash : "");
+      window.history.replaceState(null, "", cleanUrl);
+
+      // Map backend error codes to translated messages
+      if (messageParam === "not_authorized") {
+        toast.error(t("auth.login.googleNotAuthorized"));
+      } else if (messageParam === "auth_failed") {
+        toast.error(t("auth.login.googleAuthFailed"));
+      } else {
+        // Unknown/unexpected message — show generic translated error
+        toast.error(t("auth.login.googleErrorGeneric"));
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   /* =========================
      TOGGLE PASSWORD
@@ -165,7 +211,7 @@ export default function Login({ isOwner }) {
 
         toast.success(
           data?.message ||
-            t("auth.login.loginSuccess", "Logged in successfully."),
+          t("auth.login.loginSuccess", "Logged in successfully."),
         );
 
         /* =========================
@@ -197,10 +243,10 @@ export default function Login({ isOwner }) {
         if (status === 403) {
           toast.error(
             backendMessage ||
-              t(
-                "auth.login.accountInactive",
-                "Your account is inactive. Please activate your account first.",
-              ),
+            t(
+              "auth.login.accountInactive",
+              "Your account is inactive. Please activate your account first.",
+            ),
           );
 
           return;
@@ -258,10 +304,10 @@ export default function Login({ isOwner }) {
         if (status === 429) {
           toast.error(
             backendMessage ||
-              t(
-                "auth.login.tooManyRequests",
-                "Too many login attempts. Please try again later.",
-              ),
+            t(
+              "auth.login.tooManyRequests",
+              "Too many login attempts. Please try again later.",
+            ),
           );
 
           return;
@@ -275,10 +321,10 @@ export default function Login({ isOwner }) {
         if (status === 500) {
           toast.error(
             backendMessage ||
-              t(
-                "auth.login.serverError",
-                "Something went wrong on the server. Please try again later.",
-              ),
+            t(
+              "auth.login.serverError",
+              "Something went wrong on the server. Please try again later.",
+            ),
           );
 
           return;
@@ -333,22 +379,24 @@ export default function Login({ isOwner }) {
       if (status === 500) {
         toast.error(
           backendMessage ||
-            t(
-              "auth.login.serverError",
-              "Something went wrong on the server. Please try again later.",
-            ),
+          t(
+            "auth.login.serverError",
+            "Something went wrong on the server. Please try again later.",
+          ),
         );
       } else {
         toast.error(
           backendMessage ||
-            t(
-              "auth.login.googleError",
-              "Failed to initiate Google login.",
-            ),
+          t(
+            "auth.login.googleError",
+            "Failed to initiate Google login.",
+          ),
         );
       }
     }
   };
+
+
 
   return (
     <MainAuthForm>

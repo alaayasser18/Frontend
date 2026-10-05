@@ -6,6 +6,7 @@ import axiosInstance from "../../../utils/axiosInstance";
 // =====================================================
 export const getEmployees = async (params = {}) => {
   const { lang, ...filters } = params;
+
   const response = await axiosInstance.get("/employees", {
     params: filters,
     headers: lang ? { "Accept-Language": lang } : undefined,
@@ -47,7 +48,6 @@ export const getPermissions = async (lang = "en") => {
 // =====================================================
 // UPDATE EMPLOYEE HR FIELDS
 // PATCH /employees/{id}/hr-fields
-// Owner / HR only
 // =====================================================
 export const updateEmployeeHRFields = async (id, employeeData, lang = "en") => {
   const response = await axiosInstance.patch(
@@ -66,8 +66,6 @@ export const updateEmployeeHRFields = async (id, employeeData, lang = "en") => {
 // =====================================================
 // CHANGE EMPLOYEE ACCOUNT STATUS
 // PATCH /employees/{id}/change-account-status
-// Owner / HR only
-// No request body
 // =====================================================
 export const changeEmployeeAccountStatus = async (id, lang = "en") => {
   const response = await axiosInstance.patch(
@@ -86,7 +84,6 @@ export const changeEmployeeAccountStatus = async (id, lang = "en") => {
 // =====================================================
 // GET EMPLOYEE BY ID
 // GET /employees/{id}
-// Allowed for all roles
 // =====================================================
 export const getEmployeeById = async (id, lang = "en") => {
   if (!id) {
@@ -104,9 +101,100 @@ export const getEmployeeById = async (id, lang = "en") => {
 };
 
 // =====================================================
+// HR GOALS
+// =====================================================
+
+// GET HR COMPANY GOALS
+// GET /hr/goals
+//
+// Supported params:
+// status
+// department_id
+// employee_id
+// page
+// per_page
+export const getHrGoals = async (params = {}, lang = "en") => {
+  const response = await axiosInstance.get("/hr/goals", {
+    params: {
+      ...params,
+      lang,
+    },
+    headers: {
+      Accept: "application/json",
+      "Accept-Language": lang,
+    },
+  });
+
+  return response.data;
+};
+
+// =====================================================
+// CREATE GOAL
+// POST /goals
+// Owner / HR / Manager
+// =====================================================
+export const createGoal = async (goalData, lang = "en") => {
+  const response = await axiosInstance.post("/goals", goalData, {
+    params: {
+      lang,
+    },
+    headers: {
+      Accept: "application/json",
+      "Accept-Language": lang,
+    },
+  });
+
+  return response.data;
+};
+
+// =====================================================
+// UPDATE GOAL
+// PUT /goals/{id}
+// Owner / HR / Manager
+// =====================================================
+export const updateGoal = async (id, goalData, lang = "en") => {
+  if (!id) {
+    throw new Error("Goal ID is required");
+  }
+
+  const response = await axiosInstance.put(`/goals/${id}`, goalData, {
+    params: {
+      lang,
+    },
+    headers: {
+      Accept: "application/json",
+      "Accept-Language": lang,
+    },
+  });
+
+  return response.data;
+};
+
+// =====================================================
+// ALIASES
 // ALIASES FOR COMPATIBILITY
 // =====================================================
 export const updateEmployeeHrFields = updateEmployeeHRFields;
+
+// =====================================================
+// HR FINANCIALS
+// =====================================================
+
+/**
+ * GET /api/financial/advances
+ * List salary advance requests (HR / Owner / All Roles)
+ */
+export const getFinancialAdvances = async (params = {}, lang = "en") => {
+  const response = await axiosInstance.get("/financial/advances", {
+    params,
+    headers: {
+      Accept: "application/json",
+      "Accept-Language": lang,
+    },
+  });
+
+  return response.data;
+};
 
 // =====================================================
 // DEPARTMENTS
@@ -148,17 +236,51 @@ export const getDepartmentManagers = async (lang = "en") => {
 };
 
 // =====================================================
+// FINANCIAL ADVANCES STATUS
+// =====================================================
+
+/**
+ * PUT /api/financial/advances/{advance}/status
+ * Update salary advance request status (HR / Owner)
+ *
+ * @param {number|string} advanceId
+ * @param {string} status 'approved' | 'rejected'
+ * @param {string} lang
+ */
+export const updateAdvanceStatus = async (advanceId, status, lang = "en") => {
+  if (!advanceId) {
+    throw new Error("Advance ID is required");
+  }
+
+  const response = await axiosInstance.put(
+    `/financial/advances/${advanceId}/status`,
+    { status },
+    {
+      headers: {
+        Accept: "application/json",
+        "Accept-Language": lang,
+      },
+    },
+  );
+
+  return response.data;
+};
+
+// =====================================================
 // LEAVE REQUESTS
 // =====================================================
 
 // GET HR PENDING LEAVE REQUESTS
 export const getHrPendingLeaveRequests = async (lang = "en") => {
-  const response = await axiosInstance.get("/leaves/leave-requests/hr/pending", {
-    params: { lang },
-    headers: {
-      "Accept-Language": lang,
+  const response = await axiosInstance.get(
+    "/leaves/leave-requests/hr/pending",
+    {
+      params: { lang },
+      headers: {
+        "Accept-Language": lang,
+      },
     },
-  });
+  );
 
   return response.data;
 };
@@ -183,7 +305,9 @@ export const approveLeaveRequest = async (id, lang = "en") => {
 export const rejectLeaveRequest = async (id, rejectionReason, lang = "en") => {
   const response = await axiosInstance.patch(
     `/leaves/leave-requests/${id}/reject`,
-    { rejection_reason: rejectionReason },
+    {
+      rejection_reason: rejectionReason,
+    },
     {
       params: { lang },
       headers: {
@@ -193,6 +317,98 @@ export const rejectLeaveRequest = async (id, rejectionReason, lang = "en") => {
   );
 
   return response.data;
+};
+
+// =====================================================
+// FINANCIAL DEDUCTIONS
+// =====================================================
+
+/**
+ * GET /api/financial/deductions
+ * List deductions and penalties (HR / Owner / All Roles)
+ */
+export const getFinancialDeductions = async (params = {}, lang = "en") => {
+  const response = await axiosInstance.get("/financial/deductions", {
+    params,
+    headers: {
+      Accept: "application/json",
+      "Accept-Language": lang,
+    },
+  });
+
+  return response.data;
+};
+
+// =====================================================
+// FINANCIAL PAYROLL
+// =====================================================
+
+/**
+ * GET /api/financial/payroll
+ * Calculates or retrieves company payroll for a given month
+ * Owner / HR
+ *
+ * @param {Object} params - { month_year, page, per_page }
+ * @param {string} lang - 'ar' | 'en'
+ */
+export const getFinancialPayroll = async (params = {}, lang = "en") => {
+  const response = await axiosInstance.get("/financial/payroll", {
+    params,
+    headers: {
+      Accept: "application/json",
+      "Accept-Language": lang,
+    },
+  });
+
+  return response.data;
+};
+
+/**
+ * POST /api/financial/payroll/finalize
+ * Finalize and close monthly payroll (Owner / HR)
+ *
+ * @param {Object} data - { month_year }
+ * @param {string} lang - 'ar' | 'en'
+ */
+export const finalizeFinancialPayroll = async (data = {}, lang = "en") => {
+  const response = await axiosInstance.post(
+    "/financial/payroll/finalize",
+    data,
+    {
+      headers: {
+        Accept: "application/json",
+        "Accept-Language": lang,
+      },
+    },
+  );
+
+  return response.data;
+};
+
+/**
+ * GET /api/financial/payroll/{payroll}/payslip
+ * Download employee payslip PDF (Owner / HR)
+ *
+ * @param {number|string} payrollId
+ * @param {string} lang - 'ar' | 'en'
+ */
+export const downloadFinancialPayslip = async (payrollId, lang = "en") => {
+  if (!payrollId) {
+    throw new Error("Payroll ID is required");
+  }
+
+  const response = await axiosInstance.get(
+    `/financial/payroll/${payrollId}/payslip`,
+    {
+      responseType: "blob",
+      headers: {
+        Accept: "application/pdf",
+        "Accept-Language": lang,
+      },
+    },
+  );
+
+  return response;
 };
 
 // =====================================================
@@ -296,9 +512,11 @@ export const exportHrMonthlySummary = async ({
 
   // Build a filename from Content-Disposition or a default
   const disposition = response.headers?.["content-disposition"] || "";
+
   let filename = `attendance-${year}-${String(month).padStart(2, "0")}.xlsx`;
 
   const match = disposition.match(/filename[^;=\n]*=(['"]?)([^'"\n]+)\1/);
+
   if (match?.[2]) {
     filename = match[2].trim();
   }
@@ -306,11 +524,14 @@ export const exportHrMonthlySummary = async ({
   // Trigger browser download
   const url = URL.createObjectURL(new Blob([response.data]));
   const link = document.createElement("a");
+
   link.href = url;
   link.setAttribute("download", filename);
+
   document.body.appendChild(link);
   link.click();
   link.remove();
+
   URL.revokeObjectURL(url);
 
   return { success: true, filename };
@@ -333,5 +554,25 @@ export const updateAttendanceExceptionStatus = async ({
     },
   );
 
+  return response.data;
+};
+
+// =====================================================
+// HOLIDAYS
+// =====================================================
+
+// GET /holidays
+export const getHolidays = async (params = {}) => {
+  const response = await axiosInstance.get("/holidays", {
+    params,
+  });
+
+  return response.data;
+};
+
+// POST /holidays
+// Allowed for HR, Owner
+export const createHoliday = async (holidayData) => {
+  const response = await axiosInstance.post("/holidays", holidayData);
   return response.data;
 };

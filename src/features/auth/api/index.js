@@ -51,6 +51,18 @@ export const googleRedirect = async () => {
 };
 
 // =========================
+// Fetch Authenticated User
+// GET /auth/user
+// Called after Google OAuth redirect to retrieve the user object
+// using the token stored in localStorage (injected by axiosInstance interceptor).
+// =========================
+export const fetchCurrentUser = async () => {
+  const response = await axiosInstance.get("/auth/user");
+
+  return response.data;
+};
+
+// =========================
 // Register
 // =========================
 export const registerUser = async (registerData) => {

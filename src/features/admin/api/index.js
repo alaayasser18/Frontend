@@ -72,3 +72,20 @@ export const updateGoal = async (id, goalData, lang) => {
   });
   return response.data;
 };
+
+// =====================================================
+// OWNER DASHBOARD
+// GET /owner/dashboard
+// Header: App-Language (ar | en)
+// Permission: owner.dashboard.view
+// =====================================================
+export const getOwnerDashboard = async (lang = "en") => {
+  const response = await axiosInstance.get("/owner/dashboard", {
+    headers: {
+      Accept: "application/json",
+      "App-Language": lang,
+      "Accept-Language": lang,
+    },
+  });
+  return response.data;
+};

@@ -20,8 +20,10 @@ axiosInstance.interceptors.request.use(
     }
 
     // Send Accept-Language based on the stored language preference
-    const lang = localStorage.getItem("language") || "en";
+    const storedLang = localStorage.getItem("i18nextLng");
+    const lang = storedLang && storedLang.startsWith("ar") ? "ar" : "en";
     config.headers["Accept-Language"] = lang;
+    config.headers["App-Language"] = lang;
 
     return config;
   },

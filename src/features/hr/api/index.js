@@ -556,3 +556,21 @@ export const updateAttendanceExceptionStatus = async ({
 
   return response.data;
 };
+
+// =====================================================
+// HR DASHBOARD
+// GET /hr/dashboard
+// Header: App-Language (ar | en)
+// =====================================================
+export const getHrDashboard = async (params = {}, lang = "en") => {
+  const response = await axiosInstance.get("/hr/dashboard", {
+    params,
+    headers: {
+      Accept: "application/json",
+      "App-Language": lang,
+      "Accept-Language": lang,
+    },
+  });
+
+  return response.data;
+};

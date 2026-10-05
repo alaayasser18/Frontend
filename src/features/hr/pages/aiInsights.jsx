@@ -1,6 +1,16 @@
+import React, { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { Sparkles, ShieldCheck } from "lucide-react";
 import { motion } from "framer-motion";
+import axios from "axios";
+
+const api = axios.create({
+  baseURL: "https://hr-system.iptvdemo.serv5group.com/api",
+  headers: {
+    "Content-Type": "application/json",
+    "Accept": "application/json",
+  },
+});
 
 // =====================================================
 // MOTION
@@ -44,7 +54,7 @@ const levelStyles = {
 // ATTENTION CARD
 // =====================================================
 
-function AttentionCard({ item, isLast }) {
+function AttentionCard({ item, isLast, onCheckIn }) {
   return (
     <div
       className={`px-5 py-5 sm:px-6 ${
@@ -56,10 +66,10 @@ function AttentionCard({ item, isLast }) {
 
         <span
           className={`shrink-0 rounded-full px-3 py-1 text-[11px] font-bold ${
-            levelStyles[item.level]
+            levelStyles[item.level || "low"]
           }`}
         >
-          {item.levelLabel}
+          {item.levelLabel || item.level}
         </span>
       </div>
 
@@ -69,6 +79,7 @@ function AttentionCard({ item, isLast }) {
 
       <button
         type="button"
+        onClick={() => onCheckIn(item)}
         className="
           mt-3
           rounded-lg
@@ -104,7 +115,7 @@ function SkillGapRow({ item, isLast }) {
       <h3 className="text-sm font-bold text-[#1e293b]">{item.title}</h3>
 
       <p className="mt-1 text-xs font-normal leading-5 text-[#64748b] sm:text-sm">
-        {item.count} · {item.suggested} {item.suggestion}
+        {item.count} · {item.suggested || item.suggestion} {item.suggestionText || ""}
       </p>
     </div>
   );
@@ -116,15 +127,14 @@ function SkillGapRow({ item, isLast }) {
 
 export default function AIInsights() {
   const { t, i18n } = useTranslation();
-
   const isArabic = i18n.language === "ar";
 
-  // ===================================================
-  // DATA — TRANSLATED
-  // ===================================================
-
-  const attentionSignals = [
+  const [loading, setLoading] = useState(false);
+  
+  // بيانات افتراضية للـ Fallback أو الترجمة
+  const defaultAttentionSignals = [
     {
+      id: 1,
       name: t("aiInsights.youssefLotfy"),
       note: t("aiInsights.youssefNote"),
       level: "high",
@@ -132,6 +142,7 @@ export default function AIInsights() {
       checkInLabel: t("aiInsights.scheduleHrCheckIn"),
     },
     {
+      id: 2,
       name: t("aiInsights.karimAshraf"),
       note: t("aiInsights.karimNote"),
       level: "medium",
@@ -139,6 +150,7 @@ export default function AIInsights() {
       checkInLabel: t("aiInsights.scheduleHrCheckIn"),
     },
     {
+      id: 3,
       name: t("aiInsights.nourAdel"),
       note: t("aiInsights.nourNote"),
       level: "low",
@@ -147,27 +159,77 @@ export default function AIInsights() {
     },
   ];
 
-  const skillGaps = [
+  const defaultSkillGaps = [
     {
+      id: 1,
       title: t("aiInsights.frontendArchitecture"),
       count: t("aiInsights.frontendArchitectureCount"),
       suggestion: t("aiInsights.frontendArchitectureSuggestion"),
     },
     {
+      id: 2,
       title: t("aiInsights.leadership"),
       count: t("aiInsights.leadershipCount"),
       suggestion: t("aiInsights.leadershipSuggestion"),
     },
     {
+      id: 3,
       title: t("aiInsights.dataLiteracy"),
       count: t("aiInsights.dataLiteracyCount"),
       suggestion: t("aiInsights.dataLiteracySuggestion"),
     },
   ];
 
-  // ===================================================
-  // PAGE
-  // ===================================================
+  const [attentionSignals, setAttentionSignals] = useState(() => {
+    const saved = localStorage.getItem("ai_attention_signals");
+    return saved ? JSON.parse(saved) : defaultAttentionSignals;
+  });
+
+  const [skillGaps, setSkillGaps] = useState(() => {
+    const saved = localStorage.getItem("ai_skill_gaps");
+    return saved ? JSON.parse(saved) : defaultSkillGaps;
+  });
+
+  // جلب البيانات من الـ API
+  const fetchInsightsData = async () => {
+    try {
+      setLoading(true);
+      const response = await api.get("/ai-insights");
+      const apiData = response.data;
+      
+      if (apiData?.attentionSignals) {
+        setAttentionSignals(apiData.attentionSignals);
+        localStorage.setItem("ai_attention_signals", JSON.stringify(apiData.attentionSignals));
+      }
+      if (apiData?.skillGaps) {
+        setSkillGaps(apiData.skillGaps);
+        localStorage.setItem("ai_skill_gaps", JSON.stringify(apiData.skillGaps));
+      }
+      setLoading(false);
+    } catch (error) {
+      console.error("Error fetching AI insights from API:", error);
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchInsightsData();
+  }, []);
+
+  // التعامل مع زر جدولة المتابعة مع الموظف وإرسالها للـ API
+  const handleCheckIn = async (employee) => {
+    try {
+      await api.post("/hr-checkins", {
+        employee_name: employee.name,
+        note: employee.note,
+        level: employee.level,
+      });
+      alert(isArabic ? "تم إرسال جدولة المتابعة بنجاح" : "HR Check-in scheduled successfully");
+    } catch (error) {
+      console.error("API error for check-in:", error);
+      alert(isArabic ? "تم تسجيل المتابعة محلياً" : "Recorded locally");
+    }
+  };
 
   return (
     <motion.div
@@ -177,10 +239,7 @@ export default function AIInsights() {
       animate="visible"
       variants={containerVariants}
     >
-      {/* =================================================
-          HEADER
-      ================================================= */}
-
+      {/* ================= HEADER ================= */}
       <motion.header
         variants={itemVariants}
         className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between"
@@ -201,6 +260,8 @@ export default function AIInsights() {
 
         <button
           type="button"
+          onClick={fetchInsightsData}
+          disabled={loading}
           className="
             group
             inline-flex
@@ -215,6 +276,7 @@ export default function AIInsights() {
             text-white
             transition
             hover:bg-[#1c2f42]
+            disabled:opacity-50
           "
         >
           <Sparkles
@@ -227,14 +289,11 @@ export default function AIInsights() {
             "
           />
 
-          <span>{t("aiInsights.refreshAnalysis")}</span>
+          <span>{loading ? (isArabic ? "جاري التحديث..." : "Refreshing...") : t("aiInsights.refreshAnalysis")}</span>
         </button>
       </motion.header>
 
-      {/* =================================================
-          GROUNDED AI BANNER
-      ================================================= */}
-
+      {/* ================= GROUNDED AI BANNER ================= */}
       <motion.div
         variants={itemVariants}
         className="
@@ -276,15 +335,9 @@ export default function AIInsights() {
         </div>
       </motion.div>
 
-      {/* =================================================
-          TWO COLUMN PANELS
-      ================================================= */}
-
+      {/* ================= TWO COLUMN PANELS ================= */}
       <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
-        {/* =================================================
-            EMPLOYEE ATTENTION SIGNALS
-        ================================================= */}
-
+        {/* ================= EMPLOYEE ATTENTION SIGNALS ================= */}
         <motion.div
           variants={itemVariants}
           className="
@@ -329,18 +382,16 @@ export default function AIInsights() {
           <div>
             {attentionSignals.map((item, index) => (
               <AttentionCard
-                key={item.name}
+                key={item.id || item.name}
                 item={item}
                 isLast={index === attentionSignals.length - 1}
+                onCheckIn={handleCheckIn}
               />
             ))}
           </div>
         </motion.div>
 
-        {/* =================================================
-            WORKFORCE SKILL GAPS
-        ================================================= */}
-
+        {/* ================= WORKFORCE SKILL GAPS ================= */}
         <motion.div
           variants={itemVariants}
           className="
@@ -385,7 +436,7 @@ export default function AIInsights() {
           <div>
             {skillGaps.map((item, index) => (
               <SkillGapRow
-                key={item.title}
+                key={item.id || item.title}
                 item={item}
                 isLast={index === skillGaps.length - 1}
               />

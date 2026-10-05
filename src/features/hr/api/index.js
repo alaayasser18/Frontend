@@ -224,9 +224,42 @@ export const createDepartment = async (departmentData, lang = "en") => {
   return response.data;
 };
 
+// UPDATE DEPARTMENT
+// PATCH /departments/{id} (Owner / HR only)
+export const updateDepartment = async (id, departmentData, lang = "en") => {
+  const response = await axiosInstance.patch(
+    `/departments/${id}`,
+    departmentData,
+    {
+      headers: {
+        "Accept-Language": lang,
+      },
+    },
+  );
+
+  return response.data;
+};
+
+// TOGGLE DEPARTMENT STATUS
+// PATCH /departments/{id}/change-status (Owner / HR only)
+export const changeDepartmentStatus = async (id, lang = "en") => {
+  const response = await axiosInstance.patch(
+    `/departments/${id}/change-status`,
+    undefined,
+    {
+      headers: {
+        "Accept-Language": lang,
+      },
+    },
+  );
+
+  return response.data;
+};
+
 // GET DEPARTMENT MANAGERS
 export const getDepartmentManagers = async (lang = "en") => {
   const response = await axiosInstance.get("/departments/managers-dropdown", {
+    params: { lang },
     headers: {
       "Accept-Language": lang,
     },

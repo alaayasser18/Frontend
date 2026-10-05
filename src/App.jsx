@@ -53,6 +53,7 @@ import TeamGoals from "./features/manager/pages/TeamGoals";
 import PerformanceAnalytics from "./features/manager/pages/PerformanceAnalytics";
 import TeamAttendance from "./features/manager/pages/TeamAttendance";
 import TeamLeaveApprovals from "./features/manager/pages/TeamLeaveApprovals";
+import DepartmentDirectory from "./features/departments/pages/DepartmentDirectory";
 import AITeamInsights from "./features/manager/pages/AITeamInsights";
 import ProfileSetting from "./features/manager/pages/ProfileSetting";
 import ManagerHolidays from "./features/manager/pages/Holidays";
@@ -255,6 +256,11 @@ function App() {
               <Route path="/admin/attendance" element={<AdminAttendance />} />
 
               <Route
+                path="/admin/departments"
+                element={<HrDepartments role="owner" />}
+              />
+
+              <Route
                 path="/admin/leave-requests"
                 element={<HrLeaveRequests role="owner" />}
               />
@@ -372,6 +378,11 @@ function App() {
               <Route path="/manager/attendance" element={<TeamAttendance />} />
 
               <Route
+                path="/manager/departments"
+                element={<DepartmentDirectory />}
+              />
+
+              <Route
                 path="/manager/leave-approvals"
                 element={<TeamLeaveApprovals />}
               />
@@ -398,6 +409,11 @@ function App() {
               <Route path="/employee/dashboard" element={<HomeDashboard />} />
 
               <Route path="/employee/attendance" element={<Attendance />} />
+
+              <Route
+                path="/employee/departments"
+                element={<DepartmentDirectory />}
+              />
 
               <Route path="/employee/tasks" element={<Tasks />} />
 

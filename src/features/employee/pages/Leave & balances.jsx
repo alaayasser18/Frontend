@@ -38,6 +38,7 @@ import { useHolidays } from "../../../hooks/useHolidays";
 
 export default function LeaveBalances() {
   const { t, i18n } = useTranslation();
+  const isRtl = i18n.language?.startsWith("ar");
   const { data: holidaysList } = useHolidays();
   const lang = isRtl ? "ar" : "en";
   const year = new Date().getFullYear();

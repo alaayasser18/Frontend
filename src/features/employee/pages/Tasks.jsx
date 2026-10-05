@@ -535,8 +535,8 @@ const Tasks = () => {
       const submissions = Array.isArray(apiTask.submissions)
         ? apiTask.submissions
         : apiTask.submission
-        ? [apiTask.submission]
-        : [];
+          ? [apiTask.submission]
+          : [];
 
       setDetailsTask({
         ...mapApiTask(apiTask, isRtl),
@@ -695,10 +695,9 @@ const Tasks = () => {
             ? "تمت إعادة تسليم المهمة بنجاح"
             : "Submission resubmitted successfully"
           : isRtl
-          ? "تم تسليم المهمة بنجاح للمراجعة"
-          : "Deliverable submitted successfully for review",
-        `"${selectedTask.defaultTitle}" ${
-          isRtl ? "بانتظار مراجعة المسؤول" : "is now pending review"
+            ? "تم تسليم المهمة بنجاح للمراجعة"
+            : "Deliverable submitted successfully for review",
+        `"${selectedTask.defaultTitle}" ${isRtl ? "بانتظار مراجعة المسؤول" : "is now pending review"
         }.`
       );
     } catch (e) {
@@ -728,9 +727,9 @@ const Tasks = () => {
           submissions: (prev.submissions || []).map((sub) =>
             sub.id === submissionId
               ? {
-                  ...sub,
-                  attachments: [...(sub.attachments || []), newAttachment],
-                }
+                ...sub,
+                attachments: [...(sub.attachments || []), newAttachment],
+              }
               : sub
           ),
         }));
@@ -830,7 +829,7 @@ const Tasks = () => {
       if (response.status === 422) {
         setStatusError(
           json?.message ||
-            "Invalid status transition — this status change is not allowed."
+          "Invalid status transition — this status change is not allowed."
         );
         return;
       }
@@ -1222,17 +1221,6 @@ const Tasks = () => {
             {t("tasks.subtitle", "Stay on top of your priorities and deliverables.")}
           </p>
         </div>
-
-        <motion.button
-          whileHover={{ scale: 1.02 }}
-          whileTap={{ scale: 0.98 }}
-          type="button"
-          onClick={openCreateModal}
-          className="inline-flex items-center gap-2 rounded-xl bg-[#1c364f] px-4 py-2.5 text-xs font-semibold text-white transition hover:bg-[#284761] shadow-sm shrink-0 self-start sm:self-auto"
-        >
-          <FiPlus className="h-4 w-4" />
-          <span>{t("tasks.createTask", "Create Task")}</span>
-        </motion.button>
       </motion.div>
 
       {/* API ERROR */}
@@ -1267,17 +1255,15 @@ const Tasks = () => {
               whileTap={{ scale: 0.96 }}
               type="button"
               onClick={() => setActiveFilter(f.id)}
-              className={`relative inline-flex items-center gap-2 rounded-full px-4 py-1.5 text-xs font-semibold transition-colors duration-200 ${
-                isActive
+              className={`relative inline-flex items-center gap-2 rounded-full px-4 py-1.5 text-xs font-semibold transition-colors duration-200 ${isActive
                   ? "bg-[#1c364f] text-white"
                   : "bg-white border border-[#e2e8f0] text-[#64748b] hover:bg-[#f8fafc]"
-              }`}
+                }`}
             >
               <span>{t(f.labelKey, f.defaultLabel)}</span>
               <span
-                className={`inline-flex h-4 min-w-[16px] items-center justify-center rounded-full px-1 text-[10px] ${
-                  isActive ? "bg-white/20 text-white" : "bg-[#f1f5f9] text-[#64748b]"
-                }`}
+                className={`inline-flex h-4 min-w-[16px] items-center justify-center rounded-full px-1 text-[10px] ${isActive ? "bg-white/20 text-white" : "bg-[#f1f5f9] text-[#64748b]"
+                  }`}
               >
                 {count}
               </span>
@@ -1334,9 +1320,8 @@ const Tasks = () => {
                       <button
                         type="button"
                         onClick={() => openStatusModal(task)}
-                        className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold transition hover:opacity-80 hover:scale-[1.03] ${
-                          STATUS_BADGES[task.statusLabel] || "bg-[#f1f5f9] text-[#64748b]"
-                        }`}
+                        className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold transition hover:opacity-80 hover:scale-[1.03] ${STATUS_BADGES[task.statusLabel] || "bg-[#f1f5f9] text-[#64748b]"
+                          }`}
                         title="Change status"
                       >
                         <FiRefreshCw className="h-3 w-3" />
@@ -1501,11 +1486,10 @@ const Tasks = () => {
                 <button
                   type="button"
                   onClick={() => setDetailsTab("details")}
-                  className={`flex-1 inline-flex items-center justify-center gap-2 rounded-lg py-2 text-xs font-semibold transition ${
-                    detailsTab === "details"
+                  className={`flex-1 inline-flex items-center justify-center gap-2 rounded-lg py-2 text-xs font-semibold transition ${detailsTab === "details"
                       ? "bg-white text-[#102a43] shadow-sm"
                       : "text-[#64748b] hover:text-[#102a43]"
-                  }`}
+                    }`}
                 >
                   <FiFileText className="h-3.5 w-3.5" />
                   {t("tasks.tabs.details", "Details")}
@@ -1514,11 +1498,10 @@ const Tasks = () => {
                 <button
                   type="button"
                   onClick={() => setDetailsTab("submissions")}
-                  className={`flex-1 inline-flex items-center justify-center gap-2 rounded-lg py-2 text-xs font-semibold transition ${
-                    detailsTab === "submissions"
+                  className={`flex-1 inline-flex items-center justify-center gap-2 rounded-lg py-2 text-xs font-semibold transition ${detailsTab === "submissions"
                       ? "bg-white text-[#102a43] shadow-sm"
                       : "text-[#64748b] hover:text-[#102a43]"
-                  }`}
+                    }`}
                 >
                   <FiUploadCloud className="h-3.5 w-3.5" />
                   {isRtl ? "التسليمات" : "Submissions"}
@@ -1532,11 +1515,10 @@ const Tasks = () => {
                 <button
                   type="button"
                   onClick={() => setDetailsTab("activity")}
-                  className={`flex-1 inline-flex items-center justify-center gap-2 rounded-lg py-2 text-xs font-semibold transition ${
-                    detailsTab === "activity"
+                  className={`flex-1 inline-flex items-center justify-center gap-2 rounded-lg py-2 text-xs font-semibold transition ${detailsTab === "activity"
                       ? "bg-white text-[#102a43] shadow-sm"
                       : "text-[#64748b] hover:text-[#102a43]"
-                  }`}
+                    }`}
                 >
                   <FiActivity className="h-3.5 w-3.5" />
                   {t("tasks.tabs.activity", "Activity")}
@@ -1585,10 +1567,9 @@ const Tasks = () => {
                             closeTaskDetails();
                             openStatusModal(detailsTask);
                           }}
-                          className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold transition hover:opacity-80 ${
-                            STATUS_BADGES[detailsTask.statusLabel] ||
+                          className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold transition hover:opacity-80 ${STATUS_BADGES[detailsTask.statusLabel] ||
                             "bg-[#f1f5f9] text-[#64748b]"
-                          }`}
+                            }`}
                           title="Change status"
                         >
                           <FiRefreshCw className="h-3 w-3" />
@@ -1726,15 +1707,14 @@ const Tasks = () => {
                           {/* Submission Header */}
                           <div className="flex items-center justify-between gap-3">
                             <span
-                              className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-semibold ${
-                                isApproved
+                              className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-semibold ${isApproved
                                   ? "bg-[#f0fdf4] text-[#15803d]"
                                   : isChangesReq
-                                  ? "bg-[#fff7ed] text-[#c2410c]"
-                                  : isRejected
-                                  ? "bg-[#fef2f2] text-[#b91c1c]"
-                                  : "bg-[#fef3c7] text-[#b45309]"
-                              }`}
+                                    ? "bg-[#fff7ed] text-[#c2410c]"
+                                    : isRejected
+                                      ? "bg-[#fef2f2] text-[#b91c1c]"
+                                      : "bg-[#fef3c7] text-[#b45309]"
+                                }`}
                             >
                               {sub.status || "Pending Review"}
                             </span>
@@ -1805,8 +1785,8 @@ const Tasks = () => {
                                       ? "جارٍ الرفع..."
                                       : "Uploading..."
                                     : isRtl
-                                    ? "إرفاق ملف إضافي"
-                                    : "Attach File"}
+                                      ? "إرفاق ملف إضافي"
+                                      : "Attach File"}
                                 </span>
                                 <input
                                   type="file"
@@ -1975,16 +1955,16 @@ const Tasks = () => {
                               {/* old → new لو موجودين */}
                               {(activity.old_value !== null ||
                                 activity.new_value !== null) && (
-                                <div className="mt-1.5 inline-flex items-center gap-2 rounded-lg bg-[#f8fafc] border border-[#f1f5f9] px-2.5 py-1 text-[11px] text-[#64748b]">
-                                  <span className="line-through decoration-[#cbd5e1]">
-                                    {activity.old_value ?? "—"}
-                                  </span>
-                                  <span className="text-[#94a3b8]">→</span>
-                                  <span className="font-bold text-[#102a43]">
-                                    {activity.new_value ?? "—"}
-                                  </span>
-                                </div>
-                              )}
+                                  <div className="mt-1.5 inline-flex items-center gap-2 rounded-lg bg-[#f8fafc] border border-[#f1f5f9] px-2.5 py-1 text-[11px] text-[#64748b]">
+                                    <span className="line-through decoration-[#cbd5e1]">
+                                      {activity.old_value ?? "—"}
+                                    </span>
+                                    <span className="text-[#94a3b8]">→</span>
+                                    <span className="font-bold text-[#102a43]">
+                                      {activity.new_value ?? "—"}
+                                    </span>
+                                  </div>
+                                )}
 
                               <p className="text-[11px] text-[#94a3b8] mt-1.5 m-0">
                                 {formatDateTime(activity.created_at, isRtl)}
@@ -2043,9 +2023,8 @@ const Tasks = () => {
               <div className="flex items-center gap-2 mb-4">
                 <span className="text-xs text-[#829ab1]">Current:</span>
                 <span
-                  className={`inline-flex items-center rounded-full px-3 py-0.5 text-xs font-semibold ${
-                    STATUS_BADGES[statusTask.statusLabel] || "bg-[#f1f5f9] text-[#64748b]"
-                  }`}
+                  className={`inline-flex items-center rounded-full px-3 py-0.5 text-xs font-semibold ${STATUS_BADGES[statusTask.statusLabel] || "bg-[#f1f5f9] text-[#64748b]"
+                    }`}
                 >
                   {statusTask.statusLabel}
                 </span>
@@ -2069,13 +2048,12 @@ const Tasks = () => {
                       type="button"
                       disabled={isCurrent || changingStatus}
                       onClick={() => setNewStatus(status)}
-                      className={`rounded-xl border px-3 py-2.5 text-xs font-semibold transition ${
-                        isCurrent
+                      className={`rounded-xl border px-3 py-2.5 text-xs font-semibold transition ${isCurrent
                           ? "border-[#e2e8f0] bg-[#f8fafc] text-[#94a3b8] cursor-default"
                           : isSelected
-                          ? "border-[#1c364f] bg-[#1c364f] text-white shadow-sm"
-                          : "border-[#e2e8f0] bg-white text-[#486581] hover:border-[#cbd5e1] hover:bg-[#f8fafc]"
-                      }`}
+                            ? "border-[#1c364f] bg-[#1c364f] text-white shadow-sm"
+                            : "border-[#e2e8f0] bg-white text-[#486581] hover:border-[#cbd5e1] hover:bg-[#f8fafc]"
+                        }`}
                     >
                       {isCurrent ? `${status} (current)` : status}
                     </button>
@@ -2607,9 +2585,9 @@ const Tasks = () => {
                         ? "وضح ما قمت بتعديله في هذا التسليم الجديد..."
                         : "Describe the changes made in this resubmission..."
                       : t(
-                          "tasks.form.notesPlaceholder",
-                          "Add notes about this deliverable..."
-                        )
+                        "tasks.form.notesPlaceholder",
+                        "Add notes about this deliverable..."
+                      )
                   }
                   required
                   className="w-full resize-none rounded-xl border border-[#d9e2ec] px-3.5 py-2.5 text-xs text-[#102a43] placeholder:text-[#94a3b8] focus:outline-none focus:border-[#486581] focus:ring-1 focus:ring-[#486581] transition"
@@ -2663,10 +2641,10 @@ const Tasks = () => {
                       ? "جارٍ الإرسال..."
                       : "Submitting..."
                     : resubmissionTarget
-                    ? isRtl
-                      ? "إعادة التسليم"
-                      : "Resubmit Deliverable"
-                    : t("tasks.form.submitForReview", "Submit for review")}
+                      ? isRtl
+                        ? "إعادة التسليم"
+                        : "Resubmit Deliverable"
+                      : t("tasks.form.submitForReview", "Submit for review")}
                 </span>
                 {!submittingProgress && (
                   <span className="text-sm">{isRtl ? "←" : "→"}</span>
@@ -2685,9 +2663,8 @@ const Tasks = () => {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -15, scale: 0.96 }}
             transition={{ duration: 0.3, ease: "easeOut" }}
-            className={`fixed top-5 ${
-              isRtl ? "left-5" : "right-5"
-            } z-[100] flex items-center gap-3 rounded-xl border border-[#d9e2ec] bg-white px-4 py-3 shadow-[0_10px_30px_rgba(16,42,67,0.12)]`}
+            className={`fixed top-5 ${isRtl ? "left-5" : "right-5"
+              } z-[100] flex items-center gap-3 rounded-xl border border-[#d9e2ec] bg-white px-4 py-3 shadow-[0_10px_30px_rgba(16,42,67,0.12)]`}
           >
             <div className="flex size-9 items-center justify-center rounded-full bg-[#e8f3eb] text-[#3f7d5a]">
               <FiCheckCircle className="h-4 w-4" />

@@ -2049,7 +2049,12 @@
     "paymentTestsName": "Payment tests",
     "youssefLotfy": "Youssef Lotfy",
     "salmaNabil": "Salma Nabil",
-    "karimAshraf": "Karim Ashraf"
+    "karimAshraf": "Karim Ashraf",
+    "breadcrumb": "Manager Portal / Team Dashboard",
+    "loadError": "Failed to load dashboard data.",
+    "retry": "Try again",
+    "noWorkloadAlert": "No workload alerts right now. Your team's workload looks balanced.",
+    "noPendingSubmissions": "No pending submissions to review."
   },
   "managerTasks": {
     "title": "Task Management",

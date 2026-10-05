@@ -5,7 +5,6 @@ import {
   MdAttachMoney,
   MdLocationCity,
   MdEventNote,
-  MdSettings,
   MdNotifications,
   MdAssessment,
   MdHistory,
@@ -35,6 +34,7 @@ import {
   MdInsights,
   MdCalendarToday,
   MdEventAvailable,
+  MdDateRange,
 } from "react-icons/md";
 
 import { LuSparkles } from "react-icons/lu";
@@ -65,6 +65,13 @@ export const navConfig = {
       title: "Branches",
       path: "/admin/branches",
       icon: MdLocationCity,
+      section: "OPERATIONS",
+    },
+    {
+      titleKey: "portal.submissionReviews",
+      title: "Submission Reviews",
+      path: "/admin/submissions",
+      icon: MdDescription,
       section: "OPERATIONS",
     },
 
@@ -111,6 +118,18 @@ export const navConfig = {
       title: "Attendance",
       path: "/admin/attendance",
       icon: MdCalendarMonth,
+    },
+    {
+      titleKey: "portal.leaveRequests",
+      title: "Leave Requests",
+      path: "/admin/leave-requests",
+      icon: MdEventNote,
+    },
+    {
+      titleKey: "portal.holidays",
+      title: "Holidays & Seasons",
+      path: "/admin/holidays",
+      icon: MdEventAvailable,
     },
     {
       titleKey: "portal.auditLogs",
@@ -169,6 +188,13 @@ export const navConfig = {
       titleKey: "portal.leaveRequests",
       path: "/hr/leave-requests",
       icon: MdEventNote,
+      section: "OPERATIONS",
+    },
+    {
+      titleKey: "portal.submissionReviews",
+      title: "Submission Reviews",
+      path: "/hr/submissions",
+      icon: MdDescription,
       section: "OPERATIONS",
     },
 
@@ -304,6 +330,12 @@ export const navConfig = {
       icon: MdEventAvailable,
     },
     {
+      titleKey: "portal.holidays",
+      title: "Official Holidays",
+      path: "/manager/holidays",
+      icon: MdDateRange,
+    },
+    {
       titleKey: "portal.aiTeamInsights",
       title: "AI Team Insights",
       path: "/manager/ai-insights",
@@ -351,6 +383,12 @@ export const navConfig = {
       title: "Leave & Balances",
       path: "/employee/leaves",
       icon: FiCalendar,
+    },
+    {
+      titleKey: "portal.holidays",
+      title: "Company Holidays",
+      path: "/employee/holidays",
+      icon: MdEventAvailable,
     },
     {
       titleKey: "portal.myPerformance",

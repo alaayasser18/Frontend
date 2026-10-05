@@ -5,7 +5,7 @@ import {
   rejectLeaveRequest,
 } from "../api";
 
-export const useHrPendingLeaveRequests = (lang = "en") =>
+export const useHrPendingLeaveRequests = (lang = "en", enabled = true) =>
   useQuery({
     queryKey: ["leaveRequests", "hrPending", lang],
     queryFn: async () => {
@@ -26,6 +26,7 @@ export const useHrPendingLeaveRequests = (lang = "en") =>
 
       return requests;
     },
+    enabled,
   });
 
 export const useApproveLeaveRequest = (lang = "en") => {

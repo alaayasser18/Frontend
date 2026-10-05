@@ -80,6 +80,24 @@ export const getManagerEmployees = async ({
 };
 
 // =====================================================
+// GET MANAGER PENDING LEAVE REQUESTS
+// GET /api/leaves/leave-requests/manager/pending
+// =====================================================
+export const getManagerPendingLeaveRequests = async (lang = "en") => {
+  const response = await axiosInstance.get(
+    "/leaves/leave-requests/manager/pending",
+    {
+      params: { lang },
+      headers: {
+        "Accept-Language": lang,
+      },
+    },
+  );
+
+  return response.data;
+};
+
+// =====================================================
 // CREATE GOAL
 // POST /api/goals
 // Owner / HR / Manager
@@ -102,3 +120,9 @@ export const updateGoal = async (id, data) => {
 
   return response.data;
 };
+
+// =====================================================
+// TASK SUBMISSIONS API (Manager / HR / Owner / Employee)
+// =====================================================
+export * from "../../../services/submissionsApi";
+

@@ -126,3 +126,8 @@ export const updateGoal = async (id, data) => {
 // =====================================================
 export * from "../../../services/submissionsApi";
 
+// =====================================================
+// TASKS API (Manager / HR / Owner / Employee)
+// =====================================================
+export * from "../../../services/tasksApi";
+

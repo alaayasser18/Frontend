@@ -74,6 +74,13 @@ export const navConfig = {
       icon: MdDescription,
       section: "OPERATIONS",
     },
+    {
+      titleKey: "portal.taskManagement",
+      title: "Task Management",
+      path: "/admin/tasks",
+      icon: MdChecklist,
+      section: "OPERATIONS",
+    },
 
     // ================= FINANCIAL & REWARDS =================
     {
@@ -195,6 +202,13 @@ export const navConfig = {
       title: "Submission Reviews",
       path: "/hr/submissions",
       icon: MdDescription,
+      section: "OPERATIONS",
+    },
+    {
+      titleKey: "portal.taskManagement",
+      title: "Task Management",
+      path: "/hr/tasks",
+      icon: MdChecklist,
       section: "OPERATIONS",
     },
 

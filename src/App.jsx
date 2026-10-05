@@ -282,6 +282,10 @@ function App() {
                 path="/admin/submissions"
                 element={<SubmissionReviews role="Owner" />}
               />
+              <Route
+                path="/admin/tasks"
+                element={<TaskManagement role="Owner" />}
+              />
 
               <Route path="/branches" element={<Branches />} />
             </Route>
@@ -316,6 +320,10 @@ function App() {
                 <Route
                   path="submissions"
                   element={<SubmissionReviews role="HR" />}
+                />
+                <Route
+                  path="tasks"
+                  element={<TaskManagement role="HR" />}
                 />
                 <Route
                   path="evaluations-goals"

@@ -658,7 +658,7 @@ const Tasks = () => {
         await fetch(
           `${buildUrl(`${ENDPOINT_TASKS}/${selectedTask.apiId}/progress`)}?lang=${lang}`,
           {
-            method: "PUT",
+            method: "PATCH",
             headers: {
               Accept: "application/json",
               "Content-Type": "application/json",
@@ -787,7 +787,7 @@ const Tasks = () => {
       const response = await fetch(
         `${buildUrl(`${ENDPOINT_TASKS}/${statusTask.apiId}/status`)}?lang=${lang}`,
         {
-          method: "PUT",
+          method: "PATCH",
           headers: {
             Accept: "application/json",
             "Content-Type": "application/json",

@@ -226,6 +226,7 @@
     "due": "Due",
     "submitDeliverable": "Submit deliverable",
     "awaitingReview": "Awaiting review",
+    "underReviewView": "Deliverable Under Review",
     "completed": "Completed",
     "noTasks": "No tasks here",
     "allCaughtUp": "You're all caught up.",

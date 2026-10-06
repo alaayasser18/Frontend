@@ -54,6 +54,9 @@ const PRIORITY_STYLES = {
 const STATUS_BADGES = {
   Pending: "bg-[#fffaf0] text-[#d97706] border border-[#fde68a]",
   "In Progress": "bg-[#eff6ff] text-[#2563eb] border border-[#bfdbfe]",
+  "Under Review": "bg-[#fef3c7] text-[#b45309] border border-[#fde68a]",
+  "under-review": "bg-[#fef3c7] text-[#b45309] border border-[#fde68a]",
+  "Changes Requested": "bg-[#fff7ed] text-[#c2410c] border border-[#ffedd5]",
   Completed: "bg-[#f0fdf4] text-[#16a34a] border border-[#bbf7d0]",
   Closed: "bg-[#f1f5f9] text-[#64748b] border border-[#e2e8f0]",
 };
@@ -193,28 +196,89 @@ const TaskManagement = ({ role: propRole }) => {
   // Fetch Team Members (Dropdown & Reassign)
   const fetchEmployees = useCallback(async () => {
     try {
+      const extractEmployees = (res) => {
+        const d = res?.data;
+        if (!d) return [];
+        if (Array.isArray(d?.data?.employees)) return d.data.employees;
+        if (Array.isArray(d?.employees)) return d.employees;
+        if (Array.isArray(d?.data?.data)) return d.data.data;
+        if (Array.isArray(d?.data)) return d.data;
+        if (Array.isArray(d)) return d;
+        return [];
+      };
+
       let emps = [];
-      try {
-        const res = await axiosInstance.get("/manager/employees");
-        emps = res.data?.data?.data || res.data?.data || [];
-      } catch {
-        const res2 = await axiosInstance.get("/employees");
-        emps = res2.data?.data?.data || res2.data?.data || [];
+      const isHrOrOwner = portalRole === "HR" || portalRole === "Owner";
+
+      if (isHrOrOwner) {
+        // HR & Owner: GET /api/employees is the official route
+        try {
+          const res = await axiosInstance.get("/employees", {
+            params: { per_page: 100 },
+          });
+          emps = extractEmployees(res);
+        } catch (err) {
+          console.warn(
+            "Could not load /employees, attempting /manager/employees fallback:",
+            err
+          );
+        }
+
+        if (emps.length === 0) {
+          try {
+            const fallbackRes = await axiosInstance.get("/manager/employees", {
+              params: { per_page: 100 },
+            });
+            emps = extractEmployees(fallbackRes);
+          } catch (e) {
+            // ignore
+          }
+        }
+      } else {
+        // Manager: GET /api/manager/employees is the official route
+        try {
+          const res = await axiosInstance.get("/manager/employees", {
+            params: { per_page: 100 },
+          });
+          emps = extractEmployees(res);
+        } catch (err) {
+          console.warn(
+            "Could not load /manager/employees, attempting /employees fallback:",
+            err
+          );
+        }
+
+        if (emps.length === 0) {
+          try {
+            const fallbackRes = await axiosInstance.get("/employees", {
+              params: { per_page: 100 },
+            });
+            emps = extractEmployees(fallbackRes);
+          } catch (e) {
+            // ignore
+          }
+        }
       }
-      if (Array.isArray(emps)) {
+
+      if (Array.isArray(emps) && emps.length > 0) {
         setTeamMembers(
           emps.map((e) => ({
             id: e.id,
-            name: e.name || `${e.first_name || ""} ${e.last_name || ""}`.trim() || `User #${e.id}`,
+            name:
+              e.name ||
+              `${e.first_name || ""} ${e.last_name || ""}`.trim() ||
+              `User #${e.id}`,
             email: e.email,
-            role: e.role,
+            role: e.role_label || e.role,
+            job_title: e.job_title,
+            employee_code: e.employee_code,
           }))
         );
       }
     } catch (e) {
       console.warn("Could not load employees list:", e);
     }
-  }, []);
+  }, [portalRole]);
 
   // Fetch Tasks List
   const fetchTasksList = useCallback(
@@ -340,7 +404,7 @@ const TaskManagement = ({ role: propRole }) => {
       description: "",
       priority: "High",
       deadline: "",
-      assignToUserId: teamMembers[0]?.id ? String(teamMembers[0].id) : "",
+      assignToUserId: "",
     });
     setCreateError(null);
     setIsCreateOpen(true);
@@ -888,6 +952,26 @@ const TaskManagement = ({ role: propRole }) => {
                             title={isRtl ? "سجل النشاطات" : "Activity Log"}
                           >
                             <FiActivity className="w-4 h-4" />
+                          </button>
+
+                          {/* View Submissions Shortcut */}
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const targetPath =
+                                portalRole === "Owner"
+                                  ? "/admin/submissions"
+                                  : portalRole === "HR"
+                                  ? "/hr/submissions"
+                                  : "/manager/submissions";
+                              navigate(targetPath, {
+                                state: { searchQuery: task.title },
+                              });
+                            }}
+                            className="p-1.5 text-[#64748b] hover:text-[#102a43] hover:bg-[#f1f5f9] rounded-lg transition"
+                            title={isRtl ? "عرض تسليمات المهمة" : "View Task Submissions"}
+                          >
+                            <FiEye className="w-4 h-4" />
                           </button>
                         </div>
                       </td>

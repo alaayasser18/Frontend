@@ -25,16 +25,21 @@ export const submitTask = async (taskId, { note, files } = {}, { lang } = {}) =>
   formData.append("note", note || "");
 
   if (files) {
+    let fileList = [];
     if (Array.isArray(files)) {
-      files.forEach((file) => {
-        if (file) formData.append("files[]", file);
-      });
+      fileList = files.filter(Boolean);
     } else if (typeof FileList !== "undefined" && files instanceof FileList) {
-      Array.from(files).forEach((file) => {
-        formData.append("files[]", file);
-      });
+      fileList = Array.from(files);
     } else if (typeof File !== "undefined" && files instanceof File) {
-      formData.append("files[]", files);
+      fileList = [files];
+    }
+
+    fileList.forEach((file) => {
+      formData.append("files[]", file);
+    });
+
+    if (fileList.length === 1) {
+      formData.append("file", fileList[0]);
     }
   }
 

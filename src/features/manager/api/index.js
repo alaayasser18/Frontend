@@ -134,6 +134,62 @@ export const getManagerDashboard = async (lang) => {
 
   return response.data;
 };
+
+// =====================================================
+// GET MANAGER TEAM ATTENDANCE TODAY
+// GET /api/manager/attendance/today
+// Manager only
+// =====================================================
+export const getManagerTeamAttendanceToday = async ({
+  date = "",
+  status = "",
+  search = "",
+  per_page = 15,
+  page = 1,
+  lang = "en",
+} = {}) => {
+  const params = {
+    per_page,
+    page,
+    ...(date ? { date } : {}),
+    ...(status ? { status } : {}),
+    ...(search ? { search } : {}),
+    ...(lang ? { lang } : {}),
+  };
+
+  const response = await axiosInstance.get("/manager/attendance/today", {
+    params,
+    headers: lang ? { "Accept-Language": lang } : undefined,
+  });
+
+  return response.data;
+};
+
+// =====================================================
+// GET MANAGER EMPLOYEE ATTENDANCE DETAIL
+// GET /api/manager/attendance/{employeeId}
+// Manager only
+// =====================================================
+export const getManagerEmployeeAttendanceDetail = async (
+  employeeId,
+  { date = "", lang = "en" } = {}
+) => {
+  const params = {
+    ...(date ? { date } : {}),
+    ...(lang ? { lang } : {}),
+  };
+
+  const response = await axiosInstance.get(
+    `/manager/attendance/${employeeId}`,
+    {
+      params,
+      headers: lang ? { "Accept-Language": lang } : undefined,
+    }
+  );
+
+  return response.data;
+};
+
 // =====================================================
 // TASK SUBMISSIONS API (Manager / HR / Owner / Employee)
 // =====================================================
@@ -143,4 +199,5 @@ export * from "../../../services/submissionsApi";
 // TASKS API (Manager / HR / Owner / Employee)
 // =====================================================
 export * from "../../../services/tasksApi";
+
 

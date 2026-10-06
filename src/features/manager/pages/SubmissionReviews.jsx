@@ -285,6 +285,24 @@ const SubmissionReviews = ({ role: propRole }) => {
       setSubmissions((prev) =>
         prev.map((s) => (s.id === id ? { ...s, status: "Approved" } : s))
       );
+
+      try {
+        const sub = submissions.find((s) => s.id === id);
+        const taskId = sub?.task_id || sub?.task?.id;
+        if (taskId) {
+          const cache = JSON.parse(
+            localStorage.getItem("wisework_task_submissions_cache") || "{}"
+          );
+          if (cache[taskId]) {
+            cache[taskId] = { ...cache[taskId], status: "Approved" };
+            localStorage.setItem(
+              "wisework_task_submissions_cache",
+              JSON.stringify(cache)
+            );
+          }
+        }
+      } catch (e) {}
+
       showToast(
         t(
           "managerSubmissions.toastApproved",
@@ -355,6 +373,23 @@ const SubmissionReviews = ({ role: propRole }) => {
             : s
         )
       );
+
+      try {
+        const taskId =
+          changeModalSubmission?.task_id || changeModalSubmission?.task?.id;
+        if (taskId) {
+          const cache = JSON.parse(
+            localStorage.getItem("wisework_task_submissions_cache") || "{}"
+          );
+          if (cache[taskId]) {
+            cache[taskId] = { ...cache[taskId], status: "Changes Requested" };
+            localStorage.setItem(
+              "wisework_task_submissions_cache",
+              JSON.stringify(cache)
+            );
+          }
+        }
+      } catch (e) {}
 
       handleCloseChangeModal();
       showToast(
@@ -427,6 +462,23 @@ const SubmissionReviews = ({ role: propRole }) => {
             : s
         )
       );
+
+      try {
+        const taskId =
+          rejectModalSubmission?.task_id || rejectModalSubmission?.task?.id;
+        if (taskId) {
+          const cache = JSON.parse(
+            localStorage.getItem("wisework_task_submissions_cache") || "{}"
+          );
+          if (cache[taskId]) {
+            cache[taskId] = { ...cache[taskId], status: "Rejected" };
+            localStorage.setItem(
+              "wisework_task_submissions_cache",
+              JSON.stringify(cache)
+            );
+          }
+        }
+      } catch (e) {}
 
       handleCloseRejectModal();
       showToast(t("managerSubmissions.toastRejected", "Submission rejected"));

@@ -279,6 +279,7 @@
     "due": "موعد التسليم",
     "submitDeliverable": "تقديم المهمة",
     "awaitingReview": "في انتظار المراجعة",
+    "underReviewView": "التسليم قيد المراجعة",
     "completed": "مكتملة",
     "noTasks": "لا توجد مهام هنا",
     "allCaughtUp": "لقد أنجزت جميع مهامك.",

@@ -18,7 +18,15 @@ import {
   FiRefreshCw,
   FiActivity,
   FiFileText,
+  FiPaperclip,
+  FiExternalLink,
 } from "react-icons/fi";
+import {
+  submitTask,
+  attachSubmissionFile,
+  resubmitSubmission,
+  getSubmissionDetails,
+} from "../../../services/submissionsApi";
 
 // =========================
 // API CONFIG
@@ -51,6 +59,19 @@ const buildUrl = (path) => {
   return API_ROOT.endsWith("/api") && cleanPath.startsWith("/api")
     ? `${API_ROOT.replace(/\/api$/, "")}${cleanPath}`
     : `${API_ROOT}${cleanPath}`;
+};
+
+const getFileUrl = (filePath) => {
+  if (!filePath) return "#";
+  if (
+    filePath.startsWith("http://") ||
+    filePath.startsWith("https://") ||
+    filePath.startsWith("blob:")
+  ) {
+    return filePath;
+  }
+  const root = API_ROOT.replace(/\/api\/?$/, "");
+  return `${root}/storage/${filePath.replace(/^\/+/, "")}`;
 };
 
 // =========================
@@ -191,7 +212,7 @@ const formatDeadlineForInput = (iso) => {
 
   const pad = (n) => String(n).padStart(2, "0");
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(
-    d.getDate()
+    d.getDate(),
   )}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
 };
 
@@ -200,9 +221,96 @@ const formatDeadlineForApi = (datetimeLocal) => {
   return `${datetimeLocal.replace("T", " ")}:00`;
 };
 
+const SUBMISSION_STORAGE_KEY = "wisework_task_submissions_cache";
+
+const getSavedSubmissions = () => {
+  try {
+    const raw = localStorage.getItem(SUBMISSION_STORAGE_KEY);
+    return raw ? JSON.parse(raw) : {};
+  } catch {
+    return {};
+  }
+};
+
+const saveSubmissionForTask = (taskId, submissionData) => {
+  if (!taskId) return;
+  try {
+    const all = getSavedSubmissions();
+    all[taskId] = {
+      ...(all[taskId] || {}),
+      ...submissionData,
+      task_id: taskId,
+      updated_at: new Date().toISOString(),
+    };
+    localStorage.setItem(SUBMISSION_STORAGE_KEY, JSON.stringify(all));
+  } catch (e) {
+    console.warn("Could not save submission to storage:", e);
+  }
+};
+
+const removeSubmissionForTask = (taskId) => {
+  if (!taskId) return;
+  try {
+    const all = getSavedSubmissions();
+    delete all[taskId];
+    localStorage.setItem(SUBMISSION_STORAGE_KEY, JSON.stringify(all));
+  } catch (e) {
+    console.warn("Could not remove submission from storage:", e);
+  }
+};
+
+const getTaskSubmissions = (apiTask) => {
+  if (!apiTask) return [];
+
+  if (Array.isArray(apiTask.submissions) && apiTask.submissions.length > 0) {
+    return apiTask.submissions;
+  }
+  if (Array.isArray(apiTask.task_submissions) && apiTask.task_submissions.length > 0) {
+    return apiTask.task_submissions;
+  }
+  if (apiTask.active_submission) return [apiTask.active_submission];
+  if (apiTask.activeSubmission) return [apiTask.activeSubmission];
+  if (apiTask.latest_submission) return [apiTask.latest_submission];
+  if (apiTask.latestSubmission) return [apiTask.latestSubmission];
+  if (apiTask.current_submission) return [apiTask.current_submission];
+  if (apiTask.submission) return [apiTask.submission];
+
+  const taskId = apiTask.id || apiTask.apiId;
+  if (taskId) {
+    const cached = getSavedSubmissions()[taskId];
+    if (cached) return [cached];
+  }
+
+  return [];
+};
+
+const getLatestTaskSubmission = (apiTask) => {
+  const submissions = getTaskSubmissions(apiTask);
+  if (!submissions.length) return null;
+
+  return [...submissions].sort((a, b) => {
+    const aTime = new Date(a?.submitted_at || a?.created_at || 0).getTime();
+    const bTime = new Date(b?.submitted_at || b?.created_at || 0).getTime();
+    return bTime - aTime;
+  })[0];
+};
+
 const mapApiTask = (apiTask, isRtl) => {
   const styles = getPriorityStyles(apiTask.priority);
   const progress = Number(apiTask.progress) || 0;
+  const submission = getLatestTaskSubmission(apiTask);
+  const submissionStatus =
+    submission?.status ||
+    apiTask.submission_status ||
+    apiTask.submissionStatus ||
+    null;
+
+  let computedStatus = mapApiStatus(apiTask.status);
+  if (submissionStatus === "Pending Review") {
+    computedStatus = "under-review";
+  } else if (submissionStatus === "Approved") {
+    computedStatus = "completed";
+  }
 
   return {
     id: `task-${apiTask.id}`,
@@ -214,7 +322,9 @@ const mapApiTask = (apiTask, isRtl) => {
     statusLabel: apiTask.status || "Pending",
     rawDeadline: apiTask.deadline || "",
     defaultDueDate: formatDeadline(apiTask.deadline, isRtl),
-    status: mapApiStatus(apiTask.status),
+    status: computedStatus,
+    submissionStatus,
+    submission,
     progress,
     progressColor: progress >= 100 ? "bg-[#3182ce]" : "bg-[#2f855a]",
     stripeColor: styles.stripeColor,
@@ -224,9 +334,21 @@ const mapApiTask = (apiTask, isRtl) => {
 
 const FILTERS = [
   { id: "all", labelKey: "tasks.filters.all", defaultLabel: "All" },
-  { id: "in-progress", labelKey: "tasks.filters.inProgress", defaultLabel: "In Progress" },
-  { id: "under-review", labelKey: "tasks.filters.underReview", defaultLabel: "Under Review" },
-  { id: "completed", labelKey: "tasks.filters.completed", defaultLabel: "Completed" },
+  {
+    id: "in-progress",
+    labelKey: "tasks.filters.inProgress",
+    defaultLabel: "In Progress",
+  },
+  {
+    id: "under-review",
+    labelKey: "tasks.filters.underReview",
+    defaultLabel: "Under Review",
+  },
+  {
+    id: "completed",
+    labelKey: "tasks.filters.completed",
+    defaultLabel: "Completed",
+  },
 ];
 
 const PRIORITIES = ["Low", "Medium", "High", "Urgent"];
@@ -254,6 +376,8 @@ const Tasks = () => {
   const [progressVal, setProgressVal] = useState(70);
   const [submittingProgress, setSubmittingProgress] = useState(false);
   const [progressError, setProgressError] = useState(null);
+  const [checkingSubmissionTaskId, setCheckingSubmissionTaskId] =
+    useState(null);
 
   // =========================
   // Create Task Modal
@@ -316,7 +440,11 @@ const Tasks = () => {
   // =========================
   // Toast
   // =========================
-  const [toast, setToast] = useState({ visible: false, title: "", message: "" });
+  const [toast, setToast] = useState({
+    visible: false,
+    title: "",
+    message: "",
+  });
 
   const showToast = (title, message) => {
     setToast({ visible: true, title, message });
@@ -348,7 +476,7 @@ const Tasks = () => {
               ...(token ? { Authorization: `Bearer ${token}` } : {}),
               "ngrok-skip-browser-warning": "true",
             },
-          }
+          },
         );
 
         const json = await response.json().catch(() => null);
@@ -363,11 +491,13 @@ const Tasks = () => {
                 ? Object.keys(json.errors)[0]
                 : null;
             throw new Error(
-              json?.errors?.[firstKey]?.[0] || json?.message || "Validation error."
+              json?.errors?.[firstKey]?.[0] ||
+                json?.message ||
+                "Validation error.",
             );
           }
           throw new Error(
-            json?.message || `Failed to load tasks (${response.status})`
+            json?.message || `Failed to load tasks (${response.status})`,
           );
         }
 
@@ -376,7 +506,40 @@ const Tasks = () => {
         else if (Array.isArray(json?.data)) list = json.data;
         else if (Array.isArray(json)) list = json;
 
-        setTasks(list.map((item) => mapApiTask(item, isRtl)));
+        setTasks((previousTasks) => {
+          const cachedSubmissions = getSavedSubmissions();
+          return list.map((item) => {
+            const mapped = mapApiTask(item, isRtl);
+            const previous = previousTasks.find(
+              (task) => task.apiId === mapped.apiId,
+            );
+
+            const effectiveSub =
+              mapped.submission ||
+              cachedSubmissions[mapped.apiId] ||
+              previous?.submission;
+
+            if (effectiveSub) {
+              const subStatus =
+                effectiveSub.status ||
+                mapped.submissionStatus ||
+                "Pending Review";
+              return {
+                ...mapped,
+                submission: effectiveSub,
+                submissionStatus: subStatus,
+                status:
+                  subStatus === "Pending Review"
+                    ? "under-review"
+                    : subStatus === "Approved"
+                    ? "completed"
+                    : mapped.status,
+              };
+            }
+
+            return mapped;
+          });
+        });
       } catch (e) {
         if (e.name === "AbortError") return;
         setApiError(e.message);
@@ -385,7 +548,7 @@ const Tasks = () => {
       }
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [i18n.language]
+    [i18n.language],
   );
 
   useEffect(() => {
@@ -416,7 +579,7 @@ const Tasks = () => {
               ...(token ? { Authorization: `Bearer ${token}` } : {}),
               "ngrok-skip-browser-warning": "true",
             },
-          }
+          },
         );
 
         const json = await response.json().catch(() => null);
@@ -427,7 +590,7 @@ const Tasks = () => {
           }
           if (response.status === 403) {
             throw new Error(
-              json?.message || "You are not authorized to view this task."
+              json?.message || "You are not authorized to view this task.",
             );
           }
           if (response.status === 404) {
@@ -449,7 +612,7 @@ const Tasks = () => {
         setActivitiesLoading(false);
       }
     },
-    [i18n.language]
+    [i18n.language],
   );
 
   // =====================================================
@@ -481,7 +644,7 @@ const Tasks = () => {
             ...(token ? { Authorization: `Bearer ${token}` } : {}),
             "ngrok-skip-browser-warning": "true",
           },
-        }
+        },
       );
 
       const json = await response.json().catch(() => null);
@@ -492,7 +655,7 @@ const Tasks = () => {
         }
         if (response.status === 403) {
           throw new Error(
-            json?.message || "You are not authorized to view this task."
+            json?.message || "You are not authorized to view this task.",
           );
         }
         if (response.status === 404) {
@@ -510,12 +673,81 @@ const Tasks = () => {
         throw new Error("Unexpected response from server.");
       }
 
+      const submissions = getTaskSubmissions(apiTask);
+      const mappedTask = mapApiTask(apiTask, isRtl);
+      const cachedSub = getSavedSubmissions()[mappedTask.apiId];
+      const effectiveSubmissions =
+        submissions.length > 0
+          ? submissions
+          : cachedSub
+          ? [cachedSub]
+          : [];
+
       setDetailsTask({
-        ...mapApiTask(apiTask, isRtl),
+        ...mappedTask,
         createdBy: apiTask.created_by,
         createdAt: formatDateTime(apiTask.created_at, isRtl),
         updatedAt: formatDateTime(apiTask.updated_at, isRtl),
+        submissions: effectiveSubmissions,
       });
+
+      // Keep the card in sync with the latest submission state
+      setTasks((previous) =>
+        previous.map((item) =>
+          item.apiId === mappedTask.apiId
+            ? {
+                ...item,
+                ...mappedTask,
+                submission:
+                  mappedTask.submission || cachedSub || item.submission,
+                submissionStatus:
+                  mappedTask.submissionStatus ||
+                  cachedSub?.status ||
+                  item.submissionStatus,
+                status:
+                  (mappedTask.submissionStatus || cachedSub?.status) ===
+                  "Pending Review"
+                    ? "under-review"
+                    : (mappedTask.submissionStatus || cachedSub?.status) ===
+                      "Approved"
+                    ? "completed"
+                    : mappedTask.status,
+              }
+            : item,
+        ),
+      );
+
+      // If submission has an id, fetch full details in background to load reviewer comments & attachments
+      const latestSubId = effectiveSubmissions[0]?.id;
+      if (latestSubId) {
+        getSubmissionDetails(latestSubId, { lang })
+          .then((detailRes) => {
+            if (detailRes?.data) {
+              const fullSub = detailRes.data;
+              saveSubmissionForTask(mappedTask.apiId, fullSub);
+              setDetailsTask((prev) => {
+                if (!prev || prev.apiId !== mappedTask.apiId) return prev;
+                return {
+                  ...prev,
+                  submission: fullSub,
+                  submissionStatus: fullSub.status || prev.submissionStatus,
+                  status:
+                    fullSub.status === "Pending Review"
+                      ? "under-review"
+                      : fullSub.status === "Approved"
+                      ? "completed"
+                      : prev.status,
+                  submissions: prev.submissions?.map((s) =>
+                    s.id === fullSub.id ? { ...s, ...fullSub } : s,
+                  ),
+                };
+              });
+            }
+          })
+          .catch((err) => {
+            console.warn("Could not fetch full submission details:", err);
+          });
+      }
     } catch (e) {
       setDetailsError(e.message);
     } finally {
@@ -548,22 +780,207 @@ const Tasks = () => {
   }, [tasks, activeFilter]);
 
   // =====================================================
-  // SUBMIT PROGRESS — PUT /tasks/{id}/progress
+  // SUBMISSIONS & PROGRESS
+  // POST /api/tasks/{task}/submissions
+  // POST /api/tasks/submissions/{submission}/resubmit
+  // POST /api/tasks/submissions/{submission}/attachments
   // =====================================================
-  const handleOpenTaskUpdate = (task) => {
+  const [resubmissionTarget, setResubmissionTarget] = useState(null);
+  const [attachingFile, setAttachingFile] = useState(false);
+
+  const handleOpenTaskUpdate = (task, submission = null) => {
     if (!task) return;
     setSelectedTask(task);
-    setProgressVal(task.progress);
+    setResubmissionTarget(submission);
+    setProgressVal(task.progress || 0);
     setUploadedFile(null);
-    setNotes("");
+    setNotes(submission?.note || "");
     setProgressError(null);
     setShowTaskUpdate(true);
+  };
+
+  const handleOpenSubmissionFlow = async (task) => {
+    if (!task || checkingSubmissionTaskId) return;
+
+    const cachedSub = getSavedSubmissions()[task.apiId] || task.submission;
+    const knownStatus = task.submissionStatus || cachedSub?.status || null;
+    const knownSubmission = cachedSub || task.submission || null;
+
+    if (knownStatus === "Pending Review") {
+      showToast(
+        isRtl ? "التسليم قيد المراجعة" : "Submission is already under review",
+        isRtl
+          ? "لا يمكن إرسال تسليم آخر قبل انتهاء مراجعة التسليم الحالي."
+          : "You cannot submit another deliverable while the current one is pending review.",
+      );
+      return;
+    }
+
+    if (knownStatus === "Changes Requested" && knownSubmission?.id) {
+      handleOpenTaskUpdate(task, knownSubmission);
+      return;
+    }
+
+    if (knownStatus === "Approved") {
+      showToast(
+        isRtl ? "تم اعتماد التسليم" : "Submission already approved",
+        isRtl
+          ? "تم اعتماد تسليم هذه المهمة بالفعل."
+          : "This task already has an approved submission.",
+      );
+      return;
+    }
+
+    setCheckingSubmissionTaskId(task.apiId);
+    setProgressError(null);
+
+    try {
+      const token = localStorage.getItem("token");
+      const lang = i18n.language?.startsWith("ar") ? "ar" : "en";
+
+      // If we have an existing submission ID, query server for latest review status
+      if (knownSubmission?.id) {
+        try {
+          const detailRes = await getSubmissionDetails(knownSubmission.id, { lang });
+          if (detailRes?.data) {
+            const serverSub = detailRes.data;
+            saveSubmissionForTask(task.apiId, serverSub);
+
+            if (serverSub.status === "Pending Review") {
+              setTasks((prev) =>
+                prev.map((t) =>
+                  t.apiId === task.apiId
+                    ? {
+                        ...t,
+                        submission: serverSub,
+                        submissionStatus: "Pending Review",
+                        status: "under-review",
+                      }
+                    : t
+                )
+              );
+              showToast(
+                isRtl ? "التسليم قيد المراجعة" : "Submission is already under review",
+                isRtl
+                  ? "لا يمكن إرسال تسليم آخر قبل انتهاء مراجعة التسليم الحالي."
+                  : "You cannot submit another deliverable while the current one is pending review.",
+              );
+              return;
+            }
+
+            if (serverSub.status === "Changes Requested") {
+              handleOpenTaskUpdate(task, serverSub);
+              return;
+            }
+
+            if (serverSub.status === "Approved") {
+              setTasks((prev) =>
+                prev.map((t) =>
+                  t.apiId === task.apiId
+                    ? {
+                        ...t,
+                        submission: serverSub,
+                        submissionStatus: "Approved",
+                        status: "completed",
+                      }
+                    : t
+                )
+              );
+              showToast(
+                isRtl ? "تم اعتماد التسليم" : "Submission already approved",
+                isRtl
+                  ? "تم اعتماد تسليم هذه المهمة بالفعل."
+                  : "This task already has an approved submission.",
+              );
+              return;
+            }
+          }
+        } catch (detailErr) {
+          console.warn("Could not check submission details:", detailErr);
+        }
+      }
+
+      const response = await fetch(
+        `${buildUrl(`${ENDPOINT_TASKS}/${task.apiId}`)}?lang=${lang}`,
+        {
+          headers: {
+            Accept: "application/json",
+            "Accept-Language": lang,
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+            "ngrok-skip-browser-warning": "true",
+          },
+        },
+      );
+
+      const json = await response.json().catch(() => null);
+
+      if (!response.ok) {
+        throw new Error(
+          json?.message || `Failed to check submission (${response.status})`,
+        );
+      }
+
+      const apiTask = json?.data;
+      if (!apiTask) {
+        throw new Error("Unexpected response from server.");
+      }
+
+      const latestSubmission = getLatestTaskSubmission(apiTask);
+      const freshTask = mapApiTask(apiTask, isRtl);
+
+      setTasks((previous) =>
+        previous.map((item) =>
+          item.apiId === freshTask.apiId ? { ...item, ...freshTask } : item,
+        ),
+      );
+
+      if (latestSubmission?.status === "Pending Review") {
+        saveSubmissionForTask(task.apiId, latestSubmission);
+        showToast(
+          isRtl ? "التسليم قيد المراجعة" : "Submission is already under review",
+          isRtl
+            ? "لا يمكن إرسال تسليم آخر قبل انتهاء مراجعة التسليم الحالي."
+            : "You cannot submit another deliverable while the current one is pending review.",
+        );
+        return;
+      }
+
+      if (latestSubmission?.status === "Changes Requested") {
+        saveSubmissionForTask(task.apiId, latestSubmission);
+        handleOpenTaskUpdate(freshTask, latestSubmission);
+        return;
+      }
+
+      if (latestSubmission?.status === "Approved") {
+        saveSubmissionForTask(task.apiId, latestSubmission);
+        showToast(
+          isRtl ? "تم اعتماد التسليم" : "Submission already approved",
+          isRtl
+            ? "تم اعتماد تسليم هذه المهمة بالفعل."
+            : "This task already has an approved submission.",
+        );
+        return;
+      }
+
+      handleOpenTaskUpdate(freshTask);
+    } catch (e) {
+      console.error("Could not verify task submission:", e);
+      showToast(
+        isRtl
+          ? "تعذر التحقق من حالة التسليم"
+          : "Could not verify submission status",
+        e.message || (isRtl ? "حاول مرة أخرى." : "Please try again."),
+      );
+    } finally {
+      setCheckingSubmissionTaskId(null);
+    }
   };
 
   const handleCloseTaskUpdate = () => {
     if (submittingProgress) return;
     setShowTaskUpdate(false);
     setSelectedTask(null);
+    setResubmissionTarget(null);
     setUploadedFile(null);
     setNotes("");
     setProgressError(null);
@@ -577,96 +994,258 @@ const Tasks = () => {
   const handleSubmitForReview = async () => {
     if (!selectedTask || submittingProgress) return;
 
+    if (!notes.trim()) {
+      setProgressError(
+        isRtl
+          ? "يرجى كتابة ملاحظات حول التسليم (مطلوبة)."
+          : "Please write notes about your deliverable (required).",
+      );
+      return;
+    }
+
     setSubmittingProgress(true);
     setProgressError(null);
 
     try {
-      const token = localStorage.getItem("token");
       const lang = i18n.language?.startsWith("ar") ? "ar" : "en";
+      const isResubmit = Boolean(resubmissionTarget?.id);
 
-      const response = await fetch(
-        `${buildUrl(`${ENDPOINT_TASKS}/${selectedTask.apiId}/progress`)}?lang=${lang}`,
-        {
-          method: "PUT",
-          headers: {
-            Accept: "application/json",
-            "Content-Type": "application/json",
-            "Accept-Language": lang,
-            ...(token ? { Authorization: `Bearer ${token}` } : {}),
-            "ngrok-skip-browser-warning": "true",
+      if (
+        isResubmit &&
+        resubmissionTarget?.status &&
+        resubmissionTarget.status !== "Changes Requested"
+      ) {
+        throw new Error(
+          isRtl
+            ? "لا يمكن إعادة إرسال هذا التسليم إلا بعد طلب تعديلات."
+            : "This submission can only be resubmitted after changes are requested.",
+        );
+      }
+
+      if (
+        !isResubmit &&
+        ["Pending Review", "Approved"].includes(selectedTask.submissionStatus)
+      ) {
+        throw new Error(
+          selectedTask.submissionStatus === "Pending Review"
+            ? isRtl
+              ? "التسليم الحالي قيد المراجعة بالفعل."
+              : "This task already has a submission pending review."
+            : isRtl
+              ? "تم اعتماد التسليم الحالي بالفعل."
+              : "This task already has an approved submission.",
+        );
+      }
+
+      let submissionResponse;
+
+      if (isResubmit) {
+        // 8. Resubmit after changes requested: POST /api/tasks/submissions/{submission}/resubmit
+        submissionResponse = await resubmitSubmission(
+          resubmissionTarget.id,
+          {
+            note: notes.trim(),
+            files: uploadedFile ? [uploadedFile] : [],
           },
-          body: JSON.stringify({
-            progress: progressVal,
-          }),
-        }
+          { lang },
+        );
+      } else {
+        // 1. Submit a task: POST /api/tasks/{task}/submissions
+        submissionResponse = await submitTask(
+          selectedTask.apiId,
+          {
+            note: notes.trim(),
+            files: uploadedFile ? [uploadedFile] : [],
+          },
+          { lang },
+        );
+      }
+
+      const createdSubmission = submissionResponse?.data;
+      const subRecord = createdSubmission || {
+        task_id: selectedTask.apiId,
+        status: "Pending Review",
+        note: notes.trim(),
+        submitted_at: new Date().toISOString(),
+      };
+
+      // Persist to local cache so page reloads remember the deliverable
+      saveSubmissionForTask(selectedTask.apiId, subRecord);
+
+      // Keep the local card state synchronized
+      setTasks((previous) =>
+        previous.map((item) =>
+          item.apiId === selectedTask.apiId
+            ? {
+                ...item,
+                submission: subRecord,
+                submissionStatus: subRecord.status || "Pending Review",
+                status:
+                  (subRecord.status || "Pending Review") === "Pending Review"
+                    ? "under-review"
+                    : item.status,
+              }
+            : item,
+        ),
       );
 
-      const json = await response.json().catch(() => null);
+      // Also sync progress if desired
+      try {
+        const token = localStorage.getItem("token");
+        await fetch(
+          `${buildUrl(`${ENDPOINT_TASKS}/${selectedTask.apiId}/progress`)}?lang=${lang}`,
+          {
+            method: "PATCH",
+            headers: {
+              Accept: "application/json",
+              "Content-Type": "application/json",
+              "Accept-Language": lang,
+              ...(token ? { Authorization: `Bearer ${token}` } : {}),
+              "ngrok-skip-browser-warning": "true",
+            },
+            body: JSON.stringify({
+              progress: progressVal,
+            }),
+          },
+        );
+      } catch (syncErr) {
+        console.warn("Could not sync progress:", syncErr);
+      }
 
-      if (response.ok) {
-        const updated = json?.data;
+      // Refresh task details if currently open
+      if (detailsTask && detailsTask.apiId === selectedTask.apiId) {
+        setDetailsTask((prev) => ({
+          ...prev,
+          submission: subRecord,
+          submissionStatus: subRecord.status || "Pending Review",
+          status:
+            (subRecord.status || "Pending Review") === "Pending Review"
+              ? "under-review"
+              : prev.status,
+          submissions: [subRecord, ...(prev.submissions || [])],
+        }));
+      }
 
-        if (updated && updated.id) {
-          setTasks((prev) =>
-            prev.map((t) =>
-              t.apiId === updated.id ? mapApiTask(updated, isRtl) : t
-            )
-          );
-        } else {
-          await fetchTasks(new AbortController().signal);
+      setShowTaskUpdate(false);
+      setSelectedTask(null);
+      setResubmissionTarget(null);
+      setUploadedFile(null);
+      setNotes("");
+
+      showToast(
+        isResubmit
+          ? isRtl
+            ? "تمت إعادة تسليم المهمة بنجاح"
+            : "Submission resubmitted successfully"
+          : isRtl
+            ? "تم تسليم المهمة بنجاح للمراجعة"
+            : "Deliverable submitted successfully for review",
+        `"${selectedTask.defaultTitle}" ${
+          isRtl ? "بانتظار مراجعة المسؤول" : "is now pending review"
+        }.`,
+      );
+    } catch (e) {
+      console.error("Submission failed:", e);
+
+      const errMsg =
+        e.response?.data?.message ||
+        e.response?.data?.errors?.note?.[0] ||
+        e.message ||
+        (isRtl ? "فشل تسليم المهمة" : "Failed to submit deliverable");
+
+      if (
+        typeof errMsg === "string" &&
+        errMsg.toLowerCase().includes("already have an active submission")
+      ) {
+        // Backend protection: An active deliverable is already pending review.
+        // Update local state and cache so the card immediately reflects 'under-review'.
+        const activeSub = {
+          task_id: selectedTask.apiId,
+          status: "Pending Review",
+          note: notes.trim() || (isRtl ? "تسليم قيد المراجعة" : "Active deliverable under review"),
+          submitted_at: new Date().toISOString(),
+        };
+
+        saveSubmissionForTask(selectedTask.apiId, activeSub);
+
+        setTasks((previous) =>
+          previous.map((item) =>
+            item.apiId === selectedTask.apiId
+              ? {
+                  ...item,
+                  submission: activeSub,
+                  submissionStatus: "Pending Review",
+                  status: "under-review",
+                }
+              : item,
+          ),
+        );
+
+        if (detailsTask && detailsTask.apiId === selectedTask.apiId) {
+          setDetailsTask((prev) => ({
+            ...prev,
+            submission: activeSub,
+            submissionStatus: "Pending Review",
+            status: "under-review",
+            submissions: [activeSub, ...(prev.submissions || [])],
+          }));
         }
 
         setShowTaskUpdate(false);
         setSelectedTask(null);
+        setResubmissionTarget(null);
         setUploadedFile(null);
         setNotes("");
 
         showToast(
-          json?.message || "Task progress updated successfully",
-          `"${updated?.title || selectedTask.defaultTitle}" is now at ${progressVal}%.`
+          isRtl ? "التسليم قيد المراجعة بالفعل" : "Submission Already Under Review",
+          isRtl
+            ? "يوجد تسليم نشط لهذه المهمة بالفعل وبانتظار مراجعة المسؤول."
+            : "This task already has an active submission currently pending review.",
         );
         return;
       }
 
-      if (response.status === 403) {
-        setProgressError(
-          json?.message || "You are not authorized to update this task."
-        );
-        return;
-      }
-
-      if (response.status === 404) {
-        setProgressError(json?.message || "Task not found.");
-        return;
-      }
-
-      if (response.status === 422) {
-        let firstError = null;
-        if (json?.errors && typeof json.errors === "object") {
-          const firstKey = Object.keys(json.errors)[0];
-          firstError = json.errors[firstKey]?.[0] ?? null;
-        }
-        setProgressError(firstError || json?.message || "Validation error.");
-        return;
-      }
-
-      if (response.status === 401) {
-        setProgressError("Unauthenticated — please login again.");
-        return;
-      }
-
-      if (response.status === 500) {
-        setProgressError(json?.message || "Something went wrong.");
-        return;
-      }
-
-      setProgressError(
-        json?.message || `Failed to update progress (${response.status})`
-      );
-    } catch (e) {
-      setProgressError(e.message);
+      setProgressError(errMsg);
     } finally {
       setSubmittingProgress(false);
+    }
+  };
+
+  const handleAttachExtraFile = async (submissionId, file) => {
+    if (!submissionId || !file || attachingFile) return;
+    setAttachingFile(true);
+    try {
+      const lang = i18n.language?.startsWith("ar") ? "ar" : "en";
+      const res = await attachSubmissionFile(submissionId, file, { lang });
+      const newAttachment = res?.data;
+
+      if (detailsTask) {
+        setDetailsTask((prev) => ({
+          ...prev,
+          submissions: (prev.submissions || []).map((sub) =>
+            sub.id === submissionId
+              ? {
+                  ...sub,
+                  attachments: [...(sub.attachments || []), newAttachment],
+                }
+              : sub,
+          ),
+        }));
+      }
+
+      showToast(
+        isRtl ? "تم إرفاق الملف بنجاح" : "File attached successfully",
+        file.name,
+      );
+    } catch (err) {
+      console.error("Failed to attach file:", err);
+      showToast(
+        isRtl ? "فشل إرفاق الملف" : "Failed to attach file",
+        err.response?.data?.message || err.message,
+      );
+    } finally {
+      setAttachingFile(false);
     }
   };
 
@@ -707,7 +1286,7 @@ const Tasks = () => {
       const response = await fetch(
         `${buildUrl(`${ENDPOINT_TASKS}/${statusTask.apiId}/status`)}?lang=${lang}`,
         {
-          method: "PUT",
+          method: "PATCH",
           headers: {
             Accept: "application/json",
             "Content-Type": "application/json",
@@ -718,7 +1297,7 @@ const Tasks = () => {
           body: JSON.stringify({
             status: newStatus,
           }),
-        }
+        },
       );
 
       const json = await response.json().catch(() => null);
@@ -729,8 +1308,8 @@ const Tasks = () => {
         if (updated && updated.id) {
           setTasks((prev) =>
             prev.map((t) =>
-              t.apiId === updated.id ? mapApiTask(updated, isRtl) : t
-            )
+              t.apiId === updated.id ? mapApiTask(updated, isRtl) : t,
+            ),
           );
         } else {
           await fetchTasks(new AbortController().signal);
@@ -741,7 +1320,7 @@ const Tasks = () => {
 
         showToast(
           json?.message || "Task status updated successfully",
-          `"${updated?.title || statusTask.defaultTitle}" is now "${newStatus}".`
+          `"${updated?.title || statusTask.defaultTitle}" is now "${newStatus}".`,
         );
         return;
       }
@@ -749,14 +1328,14 @@ const Tasks = () => {
       if (response.status === 422) {
         setStatusError(
           json?.message ||
-            "Invalid status transition — this status change is not allowed."
+            "Invalid status transition — this status change is not allowed.",
         );
         return;
       }
 
       if (response.status === 403) {
         setStatusError(
-          json?.message || "You are not authorized to update this task."
+          json?.message || "You are not authorized to update this task.",
         );
         return;
       }
@@ -777,7 +1356,7 @@ const Tasks = () => {
       }
 
       setStatusError(
-        json?.message || `Failed to update status (${response.status})`
+        json?.message || `Failed to update status (${response.status})`,
       );
     } catch (e) {
       setStatusError(e.message);
@@ -790,7 +1369,12 @@ const Tasks = () => {
   // CREATE TASK — POST /tasks
   // =====================================================
   const openCreateModal = () => {
-    setCreateForm({ title: "", description: "", priority: "Medium", deadline: "" });
+    setCreateForm({
+      title: "",
+      description: "",
+      priority: "Medium",
+      deadline: "",
+    });
     setCreateError(null);
     setShowCreateTask(true);
   };
@@ -850,7 +1434,7 @@ const Tasks = () => {
 
         showToast(
           json?.message || "Task created successfully",
-          `"${created?.title || createForm.title}" was added to tasks.`
+          `"${created?.title || createForm.title}" was added to tasks.`,
         );
         return;
       }
@@ -871,7 +1455,7 @@ const Tasks = () => {
       }
 
       setCreateError(
-        json?.message || `Failed to create task (${response.status})`
+        json?.message || `Failed to create task (${response.status})`,
       );
     } catch (e) {
       setCreateError(e.message);
@@ -939,7 +1523,7 @@ const Tasks = () => {
             priority: editForm.priority,
             deadline: formatDeadlineForApi(editForm.deadline),
           }),
-        }
+        },
       );
 
       const json = await response.json().catch(() => null);
@@ -950,8 +1534,8 @@ const Tasks = () => {
         if (updated && updated.id) {
           setTasks((prev) =>
             prev.map((t) =>
-              t.apiId === updated.id ? mapApiTask(updated, isRtl) : t
-            )
+              t.apiId === updated.id ? mapApiTask(updated, isRtl) : t,
+            ),
           );
         } else {
           await fetchTasks(new AbortController().signal);
@@ -962,7 +1546,7 @@ const Tasks = () => {
 
         showToast(
           json?.message || "Task updated successfully",
-          `"${updated?.title || editForm.title}" was updated.`
+          `"${updated?.title || editForm.title}" was updated.`,
         );
         return;
       }
@@ -992,7 +1576,9 @@ const Tasks = () => {
         return;
       }
 
-      setEditError(json?.message || `Failed to update task (${response.status})`);
+      setEditError(
+        json?.message || `Failed to update task (${response.status})`,
+      );
     } catch (e) {
       setEditError(e.message);
     } finally {
@@ -1044,7 +1630,7 @@ const Tasks = () => {
           body: JSON.stringify({
             user_id: Number(assignUserId),
           }),
-        }
+        },
       );
 
       const json = await response.json().catch(() => null);
@@ -1055,7 +1641,7 @@ const Tasks = () => {
 
         showToast(
           json?.message || "Task assigned successfully",
-          `"${assigningTask.defaultTitle}" assigned to user #${assignUserId}.`
+          `"${assigningTask.defaultTitle}" assigned to user #${assignUserId}.`,
         );
         return;
       }
@@ -1085,7 +1671,9 @@ const Tasks = () => {
         return;
       }
 
-      setAssignError(json?.message || `Failed to assign task (${response.status})`);
+      setAssignError(
+        json?.message || `Failed to assign task (${response.status})`,
+      );
     } catch (e) {
       setAssignError(e.message);
     } finally {
@@ -1122,7 +1710,10 @@ const Tasks = () => {
   };
 
   return (
-    <div dir={isRtl ? "rtl" : "ltr"} className="w-full space-y-6 pb-16 font-sans text-[#102a43]">
+    <div
+      dir={isRtl ? "rtl" : "ltr"}
+      className="w-full space-y-6 pb-16 font-sans text-[#102a43]"
+    >
       {/* 1. Header */}
       <motion.div
         initial={{ opacity: 0, y: 10 }}
@@ -1138,20 +1729,12 @@ const Tasks = () => {
             {t("tasks.myTasks", "My tasks")}
           </h1>
           <p className="text-sm text-[#829ab1] mt-1 font-normal">
-            {t("tasks.subtitle", "Stay on top of your priorities and deliverables.")}
+            {t(
+              "tasks.subtitle",
+              "Stay on top of your priorities and deliverables.",
+            )}
           </p>
         </div>
-
-        <motion.button
-          whileHover={{ scale: 1.02 }}
-          whileTap={{ scale: 0.98 }}
-          type="button"
-          onClick={openCreateModal}
-          className="inline-flex items-center gap-2 rounded-xl bg-[#1c364f] px-4 py-2.5 text-xs font-semibold text-white transition hover:bg-[#284761] shadow-sm shrink-0 self-start sm:self-auto"
-        >
-          <FiPlus className="h-4 w-4" />
-          <span>{t("tasks.createTask", "Create Task")}</span>
-        </motion.button>
       </motion.div>
 
       {/* API ERROR */}
@@ -1195,7 +1778,9 @@ const Tasks = () => {
               <span>{t(f.labelKey, f.defaultLabel)}</span>
               <span
                 className={`inline-flex h-4 min-w-[16px] items-center justify-center rounded-full px-1 text-[10px] ${
-                  isActive ? "bg-white/20 text-white" : "bg-[#f1f5f9] text-[#64748b]"
+                  isActive
+                    ? "bg-white/20 text-white"
+                    : "bg-[#f1f5f9] text-[#64748b]"
                 }`}
               >
                 {count}
@@ -1239,8 +1824,16 @@ const Tasks = () => {
                   key={task.id}
                   initial={{ opacity: 0, y: 12 }}
                   animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, scale: 0.98, transition: { duration: 0.2 } }}
-                  transition={{ duration: 0.3, delay: index * 0.05, ease: "easeOut" }}
+                  exit={{
+                    opacity: 0,
+                    scale: 0.98,
+                    transition: { duration: 0.2 },
+                  }}
+                  transition={{
+                    duration: 0.3,
+                    delay: index * 0.05,
+                    ease: "easeOut",
+                  }}
                   whileHover={{ y: -1, transition: { duration: 0.15 } }}
                   className="relative flex flex-col justify-between rounded-2xl border border-[#e2e8f0] bg-white p-6 pl-10 pr-6 rtl:pr-10 rtl:pl-6 shadow-[0_1px_3px_rgba(0,0,0,0.02)] hover:border-[#cbd5e1] hover:shadow-md transition-shadow"
                 >
@@ -1254,7 +1847,8 @@ const Tasks = () => {
                         type="button"
                         onClick={() => openStatusModal(task)}
                         className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold transition hover:opacity-80 hover:scale-[1.03] ${
-                          STATUS_BADGES[task.statusLabel] || "bg-[#f1f5f9] text-[#64748b]"
+                          STATUS_BADGES[task.statusLabel] ||
+                          "bg-[#f1f5f9] text-[#64748b]"
                         }`}
                         title="Change status"
                       >
@@ -1320,15 +1914,23 @@ const Tasks = () => {
                   <div className="mt-6 flex flex-col md:flex-row md:items-end justify-between gap-6">
                     <div className="w-full md:max-w-md space-y-1.5">
                       <div className="flex items-center justify-between text-xs">
-                        <span className="text-[#829ab1]">{getStatusLabel(task.status)}</span>
-                        <span className="font-bold text-[#102a43]">{task.progress}%</span>
+                        <span className="text-[#829ab1]">
+                          {getStatusLabel(task.status)}
+                        </span>
+                        <span className="font-bold text-[#102a43]">
+                          {task.progress}%
+                        </span>
                       </div>
 
                       <div className="h-1.5 w-full overflow-hidden rounded-full bg-[#f1f5f9]">
                         <motion.div
                           initial={{ width: 0 }}
                           animate={{ width: `${task.progress}%` }}
-                          transition={{ duration: 0.8, ease: "easeOut", delay: 0.15 + index * 0.05 }}
+                          transition={{
+                            duration: 0.8,
+                            ease: "easeOut",
+                            delay: 0.15 + index * 0.05,
+                          }}
                           className={`h-full rounded-full ${task.progressColor}`}
                         />
                       </div>
@@ -1340,16 +1942,49 @@ const Tasks = () => {
                           whileHover={{ scale: 1.02 }}
                           whileTap={{ scale: 0.98 }}
                           type="button"
-                          onClick={() => handleOpenTaskUpdate(task)}
-                          className="inline-flex items-center gap-2 rounded-xl border border-[#d9e2ec] bg-white px-4 py-2 text-xs font-semibold text-[#102a43] hover:bg-[#f8fafc] transition shadow-sm"
+                          disabled={checkingSubmissionTaskId === task.apiId}
+                          onClick={() => handleOpenSubmissionFlow(task)}
+                          className="inline-flex items-center gap-2 rounded-xl border border-[#d9e2ec] bg-white px-4 py-2 text-xs font-semibold text-[#102a43] hover:bg-[#f8fafc] transition shadow-sm disabled:opacity-60 disabled:cursor-not-allowed"
                         >
                           <FiUploadCloud className="h-4 w-4 text-[#64748b]" />
-                          <span>{t("tasks.submitDeliverable", "Submit deliverable")}</span>
+                          <span>
+                            {checkingSubmissionTaskId === task.apiId
+                              ? isRtl
+                                ? "جارٍ التحقق..."
+                                : "Checking..."
+                              : task.submissionStatus === "Changes Requested"
+                                ? isRtl
+                                  ? "إعادة التسليم"
+                                  : "Resubmit deliverable"
+                                : t(
+                                    "tasks.submitDeliverable",
+                                    "Submit deliverable",
+                                  )}
+                          </span>
+                        </motion.button>
+                      ) : task.status === "under-review" ? (
+                        <motion.button
+                          whileHover={{ scale: 1.02 }}
+                          whileTap={{ scale: 0.98 }}
+                          type="button"
+                          onClick={() => {
+                            openTaskDetails(task);
+                            setDetailsTab("submissions");
+                          }}
+                          className="inline-flex items-center gap-2 rounded-xl bg-[#fffaf0] border border-[#feebc8] px-4 py-2 text-xs font-semibold text-[#c05621] hover:bg-[#feebc8]/60 transition shadow-sm cursor-pointer"
+                          title={isRtl ? "عرض تفاصيل التسليم" : "View deliverable details"}
+                        >
+                          <FiClock className="h-3.5 w-3.5" />
+                          <span>
+                            {t("tasks.awaitingReview", "Awaiting review")}
+                          </span>
                         </motion.button>
                       ) : (
-                        <div className="inline-flex items-center gap-2 rounded-xl bg-[#fffaf0] border border-[#feebc8] px-4 py-2 text-xs font-medium text-[#c05621]">
-                          <FiClock className="h-3.5 w-3.5" />
-                          <span>{t("tasks.awaitingReview", "Awaiting review")}</span>
+                        <div className="inline-flex items-center gap-2 rounded-xl bg-[#f0fdf4] border border-[#bbf7d0] px-4 py-2 text-xs font-medium text-[#16a34a]">
+                          <FiCheckCircle className="h-3.5 w-3.5" />
+                          <span>
+                            {t("tasks.completedBadge", "Completed")}
+                          </span>
                         </div>
                       )}
                     </div>
@@ -1370,7 +2005,10 @@ const Tasks = () => {
               {t("tasks.noTasks", "No tasks found")}
             </p>
             <p className="text-xs text-[#829ab1] mt-1">
-              {t("tasks.allCaughtUp", "All tasks in this category are caught up.")}
+              {t(
+                "tasks.allCaughtUp",
+                "All tasks in this category are caught up.",
+              )}
             </p>
           </motion.div>
         )}
@@ -1415,7 +2053,7 @@ const Tasks = () => {
                 </button>
               </div>
 
-              {/* Tabs: Details | Activity */}
+              {/* Tabs: Details | Submissions | Activity */}
               <div className="flex gap-1 rounded-xl bg-[#f1f5f9] p-1 mb-5">
                 <button
                   type="button"
@@ -1428,6 +2066,24 @@ const Tasks = () => {
                 >
                   <FiFileText className="h-3.5 w-3.5" />
                   {t("tasks.tabs.details", "Details")}
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setDetailsTab("submissions")}
+                  className={`flex-1 inline-flex items-center justify-center gap-2 rounded-lg py-2 text-xs font-semibold transition ${
+                    detailsTab === "submissions"
+                      ? "bg-white text-[#102a43] shadow-sm"
+                      : "text-[#64748b] hover:text-[#102a43]"
+                  }`}
+                >
+                  <FiUploadCloud className="h-3.5 w-3.5" />
+                  {isRtl ? "التسليمات" : "Submissions"}
+                  {detailsTask?.submissions?.length > 0 && (
+                    <span className="inline-flex h-4 min-w-[16px] items-center justify-center rounded-full bg-[#e2e8f0] px-1 text-[10px] text-[#64748b]">
+                      {detailsTask.submissions.length}
+                    </span>
+                  )}
                 </button>
 
                 <button
@@ -1502,7 +2158,8 @@ const Tasks = () => {
                           {t("tasks.form.description", "Description")}
                         </p>
                         <p className="text-sm text-[#486581] leading-relaxed m-0">
-                          {detailsTask.description || "No description provided."}
+                          {detailsTask.description ||
+                            "No description provided."}
                         </p>
                       </div>
 
@@ -1595,18 +2252,224 @@ const Tasks = () => {
                             type="button"
                             onClick={() => {
                               closeTaskDetails();
-                              handleOpenTaskUpdate(detailsTask);
+                              handleOpenSubmissionFlow(detailsTask);
                             }}
                             className="flex-1 flex items-center justify-center gap-2 rounded-xl bg-[#1c364f] py-3 px-4 text-xs font-semibold text-white hover:bg-[#254360] transition shadow-sm"
                           >
                             <FiUploadCloud className="h-4 w-4" />
-                            <span>{t("tasks.submitDeliverable", "Submit")}</span>
+                            <span>
+                              {t("tasks.submitDeliverable", "Submit")}
+                            </span>
                           </button>
+                        )}
+
+                        {detailsTask.status === "under-review" && (
+                          <button
+                            type="button"
+                            onClick={() => setDetailsTab("submissions")}
+                            className="flex-1 flex items-center justify-center gap-2 rounded-xl bg-amber-500/10 border border-amber-300 py-3 px-4 text-xs font-semibold text-amber-700 hover:bg-amber-500/20 transition shadow-sm"
+                          >
+                            <FiClock className="h-4 w-4" />
+                            <span>
+                              {t("tasks.underReviewView", "Deliverable Under Review")}
+                            </span>
+                          </button>
+                        )}
+
+                        {detailsTask.status === "completed" && (
+                          <div className="flex-1 flex items-center justify-center gap-2 rounded-xl bg-emerald-500/10 border border-emerald-300 py-3 px-4 text-xs font-semibold text-emerald-700">
+                            <FiCheckCircle className="h-4 w-4" />
+                            <span>
+                              {t("tasks.completedStatus", "Completed")}
+                            </span>
+                          </div>
                         )}
                       </div>
                     </div>
                   )}
                 </>
+              )}
+
+              {/* ======== TAB: SUBMISSIONS & DELIVERABLES ======== */}
+              {detailsTab === "submissions" && (
+                <div className="space-y-4">
+                  {detailsTask?.submissions &&
+                  detailsTask.submissions.length > 0 ? (
+                    detailsTask.submissions.map((sub, sIdx) => {
+                      const isPending = sub.status === "Pending Review";
+                      const isChangesReq = sub.status === "Changes Requested";
+                      const isApproved = sub.status === "Approved";
+                      const isRejected = sub.status === "Rejected";
+
+                      return (
+                        <div
+                          key={sub.id || sIdx}
+                          className="rounded-2xl border border-[#e2e8f0] bg-white p-4 space-y-3.5 shadow-sm"
+                        >
+                          {/* Submission Header */}
+                          <div className="flex items-center justify-between gap-3">
+                            <span
+                              className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-semibold ${
+                                isApproved
+                                  ? "bg-[#f0fdf4] text-[#15803d]"
+                                  : isChangesReq
+                                    ? "bg-[#fff7ed] text-[#c2410c]"
+                                    : isRejected
+                                      ? "bg-[#fef2f2] text-[#b91c1c]"
+                                      : "bg-[#fef3c7] text-[#b45309]"
+                              }`}
+                            >
+                              {sub.status || "Pending Review"}
+                            </span>
+                            <span className="text-[11px] text-[#94a3b8]">
+                              {formatDateTime(
+                                sub.submitted_at || sub.created_at,
+                                isRtl,
+                              )}
+                            </span>
+                          </div>
+
+                          {/* Submitter Note */}
+                          {sub.note && (
+                            <div className="rounded-xl bg-[#f8fafc] p-3 text-xs text-[#334155]">
+                              <p className="font-semibold text-[#102a43] mb-1">
+                                {isRtl
+                                  ? "ملاحظات التسليم:"
+                                  : "Deliverable Note:"}
+                              </p>
+                              <p className="leading-relaxed">{sub.note}</p>
+                            </div>
+                          )}
+
+                          {/* Reviewer Feedback / Changes Requested Alert */}
+                          {isChangesReq && (
+                            <div className="rounded-xl border border-[#fed7aa] bg-[#fff7ed] p-3 text-xs text-[#9a3412] space-y-2">
+                              <div className="flex items-center gap-1.5 font-bold">
+                                <FiAlertCircle className="w-4 h-4 text-[#ea580c]" />
+                                <span>
+                                  {isRtl
+                                    ? "مطلوب تعديلات من المسؤول:"
+                                    : "Changes Requested by Reviewer:"}
+                                </span>
+                              </div>
+                              <p className="leading-relaxed">
+                                {sub.reviews?.[sub.reviews.length - 1]
+                                  ?.feedback ||
+                                  sub.feedback ||
+                                  (isRtl
+                                    ? "يرجى مراجعة التعديلات وإعادة الإرسال."
+                                    : "Please revise your work and resubmit.")}
+                              </p>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  closeTaskDetails();
+                                  handleOpenTaskUpdate(detailsTask, sub);
+                                }}
+                                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#ea580c] text-white text-xs font-bold hover:bg-[#c2410c] transition shadow-sm"
+                              >
+                                <FiRefreshCw className="w-3.5 h-3.5" />
+                                <span>
+                                  {isRtl
+                                    ? "إعادة التسليم بعد التعديل"
+                                    : "Resubmit Deliverable"}
+                                </span>
+                              </button>
+                            </div>
+                          )}
+
+                          {/* Attachments Section */}
+                          <div>
+                            <div className="flex items-center justify-between mb-2">
+                              <p className="text-[11px] font-bold uppercase tracking-wider text-[#94a3b8]">
+                                {isRtl ? "الملفات المرفقة" : "Attachments"}
+                              </p>
+
+                              {/* Upload additional attachment button */}
+                              <label className="cursor-pointer inline-flex items-center gap-1 text-[11px] font-bold text-[#2563eb] hover:underline">
+                                <FiPaperclip className="w-3 h-3" />
+                                <span>
+                                  {attachingFile
+                                    ? isRtl
+                                      ? "جارٍ الرفع..."
+                                      : "Uploading..."
+                                    : isRtl
+                                      ? "إرفاق ملف إضافي"
+                                      : "Attach File"}
+                                </span>
+                                <input
+                                  type="file"
+                                  disabled={attachingFile}
+                                  className="hidden"
+                                  onChange={(e) => {
+                                    const file = e.target.files?.[0];
+                                    if (file)
+                                      handleAttachExtraFile(sub.id, file);
+                                    e.target.value = "";
+                                  }}
+                                />
+                              </label>
+                            </div>
+
+                            {sub.attachments && sub.attachments.length > 0 ? (
+                              <div className="flex flex-wrap gap-2">
+                                {sub.attachments.map((file) => (
+                                  <a
+                                    key={file.id || file.file_name}
+                                    href={getFileUrl(file.file_path)}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    download={file.file_name}
+                                    className="inline-flex items-center gap-2 rounded-xl bg-[#f1f5f9] hover:bg-[#e2e8f0] px-3 py-1.5 text-xs font-semibold text-[#334155] transition border border-[#e2e8f0]"
+                                  >
+                                    <FiFileText className="w-3.5 h-3.5 text-[#2563eb]" />
+                                    <span className="truncate max-w-[180px]">
+                                      {file.file_name}
+                                    </span>
+                                    <FiExternalLink className="w-3 h-3 text-[#94a3b8]" />
+                                  </a>
+                                ))}
+                              </div>
+                            ) : (
+                              <p className="text-xs text-[#94a3b8] italic">
+                                {isRtl
+                                  ? "لا توجد ملفات مرفقة"
+                                  : "No files attached"}
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })
+                  ) : (
+                    <div className="flex flex-col items-center justify-center py-10 text-center">
+                      <FiUploadCloud className="h-9 w-9 text-[#94a3b8] mb-2" />
+                      <p className="text-sm font-semibold text-[#102a43] m-0">
+                        {isRtl
+                          ? "لا توجد تسليمات لهذه المهمة بعد"
+                          : "No submissions for this task yet"}
+                      </p>
+                      <p className="text-xs text-[#829ab1] mt-1 max-w-xs">
+                        {isRtl
+                          ? "عند إكمال المهمة أو جزء منها، يمكنك إرسال تسليم ليراجعه المشرف."
+                          : "When you complete work on this task, submit your deliverable for review."}
+                      </p>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          closeTaskDetails();
+                          handleOpenSubmissionFlow(detailsTask);
+                        }}
+                        className="mt-4 inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-[#1c364f] text-white text-xs font-semibold hover:bg-[#254360] transition shadow-sm"
+                      >
+                        <FiUploadCloud className="w-4 h-4" />
+                        <span>
+                          {t("tasks.submitDeliverable", "Submit Deliverable")}
+                        </span>
+                      </button>
+                    </div>
+                  )}
+                </div>
               )}
 
               {/* ======== TAB: ACTIVITY (GET /tasks/{id}/activities) ======== */}
@@ -1649,81 +2512,88 @@ const Tasks = () => {
                   )}
 
                   {/* Empty */}
-                  {!activitiesLoading && !activitiesError && activities.length === 0 && (
-                    <div className="flex flex-col items-center justify-center py-10 text-center">
-                      <FiActivity className="h-8 w-8 text-[#94a3b8] mb-2" />
-                      <p className="text-sm font-semibold text-[#102a43] m-0">
-                        No activity yet
-                      </p>
-                      <p className="text-xs text-[#829ab1] mt-1">
-                        Actions on this task will appear here.
-                      </p>
-                    </div>
-                  )}
+                  {!activitiesLoading &&
+                    !activitiesError &&
+                    activities.length === 0 && (
+                      <div className="flex flex-col items-center justify-center py-10 text-center">
+                        <FiActivity className="h-8 w-8 text-[#94a3b8] mb-2" />
+                        <p className="text-sm font-semibold text-[#102a43] m-0">
+                          No activity yet
+                        </p>
+                        <p className="text-xs text-[#829ab1] mt-1">
+                          Actions on this task will appear here.
+                        </p>
+                      </div>
+                    )}
 
                   {/* Timeline */}
-                  {!activitiesLoading && !activitiesError && activities.length > 0 && (
-                    <div className="relative ps-2">
-                      {activities.map((activity, index) => {
-                        const styles = getActivityStyles(activity.action);
-                        const isLast = index === activities.length - 1;
+                  {!activitiesLoading &&
+                    !activitiesError &&
+                    activities.length > 0 && (
+                      <div className="relative ps-2">
+                        {activities.map((activity, index) => {
+                          const styles = getActivityStyles(activity.action);
+                          const isLast = index === activities.length - 1;
 
-                        return (
-                          <div key={activity.id} className="relative flex gap-4 pb-6 last:pb-0">
-                            {/* الخط الواصل */}
-                            {!isLast && (
-                              <div className="absolute start-[19px] top-10 bottom-0 w-px bg-[#e2e8f0]" />
-                            )}
-
-                            {/* الدايرة */}
+                          return (
                             <div
-                              className={`relative z-10 flex h-9 w-9 shrink-0 items-center justify-center rounded-full border-4 border-white shadow-sm ${styles.dotColor} text-white`}
+                              key={activity.id}
+                              className="relative flex gap-4 pb-6 last:pb-0"
                             >
-                              {styles.icon}
-                            </div>
-
-                            {/* المحتوى */}
-                            <div className="flex-1 min-w-0 pt-1">
-                              <div className="flex items-center gap-2 flex-wrap mb-1">
-                                <span
-                                  className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wide ${styles.badge}`}
-                                >
-                                  {activity.action}
-                                </span>
-
-                                <span className="inline-flex items-center gap-1 text-[11px] text-[#94a3b8]">
-                                  <FiUser className="h-3 w-3" />
-                                  User #{activity.user_id}
-                                </span>
-                              </div>
-
-                              <p className="text-sm text-[#486581] font-medium m-0 leading-snug">
-                                {activity.description}
-                              </p>
-
-                              {/* old → new لو موجودين */}
-                              {(activity.old_value !== null ||
-                                activity.new_value !== null) && (
-                                <div className="mt-1.5 inline-flex items-center gap-2 rounded-lg bg-[#f8fafc] border border-[#f1f5f9] px-2.5 py-1 text-[11px] text-[#64748b]">
-                                  <span className="line-through decoration-[#cbd5e1]">
-                                    {activity.old_value ?? "—"}
-                                  </span>
-                                  <span className="text-[#94a3b8]">→</span>
-                                  <span className="font-bold text-[#102a43]">
-                                    {activity.new_value ?? "—"}
-                                  </span>
-                                </div>
+                              {/* الخط الواصل */}
+                              {!isLast && (
+                                <div className="absolute start-[19px] top-10 bottom-0 w-px bg-[#e2e8f0]" />
                               )}
 
-                              <p className="text-[11px] text-[#94a3b8] mt-1.5 m-0">
-                                {formatDateTime(activity.created_at, isRtl)}
-                              </p>
+                              {/* الدايرة */}
+                              <div
+                                className={`relative z-10 flex h-9 w-9 shrink-0 items-center justify-center rounded-full border-4 border-white shadow-sm ${styles.dotColor} text-white`}
+                              >
+                                {styles.icon}
+                              </div>
+
+                              {/* المحتوى */}
+                              <div className="flex-1 min-w-0 pt-1">
+                                <div className="flex items-center gap-2 flex-wrap mb-1">
+                                  <span
+                                    className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wide ${styles.badge}`}
+                                  >
+                                    {activity.action}
+                                  </span>
+
+                                  <span className="inline-flex items-center gap-1 text-[11px] text-[#94a3b8]">
+                                    <FiUser className="h-3 w-3" />
+                                    User #{activity.user_id}
+                                  </span>
+                                </div>
+
+                                <p className="text-sm text-[#486581] font-medium m-0 leading-snug">
+                                  {activity.description}
+                                </p>
+
+                                {/* old → new لو موجودين */}
+                                {(activity.old_value !== null ||
+                                  activity.new_value !== null) && (
+                                  <div className="mt-1.5 inline-flex items-center gap-2 rounded-lg bg-[#f8fafc] border border-[#f1f5f9] px-2.5 py-1 text-[11px] text-[#64748b]">
+                                    <span className="line-through decoration-[#cbd5e1]">
+                                      {activity.old_value ?? "—"}
+                                    </span>
+                                    <span className="text-[#94a3b8]">→</span>
+                                    <span className="font-bold text-[#102a43]">
+                                      {activity.new_value ?? "—"}
+                                    </span>
+                                  </div>
+                                )}
+
+                                <p className="text-[11px] text-[#94a3b8] mt-1.5 m-0">
+                                  {formatDateTime(activity.created_at, isRtl)}
+                                </p>
+                              </div>
                             </div>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  )}
+                          );
+                        })}
+                      </div>
+                    )}
                 </div>
               )}
             </motion.div>
@@ -1773,7 +2643,8 @@ const Tasks = () => {
                 <span className="text-xs text-[#829ab1]">Current:</span>
                 <span
                   className={`inline-flex items-center rounded-full px-3 py-0.5 text-xs font-semibold ${
-                    STATUS_BADGES[statusTask.statusLabel] || "bg-[#f1f5f9] text-[#64748b]"
+                    STATUS_BADGES[statusTask.statusLabel] ||
+                    "bg-[#f1f5f9] text-[#64748b]"
                   }`}
                 >
                   {statusTask.statusLabel}
@@ -1783,7 +2654,9 @@ const Tasks = () => {
               {statusError && (
                 <div className="mb-4 flex items-start gap-2 rounded-xl border border-[#fecaca] bg-[#fef2f2] p-3">
                   <FiAlertCircle className="text-[#dc2626] shrink-0 mt-0.5" />
-                  <p className="text-xs font-semibold text-[#dc2626] m-0">{statusError}</p>
+                  <p className="text-xs font-semibold text-[#dc2626] m-0">
+                    {statusError}
+                  </p>
                 </div>
               )}
 
@@ -1802,8 +2675,8 @@ const Tasks = () => {
                         isCurrent
                           ? "border-[#e2e8f0] bg-[#f8fafc] text-[#94a3b8] cursor-default"
                           : isSelected
-                          ? "border-[#1c364f] bg-[#1c364f] text-white shadow-sm"
-                          : "border-[#e2e8f0] bg-white text-[#486581] hover:border-[#cbd5e1] hover:bg-[#f8fafc]"
+                            ? "border-[#1c364f] bg-[#1c364f] text-white shadow-sm"
+                            : "border-[#e2e8f0] bg-white text-[#486581] hover:border-[#cbd5e1] hover:bg-[#f8fafc]"
                       }`}
                     >
                       {isCurrent ? `${status} (current)` : status}
@@ -1826,7 +2699,9 @@ const Tasks = () => {
                   whileTap={{ scale: 0.98 }}
                   type="button"
                   onClick={handleStatusChangeSubmit}
-                  disabled={changingStatus || newStatus === statusTask.statusLabel}
+                  disabled={
+                    changingStatus || newStatus === statusTask.statusLabel
+                  }
                   className="h-10 px-[22px] rounded-xl bg-[#1c364f] text-xs font-semibold text-white hover:bg-[#254360] transition shadow-sm disabled:opacity-60 disabled:cursor-not-allowed"
                 >
                   {changingStatus
@@ -1881,22 +2756,31 @@ const Tasks = () => {
                   <FiUserPlus className="h-4 w-4" />
                 </div>
                 <p className="text-xs text-[#486581] leading-relaxed m-0">
-                  Enter the <strong>User ID</strong> to assign this task to them.
-                  The employee will see this task in their dashboard.
+                  Enter the <strong>User ID</strong> to assign this task to
+                  them. The employee will see this task in their dashboard.
                 </p>
               </div>
 
               {assignError && (
                 <div className="mb-4 flex items-start gap-2 rounded-xl border border-[#fecaca] bg-[#fef2f2] p-3">
                   <FiAlertCircle className="text-[#dc2626] shrink-0 mt-0.5" />
-                  <p className="text-xs font-semibold text-[#dc2626] m-0">{assignError}</p>
+                  <p className="text-xs font-semibold text-[#dc2626] m-0">
+                    {assignError}
+                  </p>
                 </div>
               )}
 
-              <form onSubmit={handleAssignSubmit} className="flex flex-col gap-4">
+              <form
+                onSubmit={handleAssignSubmit}
+                className="flex flex-col gap-4"
+              >
                 <div className="flex flex-col gap-1.5">
-                  <label htmlFor="assign-user-id" className="text-xs font-semibold text-[#64748b]">
-                    {t("tasks.form.userId", "User ID")} <span className="text-[#e05252]">*</span>
+                  <label
+                    htmlFor="assign-user-id"
+                    className="text-xs font-semibold text-[#64748b]"
+                  >
+                    {t("tasks.form.userId", "User ID")}{" "}
+                    <span className="text-[#e05252]">*</span>
                   </label>
                   <input
                     id="assign-user-id"
@@ -1980,14 +2864,23 @@ const Tasks = () => {
               {editError && (
                 <div className="mb-4 flex items-start gap-2 rounded-xl border border-[#fecaca] bg-[#fef2f2] p-3">
                   <FiAlertCircle className="text-[#dc2626] shrink-0 mt-0.5" />
-                  <p className="text-xs font-semibold text-[#dc2626] m-0">{editError}</p>
+                  <p className="text-xs font-semibold text-[#dc2626] m-0">
+                    {editError}
+                  </p>
                 </div>
               )}
 
-              <form onSubmit={handleEditTaskSubmit} className="flex flex-col gap-4">
+              <form
+                onSubmit={handleEditTaskSubmit}
+                className="flex flex-col gap-4"
+              >
                 <div className="flex flex-col gap-1.5">
-                  <label htmlFor="edit-task-title" className="text-xs font-semibold text-[#64748b]">
-                    {t("tasks.form.title", "Title")} <span className="text-[#e05252]">*</span>
+                  <label
+                    htmlFor="edit-task-title"
+                    className="text-xs font-semibold text-[#64748b]"
+                  >
+                    {t("tasks.form.title", "Title")}{" "}
+                    <span className="text-[#e05252]">*</span>
                   </label>
                   <input
                     id="edit-task-title"
@@ -2001,7 +2894,10 @@ const Tasks = () => {
                 </div>
 
                 <div className="flex flex-col gap-1.5">
-                  <label htmlFor="edit-task-description" className="text-xs font-semibold text-[#64748b]">
+                  <label
+                    htmlFor="edit-task-description"
+                    className="text-xs font-semibold text-[#64748b]"
+                  >
                     {t("tasks.form.description", "Description")}
                   </label>
                   <textarea
@@ -2016,8 +2912,12 @@ const Tasks = () => {
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="flex flex-col gap-1.5">
-                    <label htmlFor="edit-task-priority" className="text-xs font-semibold text-[#64748b]">
-                      {t("tasks.form.priority", "Priority")} <span className="text-[#e05252]">*</span>
+                    <label
+                      htmlFor="edit-task-priority"
+                      className="text-xs font-semibold text-[#64748b]"
+                    >
+                      {t("tasks.form.priority", "Priority")}{" "}
+                      <span className="text-[#e05252]">*</span>
                     </label>
                     <select
                       id="edit-task-priority"
@@ -2035,8 +2935,12 @@ const Tasks = () => {
                   </div>
 
                   <div className="flex flex-col gap-1.5">
-                    <label htmlFor="edit-task-deadline" className="text-xs font-semibold text-[#64748b]">
-                      {t("tasks.form.deadline", "Deadline")} <span className="text-[#e05252]">*</span>
+                    <label
+                      htmlFor="edit-task-deadline"
+                      className="text-xs font-semibold text-[#64748b]"
+                    >
+                      {t("tasks.form.deadline", "Deadline")}{" "}
+                      <span className="text-[#e05252]">*</span>
                     </label>
                     <input
                       id="edit-task-deadline"
@@ -2117,20 +3021,32 @@ const Tasks = () => {
               {createError && (
                 <div className="mb-4 flex items-start gap-2 rounded-xl border border-[#fecaca] bg-[#fef2f2] p-3">
                   <FiAlertCircle className="text-[#dc2626] shrink-0 mt-0.5" />
-                  <p className="text-xs font-semibold text-[#dc2626] m-0">{createError}</p>
+                  <p className="text-xs font-semibold text-[#dc2626] m-0">
+                    {createError}
+                  </p>
                 </div>
               )}
 
-              <form onSubmit={handleCreateTaskSubmit} className="flex flex-col gap-4">
+              <form
+                onSubmit={handleCreateTaskSubmit}
+                className="flex flex-col gap-4"
+              >
                 <div className="flex flex-col gap-1.5">
-                  <label htmlFor="task-title" className="text-xs font-semibold text-[#64748b]">
-                    {t("tasks.form.title", "Title")} <span className="text-[#e05252]">*</span>
+                  <label
+                    htmlFor="task-title"
+                    className="text-xs font-semibold text-[#64748b]"
+                  >
+                    {t("tasks.form.title", "Title")}{" "}
+                    <span className="text-[#e05252]">*</span>
                   </label>
                   <input
                     id="task-title"
                     name="title"
                     type="text"
-                    placeholder={t("tasks.form.titlePlaceholder", "e.g. Complete API Documentation")}
+                    placeholder={t(
+                      "tasks.form.titlePlaceholder",
+                      "e.g. Complete API Documentation",
+                    )}
                     value={createForm.title}
                     onChange={handleCreateInputChange}
                     required
@@ -2139,14 +3055,20 @@ const Tasks = () => {
                 </div>
 
                 <div className="flex flex-col gap-1.5">
-                  <label htmlFor="task-description" className="text-xs font-semibold text-[#64748b]">
+                  <label
+                    htmlFor="task-description"
+                    className="text-xs font-semibold text-[#64748b]"
+                  >
                     {t("tasks.form.description", "Description")}
                   </label>
                   <textarea
                     id="task-description"
                     name="description"
                     rows={3}
-                    placeholder={t("tasks.form.descriptionPlaceholder", "Describe the task...")}
+                    placeholder={t(
+                      "tasks.form.descriptionPlaceholder",
+                      "Describe the task...",
+                    )}
                     value={createForm.description}
                     onChange={handleCreateInputChange}
                     className="w-full resize-none rounded-xl border border-[#d9e2ec] px-3.5 py-2.5 text-xs text-[#102a43] placeholder:text-[#94a3b8] focus:outline-none focus:border-[#486581] focus:ring-1 focus:ring-[#486581] transition"
@@ -2155,8 +3077,12 @@ const Tasks = () => {
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="flex flex-col gap-1.5">
-                    <label htmlFor="task-priority" className="text-xs font-semibold text-[#64748b]">
-                      {t("tasks.form.priority", "Priority")} <span className="text-[#e05252]">*</span>
+                    <label
+                      htmlFor="task-priority"
+                      className="text-xs font-semibold text-[#64748b]"
+                    >
+                      {t("tasks.form.priority", "Priority")}{" "}
+                      <span className="text-[#e05252]">*</span>
                     </label>
                     <select
                       id="task-priority"
@@ -2174,8 +3100,12 @@ const Tasks = () => {
                   </div>
 
                   <div className="flex flex-col gap-1.5">
-                    <label htmlFor="task-deadline" className="text-xs font-semibold text-[#64748b]">
-                      {t("tasks.form.deadline", "Deadline")} <span className="text-[#e05252]">*</span>
+                    <label
+                      htmlFor="task-deadline"
+                      className="text-xs font-semibold text-[#64748b]"
+                    >
+                      {t("tasks.form.deadline", "Deadline")}{" "}
+                      <span className="text-[#e05252]">*</span>
                     </label>
                     <input
                       id="task-deadline"
@@ -2241,10 +3171,18 @@ const Tasks = () => {
               <div className="flex items-start justify-between pb-4">
                 <div>
                   <p className="text-[11px] font-bold uppercase tracking-wider text-[#94a3b8]">
-                    {t("tasks.taskUpdate", "TASK UPDATE")}
+                    {resubmissionTarget
+                      ? isRtl
+                        ? "إعادة تسليم المهمة"
+                        : "RESUBMISSION"
+                      : t("tasks.taskUpdate", "TASK UPDATE")}
                   </p>
                   <h2 className="text-lg font-bold text-[#102a43] mt-0.5">
-                    {t("tasks.submitDeliverable", "Submit deliverable")}
+                    {resubmissionTarget
+                      ? isRtl
+                        ? "إعادة تسليم العمل بعد التعديل"
+                        : "Resubmit Deliverable"
+                      : t("tasks.submitDeliverable", "Submit deliverable")}
                   </h2>
                 </div>
                 <button
@@ -2257,10 +3195,17 @@ const Tasks = () => {
                 </button>
               </div>
 
-              <div className="rounded-xl bg-[#f8fafc] px-4 py-3 border border-[#f1f5f9] mb-5">
+              <div className="rounded-xl bg-[#f8fafc] px-4 py-3 border border-[#f1f5f9] mb-4">
                 <p className="text-xs font-semibold text-[#102a43]">
                   {selectedTask.defaultTitle}
                 </p>
+                {resubmissionTarget && (
+                  <p className="text-[11px] text-[#c2410c] mt-1 font-medium">
+                    {isRtl
+                      ? "تقوم الآن بإعادة التسليم استجابة لطلب التعديلات من المشرف."
+                      : "You are resubmitting this deliverable following the change request."}
+                  </p>
+                )}
               </div>
 
               {progressError && (
@@ -2277,7 +3222,9 @@ const Tasks = () => {
                   <span className="font-semibold text-[#64748b]">
                     {t("tasks.form.progress", "Progress")}
                   </span>
-                  <span className="font-bold text-[#102a43]">{progressVal}%</span>
+                  <span className="font-bold text-[#102a43]">
+                    {progressVal}%
+                  </span>
                 </div>
 
                 <input
@@ -2308,13 +3255,24 @@ const Tasks = () => {
 
               <div className="mb-5">
                 <label className="block text-xs font-semibold text-[#64748b] mb-1.5">
-                  {t("tasks.form.notes", "Notes")}
+                  {t("tasks.form.notes", "Notes")}{" "}
+                  <span className="text-[#dc2626]">*</span>
                 </label>
                 <textarea
                   rows={3}
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
-                  placeholder={t("tasks.form.notesPlaceholder", "Add notes about this deliverable...")}
+                  placeholder={
+                    resubmissionTarget
+                      ? isRtl
+                        ? "وضح ما قمت بتعديله في هذا التسليم الجديد..."
+                        : "Describe the changes made in this resubmission..."
+                      : t(
+                          "tasks.form.notesPlaceholder",
+                          "Add notes about this deliverable...",
+                        )
+                  }
+                  required
                   className="w-full resize-none rounded-xl border border-[#d9e2ec] px-3.5 py-2.5 text-xs text-[#102a43] placeholder:text-[#94a3b8] focus:outline-none focus:border-[#486581] focus:ring-1 focus:ring-[#486581] transition"
                 />
               </div>
@@ -2323,7 +3281,7 @@ const Tasks = () => {
                 <label className="flex cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-[#e2e8f0] bg-[#fafcfd] py-6 px-4 hover:bg-[#f8fafc] hover:border-[#cbd5e1] transition text-center">
                   <input
                     type="file"
-                    accept=".pdf,.docx,.png"
+                    accept=".pdf,.docx,.png,.zip"
                     onChange={handleFileChange}
                     className="hidden"
                   />
@@ -2345,7 +3303,10 @@ const Tasks = () => {
                         {t("tasks.form.uploadFile", "Tap to upload a file")}
                       </p>
                       <p className="text-[10px] text-[#94a3b8]">
-                        {t("tasks.form.uploadHint", "PDF, DOCX, PNG up to 10MB")}
+                        {t(
+                          "tasks.form.uploadHint",
+                          "PDF, DOCX, PNG up to 10MB",
+                        )}
                       </p>
                     </div>
                   )}
@@ -2362,10 +3323,18 @@ const Tasks = () => {
               >
                 <span>
                   {submittingProgress
-                    ? t("tasks.form.updating", "Updating...")
-                    : t("tasks.form.submitForReview", "Submit for review")}
+                    ? isRtl
+                      ? "جارٍ الإرسال..."
+                      : "Submitting..."
+                    : resubmissionTarget
+                      ? isRtl
+                        ? "إعادة التسليم"
+                        : "Resubmit Deliverable"
+                      : t("tasks.form.submitForReview", "Submit for review")}
                 </span>
-                {!submittingProgress && <span className="text-sm">{isRtl ? "←" : "→"}</span>}
+                {!submittingProgress && (
+                  <span className="text-sm">{isRtl ? "←" : "→"}</span>
+                )}
               </motion.button>
             </motion.div>
           </motion.div>
@@ -2389,7 +3358,9 @@ const Tasks = () => {
             </div>
 
             <div>
-              <p className="text-sm font-semibold text-[#102a43]">{toast.title}</p>
+              <p className="text-sm font-semibold text-[#102a43]">
+                {toast.title}
+              </p>
               <p className="mt-0.5 text-xs text-[#829ab1]">{toast.message}</p>
             </div>
           </motion.div>

@@ -125,15 +125,15 @@ export default function VerifyOTP() {
           toast.error(t("auth.verifyOtp.validationError"));
 
           // Clear old reset data
-          sessionStorage.removeItem("resetEmail");
+          // sessionStorage.removeItem("resetEmail");
           sessionStorage.removeItem("resetToken");
 
           // Return to Forgot Password
-          setTimeout(() => {
-            navigate("/ForgotPassword", {
-              replace: true,
-            });
-          }, 1200);
+          // setTimeout(() => {
+          //   navigate("/ForgotPassword", {
+          //     replace: true,
+          //   });
+          // }, 1200);
 
           return;
         }

@@ -279,6 +279,7 @@
     "due": "موعد التسليم",
     "submitDeliverable": "تقديم المهمة",
     "awaitingReview": "في انتظار المراجعة",
+    "underReviewView": "التسليم قيد المراجعة",
     "completed": "مكتملة",
     "noTasks": "لا توجد مهام هنا",
     "allCaughtUp": "لقد أنجزت جميع مهامك.",
@@ -686,6 +687,15 @@
       ]
     },
     "features": {
+      "platformLabel": "منصة WiseWork",
+      "badges": {
+        "employees": "إدارة الموظفين",
+        "attendance": "الحضور والوقت",
+        "leaves": "إدارة الإجازات",
+        "performance": "مؤشرات الأداء",
+        "reports": "التقارير والتحليلات",
+        "aiInsights": "ذكاء المواهب"
+      },
       "badge": "إمكانيات المنصة",
       "title": "كل ما تحتاجه لإدارة منظومة العمل باحترافية",
       "subtitle": "واجهة تشغيلية هادئة وسلسة صُممت لتمكين مسؤولي الموارد البشرية والموظفين معاً.",
@@ -844,12 +854,14 @@
       }
     },
     "plans": {
+      "whatsIncluded": "ما يشمله الاشتراك",
       "badge": "الخطط والأسعار",
       "title": "باقات واضحة ومناسبة لجميع أحجام الفرق",
       "subtitle": "اختر الخطة المناسبة لمنشأتك الآن، مع إمكانية الترقية أو التخصيص في أي وقت.",
       "recommendedBadge": "الأكثر اختياراً",
       "period": "/شهرياً",
       "basic": {
+        "audience": "للفرق التي تبدأ رحلتها",
         "name": "الأساسية",
         "price": "",
         "userPeriod": "لكل موظف / شهرياً",
@@ -863,6 +875,7 @@
         ]
       },
       "pro": {
+        "audience": "للمؤسسات النامية",
         "name": "المتقدمة",
         "price": "",
         "userPeriod": "لكل موظف / شهرياً",
@@ -878,6 +891,7 @@
         ]
       },
       "enterprise": {
+        "audience": "للفرق المؤسسية الكبيرة",
         "name": "المؤسسات",
         "price": "مخصص",
         "userPeriod": "مصممة حسب متطلبات منشأتك",
@@ -956,6 +970,7 @@
     ]
   },
   "portal": {
+    "calendar": "التقويم",
     "holidays": "العطلات والمواسم",
     "aiInsights": "رؤى الذكاء الاصطناعي",
     "performanceMetrics": "مؤشرات الأداء",
@@ -1155,7 +1170,23 @@
     "employee": "موظف",
     "manager": "مدير",
     "hrManager": "مدير موارد بشرية",
-    "administrator": "مسؤول النظام"
+    "administrator": "مسؤول النظام",
+    "branchLocations": "مواقع الفروع",
+    "reviewCompletion": "اكتمال المراجعات",
+    "quickViewUsers": "نظرة سريعة على المستخدمين",
+    "quickViewUsersSubtitle": "أحدث مستخدمي مساحة العمل",
+    "noUsers": "لا يوجد مستخدمون لعرضهم.",
+    "noActivity": "لا يوجد نشاط حديث.",
+    "loading": "جارٍ تحميل لوحة التحكم...",
+    "loadError": "تعذر تحميل بيانات لوحة التحكم.",
+    "retry": "حاول مرة أخرى",
+    "exportSuccessTitle": "تم التصدير بنجاح",
+    "exportSuccessMessage": "تم تصدير تقرير لوحة التحكم بنجاح.",
+    "refreshSuccessTitle": "تم تحديث البيانات",
+    "refreshSuccessMessage": "تم تحديث بيانات لوحة التحكم بنجاح.",
+    "refreshing": "جارٍ تحديث البيانات...",
+    "rangeUpdatedTitle": "تم تحديث النطاق",
+    "rangeUpdatedMessage": "تم تحديث نطاق نمو المستخدمين بنجاح."
   },
   "branchesPage": {
     "breadcrumbApp": "WiseWork",
@@ -1293,7 +1324,7 @@
     },
     "home": {
       "date": "الاثنين، 9 يونيو 2026",
-      "welcome": "صباح الخير، عمر",
+      "welcome": "صباح الخير، {{name}}",
       "subtitle": "إليك نظرة سريعة على يوم عملك.",
       "viewCalendar": "عرض التقويم",
       "onShift": "في الوردية",
@@ -1653,7 +1684,14 @@
     "readiness1": "التحقق من الحضور",
     "readiness2": "موافقات الإجازات",
     "readiness3": "تقييمات الربع الثالث",
-    "readiness4": "تسوية الرواتب"
+    "readiness4": "تسوية الرواتب",
+    "breadcrumb": "بوابة الموارد البشرية / مركز القيادة",
+    "loading": "جارٍ تحميل لوحة التحكم...",
+    "loadError": "تعذر تحميل بيانات لوحة التحكم.",
+    "retry": "حاول مرة أخرى",
+    "noSignals": "لا يوجد موظفون يحتاجون إلى متابعة حالياً.",
+    "presentTodayPct": "{{percentage}}٪ من القوى العاملة حاضرون",
+    "pendingReviewsDetail": "{{leaves}} إجازات · {{advances}} سلف"
   },
   "hrAttendance": {
     "title": "الحضور والانصراف",
@@ -1841,7 +1879,11 @@
     "youssefLotfy": "يوسف لطفي",
     "salmaNabil": "سلمى نبيل",
     "karimAshraf": "كريم أشرف",
-    "breadcrumb": "بوابة المدير / لوحة تحكم الفريق"
+    "breadcrumb": "بوابة المدير / لوحة تحكم الفريق",
+    "loadError": "تعذر تحميل بيانات لوحة التحكم.",
+    "retry": "حاول مرة أخرى",
+    "noWorkloadAlert": "لا توجد تنبيهات لعبء العمل حاليًا. يبدو أن توزيع العمل على فريقك متوازن.",
+    "noPendingSubmissions": "لا توجد تسليمات معلقة تحتاج إلى مراجعتك."
   },
   "managerTasks": {
     "title": "إدارة المهام",
@@ -1899,6 +1941,15 @@
     "toastApproved": "تم اعتماد التسليم وإنهاء المهمة",
     "toastRejected": "تم رفض التسليم",
     "toastChangeRequested": "تم إرسال طلب التعديل",
+    "searchPlaceholder": "ابحث باسم المهمة أو العضو أو الملاحظات...",
+    "noSubmissions": "لا توجد تسليمات",
+    "noSubmissionsDesc": "لا توجد حاليًا أي تسليمات في قائمة الانتظار للمراجعة.",
+    "feedbackRequired": "يرجى كتابة ملاحظات توضح التعديلات أو سبب الرفض",
+    "rejectPlaceholder": "اكتب ملاحظات واضحة حول سبب رفض هذا التسليم...",
+    "errorApprove": "فشل اعتماد التسليم",
+    "errorReject": "فشل رفض التسليم",
+    "errorChangeRequest": "فشل إرسال طلب التعديل",
+    "fetchError": "فشل تحميل قائمة المراجعة",
     "youssefLotfy": "يوسف لطفي",
     "salmaNabil": "سلمى نبيل",
     "karimAshraf": "كريم أشرف",
@@ -1985,6 +2036,11 @@
     "breadcrumb": "بوابة المدير / الموافقات على إجازات الفريق",
     "title": "الموافقة على إجازات الفريق",
     "subtitle": "حافظ على توافق فريقك ودعمه واستمراره في التقدم.",
+    "loading": "جارٍ تحميل طلبات الإجازات...",
+    "loadError": "تعذر تحميل طلبات الإجازات.",
+    "approveSuccess": "تمت الموافقة على طلب الإجازة.",
+    "approveError": "تعذرت الموافقة على طلب الإجازة.",
+    "retry": "إعادة المحاولة",
     "searchPlaceholder": "ابحث عن أعضاء الفريق...",
     "table": {
       "member": "العضو",
@@ -2185,7 +2241,6 @@
     "omarKhaled": "عمر خالد",
     "karimAshraf": "كريم أشرف"
   },
-
   "hrCommandCenter": {
     "title": "مركز قيادة الموارد البشرية",
     "subtitle": "عرض تشغيلي مباشر لحالة الموظفين والموافقات والاستعداد للرواتب.",
@@ -2436,7 +2491,77 @@
     "myPerformance": "أدائي",
     "myGoals": "أهدافي",
     "myFinancials": "ماليّاتي",
-    "aiAssistant": "المساعد الذكي"
+    "aiAssistant": "المساعد الذكي",
+    "landingPage": "الصفحة الرئيسية"
+  },
+  "landingPageAdmin": {
+    "title": "الصفحة الرئيسية",
+    "subtitle": "إدارة محتوى الصفحة الرئيسية العامة للموقع.",
+    "langNotice": "أنت تعدّل النسخة {{language}} من المحتوى. غيّر لغة الواجهة لتعديل النسخة الأخرى.",
+    "sectionsTitle": "أقسام الصفحة",
+    "sectionsSubtitle": "عدّل المحتوى النصي لكل قسم في الصفحة الرئيسية.",
+    "featuresTitle": "المميزات",
+    "featuresSubtitle": "كروت المميزات المعروضة في الصفحة الرئيسية مرتبة حسب الأولوية.",
+    "addFeature": "إضافة ميزة",
+    "editFeature": "تعديل الميزة",
+    "editSection": "تعديل القسم",
+    "edit": "تعديل",
+    "save": "حفظ التغييرات",
+    "saving": "جارٍ الحفظ...",
+    "cancel": "إلغاء",
+    "close": "إغلاق",
+    "retry": "إعادة المحاولة",
+    "remove": "حذف",
+    "addItem": "إضافة عنصر",
+    "lastUpdated": "آخر تحديث",
+    "itemsCount": "{{count}} عناصر",
+    "noSections": "لا توجد أقسام.",
+    "noFeatures": "لا توجد مميزات بعد. أضف أول ميزة.",
+    "loadError": "تعذر تحميل البيانات.",
+    "saveFailed": "تعذر حفظ التغييرات.",
+    "sectionUpdated": "تم تحديث القسم بنجاح.",
+    "featureCreated": "تمت إضافة الميزة بنجاح.",
+    "featureUpdated": "تم تحديث الميزة بنجاح.",
+    "iconHint": "اسم الأيقونة، مثل: user-group أو clock أو shield-check.",
+    "orderHint": "الأرقام الأصغر تظهر أولاً.",
+    "sections": {
+      "hero": "القسم الرئيسي (Hero)",
+      "about": "من نحن",
+      "ai_insights": "رؤى الذكاء الاصطناعي",
+      "global_stats": "الإحصائيات العامة",
+      "cta": "دعوة لاتخاذ إجراء",
+      "footer": "التذييل"
+    },
+    "fields": {
+      "badge": "الشارة",
+      "title": "العنوان",
+      "description": "الوصف",
+      "primary_button": "الزر الأساسي",
+      "secondary_button": "الزر الثانوي",
+      "trust_text": "نص الثقة",
+      "ticker_tags": "شريط الوسوم المتحرك",
+      "stats": "الإحصائيات",
+      "highlights": "النقاط البارزة",
+      "label": "التسمية",
+      "value": "القيمة",
+      "subtext": "النص الفرعي",
+      "items": "الإحصائيات",
+      "button_text": "نص الزر",
+      "subnotes": "ملاحظات فرعية",
+      "brand_description": "وصف العلامة التجارية",
+      "columns": "أعمدة الروابط",
+      "platform": "المنصة",
+      "resources": "المصادر",
+      "company": "الشركة",
+      "contact": "التواصل",
+      "email": "البريد الإلكتروني",
+      "phone": "الهاتف",
+      "address": "العنوان",
+      "copyright": "حقوق النشر",
+      "bottom_tagline": "الشعار السفلي",
+      "icon": "الأيقونة",
+      "order": "الترتيب"
+    }
   },
   "employeeFinancial": {
     "eyebrow": "الإدارة المالية",

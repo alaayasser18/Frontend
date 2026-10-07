@@ -14,6 +14,7 @@ import {
   useHrPendingLeaveRequests,
   useRejectLeaveRequest,
 } from "../hooks/useLeaveRequests";
+import { useOwnerPendingLeaveRequests } from "../../admin/hooks/useOwnerLeaveRequests";
 
 const categoryStyle =
   "bg-[#f5f3ff] text-[#7c3aed]";
@@ -82,21 +83,27 @@ const modalVariants = {
   },
 };
 
-const LeaveRequests = () => {
+const LeaveRequests = ({ role = "hr" }) => {
   const { t, i18n } = useTranslation();
 
   const isArabic = i18n.language?.toLowerCase().startsWith("ar");
   const lang = isArabic ? "ar" : "en";
 
-  const requestsQuery = useHrPendingLeaveRequests(lang);
+  const hrRequestsQuery = useHrPendingLeaveRequests(lang, role === "hr");
+  const ownerRequestsQuery = useOwnerPendingLeaveRequests(
+    lang,
+    role === "owner",
+  );
+  const requestsQuery =
+    role === "owner" ? ownerRequestsQuery : hrRequestsQuery;
   const approveMutation = useApproveLeaveRequest(lang);
   const rejectMutation = useRejectLeaveRequest(lang);
   const requests = useMemo(
     () =>
       (requestsQuery.data || []).map((request) =>
-        mapLeaveRequest(request, isArabic),
+        mapLeaveRequest(request, isArabic, t),
       ),
-    [requestsQuery.data, isArabic],
+    [requestsQuery.data, isArabic, t],
   );
 
   const [activeAction, setActiveAction] = useState(null);
@@ -193,7 +200,10 @@ const LeaveRequests = () => {
       });
       setActiveAction(null);
       closeRejectModal();
-      showMessage("success", response?.message || t("leaveRequests.rejectSuccess"));
+      showMessage(
+        "rejected",
+        response?.message || t("leaveRequests.rejectSuccess"),
+      );
     } catch (error) {
       setActiveAction(null);
       showMessage(
@@ -869,7 +879,7 @@ const LeaveRequests = () => {
 
 export default LeaveRequests;
 
-function mapLeaveRequest(request, isArabic) {
+function mapLeaveRequest(request, isArabic, t) {
   const employee = request.user || request.employee || {};
   const startDate = formatLeaveDate(request.start_date, isArabic);
   const endDate = formatLeaveDate(request.end_date, isArabic);
@@ -880,14 +890,64 @@ function mapLeaveRequest(request, isArabic) {
     role: employee.job_title || employee.role_label || employee.role || "—",
     department:
       employee.department?.name || employee.department_name || "—",
-    category: request.leave_type?.name || (isArabic ? "إجازة" : "Leave"),
+    category:
+      getLocalizedLeaveTypeName(request.leave_type?.name, isArabic, t) ||
+      (isArabic ? "إجازة" : "Leave"),
     dates: startDate === endDate ? startDate : `${startDate} – ${endDate}`,
     days:
       request.days == null
         ? "—"
         : new Intl.NumberFormat(isArabic ? "ar" : "en").format(request.days),
-    reason: request.reason || "",
+    reason: getLocalizedLeaveReason(request.reason, isArabic, t),
   };
+}
+
+function getLocalizedLeaveTypeName(name, isArabic, t) {
+  if (!name || !isArabic || /[\u0600-\u06ff]/i.test(name)) {
+    return name || "";
+  }
+
+  const normalizedName = name.trim().toLowerCase().replace(/[^a-z]/g, "");
+  const translations = [
+    { key: "annual", names: ["annual", "annualleave"] },
+    { key: "casual", names: ["casual", "casualleave"] },
+    { key: "sick", names: ["sick", "sickleave"] },
+    { key: "unpaid", names: ["unpaid", "unpaidleave"] },
+    { key: "emergency", names: ["emergency", "emergencyleave"] },
+  ];
+  const translation = translations.find(({ names }) =>
+    names.some((knownName) => normalizedName.endsWith(knownName)),
+  );
+
+  if (!translation) {
+    return name;
+  }
+
+  const translatedName = t(`leaveBalances.${translation.key}`);
+  return normalizedName.startsWith("new")
+    ? `${translatedName} ${t("leaveBalances.newTypeSuffix")}`
+    : translatedName;
+}
+
+function getLocalizedLeaveReason(reason, isArabic, t) {
+  if (!reason || !isArabic) {
+    return reason || "";
+  }
+
+  const normalizedReason = reason.trim().toLowerCase().replace(/[^a-z]/g, "");
+  const translations = [
+    { key: "familyTrip", values: ["familytrip"] },
+    { key: "medicalAppointment", values: ["medicalappointment"] },
+    { key: "personalTime", values: ["personaltime"] },
+    { key: "personalAppointment", values: ["personalappointment"] },
+  ];
+  const translation = translations.find(({ values }) =>
+    values.includes(normalizedReason),
+  );
+
+  return translation
+    ? t(`managerLeave.reasons.${translation.key}`)
+    : reason;
 }
 
 function formatLeaveDate(value, isArabic) {

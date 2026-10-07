@@ -194,6 +194,7 @@ const Users = () => {
   const [departmentId, setDepartmentId] = useState("");
   const [phone, setPhone] = useState("");
   const [address, setAddress] = useState("");
+  const [salary, setSalary] = useState("");
   const [selectedPermissions, setSelectedPermissions] = useState([]);
   const [formErrors, setFormErrors] = useState({});
 
@@ -254,6 +255,15 @@ const Users = () => {
 
   // Extracted live employees list
   const employeesList = useMemo(() => {
+    if (Array.isArray(employeesResponse?.data?.employees)) {
+      return employeesResponse.data.employees;
+    }
+    if (Array.isArray(employeesResponse?.employees)) {
+      return employeesResponse.employees;
+    }
+    if (Array.isArray(employeesResponse?.data?.data?.employees)) {
+      return employeesResponse.data.data.employees;
+    }
     if (Array.isArray(employeesResponse?.data?.data)) {
       return employeesResponse.data.data;
     }
@@ -364,6 +374,7 @@ const Users = () => {
     setDepartmentId("");
     setPhone("");
     setAddress("");
+    setSalary("");
     setSelectedPermissions([]);
     setFormErrors({});
   };
@@ -394,7 +405,8 @@ const Users = () => {
       !email.trim() ||
       !password.trim() ||
       !jobTitle.trim() ||
-      !startDate
+      !startDate ||
+      !salary
     ) {
       toast.error(
         t("usersPage.validationError", "Please fill in all required fields."),
@@ -427,6 +439,7 @@ const Users = () => {
       job_title: jobTitle.trim(),
       employment_type: employmentType,
       start_date: startDate,
+      salary: Number(salary),
       department_id:
         role === "HR" && !departmentId ? null : Number(departmentId) || null,
       phone: phone.trim() || null,
@@ -1192,6 +1205,32 @@ const Users = () => {
                     {formErrors?.phone && (
                       <p className="mt-1.5 text-xs text-red-500 font-medium">
                         {formErrors.phone[0]}
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Salary */}
+                  <div>
+                    <label className={LABEL_CLASS}>
+                      {t("usersPage.salary", "Salary")}{" "}
+                      <span className="text-red-500">*</span>
+                    </label>
+
+                    <input
+                      type="number"
+                      required
+                      min={0}
+                      value={salary}
+                      onChange={(e) => setSalary(e.target.value)}
+                      placeholder={t(
+                        "usersPage.salaryPlaceholder",
+                        "e.g. 5000",
+                      )}
+                      className={INPUT_CLASS}
+                    />
+                    {formErrors?.salary && (
+                      <p className="mt-1.5 text-xs text-red-500 font-medium">
+                        {formErrors.salary[0]}
                       </p>
                     )}
                   </div>

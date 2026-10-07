@@ -1,5 +1,6 @@
 import { useEffect } from "react";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { Routes, Route, Navigate } from "react-router-dom";
+import LanguageRouter from "./routes/LanguageRouter";
 import { Toaster } from "react-hot-toast";
 import { useTranslation } from "react-i18next";
 import { AuthProvider } from "./context/AuthContext";
@@ -31,10 +32,12 @@ import AdminAdvances from "./features/admin/pages/AdvancesDeductions";
 import AdminRewards from "./features/admin/pages/Rewards";
 import AdminAttendance from "./features/admin/pages/Attendance";
 import AdminHolidays from "./features/admin/pages/Holidays";
+import AdminPolicies from "./features/admin/pages/Policies";
+import LandingPage from "./features/admin/pages/LandingPage";
 
 // ==================== Employee Pages ====================
 import EmployeePerformance from "./features/employee/pages/Performance";
-import CompanyPolicies from "./features/employee/pages/Policies";
+import PoliciesList from "./features/employee/pages/PoliciesList";
 import Tasks from "./features/employee/pages/Tasks";
 import EmployeeProfileSettings from "./features/employee/pages/ProfileSettings";
 import HomeDashboard from "./features/employee/pages/home/HomeDashboard";
@@ -54,10 +57,13 @@ import TeamEvaluations from "./features/manager/pages/TeamEvaluations";
 import TeamGoals from "./features/manager/pages/TeamGoals";
 import PerformanceAnalytics from "./features/manager/pages/PerformanceAnalytics";
 import TeamAttendance from "./features/manager/pages/TeamAttendance";
+import TeamMembers from "./features/manager/pages/TeamMembers";
 import TeamLeaveApprovals from "./features/manager/pages/TeamLeaveApprovals";
+import DepartmentDirectory from "./features/departments/pages/DepartmentDirectory";
 import AITeamInsights from "./features/manager/pages/AITeamInsights";
 import ProfileSetting from "./features/manager/pages/ProfileSetting";
 import ManagerHolidays from "./features/manager/pages/Holidays";
+import ManagerPolicies from "./features/manager/pages/CompanyPolicies";
 
 // ==================== HR Pages ====================
 import HrDashboard from "./features/hr/pages/hrDashboard";
@@ -72,28 +78,36 @@ import HrGoals from "./features/hr/pages/goals";
 import HrEvaluations from "./features/hr/pages/evaluations";
 import PerformanceMetrics from "./features/hr/pages/performanceMatrics";
 import AIInsights from "./features/hr/pages/aiInsights";
-import HrCompanyPolicies from "./features/hr/pages/companyPolicies";
+import HrPolicies from "./features/hr/pages/managePolicies";
 import HrHolidays from "./features/hr/pages/holidays";
 import EmployeeHolidays from "./features/employee/pages/Holidays";
 import Reports from "./features/hr/pages/reports";
 import HrProfileSettings from "./features/hr/pages/ProfileSettings";
+import CalendarPage from "./features/calendar/pages/CalendarPage";
+import CompanyEventsPage from "./features/events/pages/CompanyEventsPage";
 
 // ==================== Layout ====================
 import DashboardLayout from "./layouts/DashboardLayout";
 
-
 // ==================== Google OAuth hash handler ====================
 (function handleGoogleHash() {
   const hash = window.location.hash;
+
   if (!hash.includes("token=")) return;
 
   const token = new URLSearchParams(hash.replace(/^#/, "")).get("token");
+
   if (!token) return;
 
   try {
     const b64 = token.split(".")[1].replace(/-/g, "+").replace(/_/g, "/");
+
     const payload = JSON.parse(atob(b64));
-    const user = { id: payload.sub, role: payload.role };
+
+    const user = {
+      id: payload.sub,
+      role: payload.role,
+    };
 
     localStorage.setItem("token", token);
     localStorage.setItem("user", JSON.stringify(user));
@@ -108,25 +122,66 @@ import DashboardLayout from "./layouts/DashboardLayout";
   window.history.replaceState(null, "", window.location.pathname);
 })();
 
+// ==================== Language <-> URL (?lang=ar|en) ====================
+// function LanguageUrlSync() {
+//   const { i18n } = useTranslation();
+//   const location = useLocation();
+//   const navigate = useNavigate();
 
-// ==================== Dashboard Placeholder ====================
-function DashboardPlaceholder({ messageKey, defaultMessage }) {
-  const { t } = useTranslation();
+//   const current = i18n.language?.startsWith("ar") ? "ar" : "en";
 
-  return (
-    <div
-      style={{
-        padding: "40px 24px",
-        textAlign: "center",
-        color: "#64748b",
-        fontSize: "16px",
-      }}
-    >
-      {t(messageKey, defaultMessage)}
-    </div>
-  );
-}
+//   const prevLang = useRef(current);
 
+//   const rawUrlLang = new URLSearchParams(location.search).get("lang");
+
+//   const urlLang =
+//     rawUrlLang === "ar" || rawUrlLang === "en" ? rawUrlLang : null;
+
+//   // URL -> i18n
+//   // أول تحميل / تعديل الرابط يدوي / back
+//   useEffect(() => {
+//     if (urlLang && urlLang !== current) {
+//       i18n.changeLanguage(urlLang);
+//     }
+
+//     // eslint-disable-next-line react-hooks/exhaustive-deps
+//   }, [urlLang]);
+
+//   // i18n -> URL
+//   // تغيير اللغة من الـ switcher أو التنقل بين الصفحات
+//   useEffect(() => {
+//     const langChanged = prevLang.current !== current;
+
+//     prevLang.current = current;
+
+//     if (urlLang === current) return;
+
+//     if (urlLang && !langChanged) {
+//       return;
+//     }
+
+//     const params = new URLSearchParams(location.search);
+
+//     params.set("lang", current);
+
+//     navigate(
+//       {
+//         pathname: location.pathname,
+//         search: `?${params.toString()}`,
+//         hash: location.hash,
+//       },
+//       {
+//         replace: true,
+//       },
+//     );
+
+//     // eslint-disable-next-line react-hooks/exhaustive-deps
+//   }, [current, location.pathname, location.search]);
+
+//   return null;
+// }
+
+// ==================== App ====================
 function App() {
   const { i18n } = useTranslation();
 
@@ -135,6 +190,7 @@ function App() {
 
     // HTML direction
     document.documentElement.dir = isArabic ? "rtl" : "ltr";
+
     document.documentElement.lang = isArabic ? "ar" : "en";
 
     // Body direction
@@ -142,14 +198,16 @@ function App() {
 
     // Language classes
     document.documentElement.classList.toggle("rtl", isArabic);
+
     document.body.classList.toggle("rtl", isArabic);
 
     document.documentElement.classList.toggle("arabic-mode", isArabic);
+
     document.documentElement.classList.toggle("english-mode", !isArabic);
   }, [i18n.language]);
 
   return (
-    <BrowserRouter>
+    <LanguageRouter>
       <AuthProvider>
         {/* ==================== Toast Notifications ==================== */}
         <Toaster
@@ -164,7 +222,8 @@ function App() {
           <Route path="/" element={<Home />} />
 
           {/* ==================== Authentication ==================== */}
-          {/* Normal Login: for Employee, HR, Manager (Google login hidden, no register link) */}
+
+          {/* Normal Login: Employee, HR, Manager */}
           <Route
             path="/login"
             element={
@@ -174,7 +233,7 @@ function App() {
             }
           />
 
-          {/* Owner Login: for System Owner (Google login visible, register link points to /owner/register) */}
+          {/* Owner Login */}
           <Route
             path="/owner/login"
             element={
@@ -190,7 +249,7 @@ function App() {
             element={<Navigate to="/owner/login" replace />}
           />
 
-          {/* Owner Register: intended for Owner only */}
+          {/* Owner Register */}
           <Route
             path="/owner/register"
             element={
@@ -200,13 +259,14 @@ function App() {
             }
           />
 
-          {/* Backward compatibility for /register: redirect to /owner/register */}
+          {/* Backward compatibility for /register */}
           <Route
             path="/register"
             element={<Navigate to="/owner/register" replace />}
           />
 
           {/* ==================== Password Reset ==================== */}
+
           <Route
             path="/ForgotPassword"
             element={
@@ -215,6 +275,7 @@ function App() {
               </PublicRoute>
             }
           />
+
           <Route
             path="/VerifyOTP"
             element={
@@ -223,6 +284,7 @@ function App() {
               </PublicRoute>
             }
           />
+
           <Route
             path="/ResetPassword"
             element={
@@ -246,6 +308,7 @@ function App() {
             {/* ================================================== */}
             {/* ==================== ADMIN (Owner Only) ========== */}
             {/* ================================================== */}
+
             <Route element={<ProtectedRoute allowedRoles={["Owner"]} />}>
               <Route
                 path="/admin"
@@ -253,68 +316,153 @@ function App() {
               />
 
               <Route path="/admin/dashboard" element={<AdminDashboard />} />
+
               <Route path="/admin/users" element={<Users />} />
+
               <Route path="/admin/branches" element={<Branches />} />
+
               <Route path="/admin/performance" element={<AdminPerformance />} />
+
               <Route path="/admin/notifications" element={<Notification />} />
+
               <Route path="/admin/audit" element={<ActivityLog />} />
+
               <Route path="/admin/attendance" element={<AdminAttendance />} />
-              <Route path="/admin/holidays" element={<AdminHolidays />} />
-              <Route path="/admin/profile" element={<AdminProfileSettings />} />
-              <Route path="/admin/goals" element={<Goals />} />
+
               <Route
-                path="/admin/evaluations"
-                element={<AdminEvaluations />}
+                path="/admin/departments"
+                element={<HrDepartments role="owner" />}
               />
+
+              <Route
+                path="/admin/leave-requests"
+                element={<HrLeaveRequests role="owner" />}
+              />
+
+              <Route path="/admin/holidays" element={<AdminHolidays />} />
+
+              <Route
+                path="/admin/calendar"
+                element={<CalendarPage customRole="admin" />}
+              />
+
+              <Route
+                path="/admin/events"
+                element={<CompanyEventsPage customRole="admin" />}
+              />
+              <Route
+                path="/admin/company-events"
+                element={<Navigate to="/admin/events" replace />}
+              />
+
+              <Route path="/admin/profile" element={<AdminProfileSettings />} />
+
+              <Route path="/admin/goals" element={<Goals />} />
+
+              <Route path="/admin/evaluations" element={<AdminEvaluations />} />
+              <Route path="/admin/policies" element={<AdminPolicies />} />
+
               <Route
                 path="/admin/settings"
                 element={<AdminProfileSettings />}
               />
+
               <Route path="/admin/payroll" element={<AdminPayroll />} />
+
               <Route
                 path="/admin/advances-deductions"
                 element={<AdminAdvances />}
               />
+
               <Route path="/admin/rewards" element={<AdminRewards />} />
+
+              <Route
+                path="/admin/submissions"
+                element={<SubmissionReviews role="Owner" />}
+              />
+              <Route
+                path="/admin/tasks"
+                element={<TaskManagement role="Owner" />}
+              />
+
+              <Route path="/admin/landing-page" element={<LandingPage />} />
+
               <Route path="/branches" element={<Branches />} />
             </Route>
 
             {/* ================================================== */}
             {/* ====================== HR (HR Only) ============== */}
             {/* ================================================== */}
+
             <Route element={<ProtectedRoute allowedRoles={["HR"]} />}>
               <Route path="/hr" element={<HrLayout />}>
                 <Route
                   index
                   element={<Navigate to="/hr/dashboard" replace />}
                 />
+
                 <Route path="dashboard" element={<HrDashboard />} />
+
                 <Route path="employees" element={<HrEmployees />} />
+
                 <Route path="departments" element={<HrDepartments />} />
+
                 <Route path="attendance" element={<HrAttendance />} />
+
                 <Route path="leave-requests" element={<HrLeaveRequests />} />
+
                 <Route path="advances-deductions" element={<HrAdvances />} />
+
                 <Route path="payroll" element={<HrPayroll />} />
+
                 <Route path="rewards" element={<HrRewards />} />
+
+                <Route
+                  path="submissions"
+                  element={<SubmissionReviews role="HR" />}
+                />
+
+                <Route path="tasks" element={<TaskManagement role="HR" />} />
                 <Route path="goals" element={<HrGoals />} />
                 <Route path="evaluations" element={<HrEvaluations />} />
                 <Route
                   path="evaluations-goals"
                   element={<Navigate to="/hr/evaluations" replace />}
                 />
+
                 <Route
                   path="performance-metrics"
                   element={<PerformanceMetrics />}
                 />
+
                 <Route path="ai-insights" element={<AIInsights />} />
-                <Route
-                  path="company-policies"
-                  element={<HrCompanyPolicies />}
-                />
+
+                <Route path="company-policies" element={<HrPolicies />} />
+
                 <Route path="holidays" element={<HrHolidays />} />
+
+                <Route
+                  path="calendar"
+                  element={<CalendarPage customRole="hr" />}
+                />
+
+                <Route
+                  path="events"
+                  element={<CompanyEventsPage customRole="hr" />}
+                />
+                <Route
+                  path="company-events"
+                  element={<Navigate to="/hr/events" replace />}
+                />
+
+                <Route path="audit" element={<ActivityLog role="HR" />} />
+
                 <Route path="reports" element={<Reports />} />
+
                 <Route path="notifications" element={<Notification />} />
+
                 <Route path="profile" element={<HrProfileSettings />} />
+
                 <Route path="settings" element={<HrProfileSettings />} />
               </Route>
             </Route>
@@ -322,6 +470,7 @@ function App() {
             {/* ================================================== */}
             {/* ==================== MANAGER (Manager Only) ====== */}
             {/* ================================================== */}
+
             <Route element={<ProtectedRoute allowedRoles={["Manager"]} />}>
               <Route
                 path="/manager"
@@ -329,34 +478,67 @@ function App() {
               />
 
               <Route path="/manager/dashboard" element={<TeamDashboard />} />
+
+              <Route path="/manager/members" element={<TeamMembers />} />
+
               <Route path="/manager/tasks" element={<TaskManagement />} />
+
               <Route
                 path="/manager/submissions"
                 element={<SubmissionReviews />}
               />
+
               <Route
                 path="/manager/evaluations"
                 element={<TeamEvaluations />}
               />
+
               <Route path="/manager/goals" element={<TeamGoals />} />
+
               <Route
                 path="/manager/analytics"
                 element={<PerformanceAnalytics />}
               />
+
               <Route path="/manager/attendance" element={<TeamAttendance />} />
+
+              <Route
+                path="/manager/departments"
+                element={<DepartmentDirectory />}
+              />
+
               <Route
                 path="/manager/leave-approvals"
                 element={<TeamLeaveApprovals />}
               />
+
               <Route path="/manager/holidays" element={<ManagerHolidays />} />
+              <Route
+                path="/manager/calendar"
+                element={<CalendarPage customRole="manager" />}
+              />
+              <Route
+                path="/manager/events"
+                element={<CompanyEventsPage customRole="manager" />}
+              />
+              <Route
+                path="/manager/company-events"
+                element={<Navigate to="/manager/events" replace />}
+              />
+
               <Route path="/manager/ai-insights" element={<AITeamInsights />} />
+
+              <Route path="/manager/policies" element={<ManagerPolicies />} />
+
               <Route path="/manager/notifications" element={<Notification />} />
+
               <Route path="/manager/profile" element={<ProfileSetting />} />
             </Route>
 
             {/* ================================================== */}
             {/* ==================== EMPLOYEE (Employee Only) ==== */}
             {/* ================================================== */}
+
             <Route element={<ProtectedRoute allowedRoles={["Employee"]} />}>
               <Route
                 path="/employee"
@@ -364,29 +546,58 @@ function App() {
               />
 
               <Route path="/employee/dashboard" element={<HomeDashboard />} />
+
               <Route path="/employee/attendance" element={<Attendance />} />
+
+              <Route
+                path="/employee/departments"
+                element={<DepartmentDirectory />}
+              />
+
               <Route path="/employee/tasks" element={<Tasks />} />
+
               <Route
                 path="/employee/performance"
                 element={<EmployeePerformance />}
               />
+
               <Route path="/employee/leaves" element={<LeaveBalances />} />
+
               <Route
                 path="/employee/leave-balances"
                 element={<Navigate to="/employee/leaves" replace />}
               />
+
               <Route path="/employee/holidays" element={<EmployeeHolidays />} />
+              <Route
+                path="/employee/calendar"
+                element={<CalendarPage customRole="employee" />}
+              />
+              <Route
+                path="/employee/events"
+                element={<CompanyEventsPage customRole="employee" />}
+              />
+              <Route
+                path="/employee/company-events"
+                element={<Navigate to="/employee/events" replace />}
+              />
+
               <Route path="/employee/ai-assistant" element={<AIAssistant />} />
+
               <Route
                 path="/employee/assistant"
                 element={<Navigate to="/employee/ai-assistant" replace />}
               />
+
               <Route
                 path="/employee/notifications"
                 element={<Notification />}
               />
-              <Route path="/employee/policies" element={<CompanyPolicies />} />
+
+              <Route path="/employee/policies" element={<PoliciesList />} />
+
               <Route path="/employee/goals" element={<EmployeeGoals />} />
+
               <Route
                 path="/employee/evaluations"
                 element={<EmployeeEvaluations />}
@@ -395,6 +606,7 @@ function App() {
                 path="/employee/financial"
                 element={<EmployeeFinancial />}
               />
+
               <Route
                 path="/employee/profile"
                 element={<EmployeeProfileSettings />}
@@ -403,7 +615,7 @@ function App() {
           </Route>
         </Routes>
       </AuthProvider>
-    </BrowserRouter>
+    </LanguageRouter>
   );
 }
 

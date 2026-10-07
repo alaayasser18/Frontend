@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
+import { useAuth } from "../../../../context/AuthContext";
 import {
   FiCalendar,
   FiMapPin,
@@ -22,6 +23,8 @@ import {
   getCurrentLocation,
 } from "../../hooks/useTodayAttendance";
 import { checkIn, checkOut } from "../../api/attendanceApi";
+import CalendarModal from "../../../calendar/components/CalendarModal";
+import { getCalendarEvents } from "../../../../api/calendarApi";
 import toast from "react-hot-toast";
 
 const containerVariants = {
@@ -60,14 +63,12 @@ const parseWorkedTime = (timeString) => {
 const formatTime = (totalSeconds) => {
   const safeSeconds = Math.max(0, Number(totalSeconds) || 0);
 
-  const hours = String(Math.floor(safeSeconds / 3600)).padStart(
+  const hours = String(Math.floor(safeSeconds / 3600)).padStart(2, "0");
+
+  const minutes = String(Math.floor((safeSeconds % 3600) / 60)).padStart(
     2,
     "0",
   );
-
-  const minutes = String(
-    Math.floor((safeSeconds % 3600) / 60),
-  ).padStart(2, "0");
 
   const seconds = String(safeSeconds % 60).padStart(2, "0");
 
@@ -75,8 +76,9 @@ const formatTime = (totalSeconds) => {
 };
 
 export default function HomeDashboard() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const navigate = useNavigate();
+  const { currentUser } = useAuth();
 
   const {
     data: attendanceResponse,
@@ -86,15 +88,48 @@ export default function HomeDashboard() {
   } = useTodayAttendance();
 
   const [showCalendarModal, setShowCalendarModal] = useState(false);
+  const [todayEvents, setTodayEvents] = useState([]);
   const [secondsWorked, setSecondsWorked] = useState(0);
   const [actionLoading, setActionLoading] = useState(false);
   const [actionError, setActionError] = useState("");
+
+  useEffect(() => {
+    const fetchTodayEvents = async () => {
+      try {
+        const today = new Date();
+        const y = today.getFullYear();
+        const m = String(today.getMonth() + 1).padStart(2, "0");
+        const d = String(today.getDate()).padStart(2, "0");
+        const todayStr = `${y}-${m}-${d}`;
+        const lang = i18n.language?.startsWith("ar") ? "ar" : "en";
+
+        const res = await getCalendarEvents({
+          from: todayStr,
+          to: todayStr,
+          lang,
+        });
+
+        if (res && res.success && Array.isArray(res.data)) {
+          setTodayEvents(res.data);
+        } else if (Array.isArray(res?.data)) {
+          setTodayEvents(res.data);
+        } else if (Array.isArray(res)) {
+          setTodayEvents(res);
+        }
+      } catch (err) {
+        console.error("Error fetching today events:", err);
+      }
+    };
+
+    fetchTodayEvents();
+  }, [i18n.language]);
 
   const attendance = attendanceResponse?.data || attendanceResponse;
   const widgets = attendance?.widgets;
 
   const checkInTime = attendance?.check_in || attendance?.check_in_time || null;
-  const checkOutTime = attendance?.check_out || attendance?.check_out_time || null;
+  const checkOutTime =
+    attendance?.check_out || attendance?.check_out_time || null;
 
   const hasCheckedIn = Boolean(checkInTime);
   const hasCheckedOut = Boolean(checkOutTime);
@@ -111,17 +146,10 @@ export default function HomeDashboard() {
       return;
     }
 
-    const initialWorkedSeconds = parseWorkedTime(
-      attendance.worked_time,
-    );
+    const initialWorkedSeconds = parseWorkedTime(attendance.worked_time);
 
     setSecondsWorked(initialWorkedSeconds);
-  }, [
-    attendance?.worked_time,
-    checkInTime,
-    checkOutTime,
-    attendance?.status,
-  ]);
+  }, [attendance?.worked_time, checkInTime, checkOutTime, attendance?.status]);
 
   useEffect(() => {
     if (!isOnShift) {
@@ -143,12 +171,11 @@ export default function HomeDashboard() {
 
       const location = await getCurrentLocation({ required: true });
 
-      const res = await checkIn({
+      await checkIn({
         latitude: location.latitude,
         longitude: location.longitude,
       });
 
-      toast.success(res?.message || t("attendance.checkedInSuccess", "Checked in successfully!"));
       await refetchAttendance();
     } catch (error) {
       console.error("Check-in failed:", error);
@@ -173,12 +200,11 @@ export default function HomeDashboard() {
 
       const location = await getCurrentLocation({ required: false });
 
-      const res = await checkOut({
+      await checkOut({
         latitude: location?.latitude,
         longitude: location?.longitude,
       });
 
-      toast.success(res?.message || t("attendance.checkedOutSuccess", "Checked out successfully!"));
       await refetchAttendance();
     } catch (error) {
       console.error("Check-out failed:", error);
@@ -233,24 +259,18 @@ export default function HomeDashboard() {
       >
         <div>
           <p className="text-[11px] font-bold tracking-wider text-[#5b8c6a] uppercase mb-1">
-            {t(
-              "employee.home.date",
-              "MONDAY, JUNE 9, 2026",
-            )}
+            {t("employee.home.date", "MONDAY, JUNE 9, 2026")}
           </p>
 
           <h1 className="text-2xl md:text-[28px] font-bold text-[#102a43] tracking-tight">
-            {t(
-              "employee.home.welcome",
-              "Good morning, Omar",
-            )}
+            {t("employee.home.welcome", {
+              defaultValue: "Good morning, {{name}}",
+              name: currentUser?.name || "",
+            })}
           </h1>
 
           <p className="text-sm text-[#829ab1] mt-1 font-normal">
-            {t(
-              "employee.home.subtitle",
-              "Here's your workday at a glance.",
-            )}
+            {t("employee.home.subtitle", "Here's your workday at a glance.")}
           </p>
         </div>
 
@@ -263,10 +283,7 @@ export default function HomeDashboard() {
         >
           <FiCalendar className="w-4 h-4 text-[#64748b]" />
 
-          {t(
-            "employee.home.viewCalendar",
-            "View calendar",
-          )}
+          {t("employee.home.viewCalendar", "View calendar")}
         </motion.button>
       </motion.div>
 
@@ -292,9 +309,7 @@ export default function HomeDashboard() {
                     Loading your attendance
                   </h2>
 
-                  <p className="text-xs text-white/70 mt-1">
-                    Please wait...
-                  </p>
+                  <p className="text-xs text-white/70 mt-1">Please wait...</p>
                 </div>
               </>
             ) : attendanceError ? (
@@ -324,37 +339,23 @@ export default function HomeDashboard() {
 
                   <span>
                     {attendance?.status ||
-                      t(
-                        "employee.home.onShift",
-                        "On Shift",
-                      )}
+                      t("employee.home.onShift", "On Shift")}
                   </span>
 
-                  <span className="text-white/40">
-                    •
-                  </span>
+                  <span className="text-white/40">•</span>
 
                   <span className="text-white/80">
-                    {t(
-                      "employee.home.location",
-                      "Workplace",
-                    )}
+                    {t("employee.home.location", "Workplace")}
                   </span>
                 </div>
 
                 <div>
                   <h2 className="text-2xl md:text-[26px] font-bold text-white tracking-tight">
-                    {t(
-                      "employee.home.checkedIn",
-                      "You're checked in",
-                    )}
+                    {t("employee.home.checkedIn", "You're checked in")}
                   </h2>
 
                   <p className="text-xs text-white/70 mt-1">
-                    {t(
-                      "employee.home.checkedInAt",
-                      "Checked in at",
-                    )}{" "}
+                    {t("employee.home.checkedInAt", "Checked in at")}{" "}
                     {checkInTime || "--"}
                   </p>
                 </div>
@@ -378,31 +379,20 @@ export default function HomeDashboard() {
 
                   <span>
                     {attendance?.status ||
-                      t(
-                        "employee.home.offShift",
-                        "Off Shift",
-                      )}
+                      t("employee.home.offShift", "Off Shift")}
                   </span>
 
-                  <span className="text-white/40">
-                    •
-                  </span>
+                  <span className="text-white/40">•</span>
 
                   <span className="text-white/80">
-                    {t(
-                      "employee.home.location",
-                      "Workplace",
-                    )}
+                    {t("employee.home.location", "Workplace")}
                   </span>
                 </div>
 
                 <div>
                   <h2 className="text-2xl md:text-[26px] font-bold text-white tracking-tight">
                     {checkOutTime
-                      ? t(
-                          "employee.home.checkedOut",
-                          "You're checked out",
-                        )
+                      ? t("employee.home.checkedOut", "You're checked out")
                       : t(
                           "employee.home.notCheckedIn",
                           "You're not checked in",
@@ -426,10 +416,8 @@ export default function HomeDashboard() {
                   <FiMapPin className="w-3.5 h-3.5 text-slate-400" />
 
                   <span>
-                    {attendance?.distance_meters !==
-                    null &&
-                    attendance?.distance_meters !==
-                      undefined
+                    {attendance?.distance_meters !== null &&
+                    attendance?.distance_meters !== undefined
                       ? distanceText
                       : t(
                           "employee.home.locationUnavailable",
@@ -443,16 +431,11 @@ export default function HomeDashboard() {
 
           <div className="flex flex-col items-start md:items-end gap-3 shrink-0">
             <span className="text-[11px] font-bold tracking-widest text-white/50 uppercase">
-              {t(
-                "employee.home.workedToday",
-                "WORKED TODAY",
-              )}
+              {t("employee.home.workedToday", "WORKED TODAY")}
             </span>
 
             <div className="font-mono text-3xl md:text-[34px] font-bold tracking-tight text-white">
-              {attendanceLoading
-                ? "--:--:--"
-                : formatTime(secondsWorked)}
+              {attendanceLoading ? "--:--:--" : formatTime(secondsWorked)}
             </div>
 
             <div className="flex flex-wrap items-center gap-2">
@@ -615,16 +598,10 @@ export default function HomeDashboard() {
       </motion.div>
 
       {/* 4. Quick Actions */}
-      <motion.div
-        variants={itemVariants}
-        className="space-y-3"
-      >
+      <motion.div variants={itemVariants} className="space-y-3">
         <div>
           <h3 className="text-base font-bold text-[#102a43]">
-            {t(
-              "employee.home.quickActions",
-              "Quick actions",
-            )}
+            {t("employee.home.quickActions", "Quick actions")}
           </h3>
 
           <p className="text-xs text-[#829ab1] mt-0.5">
@@ -648,10 +625,7 @@ export default function HomeDashboard() {
               </div>
 
               <span className="text-xs font-semibold text-[#102a43]">
-                {t(
-                  "employee.home.requestLeave",
-                  "Request leave",
-                )}
+                {t("employee.home.requestLeave", "Request leave")}
               </span>
             </div>
 
@@ -670,10 +644,7 @@ export default function HomeDashboard() {
               </div>
 
               <span className="text-xs font-semibold text-[#102a43]">
-                {t(
-                  "employee.home.submitTask",
-                  "Submit task",
-                )}
+                {t("employee.home.submitTask", "Submit task")}
               </span>
             </div>
 
@@ -692,10 +663,7 @@ export default function HomeDashboard() {
               </div>
 
               <span className="text-xs font-semibold text-[#102a43]">
-                {t(
-                  "employee.home.viewCalendar",
-                  "View calendar",
-                )}
+                {t("employee.home.viewCalendar", "View calendar")}
               </span>
             </div>
 
@@ -713,10 +681,7 @@ export default function HomeDashboard() {
               </div>
 
               <span className="text-xs font-semibold text-[#102a43]">
-                {t(
-                  "employee.home.aiAssistant",
-                  "AI HR Assistant",
-                )}
+                {t("employee.home.aiAssistant", "AI HR Assistant")}
               </span>
             </div>
 
@@ -734,10 +699,7 @@ export default function HomeDashboard() {
           <div className="flex items-center justify-between mb-4">
             <div>
               <h3 className="text-base font-bold text-[#102a43]">
-                {t(
-                  "employee.home.todaysSchedule",
-                  "Today's schedule",
-                )}
+                {t("employee.home.todaysSchedule", "Today's schedule")}
               </h3>
 
               <p className="text-xs text-[#829ab1] mt-0.5">
@@ -753,63 +715,90 @@ export default function HomeDashboard() {
               onClick={() => setShowCalendarModal(true)}
               className="inline-flex items-center gap-1 text-xs font-medium text-[#64748b] hover:text-[#102a43] transition"
             >
-              {t(
-                "employee.home.viewAll",
-                "View all",
-              )}
+              {t("employee.home.viewAll", "View all")}
 
               <FiArrowRight className="w-3.5 h-3.5" />
             </button>
           </div>
 
           <div className="space-y-4 pt-1">
-            <div className="flex items-center gap-3 text-xs">
-              <span className="font-medium text-[#829ab1] w-16 shrink-0">
-                10:30 AM
-              </span>
+            {todayEvents.length > 0 ? (
+              todayEvents.map((ev, idx) => {
+                const isLeave = ev.type === "leave";
+                const isDeadline = ev.type === "task_deadline";
+                const isHoliday = ev.type === "holiday";
+                const dotColor = isLeave
+                  ? "bg-[#10b981]"
+                  : isDeadline
+                    ? "bg-[#f59e0b]"
+                    : isHoliday
+                      ? "bg-[#8b5cf6]"
+                      : "bg-[#3b82f6]";
 
-              <span className="h-2 w-2 rounded-full bg-[#3b82f6] shrink-0" />
+                const typeLabel = isLeave
+                  ? t("calendar.leave", "Leave")
+                  : isDeadline
+                    ? t("calendar.deadline", "Task Deadline")
+                    : isHoliday
+                      ? t("calendar.holiday", "Official Holiday")
+                      : t("calendar.companyEvent", "Company Event");
 
-              <div className="min-w-0">
-                <p className="font-semibold text-[#102a43]">
-                  {t(
-                    "employee.home.productSync",
-                    "Product sync",
-                  )}
-                </p>
+                return (
+                  <div key={idx} className="flex items-center gap-3 text-xs">
+                    <span className="font-medium text-[#829ab1] w-20 shrink-0">
+                      {ev.date}
+                    </span>
+                    <span
+                      className={`h-2 w-2 rounded-full shrink-0 ${dotColor}`}
+                    />
+                    <div className="min-w-0">
+                      <p className="font-semibold text-[#102a43]">
+                        {typeLabel}
+                      </p>
+                      <p className="text-[#829ab1]">#{ev.reference}</p>
+                    </div>
+                  </div>
+                );
+              })
+            ) : (
+              <>
+                <div className="flex items-center gap-3 text-xs">
+                  <span className="font-medium text-[#829ab1] w-16 shrink-0">
+                    10:30 AM
+                  </span>
+                  <span className="h-2 w-2 rounded-full bg-[#3b82f6] shrink-0" />
+                  <div className="min-w-0">
+                    <p className="font-semibold text-[#102a43]">
+                      {t("employee.home.productSync", "Product sync")}
+                    </p>
+                    <p className="text-[#829ab1]">
+                      {t(
+                        "employee.home.meetingRoom",
+                        "Meeting room 4B · 45 min",
+                      )}
+                    </p>
+                  </div>
+                </div>
 
-                <p className="text-[#829ab1]">
-                  {t(
-                    "employee.home.meetingRoom",
-                    "Meeting room 4B · 45 min",
-                  )}
-                </p>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-3 text-xs">
-              <span className="font-medium text-[#829ab1] w-16 shrink-0">
-                02:00 PM
-              </span>
-
-              <span className="h-2 w-2 rounded-full bg-[#10b981] shrink-0" />
-
-              <div className="min-w-0">
-                <p className="font-semibold text-[#102a43]">
-                  {t(
-                    "employee.home.focusTime",
-                    "Focus time",
-                  )}
-                </p>
-
-                <p className="text-[#829ab1]">
-                  {t(
-                    "employee.home.operationsReportShort",
-                    "Q2 Operations report",
-                  )}
-                </p>
-              </div>
-            </div>
+                <div className="flex items-center gap-3 text-xs">
+                  <span className="font-medium text-[#829ab1] w-16 shrink-0">
+                    02:00 PM
+                  </span>
+                  <span className="h-2 w-2 rounded-full bg-[#10b981] shrink-0" />
+                  <div className="min-w-0">
+                    <p className="font-semibold text-[#102a43]">
+                      {t("employee.home.focusTime", "Focus time")}
+                    </p>
+                    <p className="text-[#829ab1]">
+                      {t(
+                        "employee.home.operationsReportShort",
+                        "Q2 Operations report",
+                      )}
+                    </p>
+                  </div>
+                </div>
+              </>
+            )}
           </div>
         </div>
 
@@ -817,10 +806,7 @@ export default function HomeDashboard() {
           <div className="flex items-center justify-between mb-4">
             <div>
               <h3 className="text-base font-bold text-[#102a43]">
-                {t(
-                  "employee.home.recentActivity",
-                  "Recent activity",
-                )}
+                {t("employee.home.recentActivity", "Recent activity")}
               </h3>
 
               <p className="text-xs text-[#829ab1] mt-0.5">
@@ -835,10 +821,7 @@ export default function HomeDashboard() {
               type="button"
               className="inline-flex items-center gap-1 text-xs font-medium text-[#64748b] hover:text-[#102a43] transition"
             >
-              {t(
-                "employee.home.seeAll",
-                "See all",
-              )}
+              {t("employee.home.seeAll", "See all")}
 
               <FiArrowRight className="w-3.5 h-3.5" />
             </button>
@@ -860,10 +843,7 @@ export default function HomeDashboard() {
                   </p>
 
                   <p className="text-[#829ab1]">
-                    {t(
-                      "employee.home.yesterdayAt432",
-                      "Yesterday at 4:32 PM",
-                    )}
+                    {t("employee.home.yesterdayAt432", "Yesterday at 4:32 PM")}
                   </p>
                 </div>
               </div>
@@ -881,17 +861,11 @@ export default function HomeDashboard() {
 
                 <div className="min-w-0">
                   <p className="font-semibold text-[#102a43] truncate">
-                    {t(
-                      "employee.home.leaveUpdated",
-                      "Leave balance updated",
-                    )}
+                    {t("employee.home.leaveUpdated", "Leave balance updated")}
                   </p>
 
                   <p className="text-[#829ab1]">
-                    {t(
-                      "employee.home.yesterdayAt910",
-                      "Yesterday at 9:10 AM",
-                    )}
+                    {t("employee.home.yesterdayAt910", "Yesterday at 9:10 AM")}
                   </p>
                 </div>
               </div>
@@ -904,152 +878,12 @@ export default function HomeDashboard() {
         </div>
       </motion.div>
 
-      {/* 6. Calendar Modal */}
-      <AnimatePresence>
-        {showCalendarModal && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            onClick={() => setShowCalendarModal(false)}
-            className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 p-4 backdrop-blur-sm"
-          >
-            <motion.div
-              initial={{
-                opacity: 0,
-                scale: 0.96,
-                y: 10,
-              }}
-              animate={{
-                opacity: 1,
-                scale: 1,
-                y: 0,
-              }}
-              exit={{
-                opacity: 0,
-                scale: 0.96,
-                y: 10,
-              }}
-              transition={{ duration: 0.2 }}
-              onClick={(e) => e.stopPropagation()}
-              className="w-full max-w-lg rounded-2xl bg-white p-6 shadow-xl"
-            >
-              <div className="flex items-center justify-between mb-4">
-                <button
-                  type="button"
-                  className="flex h-8 w-8 items-center justify-center rounded-lg border border-[#e2e8f0] text-[#64748b] hover:bg-[#f8fafc] transition"
-                >
-                  <FiChevronLeft className="w-4 h-4" />
-                </button>
-
-                <h3 className="text-sm font-bold text-[#102a43]">
-                  {t(
-                    "employee.home.monthName",
-                    "June 2026",
-                  )}
-                </h3>
-
-                <button
-                  type="button"
-                  className="flex h-8 w-8 items-center justify-center rounded-lg border border-[#e2e8f0] text-[#64748b] hover:bg-[#f8fafc] transition"
-                >
-                  <FiChevronRight className="w-4 h-4" />
-                </button>
-              </div>
-
-              <div className="grid grid-cols-7 text-center text-[11px] font-bold text-[#94a3b8] py-2 border-b border-[#f1f5f9]">
-                <span>Sun</span>
-                <span>Mon</span>
-                <span>Tue</span>
-                <span>Wed</span>
-                <span>Thu</span>
-                <span>Fri</span>
-                <span>Sat</span>
-              </div>
-
-              <div className="grid grid-cols-7 text-center gap-1 py-3 text-xs font-medium text-[#1e293b]">
-                <span className="py-2 text-[#cbd5e1]">
-                  31
-                </span>
-
-                <span className="py-2">1</span>
-                <span className="py-2">2</span>
-                <span className="py-2">3</span>
-                <span className="py-2">4</span>
-                <span className="py-2">5</span>
-                <span className="py-2">6</span>
-                <span className="py-2">7</span>
-                <span className="py-2">8</span>
-
-                <span className="py-2 font-bold text-[#059669] bg-[#ecfdf5] rounded-lg">
-                  9
-                </span>
-
-                <span className="py-2">10</span>
-                <span className="py-2">11</span>
-                <span className="py-2">12</span>
-                <span className="py-2">13</span>
-                <span className="py-2">14</span>
-                <span className="py-2">15</span>
-                <span className="py-2">16</span>
-                <span className="py-2">17</span>
-                <span className="py-2">18</span>
-                <span className="py-2">19</span>
-                <span className="py-2">20</span>
-                <span className="py-2">21</span>
-                <span className="py-2">22</span>
-                <span className="py-2">23</span>
-                <span className="py-2">24</span>
-                <span className="py-2">25</span>
-                <span className="py-2">26</span>
-                <span className="py-2">27</span>
-                <span className="py-2">28</span>
-                <span className="py-2">29</span>
-                <span className="py-2">30</span>
-              </div>
-
-              <div className="flex items-center justify-between border-t border-[#f1f5f9] pt-4 mt-2">
-                <div className="flex items-center gap-3 text-xs text-[#64748b]">
-                  <div className="flex items-center gap-1.5">
-                    <span className="h-2 w-2 rounded-full bg-[#10b981]" />
-
-                    <span>
-                      {t(
-                        "employee.home.today",
-                        "Today",
-                      )}
-                    </span>
-                  </div>
-
-                  <div className="flex items-center gap-1.5">
-                    <span className="h-2 w-2 rounded-full bg-[#3b82f6]" />
-
-                    <span>
-                      {t(
-                        "employee.home.event",
-                        "Events",
-                      )}
-                    </span>
-                  </div>
-                </div>
-
-                <button
-                  type="button"
-                  onClick={() =>
-                    setShowCalendarModal(false)
-                  }
-                  className="rounded-xl bg-[#102a43] px-4 py-2 text-xs font-semibold text-white hover:bg-[#1c364f] transition"
-                >
-                  {t(
-                    "employee.home.close",
-                    "Close",
-                  )}
-                </button>
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {/* 6. Live Connected Calendar Modal */}
+      <CalendarModal
+        isOpen={showCalendarModal}
+        onClose={() => setShowCalendarModal(false)}
+        role="employee"
+      />
     </motion.div>
   );
 }

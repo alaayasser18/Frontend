@@ -14,9 +14,11 @@ import {
 } from "react-icons/fi";
 import {
   createDepartment,
+  changeDepartmentStatus,
   getDepartmentManagers,
   getDepartments,
   getEmployees,
+  updateDepartment,
   updateEmployeeHRFields,
 } from "../api";
 
@@ -25,6 +27,8 @@ const content = {
     title: "Departments & Teams",
     subtitle: "Manage organizational structure, leaders, and workstreams.",
     createBtn: "Create Department",
+    editBtn: "Edit Department",
+    changeStatusBtn: "Set {status}",
     searchPlaceholder: "Search departments...",
 
     headPrefix: "Head: ",
@@ -46,6 +50,8 @@ const content = {
 
     successTitle: "Saved successfully",
     successSubtitle: "The new department has been added successfully.",
+    updateSuccess: "Department updated successfully.",
+    statusSuccess: "Department status updated successfully.",
     doneBtn: "Done",
 
     noResults: "No departments found",
@@ -72,6 +78,7 @@ const content = {
     active: "Active",
     inactive: "Inactive",
     selectHead: "Select a department head (optional)",
+    noDepartmentHead: "No department head",
     createSuccess: "Department created successfully.",
     transferSuccess: "Employee transferred successfully.",
     requiredDepartmentName: "Enter a department name.",
@@ -81,6 +88,8 @@ const content = {
     title: "الأقسام والفرق",
     subtitle: "إدارة الهيكل التنظيمي، القادة، ومسارات العمل.",
     createBtn: "إنشاء قسم",
+    editBtn: "تعديل القسم",
+    changeStatusBtn: "تغيير الحالة إلى {status}",
     searchPlaceholder: "بحث عن الأقسام...",
 
     headPrefix: "رئيس القسم: ",
@@ -102,6 +111,8 @@ const content = {
 
     successTitle: "تم الحفظ بنجاح",
     successSubtitle: "تمت إضافة القسم الجديد بنجاح.",
+    updateSuccess: "تم تحديث القسم بنجاح.",
+    statusSuccess: "تم تحديث حالة القسم بنجاح.",
     doneBtn: "تم",
 
     noResults: "لم يتم العثور على أقسام",
@@ -127,6 +138,7 @@ const content = {
     active: "نشط",
     inactive: "غير نشط",
     selectHead: "اختر رئيس القسم (اختياري)",
+    noDepartmentHead: "بدون رئيس قسم",
     createSuccess: "تم إنشاء القسم بنجاح.",
     transferSuccess: "تم نقل الموظف بنجاح.",
     requiredDepartmentName: "أدخل اسم القسم.",
@@ -165,7 +177,7 @@ const modalVariants = {
   },
 };
 
-export default function DepartmentsAndTeams() {
+export default function DepartmentsAndTeams({ role = "hr" }) {
   const { i18n } = useTranslation();
   const isArabic = i18n.language?.startsWith("ar");
   const lang = isArabic ? "ar" : "en";
@@ -215,6 +227,7 @@ export default function DepartmentsAndTeams() {
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
+  const [editingDepartment, setEditingDepartment] = useState(null);
 
   const [details, setDetails] = useState("");
   const [managerId, setManagerId] = useState("");
@@ -227,6 +240,17 @@ export default function DepartmentsAndTeams() {
 
   const createDepartmentMutation = useMutation({
     mutationFn: (departmentData) => createDepartment(departmentData, lang),
+    onSuccess: () =>
+      queryClient.invalidateQueries({ queryKey: ["departments"] }),
+  });
+  const updateDepartmentMutation = useMutation({
+    mutationFn: ({ id, departmentData }) =>
+      updateDepartment(id, departmentData, lang),
+    onSuccess: () =>
+      queryClient.invalidateQueries({ queryKey: ["departments"] }),
+  });
+  const changeDepartmentStatusMutation = useMutation({
+    mutationFn: (id) => changeDepartmentStatus(id, lang),
     onSuccess: () =>
       queryClient.invalidateQueries({ queryKey: ["departments"] }),
   });
@@ -256,8 +280,19 @@ export default function DepartmentsAndTeams() {
   const totalEmployees = employees.length;
 
   const handleCreateDepartment = () => {
+    setEditingDepartment(null);
     setDetails("");
     setManagerId("");
+    setIsSuccess(false);
+    setIsModalOpen(true);
+  };
+
+  const handleEditDepartment = (department) => {
+    setEditingDepartment(department);
+    setDetails(department.name || "");
+    setManagerId(
+      String(department.manager_id ?? department.manager?.id ?? ""),
+    );
     setIsSuccess(false);
     setIsModalOpen(true);
   };
@@ -271,19 +306,32 @@ export default function DepartmentsAndTeams() {
     }
 
     try {
-      const response = await createDepartmentMutation.mutateAsync({
+      const departmentData = {
         name: details.trim(),
-        description: null,
+        description: editingDepartment?.description || null,
         manager_id: managerId ? Number(managerId) : null,
-      });
+      };
+      const response = editingDepartment
+        ? await updateDepartmentMutation.mutateAsync({
+            id: editingDepartment.id,
+            departmentData,
+          })
+        : await createDepartmentMutation.mutateAsync(departmentData);
       setIsSuccess(true);
-      toast.success(response?.message || t.createSuccess);
+      toast.success(
+        response?.message ||
+          (editingDepartment ? t.updateSuccess : t.createSuccess),
+      );
     } catch (error) {
       toast.error(
         error?.response?.data?.message ||
           (isArabic
-            ? "تعذر إنشاء القسم."
-            : "Failed to create department."),
+            ? editingDepartment
+              ? "تعذر تحديث القسم."
+              : "تعذر إنشاء القسم."
+            : editingDepartment
+              ? "Failed to update department."
+              : "Failed to create department."),
       );
     }
   };
@@ -291,8 +339,25 @@ export default function DepartmentsAndTeams() {
   const closeCreateModal = () => {
     setIsModalOpen(false);
     setIsSuccess(false);
+    setEditingDepartment(null);
     setDetails("");
     setManagerId("");
+  };
+
+  const handleToggleDepartmentStatus = async (department) => {
+    try {
+      const response = await changeDepartmentStatusMutation.mutateAsync(
+        department.id,
+      );
+      toast.success(response?.message || t.statusSuccess);
+    } catch (error) {
+      toast.error(
+        error?.response?.data?.message ||
+          (isArabic
+            ? "تعذر تحديث حالة القسم."
+            : "Failed to update department status."),
+      );
+    }
   };
 
   const openMembersModal = (department) => {
@@ -389,9 +454,13 @@ export default function DepartmentsAndTeams() {
       >
         <div className="min-w-0">
           <p className="text-[11px] font-bold tracking-wider text-[#6b879f] uppercase">
-            {isArabic
-              ? "الموارد البشرية / الأقسام والفرق"
-              : "HR Portal / Departments & Teams"}
+            {role === "owner"
+              ? isArabic
+                ? "مسؤول النظام / الأقسام والفرق"
+                : "Admin Portal / Departments & Teams"
+              : isArabic
+                ? "الموارد البشرية / الأقسام والفرق"
+                : "HR Portal / Departments & Teams"}
           </p>
 
           <h1 className="mt-1 text-lg font-bold tracking-tight text-[#1e293b] md:text-[21px]">
@@ -623,6 +692,32 @@ export default function DepartmentsAndTeams() {
                 <div className="mt-5 space-y-2 border-t border-[#f1f5f9] pt-4">
                   <motion.button
                     type="button"
+                    onClick={() => handleEditDepartment(department)}
+                    whileHover={{ y: -1 }}
+                    whileTap={{ scale: 0.98 }}
+                    className="w-full rounded-lg border border-[#e2e8f0] bg-white px-3 py-2.5 text-xs font-semibold text-[#475569] transition hover:bg-[#f8fafc]"
+                  >
+                    {t.editBtn}
+                  </motion.button>
+
+                  <motion.button
+                    type="button"
+                    onClick={() => handleToggleDepartmentStatus(department)}
+                    disabled={changeDepartmentStatusMutation.isPending}
+                    whileHover={{ y: -1 }}
+                    whileTap={{ scale: 0.98 }}
+                    className="w-full rounded-lg border border-[#e2e8f0] bg-white px-3 py-2.5 text-xs font-semibold text-[#475569] transition hover:bg-[#f8fafc] disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    {t.changeStatusBtn.replace(
+                      "{status}",
+                      String(department.status).toLowerCase() === "active"
+                        ? t.inactive
+                        : t.active,
+                    )}
+                  </motion.button>
+
+                  <motion.button
+                    type="button"
                     onClick={() => openMembersModal(department)}
                     whileHover={{ y: -1 }}
                     whileTap={{ scale: 0.98 }}
@@ -685,7 +780,7 @@ export default function DepartmentsAndTeams() {
                   <div className="flex items-center justify-between border-b border-[#f1f5f9] px-6 py-5">
                     <div>
                       <h2 className="text-base font-bold text-[#1e293b]">
-                        {t.modalTitle}
+                        {editingDepartment ? t.editBtn : t.modalTitle}
                       </h2>
 
                       <p className="mt-1 text-xs text-[#64748b]">
@@ -730,8 +825,8 @@ export default function DepartmentsAndTeams() {
                           disabled={managersQuery.isLoading}
                           className="w-full rounded-lg border border-[#e2e8f0] bg-white px-3 py-2.5 text-xs text-[#334155] outline-none transition focus:border-[#94a3b8] focus:ring-2 focus:ring-[#f1f5f9] disabled:opacity-60 sm:text-sm"
                         >
-                          <option value="" disabled hidden>
-                            {t.selectHead}
+                          <option value="">
+                            {t.noDepartmentHead}
                           </option>
                           {managers.map((manager) => (
                             <option key={manager.id} value={manager.id}>
@@ -772,11 +867,14 @@ export default function DepartmentsAndTeams() {
                       <button
                         type="submit"
                         disabled={
-                          !details.trim() || createDepartmentMutation.isPending
+                          !details.trim() ||
+                          createDepartmentMutation.isPending ||
+                          updateDepartmentMutation.isPending
                         }
                         className="flex-1 rounded-lg bg-[#243B53] px-4 py-2.5 text-xs font-semibold text-white transition hover:bg-[#1c2f42] disabled:cursor-not-allowed disabled:opacity-50 sm:text-sm"
                       >
-                        {createDepartmentMutation.isPending
+                        {createDepartmentMutation.isPending ||
+                        updateDepartmentMutation.isPending
                           ? t.loading
                           : t.saveBtn}
                       </button>
@@ -798,7 +896,7 @@ export default function DepartmentsAndTeams() {
                   </h2>
 
                   <p className="mx-auto mt-1 max-w-xs text-xs text-[#64748b] sm:text-sm">
-                    {t.successSubtitle}
+                    {editingDepartment ? t.updateSuccess : t.successSubtitle}
                   </p>
 
                   <button

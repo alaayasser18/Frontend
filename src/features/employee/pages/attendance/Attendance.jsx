@@ -239,15 +239,10 @@ export default function Attendance() {
     try {
       const location = await getCurrentLocation({ required: true });
 
-      const res = await checkIn({
+      await checkIn({
         latitude: location.latitude,
         longitude: location.longitude,
       });
-
-      toast.success(
-        res?.message ||
-          t("attendance.checkedInSuccess", "Checked in successfully!")
-      );
 
       queryClient.invalidateQueries({ queryKey: ["attendance"] });
       await refetchToday();
@@ -283,15 +278,10 @@ export default function Attendance() {
     try {
       const location = await getCurrentLocation();
 
-      const res = await checkOut({
+      await checkOut({
         latitude: location.latitude,
         longitude: location.longitude,
       });
-
-      toast.success(
-        res?.message ||
-          t("attendance.checkedOutSuccess", "Checked out successfully!")
-      );
 
       queryClient.invalidateQueries({ queryKey: ["attendance"] });
       await refetchToday();

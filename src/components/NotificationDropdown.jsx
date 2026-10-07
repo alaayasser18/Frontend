@@ -22,6 +22,20 @@ const CATEGORY_META = {
 const getCategoryMeta = (cat) =>
   CATEGORY_META[cat] || { icon: FiBell, iconClass: "text-slate-400", bgClass: "bg-slate-100" };
 
+<<<<<<< HEAD
+=======
+const ROUTE_MAP = {
+  admin: "/admin/notifications",
+  owner: "/admin/notifications",
+  hr: "/hr/notifications",
+  manager: "/manager/notifications",
+  employee: "/employee/notifications",
+};
+
+const getNotificationsRoute = (role) =>
+  ROUTE_MAP[String(role || "").trim().toLowerCase()] || "/admin/notifications";
+
+>>>>>>> 6e4c0b25f8460a4c69b899c7b6443e5369faa2fc
 const NotificationDropdown = ({ isOpen, onClose, role }) => {
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
@@ -74,7 +88,11 @@ const NotificationDropdown = ({ isOpen, onClose, role }) => {
 
   const handleSeeAll = () => {
     onClose();
+<<<<<<< HEAD
     navigate(getTargetRoute());
+=======
+    navigate(getNotificationsRoute(currentRole));
+>>>>>>> 6e4c0b25f8460a4c69b899c7b6443e5369faa2fc
   };
 
   const handleNotificationClick = (notif) => {
@@ -82,7 +100,13 @@ const NotificationDropdown = ({ isOpen, onClose, role }) => {
       toggleNotificationRead(notif.id);
     }
     onClose();
+<<<<<<< HEAD
     navigate(getTargetRoute(), { state: { selectedNotificationId: notif.id } });
+=======
+    navigate(getNotificationsRoute(currentRole), {
+      state: { selectedNotificationId: notif.id },
+    });
+>>>>>>> 6e4c0b25f8460a4c69b899c7b6443e5369faa2fc
   };
 
   const preview = notifications.slice(0, 5);
@@ -217,6 +241,7 @@ const NotificationDropdown = ({ isOpen, onClose, role }) => {
           {/* Footer */}
           <div className="flex items-center justify-between px-4 py-2.5 border-t border-slate-100 bg-slate-50">
             <span className="text-[12px] text-slate-400">
+<<<<<<< HEAD
               {notifications.length > 5
                 ? `+${notifications.length - 5} more`
                 : `${notifications.length} ${t("portal.total", "total")}`}
@@ -224,6 +249,13 @@ const NotificationDropdown = ({ isOpen, onClose, role }) => {
             <button
               onClick={handleSeeAll}
               className="flex items-center gap-1.5 bg-[#243b53] hover:bg-[#334e68] text-white text-[12px] font-semibold px-3.5 py-1.5 rounded-lg transition cursor-pointer"
+=======
+              {notifications.length > 5 ? `+${notifications.length - 5} more` : ""}
+            </span>
+            <button
+              onClick={handleSeeAll}
+              className="flex items-center gap-1.5 bg-[#243b53] hover:bg-[#334e68] text-white text-[12px] font-semibold px-3.5 py-1.5 rounded-lg transition"
+>>>>>>> 6e4c0b25f8460a4c69b899c7b6443e5369faa2fc
             >
               <FiCheck className="w-3 h-3" />
               {t("portal.seeAll", "See all notifications")}

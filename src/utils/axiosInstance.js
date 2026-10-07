@@ -4,7 +4,7 @@ console.log("API URL:", import.meta.env.VITE_API_BASE_URL);
 
 const rawBaseUrl =
   import.meta.env.VITE_API_BASE_URL ||
-  "https://workwise-production-3941.up.railway.app";
+  "https://workwise-production-3941.up.railway.app/api";
 
 const getBaseUrl = () => {
   const trimmed = (rawBaseUrl || "").trim().replace(/\/+$/, "");
@@ -27,8 +27,10 @@ axiosInstance.interceptors.request.use(
     }
 
     // Send Accept-Language based on the stored language preference
-    const lang = localStorage.getItem("language") || "en";
-    config.headers["Accept-Language"] = lang;
+    const storedLang = localStorage.getItem("i18nextLng");
+    const lang = storedLang && storedLang.startsWith("ar") ? "ar" : "en";
+    config.headers["Accept-Language"] = config.headers["Accept-Language"] || lang;
+    config.headers["App-Language"] = config.headers["App-Language"] || lang;
 
     return config;
   },
@@ -50,9 +52,17 @@ axiosInstance.interceptors.response.use(
       localStorage.removeItem("rememberMe");
 
       if (typeof window !== "undefined") {
+        if (window.Echo) {
+          try {
+            window.Echo.disconnect();
+          } catch (e) {
+            // ignore
+          }
+        }
         window.dispatchEvent(new CustomEvent("auth:unauthorized"));
 
-        const path = window.location.pathname;
+        const path =
+          window.location.pathname.replace(/^\/(ar|en)(?=\/|$)/, "") || "/";
 
         const isAuthPage =
           path.includes("/login") ||

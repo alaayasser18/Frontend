@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next";
 import { motion } from "framer-motion";
 import { FiArrowRight } from "react-icons/fi";
 
-export default function CtaSection() {
+export default function CtaSection({ data }) {
   const { t, i18n } = useTranslation();
   const isRtl = i18n.language?.startsWith("ar");
 
@@ -109,7 +109,7 @@ export default function CtaSection() {
                 "
               >
                 <span className="h-1.5 w-1.5 rounded-full bg-white" />
-                <span>{t("home.cta.badge")}</span>
+                <span>{data?.badge || t("home.cta.badge")}</span>
               </motion.div>
 
               {/* Title */}
@@ -132,7 +132,7 @@ export default function CtaSection() {
                   xl:text-[40px]
                 "
               >
-                {t("home.cta.title")}
+                {data?.title || t("home.cta.title")}
               </motion.h2>
 
               {/* Description */}
@@ -154,7 +154,7 @@ export default function CtaSection() {
                   xl:leading-7
                 "
               >
-                {t("home.cta.subtitle")}
+                {data?.description || t("home.cta.subtitle")}
               </motion.p>
             </motion.div>
 
@@ -203,7 +203,7 @@ export default function CtaSection() {
                     hover:shadow-lg
                   "
                 >
-                  <span>{t("home.cta.btnPrimary")}</span>
+                  <span>{data?.button_text || t("home.cta.btnPrimary")}</span>
 
                   <FiArrowRight
                     className="h-4 w-4"
@@ -230,7 +230,7 @@ export default function CtaSection() {
                   text-white/60
                 "
               >
-                {t("home.cta.noCreditCard")}
+                {data?.subnotes || t("home.cta.noCreditCard")}
               </motion.span>
             </motion.div>
           </div>

@@ -31,16 +31,29 @@ const initials = (name) =>
     .join("");
 
 const statusCfg = {
-  Active:   { cls: "bg-[#ecfdf5] text-[#059669]", dot: "bg-[#059669]" },
+  Active: { cls: "bg-[#ecfdf5] text-[#059669]", dot: "bg-[#059669]" },
   Inactive: { cls: "bg-[#fef2f2] text-[#dc2626]", dot: "bg-[#dc2626]" },
 };
 const getStatusCfg = (s) =>
   statusCfg[s] ?? { cls: "bg-[#f1f5f9] text-[#475569]", dot: "bg-[#94a3b8]" };
 
+const getStatusLabel = (status, t) =>
+  status === "Active"
+    ? t("teamMembers.statusActive", "Active")
+    : status === "Inactive"
+      ? t("teamMembers.statusInactive", "Inactive")
+      : status;
+
+const getEmploymentLabel = (type, t) => ({
+  "Full-time": t("teamMembers.fullTime", "Full-time"),
+  "Part-time": t("teamMembers.partTime", "Part-time"),
+  Contract: t("teamMembers.contract", "Contract"),
+}[type] || type);
+
 const empTypeCfg = {
   "Full-time": "bg-[#eff6ff] text-[#3b82f6]",
   "Part-time": "bg-[#f5f3ff] text-[#7c3aed]",
-  Contract:   "bg-[#fff7ed] text-[#c2410c]",
+  Contract: "bg-[#fff7ed] text-[#c2410c]",
 };
 const getEmpType = (t) => empTypeCfg[t] ?? "bg-[#f1f5f9] text-[#475569]";
 
@@ -102,11 +115,11 @@ const EmployeeDrawer = ({ employee, onClose, isArabic, t }) => {
               <div className="mt-1 flex flex-wrap gap-2">
                 <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[11px] font-semibold ${cfg.cls}`}>
                   <span className={`h-1.5 w-1.5 rounded-full ${cfg.dot}`} />
-                  {employee.status}
+                  {getStatusLabel(employee.status, t)}
                 </span>
                 {employee.employment_type && (
                   <span className={`rounded-full px-2.5 py-0.5 text-[11px] font-semibold ${getEmpType(employee.employment_type)}`}>
-                    {employee.employment_type}
+                    {getEmploymentLabel(employee.employment_type, t)}
                   </span>
                 )}
               </div>
@@ -116,11 +129,11 @@ const EmployeeDrawer = ({ employee, onClose, isArabic, t }) => {
           {/* Info grid */}
           <div className="grid grid-cols-1 gap-3">
             {[
-              { icon: FiMail,     label: t("teamMembers.email", "Email"),        value: employee.email },
-              { icon: FiPhone,    label: t("teamMembers.phone", "Phone"),        value: employee.phone },
+              { icon: FiMail, label: t("teamMembers.email", "Email"), value: employee.email },
+              { icon: FiPhone, label: t("teamMembers.phone", "Phone"), value: employee.phone },
               { icon: FiBriefcase, label: t("teamMembers.empCode", "Emp. Code"), value: employee.employee_code },
               { icon: FiCalendar, label: t("teamMembers.startDate", "Start Date"), value: employee.start_date },
-              { icon: FiMapPin,   label: t("teamMembers.address", "Address"),    value: employee.address },
+              { icon: FiMapPin, label: t("teamMembers.address", "Address"), value: employee.address },
             ].map(({ icon: Icon, label, value }) =>
               value ? (
                 <div key={label} className="flex items-start gap-3">
@@ -167,10 +180,10 @@ const TeamMembers = () => {
   const isArabic = i18n.language?.startsWith("ar");
 
   // ── Filters ──
-  const [search, setSearch]           = useState("");
-  const [status, setStatus]           = useState("");
-  const [empType, setEmpType]         = useState("");
-  const [page, setPage]               = useState(1);
+  const [search, setSearch] = useState("");
+  const [status, setStatus] = useState("");
+  const [empType, setEmpType] = useState("");
+  const [page, setPage] = useState(1);
   const [selectedEmployee, setSelected] = useState(null);
 
   // ── Query ──
@@ -181,8 +194,8 @@ const TeamMembers = () => {
     error,
     refetch,
   } = useManagerEmployees({
-    ...(search  ? { search }  : {}),
-    ...(status  ? { status }  : {}),
+    ...(search ? { search } : {}),
+    ...(status ? { status } : {}),
     ...(empType ? { employment_type: empType } : {}),
     page,
     per_page: 15,
@@ -190,9 +203,9 @@ const TeamMembers = () => {
 
   // ── Derived ──
   const employees = data?.employees ?? [];
-  const meta      = data?.meta      ?? {};
-  const lastPage  = meta.last_page  ?? 1;
-  const total     = meta.total      ?? 0;
+  const meta = data?.meta ?? {};
+  const lastPage = meta.last_page ?? 1;
+  const total = meta.total ?? 0;
 
   return (
     <motion.div
@@ -263,9 +276,9 @@ const TeamMembers = () => {
             className="rounded-xl border border-[#e2e8f0] bg-white py-2.5 ps-9 pe-4 text-sm text-[#1e293b] outline-none focus:border-[#5b8c6a] focus:ring-2 focus:ring-[#5b8c6a]/20 transition appearance-none cursor-pointer"
           >
             <option value="">{t("teamMembers.allTypes", "All Types")}</option>
-            <option value="Full-time">Full-time</option>
-            <option value="Part-time">Part-time</option>
-            <option value="Contract">Contract</option>
+            <option value="Full-time">{t("teamMembers.fullTime", "Full-time")}</option>
+            <option value="Part-time">{t("teamMembers.partTime", "Part-time")}</option>
+            <option value="Contract">{t("teamMembers.contract", "Contract")}</option>
           </select>
         </div>
       </motion.div>
@@ -293,7 +306,7 @@ const TeamMembers = () => {
             onClick={() => refetch()}
             className="shrink-0 text-sm font-semibold text-[#dc2626] hover:underline"
           >
-            {t("common.retry", "Retry")}
+            {t("teamMembers.retry", "Retry")}
           </button>
         </motion.div>
       )}
@@ -349,11 +362,11 @@ const TeamMembers = () => {
                     <div className="mt-3 flex flex-wrap gap-2">
                       <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[11px] font-semibold ${cfg.cls}`}>
                         <span className={`h-1.5 w-1.5 rounded-full ${cfg.dot}`} />
-                        {emp.status}
+                        {getStatusLabel(emp.status, t)}
                       </span>
                       {emp.employment_type && (
                         <span className={`rounded-full px-2.5 py-0.5 text-[11px] font-semibold ${getEmpType(emp.employment_type)}`}>
-                          {emp.employment_type}
+                          {getEmploymentLabel(emp.employment_type, t)}
                         </span>
                       )}
                     </div>

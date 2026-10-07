@@ -10,6 +10,7 @@ import {
   deleteNotification as apiDeleteOne,
 } from "../api";
 import echo, { createEcho, reconnectEcho } from "../../../utils/echo";
+import i18n from "../../../i18n/config";
 
 // ============================================================
 // HELPER: استخراج معرف المستخدم من أي شكل من أشكال الكائنات
@@ -59,7 +60,7 @@ const showPopupNotification = (title, body, dedupId) => {
   // امسح بعد 10 ثوانٍ عشان يسمح بالإشعار التاني لو جه تاني
   setTimeout(() => shownToastIds.delete(key), 10_000);
 
-  const displayTitle = title || "إشعار جديد";
+  const displayTitle = title || i18n.t("notifications.newNotification");
   const displayBody = body || "";
   const message = displayBody
     ? `${displayTitle}\n${displayBody}`
@@ -102,16 +103,11 @@ const normalizeNotification = (apiNotif) => {
     notifData.name ||
     apiNotif?.title ||
     apiNotif?.name ||
-    "Notification";
+    i18n.t("notifications.newNotification");
 
   const desc =
-    notifData.body ||
-    notifData.message ||
-    notifData.description ||
-    notifData.content ||
-    apiNotif?.body ||
-    apiNotif?.message ||
-    apiNotif?.description ||
+    notifData.body || notifData.message || notifData.description || notifData.content ||
+    apiNotif?.body || apiNotif?.message || apiNotif?.description ||
     "";
 
   return {
@@ -170,7 +166,10 @@ export const useNotifications = (currentUserId) => {
   // دالة اختبار في الكونسول: window.testNotif()
   useEffect(() => {
     if (typeof window !== "undefined") {
-      window.testNotif = (t = "تجربة", d = "إشعار تجريبي") =>
+      window.testNotif = (
+        t = i18n.t("notifications.testTitle"),
+        d = i18n.t("notifications.testBody"),
+      ) =>
         showPopupNotification(t, d, `test-${Date.now()}`);
     }
   }, []);

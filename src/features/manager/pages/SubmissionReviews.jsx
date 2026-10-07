@@ -49,7 +49,7 @@ const getFileUrl = (filePath) => {
   }
   const root = (
     import.meta.env.VITE_API_BASE_URL ||
-    "https://nontelepathically-pamphletary-cyndi.ngrok-free.dev/api"
+    "https://workwise-production-3941.up.railway.app/api"
   ).replace(/\/api\/?$/, "");
 
   return `${root}/storage/${filePath.replace(/^\/+/, "")}`;

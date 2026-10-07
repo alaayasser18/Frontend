@@ -6,7 +6,7 @@ export default function PerformanceDashboard() {
 
   useEffect(() => {
     fetch(
-      "https://nontelepathically-pamphletary-cyndi.ngrok-free.dev/api/employee/performance-dashboard",
+      "https://workwise-production-3941.up.railway.app/api/employee/performance-dashboard",
       {
         headers: {
           Accept: "application/json",

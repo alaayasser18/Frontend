@@ -171,6 +171,13 @@ export const navConfig = {
       section: "GROWTH & GOVERNANCE",
     },
     {
+      titleKey: "portal.companyEvents",
+      title: "Company Events",
+      path: "/admin/events",
+      icon: FiAward,
+      section: "GROWTH & GOVERNANCE",
+    },
+    {
       titleKey: "portal.auditLogs",
       title: "Audit Logs",
       path: "/admin/audit",
@@ -228,6 +235,13 @@ export const navConfig = {
       title: "Calendar",
       path: "/hr/calendar",
       icon: MdCalendarMonth,
+      section: "OPERATIONS",
+    },
+    {
+      titleKey: "portal.companyEvents",
+      title: "Company Events",
+      path: "/hr/events",
+      icon: FiAward,
       section: "OPERATIONS",
     },
     {
@@ -421,6 +435,12 @@ export const navConfig = {
       icon: MdCalendarMonth,
     },
     {
+      titleKey: "portal.companyEvents",
+      title: "Company Events",
+      path: "/manager/events",
+      icon: FiAward,
+    },
+    {
       titleKey: "portal.aiTeamInsights",
       title: "AI Team Insights",
       path: "/manager/ai-insights",
@@ -486,6 +506,12 @@ export const navConfig = {
       title: "Calendar",
       path: "/employee/calendar",
       icon: FiCalendar,
+    },
+    {
+      titleKey: "portal.companyEvents",
+      title: "Company Events",
+      path: "/employee/events",
+      icon: FiAward,
     },
     {
       titleKey: "portal.myPerformance",

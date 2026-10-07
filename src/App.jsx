@@ -88,6 +88,7 @@ import EmployeeHolidays from "./features/employee/pages/Holidays";
 import Reports from "./features/hr/pages/reports";
 import HrProfileSettings from "./features/hr/pages/ProfileSettings";
 import CalendarPage from "./features/calendar/pages/CalendarPage";
+import CompanyEventsPage from "./features/events/pages/CompanyEventsPage";
 
 // ==================== Layout ====================
 import DashboardLayout from "./layouts/DashboardLayout";
@@ -351,6 +352,15 @@ function App() {
                 element={<CalendarPage customRole="admin" />}
               />
 
+              <Route
+                path="/admin/events"
+                element={<CompanyEventsPage customRole="admin" />}
+              />
+              <Route
+                path="/admin/company-events"
+                element={<Navigate to="/admin/events" replace />}
+              />
+
               <Route path="/admin/profile" element={<AdminProfileSettings />} />
 
               <Route path="/admin/goals" element={<Goals />} />
@@ -440,6 +450,15 @@ function App() {
                   element={<CalendarPage customRole="hr" />}
                 />
 
+                <Route
+                  path="events"
+                  element={<CompanyEventsPage customRole="hr" />}
+                />
+                <Route
+                  path="company-events"
+                  element={<Navigate to="/hr/events" replace />}
+                />
+
                 <Route path="audit" element={<ActivityLog role="HR" />} />
 
                 <Route path="reports" element={<Reports />} />
@@ -500,6 +519,14 @@ function App() {
                 path="/manager/calendar"
                 element={<CalendarPage customRole="manager" />}
               />
+              <Route
+                path="/manager/events"
+                element={<CompanyEventsPage customRole="manager" />}
+              />
+              <Route
+                path="/manager/company-events"
+                element={<Navigate to="/manager/events" replace />}
+              />
 
               <Route path="/manager/ai-insights" element={<AITeamInsights />} />
 
@@ -547,6 +574,14 @@ function App() {
               <Route
                 path="/employee/calendar"
                 element={<CalendarPage customRole="employee" />}
+              />
+              <Route
+                path="/employee/events"
+                element={<CompanyEventsPage customRole="employee" />}
+              />
+              <Route
+                path="/employee/company-events"
+                element={<Navigate to="/employee/events" replace />}
               />
 
               <Route path="/employee/ai-assistant" element={<AIAssistant />} />

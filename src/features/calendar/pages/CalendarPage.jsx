@@ -286,6 +286,8 @@ const CalendarPage = ({ customRole }) => {
       }
     } else if (eventItem.type === "holiday") {
       navigate(`${prefix}/holidays`);
+    } else if (eventItem.type === "company_event") {
+      navigate(`${prefix}/events`);
     } else {
       toast.success(
         `${isRtl ? "مرجع الفعالية" : "Event reference"}: #${eventItem.reference}`

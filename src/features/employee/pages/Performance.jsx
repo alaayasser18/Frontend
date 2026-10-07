@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useMemo } from "react";
 import {
   FiFileText,
   FiChevronDown,
@@ -6,16 +6,11 @@ import {
   FiArrowRight,
   FiX,
   FiCheckCircle,
+  FiAlertCircle,
+  FiRefreshCw,
 } from "react-icons/fi";
 import { useTranslation } from "react-i18next";
-
-// =========================
-// API CONFIG
-// =========================
-// لو Vite:
-const API_BASE_URL = import.meta.env.VITE_API_URL || "";
-// لو Create React App استبدل السطر اللي فوق بـ:
-// const API_BASE_URL = process.env.REACT_APP_API_URL || "";
+import { useEmployeePerformance } from "../../../hooks/usePerformance";
 
 const Performance = () => {
   const { t, i18n } = useTranslation();
@@ -25,110 +20,53 @@ const Performance = () => {
   // =========================
   // STATES
   // =========================
-
-  const [selectedYear, setSelectedYear] = useState("2026");
   const [yearMenuOpen, setYearMenuOpen] = useState(false);
   const [reviewModalOpen, setReviewModalOpen] = useState(false);
 
-  const [overallScore, setOverallScore] = useState(87);
-  const [scoreChange, setScoreChange] = useState("+5% from last month");
-  const [breakdown, setBreakdown] = useState({
-    tasks: 92,
-    quality: 88,
-    attendance: 95,
-  });
-  const [goals, setGoals] = useState([
-    {
-      title: t(
-        "employeePerformance.goals.completeFlutterTraining",
-        "Complete Flutter training",
-      ),
-      due: isArabic ? "30 سبتمبر" : "Sep 30",
-      progress: 75,
-    },
-    {
-      title: t(
-        "employeePerformance.goals.leadCrossTeamWorkshop",
-        "Lead one cross-team workshop",
-      ),
-      due: isArabic ? "15 أكتوبر" : "Oct 15",
-      progress: 50,
-    },
-    {
-      title: t(
-        "employeePerformance.goals.automateMonthlyReporting",
-        "Automate monthly reporting",
-      ),
-      due: isArabic ? "01 نوفمبر" : "Nov 01",
-      progress: 30,
-    },
-  ]);
-  const [loading, setLoading] = useState(false);
-
   // =========================
-  // FETCH DATA FROM BACKEND
+  // DATA — GET /api/employee/performance
   // =========================
-  useEffect(() => {
-    const controller = new AbortController();
+  const { data: perfData, isLoading: loading, isError, error, refetch } = useEmployeePerformance();
 
-    const fetchPerformanceData = async () => {
-      setLoading(true);
-      try {
-        const response = await fetch(
-          `${API_BASE_URL}/api/performance?year=${selectedYear}`,
-          {
-            signal: controller.signal,
-            headers: {
-              "Content-Type": "application/json",
-              // ✅ ضروري مع ngrok المجاني حتى لا يرجع صفحة تحذير HTML بدل JSON
-              "ngrok-skip-browser-warning": "true",
-            },
-          },
-        );
+  // Derived values — fallback to safe defaults if API not ready yet
+  const overallScore = useMemo(() => {
+    const s = perfData?.overall?.score;
+    return s != null ? Math.round(s) : 87;
+  }, [perfData]);
 
-        // ✅ لو مفيش بيانات للسنة دي → سيب البيانات الافتراضية و mattلقيش error
-        if (response.status === 404) {
-          console.warn(`No performance data for year: ${selectedYear}`);
-          return;
-        }
+  const scoreChange = useMemo(() => {
+    return perfData?.overall?.change_label ?? "+5% from last month";
+  }, [perfData]);
 
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
+  const breakdown = useMemo(() => ({
+    tasks:      perfData?.at_a_glance?.tasks_rate      ?? 92,
+    quality:    perfData?.at_a_glance?.quality_rate    ?? 88,
+    attendance: perfData?.at_a_glance?.attendance_rate ?? 95,
+  }), [perfData]);
 
-        // ✅ تأكد إن الرد JSON فعلاً (ngrok ساعات بيرجع HTML)
-        const contentType = response.headers.get("content-type") || "";
-        if (!contentType.includes("application/json")) {
-          throw new Error("Server did not return JSON");
-        }
+  const goals = useMemo(() => {
+    const apiGoals = perfData?.metrics?.goals;
+    if (!apiGoals) return [
+      { title: t("employeePerformance.goals.completeFlutterTraining", "Complete Flutter training"), due: isArabic ? "30 سبتمبر" : "Sep 30", progress: 75 },
+      { title: t("employeePerformance.goals.leadCrossTeamWorkshop", "Lead one cross-team workshop"), due: isArabic ? "15 أكتوبر" : "Oct 15", progress: 50 },
+      { title: t("employeePerformance.goals.automateMonthlyReporting", "Automate monthly reporting"), due: isArabic ? "01 نوفمبر" : "Nov 01", progress: 30 },
+    ];
+    return [
+      { title: isArabic ? "الأهداف المكتملة" : "Goals Completed", due: perfData?.period_name ?? "", progress: Math.round(apiGoals.completion_rate ?? 0) },
+      { title: isArabic ? "متوسط التقدم" : "Average Progress", due: isArabic ? "الفترة الحالية" : "Current period", progress: Math.round(apiGoals.average_progress ?? 0) },
+    ];
+  }, [perfData, isArabic, t]);
 
-        const data = await response.json();
-
-        if (data) {
-          if (data.overallScore != null) setOverallScore(data.overallScore);
-          if (data.scoreChange) setScoreChange(data.scoreChange);
-          if (data.breakdown) setBreakdown(data.breakdown);
-          if (data.goals) setGoals(data.goals);
-        }
-      } catch (error) {
-        if (error.name === "AbortError") return; // تجاهل إلغاء الطلب
-        console.error("Error fetching performance data:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchPerformanceData();
-
-    // ✅ تنظيف الطلب لو الـ component اتقفل
-    return () => controller.abort();
-  }, [selectedYear]);
+  const selectedYear = perfData?.period_name?.split(" ")[1] ?? new Date().getFullYear().toString();
 
   // =========================
   // YEARS
   // =========================
 
   const years = ["2026", "2025", "2024"];
+
+  if (loading) return <div dir={isArabic ? "rtl" : "ltr"} className="min-h-[60vh] flex items-center justify-center text-[#627d98]"><FiRefreshCw className="h-7 w-7 animate-spin" /></div>;
+  if (isError) return <div dir={isArabic ? "rtl" : "ltr"} className="min-h-[60vh] flex flex-col items-center justify-center gap-3"><FiAlertCircle className="h-9 w-9 text-rose-500" /><p className="text-sm text-[#627d98]">{error?.message}</p><button onClick={() => refetch()} className="px-4 py-2 bg-[#243b53] text-white rounded-lg text-xs font-semibold">{isArabic ? "إعادة المحاولة" : "Retry"}</button></div>;
 
   return (
     <>

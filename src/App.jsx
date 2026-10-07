@@ -32,6 +32,7 @@ import AdminAdvances from "./features/admin/pages/AdvancesDeductions";
 import AdminRewards from "./features/admin/pages/Rewards";
 import AdminAttendance from "./features/admin/pages/Attendance";
 import AdminHolidays from "./features/admin/pages/Holidays";
+import LandingPage from "./features/admin/pages/LandingPage";
 
 // ==================== Employee Pages ====================
 import EmployeePerformance from "./features/employee/pages/Performance";
@@ -358,6 +359,8 @@ function App() {
                 path="/admin/tasks"
                 element={<TaskManagement role="Owner" />}
               />
+
+              <Route path="/admin/landing-page" element={<LandingPage />} />
 
               <Route path="/branches" element={<Branches />} />
             </Route>

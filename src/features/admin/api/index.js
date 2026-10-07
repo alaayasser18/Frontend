@@ -102,3 +102,43 @@ export const getOwnerPendingLeaveRequests = async (lang = "en") => {
 
   return response.data;
 };
+
+// =====================================================
+// LANDING PAGE (Owner)
+// =====================================================
+const langConfig = (lang = "en") => ({
+  headers: { "Accept-Language": lang, "App-Language": lang },
+});
+
+export const getLandingSections = async (lang = "en") => {
+  const res = await axiosInstance.get("/owner/landing-page/sections", langConfig(lang));
+  return res.data;
+};
+
+export const updateLandingSection = async (key, content, lang = "en") => {
+  const res = await axiosInstance.put(
+    `/owner/landing-page/sections/${key}`,
+    { content },
+    langConfig(lang),
+  );
+  return res.data;
+};
+
+export const getLandingFeatures = async (lang = "en") => {
+  const res = await axiosInstance.get("/owner/landing-page/features", langConfig(lang));
+  return res.data;
+};
+
+export const createLandingFeature = async (payload, lang = "en") => {
+  const res = await axiosInstance.post("/owner/landing-page/features", payload, langConfig(lang));
+  return res.data;
+};
+
+export const updateLandingFeature = async (id, payload, lang = "en") => {
+  const res = await axiosInstance.put(
+    `/owner/landing-page/features/${id}`,
+    payload,
+    langConfig(lang),
+  );
+  return res.data;
+};

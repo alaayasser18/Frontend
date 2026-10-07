@@ -114,6 +114,13 @@ export const navConfig = {
       section: "GROWTH & GOVERNANCE",
     },
     {
+      titleKey: "portal.companyPolicies",
+      title: "Company Policies",
+      path: "/admin/policies",
+      icon: FiBookOpen,
+      section: "GROWTH & GOVERNANCE",
+    },
+    {
       titleKey: "portal.attendance",
       title: "Attendance",
       path: "/admin/attendance",
@@ -328,6 +335,12 @@ export const navConfig = {
       title: "Team Leave Approvals",
       path: "/manager/leave-approvals",
       icon: MdEventAvailable,
+    },
+    {
+      titleKey: "portal.companyPolicies",
+      title: "Company Policies",
+      path: "/manager/policies",
+      icon: FiBookOpen,
     },
     {
       titleKey: "portal.holidays",

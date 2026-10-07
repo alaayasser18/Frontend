@@ -68,10 +68,23 @@ export const navConfig = {
       section: "OPERATIONS",
     },
     {
+      titleKey: "portal.departmentsTeams",
+      title: "Departments & Teams",
+      path: "/admin/departments",
+      icon: MdLocationCity,
+    },
+    {
       titleKey: "portal.submissionReviews",
       title: "Submission Reviews",
       path: "/admin/submissions",
       icon: MdDescription,
+      section: "OPERATIONS",
+    },
+    {
+      titleKey: "portal.taskManagement",
+      title: "Task Management",
+      path: "/admin/tasks",
+      icon: MdChecklist,
       section: "OPERATIONS",
     },
 
@@ -204,6 +217,13 @@ export const navConfig = {
       icon: MdDescription,
       section: "OPERATIONS",
     },
+    {
+      titleKey: "portal.taskManagement",
+      title: "Task Management",
+      path: "/hr/tasks",
+      icon: MdChecklist,
+      section: "OPERATIONS",
+    },
 
     // ================= FINANCIAL & REWARDS =================
     {
@@ -331,6 +351,12 @@ export const navConfig = {
       icon: MdCalendarToday,
     },
     {
+      titleKey: "portal.departmentsTeams",
+      title: "Departments & Teams",
+      path: "/manager/departments",
+      icon: MdLocationCity,
+    },
+    {
       titleKey: "portal.teamLeaveApprovals",
       title: "Team Leave Approvals",
       path: "/manager/leave-approvals",
@@ -384,6 +410,12 @@ export const navConfig = {
       title: "My Attendance",
       path: "/employee/attendance",
       icon: FiClock,
+    },
+    {
+      titleKey: "portal.departmentsTeams",
+      title: "Departments & Teams",
+      path: "/employee/departments",
+      icon: MdLocationCity,
     },
     {
       titleKey: "portal.myTasks",

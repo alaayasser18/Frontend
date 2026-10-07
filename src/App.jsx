@@ -57,6 +57,7 @@ import TeamEvaluations from "./features/manager/pages/TeamEvaluations";
 import TeamGoals from "./features/manager/pages/TeamGoals";
 import PerformanceAnalytics from "./features/manager/pages/PerformanceAnalytics";
 import TeamAttendance from "./features/manager/pages/TeamAttendance";
+import TeamMembers from "./features/manager/pages/TeamMembers";
 import TeamLeaveApprovals from "./features/manager/pages/TeamLeaveApprovals";
 import DepartmentDirectory from "./features/departments/pages/DepartmentDirectory";
 import AITeamInsights from "./features/manager/pages/AITeamInsights";
@@ -477,6 +478,8 @@ function App() {
               />
 
               <Route path="/manager/dashboard" element={<TeamDashboard />} />
+
+              <Route path="/manager/members" element={<TeamMembers />} />
 
               <Route path="/manager/tasks" element={<TaskManagement />} />
 

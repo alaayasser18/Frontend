@@ -378,6 +378,12 @@ export const navConfig = {
       icon: MdGridView,
     },
     {
+      titleKey: "portal.teamMembers",
+      title: "Team Members",
+      path: "/manager/members",
+      icon: MdPeople,
+    },
+    {
       titleKey: "portal.taskManagement",
       title: "Task Management",
       path: "/manager/tasks",

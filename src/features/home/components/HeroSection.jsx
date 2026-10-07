@@ -8,10 +8,29 @@ import {
 } from "react-icons/fi";
 import { APP_NAME } from "../../../utils/global";
 
-export default function HeroSection() {
+// "Smarter HR Management. Empowered Teams." -> ["Smarter HR Management.", "Empowered Teams."]
+const splitTitle = (title) => {
+  const m = String(title).match(/^(.+?[.!?؟])\s+(.+)$/s);
+  return m ? [m[1], m[2]] : [String(title), ""];
+};
+
+// "10,000+ Trusted by ..." -> ["10,000+", "Trusted by ..."] (only if it starts with a number)
+const splitTrust = (text) => {
+  const m = String(text).match(/^(\S*\d\S*)\s+(.*)$/s);
+  return m ? [m[1], m[2]] : ["", String(text)];
+};
+
+export default function HeroSection({ data }) {
   const { t, i18n } = useTranslation();
 
   const isRtl = i18n.language?.startsWith("ar");
+ const hero = data || {};
+  const [titleMain, titleAccent] = hero.title
+    ? splitTitle(hero.title)
+    : [t("home.hero.titleMain"), t("home.hero.titleAccent")];
+  const [trustNumber, trustRest] = hero.trust_text
+    ? splitTrust(hero.trust_text)
+    : ["10,000+", t("home.hero.trustedBy")];
 
   const scrollToFeatures = () => {
     const el = document.getElementById("features");
@@ -157,7 +176,7 @@ export default function HeroSection() {
             >
               <span className="h-1.5 w-1.5 rounded-full bg-[#5B8C6A]" />
 
-              <span>{t("home.hero.badge")}</span>
+              <span>{hero.badge || t("home.hero.badge")}</span>
             </motion.div>
 
             {/* =========================
@@ -196,10 +215,10 @@ export default function HeroSection() {
                 lg:text-6xl
               "
             >
-              {t("home.hero.titleMain")}{" "}
-              <span className="text-[#AFC4B5]">
-                {t("home.hero.titleAccent")}
-              </span>
+              {titleMain}{" "}
+              {titleAccent && (
+                <span className="text-[#AFC4B5]">{titleAccent}</span>
+              )}
             </motion.h1>
 
             {/* =========================
@@ -236,7 +255,7 @@ export default function HeroSection() {
                 lg:text-lg
               "
             >
-              {t("home.hero.description")}
+              {hero.description || t("home.hero.description")}
             </motion.p>
 
             {/* =========================
@@ -293,7 +312,7 @@ export default function HeroSection() {
                   sm:w-auto
                 "
               >
-                <span>{t("home.hero.ctaPrimary")}</span>
+                <span>{hero.primary_button || t("home.hero.ctaPrimary")}</span>
 
                 <FiArrowRight
                   className={`
@@ -330,7 +349,7 @@ export default function HeroSection() {
                   sm:w-auto
                 "
               >
-                {t("home.hero.ctaSecondary")}
+                {hero.secondary_button || t("home.hero.ctaSecondary")}
               </button>
             </motion.div>
 
@@ -445,10 +464,14 @@ export default function HeroSection() {
                   sm:text-start
                 "
               >
-                <strong className="font-semibold text-white">
-                  10,000+
-                </strong>{" "}
-                {t("home.hero.trustedBy")}
+                {trustNumber && (
+                  <>
+                    <strong className="font-semibold text-white">
+                      {trustNumber}
+                    </strong>{" "}
+                  </>
+                )}
+                {trustRest}
               </p>
             </motion.div>
           </motion.div>

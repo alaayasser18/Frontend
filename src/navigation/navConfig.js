@@ -12,6 +12,7 @@ import {
   MdAccountBalanceWallet,
   MdCardGiftcard,
   MdEventAvailable,
+  MdWeb,
 } from "react-icons/md";
 
 import {
@@ -196,6 +197,14 @@ export const navConfig = {
       title: "Profile & Settings",
       path: "/admin/settings",
       icon: FiUser,
+      section: "GROWTH & GOVERNANCE",
+    },
+
+    {
+      titleKey: "portal.landingPage",
+      title: "Landing Page",
+      path: "/admin/landing-page",
+      icon: MdWeb,
       section: "GROWTH & GOVERNANCE",
     },
   ],

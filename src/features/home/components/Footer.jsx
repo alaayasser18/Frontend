@@ -12,13 +12,38 @@ import logoImg from "../../../assets/logo.jpeg";
 import {
   APP_NAME,
   BRAND_NAME,
-  SITE_CONFIG,
 } from "../../../utils/global";
 
-export default function Footer() {
+export default function Footer({ data }) {
   const { t, i18n } = useTranslation();
   const isRtl = i18n.language?.startsWith("ar");
+  
+  const FOOTER_HREFS = {
+    platform: ["#features", "#features", "#features", "#features"],
+    resources: ["#about", "#about", "#contact"],
+    company: ["#about", "#roles", "#contact"],
+  };
 
+  const fallbackItems = {
+    platform: ["directory", "attendance", "leaves", "performance"].map((k) => t(`home.footer.links.${k}`)),
+    resources: ["docs", "security", "help"].map((k) => t(`home.footer.links.${k}`)),
+    company: ["about", "careers", "privacy"].map((k) => t(`home.footer.links.${k}`)),
+  };
+
+  const footerColumns = ["platform", "resources", "company"].map((id) => ({
+    id,
+    title: t(`home.footer.${id}Title`),
+    items:
+      Array.isArray(data?.columns?.[id]) && data.columns[id].length > 0
+        ? data.columns[id]
+        : fallbackItems[id],
+    hrefs: FOOTER_HREFS[id],
+  }));
+
+  const contact = data?.contact || {};
+  const email = contact.email || t("home.footer.contactInfo.email");
+  const phone = contact.phone || t("home.footer.contactInfo.phone");
+  const address = contact.address || t("home.footer.contactInfo.location");
   const [showBackToTop, setShowBackToTop] = useState(false);
 
   useEffect(() => {
@@ -175,7 +200,7 @@ export default function Footer() {
                   text-[#D9E2EC]
                 "
               >
-                {t("home.footer.tagline")}
+                {data?.brand_description || t("home.footer.tagline")}
               </motion.p>
             </motion.div>
 
@@ -193,286 +218,31 @@ export default function Footer() {
                 lg:gap-x-8
               "
             >
-              {/* =====================================================
-                  PLATFORM
-                  ===================================================== */}
-              <motion.div
-                initial={{
-                  opacity: 0,
-                  y: 20,
-                }}
-                whileInView={{
-                  opacity: 1,
-                  y: 0,
-                }}
-                viewport={{
-                  once: true,
-                }}
-                transition={{
-                  duration: 0.5,
-                  delay: 0.15,
-                }}
-                className="
-                  flex
-                  flex-col
-                  gap-3
-                "
-              >
-                <strong
-                  className="
-                    mb-1
-                    text-sm
-                    font-bold
-                    text-white
-                  "
+              {footerColumns.map((col, colIdx) => (
+                <motion.div
+                  key={col.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.5, delay: 0.15 + colIdx * 0.1 }}
+                  className="flex flex-col gap-3"
                 >
-                  {t("home.footer.platformTitle")}
-                </strong>
+                  <strong className="mb-1 text-sm font-bold text-white">
+                    {col.title}
+                  </strong>
 
-                <motion.a
-                  href="#features"
-                  whileHover={{
-                    x: isRtl ? -4 : 4,
-                  }}
-                  className="
-                    text-xs
-                    leading-6
-                    text-[#9FB3C8]
-                    transition-colors
-                    hover:text-white
-                    sm:text-sm
-                  "
-                >
-                  {t("home.footer.links.directory")}
-                </motion.a>
-
-                <motion.a
-                  href="#features"
-                  whileHover={{
-                    x: isRtl ? -4 : 4,
-                  }}
-                  className="
-                    text-xs
-                    leading-6
-                    text-[#9FB3C8]
-                    transition-colors
-                    hover:text-white
-                    sm:text-sm
-                  "
-                >
-                  {t("home.footer.links.attendance")}
-                </motion.a>
-
-                <motion.a
-                  href="#features"
-                  whileHover={{
-                    x: isRtl ? -4 : 4,
-                  }}
-                  className="
-                    text-xs
-                    leading-6
-                    text-[#9FB3C8]
-                    transition-colors
-                    hover:text-white
-                    sm:text-sm
-                  "
-                >
-                  {t("home.footer.links.leaves")}
-                </motion.a>
-
-                <motion.a
-                  href="#features"
-                  whileHover={{
-                    x: isRtl ? -4 : 4,
-                  }}
-                  className="
-                    text-xs
-                    leading-6
-                    text-[#9FB3C8]
-                    transition-colors
-                    hover:text-white
-                    sm:text-sm
-                  "
-                >
-                  {t("home.footer.links.performance")}
-                </motion.a>
-              </motion.div>
-
-              {/* =====================================================
-                  RESOURCES
-                  ===================================================== */}
-              <motion.div
-                initial={{
-                  opacity: 0,
-                  y: 20,
-                }}
-                whileInView={{
-                  opacity: 1,
-                  y: 0,
-                }}
-                viewport={{
-                  once: true,
-                }}
-                transition={{
-                  duration: 0.5,
-                  delay: 0.25,
-                }}
-                className="
-                  flex
-                  flex-col
-                  gap-3
-                "
-              >
-                <strong
-                  className="
-                    mb-1
-                    text-sm
-                    font-bold
-                    text-white
-                  "
-                >
-                  {t("home.footer.resourcesTitle")}
-                </strong>
-
-                <motion.a
-                  href="#about"
-                  whileHover={{
-                    x: isRtl ? -4 : 4,
-                  }}
-                  className="
-                    text-xs
-                    leading-6
-                    text-[#9FB3C8]
-                    transition-colors
-                    hover:text-white
-                    sm:text-sm
-                  "
-                >
-                  {t("home.footer.links.docs")}
-                </motion.a>
-
-                <motion.a
-                  href="#about"
-                  whileHover={{
-                    x: isRtl ? -4 : 4,
-                  }}
-                  className="
-                    text-xs
-                    leading-6
-                    text-[#9FB3C8]
-                    transition-colors
-                    hover:text-white
-                    sm:text-sm
-                  "
-                >
-                  {t("home.footer.links.security")}
-                </motion.a>
-
-                <motion.a
-                  href="#contact"
-                  whileHover={{
-                    x: isRtl ? -4 : 4,
-                  }}
-                  className="
-                    text-xs
-                    leading-6
-                    text-[#9FB3C8]
-                    transition-colors
-                    hover:text-white
-                    sm:text-sm
-                  "
-                >
-                  {t("home.footer.links.help")}
-                </motion.a>
-              </motion.div>
-
-              {/* =====================================================
-                  COMPANY
-                  ===================================================== */}
-              <motion.div
-                initial={{
-                  opacity: 0,
-                  y: 20,
-                }}
-                whileInView={{
-                  opacity: 1,
-                  y: 0,
-                }}
-                viewport={{
-                  once: true,
-                }}
-                transition={{
-                  duration: 0.5,
-                  delay: 0.35,
-                }}
-                className="
-                  flex
-                  flex-col
-                  gap-3
-                "
-              >
-                <strong
-                  className="
-                    mb-1
-                    text-sm
-                    font-bold
-                    text-white
-                  "
-                >
-                  {t("home.footer.companyTitle")}
-                </strong>
-
-                <motion.a
-                  href="#about"
-                  whileHover={{
-                    x: isRtl ? -4 : 4,
-                  }}
-                  className="
-                    text-xs
-                    leading-6
-                    text-[#9FB3C8]
-                    transition-colors
-                    hover:text-white
-                    sm:text-sm
-                  "
-                >
-                  {t("home.footer.links.about")}
-                </motion.a>
-
-                <motion.a
-                  href="#roles"
-                  whileHover={{
-                    x: isRtl ? -4 : 4,
-                  }}
-                  className="
-                    text-xs
-                    leading-6
-                    text-[#9FB3C8]
-                    transition-colors
-                    hover:text-white
-                    sm:text-sm
-                  "
-                >
-                  {t("home.footer.links.careers")}
-                </motion.a>
-
-                <motion.a
-                  href="#contact"
-                  whileHover={{
-                    x: isRtl ? -4 : 4,
-                  }}
-                  className="
-                    text-xs
-                    leading-6
-                    text-[#9FB3C8]
-                    transition-colors
-                    hover:text-white
-                    sm:text-sm
-                  "
-                >
-                  {t("home.footer.links.privacy")}
-                </motion.a>
-              </motion.div>
+                  {col.items.map((label, i) => (
+                    <motion.a
+                      key={`${label}-${i}`}
+                      href={col.hrefs[i] || "#home"}
+                      whileHover={{ x: isRtl ? -4 : 4 }}
+                      className="text-xs leading-6 text-[#9FB3C8] transition-colors hover:text-white sm:text-sm"
+                    >
+                      {label}
+                    </motion.a>
+                  ))}
+                </motion.div>
+              ))}
 
               {/* =====================================================
                   CONTACT
@@ -533,7 +303,7 @@ export default function Footer() {
                 >
                   {/* Email */}
                   <motion.a
-                    href={`mailto:${SITE_CONFIG.supportEmail}`}
+                    href={`mailto:${email}`}
                     whileHover={{
                       x: isRtl ? -4 : 4,
                     }}
@@ -559,9 +329,7 @@ export default function Footer() {
                     />
 
                     <span>
-                      {t(
-                        "home.footer.contactInfo.email"
-                      )}
+                     {email}
                     </span>
                   </motion.a>
 
@@ -590,9 +358,7 @@ export default function Footer() {
                     />
 
                     <span>
-                      {t(
-                        "home.footer.contactInfo.phone"
-                      )}
+                      {phone}
                     </span>
                   </motion.span>
 
@@ -621,9 +387,7 @@ export default function Footer() {
                     />
 
                     <span>
-                      {t(
-                        "home.footer.contactInfo.location"
-                      )}
+                    {address}
                     </span>
                   </motion.span>
                 </div>
@@ -675,11 +439,11 @@ export default function Footer() {
             "
           >
             <span>
-              {t("home.footer.copyright")}
+              {data?.copyright || t("home.footer.copyright")}
             </span>
 
             <span className="text-[#9FB3C8]">
-              {t("home.footer.enterpriseLabel")}
+              {data?.bottom_tagline || t("home.footer.enterpriseLabel")}
             </span>
           </motion.div>
         </div>

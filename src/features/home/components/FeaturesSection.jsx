@@ -13,59 +13,57 @@ import {
   FiCheckCircle,
 } from "react-icons/fi";
 
-export default function FeaturesSection() {
+// API icon name -> existing react-icons component (design unchanged)
+const ICON_MAP = {
+  "user-group": FiUsers,
+  clock: FiClock,
+  calendar: FiCalendar,
+  "trending-up": FiTrendingUp,
+  "chart-bar": FiBarChart2,
+  sparkles: FiCpu,
+};
+
+// API icon name -> i18n key of the small footer badge (the API has no badge field)
+const BADGE_KEY = {
+  "user-group": "employees",
+  clock: "attendance",
+  calendar: "leaves",
+  "trending-up": "performance",
+  "chart-bar": "reports",
+  sparkles: "aiInsights",
+};
+
+const FALLBACK_KEYS = ["employees", "attendance", "leaves", "performance", "reports", "aiInsights"];
+const FALLBACK_ICONS = ["user-group", "clock", "calendar", "trending-up", "chart-bar", "sparkles"];
+
+export default function FeaturesSection({ data }) {
   const { t } = useTranslation();
 
-  const featureItems = [
-    {
-      key: "employees",
-      icon: FiUsers,
-      title: t("home.features.items.employees.title"),
-      desc: t("home.features.items.employees.desc"),
-      badge: "Employee Management",
-      highlight: false,
-    },
-    {
-      key: "attendance",
-      icon: FiClock,
-      title: t("home.features.items.attendance.title"),
-      desc: t("home.features.items.attendance.desc"),
-      badge: "Attendance & Time",
-      highlight: false,
-    },
-    {
-      key: "leaves",
-      icon: FiCalendar,
-      title: t("home.features.items.leaves.title"),
-      desc: t("home.features.items.leaves.desc"),
-      badge: "Leave Management",
-      highlight: false,
-    },
-    {
-      key: "performance",
-      icon: FiTrendingUp,
-      title: t("home.features.items.performance.title"),
-      desc: t("home.features.items.performance.desc"),
-      badge: "Performance KPIs",
-      highlight: false,
-    },
-    {
-      key: "reports",
-      icon: FiBarChart2,
-      title: t("home.features.items.reports.title"),
-      desc: t("home.features.items.reports.desc"),
-      badge: "Reports & Analytics",
-      highlight: false,
-    },
-    {
-      key: "aiInsights",
-      icon: FiCpu,
-      title: t("home.features.items.aiInsights.title"),
-      desc: t("home.features.items.aiInsights.desc"),
-      badge: "Talent Intelligence",
-      highlight: true,
-    },
-  ];
+  const baseFeatures =
+    Array.isArray(data) && data.length > 0
+      ? [...data]
+          .sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
+          .map((f) => ({
+            key: f.id,
+            iconKey: f.icon,
+            title: f.title,
+            desc: f.description,
+          }))
+      : FALLBACK_KEYS.map((k, i) => ({
+          key: k,
+          iconKey: FALLBACK_ICONS[i],
+          title: t(`home.features.items.${k}.title`),
+          desc: t(`home.features.items.${k}.desc`),
+        }));
+
+  const featureItems = baseFeatures.map((f) => ({
+    ...f,
+    icon: ICON_MAP[f.iconKey] || FiCheckCircle,
+    badge: BADGE_KEY[f.iconKey]
+      ? t(`home.features.badges.${BADGE_KEY[f.iconKey]}`)
+      : t("home.features.platformLabel"),
+    highlight: f.iconKey === "sparkles",
+  }));
 
   const [activeIndex, setActiveIndex] = useState(1);
 

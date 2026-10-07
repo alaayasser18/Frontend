@@ -687,6 +687,15 @@
       ]
     },
     "features": {
+      "platformLabel": "منصة WiseWork",
+      "badges": {
+        "employees": "إدارة الموظفين",
+        "attendance": "الحضور والوقت",
+        "leaves": "إدارة الإجازات",
+        "performance": "مؤشرات الأداء",
+        "reports": "التقارير والتحليلات",
+        "aiInsights": "ذكاء المواهب"
+      },
       "badge": "إمكانيات المنصة",
       "title": "كل ما تحتاجه لإدارة منظومة العمل باحترافية",
       "subtitle": "واجهة تشغيلية هادئة وسلسة صُممت لتمكين مسؤولي الموارد البشرية والموظفين معاً.",
@@ -845,12 +854,14 @@
       }
     },
     "plans": {
+      "whatsIncluded": "ما يشمله الاشتراك",
       "badge": "الخطط والأسعار",
       "title": "باقات واضحة ومناسبة لجميع أحجام الفرق",
       "subtitle": "اختر الخطة المناسبة لمنشأتك الآن، مع إمكانية الترقية أو التخصيص في أي وقت.",
       "recommendedBadge": "الأكثر اختياراً",
       "period": "/شهرياً",
       "basic": {
+        "audience": "للفرق التي تبدأ رحلتها",
         "name": "الأساسية",
         "price": "",
         "userPeriod": "لكل موظف / شهرياً",
@@ -864,6 +875,7 @@
         ]
       },
       "pro": {
+        "audience": "للمؤسسات النامية",
         "name": "المتقدمة",
         "price": "",
         "userPeriod": "لكل موظف / شهرياً",
@@ -879,6 +891,7 @@
         ]
       },
       "enterprise": {
+        "audience": "للفرق المؤسسية الكبيرة",
         "name": "المؤسسات",
         "price": "مخصص",
         "userPeriod": "مصممة حسب متطلبات منشأتك",
@@ -2478,7 +2491,77 @@
     "myPerformance": "أدائي",
     "myGoals": "أهدافي",
     "myFinancials": "ماليّاتي",
-    "aiAssistant": "المساعد الذكي"
+    "aiAssistant": "المساعد الذكي",
+    "landingPage": "الصفحة الرئيسية"
+  },
+  "landingPageAdmin": {
+    "title": "الصفحة الرئيسية",
+    "subtitle": "إدارة محتوى الصفحة الرئيسية العامة للموقع.",
+    "langNotice": "أنت تعدّل النسخة {{language}} من المحتوى. غيّر لغة الواجهة لتعديل النسخة الأخرى.",
+    "sectionsTitle": "أقسام الصفحة",
+    "sectionsSubtitle": "عدّل المحتوى النصي لكل قسم في الصفحة الرئيسية.",
+    "featuresTitle": "المميزات",
+    "featuresSubtitle": "كروت المميزات المعروضة في الصفحة الرئيسية مرتبة حسب الأولوية.",
+    "addFeature": "إضافة ميزة",
+    "editFeature": "تعديل الميزة",
+    "editSection": "تعديل القسم",
+    "edit": "تعديل",
+    "save": "حفظ التغييرات",
+    "saving": "جارٍ الحفظ...",
+    "cancel": "إلغاء",
+    "close": "إغلاق",
+    "retry": "إعادة المحاولة",
+    "remove": "حذف",
+    "addItem": "إضافة عنصر",
+    "lastUpdated": "آخر تحديث",
+    "itemsCount": "{{count}} عناصر",
+    "noSections": "لا توجد أقسام.",
+    "noFeatures": "لا توجد مميزات بعد. أضف أول ميزة.",
+    "loadError": "تعذر تحميل البيانات.",
+    "saveFailed": "تعذر حفظ التغييرات.",
+    "sectionUpdated": "تم تحديث القسم بنجاح.",
+    "featureCreated": "تمت إضافة الميزة بنجاح.",
+    "featureUpdated": "تم تحديث الميزة بنجاح.",
+    "iconHint": "اسم الأيقونة، مثل: user-group أو clock أو shield-check.",
+    "orderHint": "الأرقام الأصغر تظهر أولاً.",
+    "sections": {
+      "hero": "القسم الرئيسي (Hero)",
+      "about": "من نحن",
+      "ai_insights": "رؤى الذكاء الاصطناعي",
+      "global_stats": "الإحصائيات العامة",
+      "cta": "دعوة لاتخاذ إجراء",
+      "footer": "التذييل"
+    },
+    "fields": {
+      "badge": "الشارة",
+      "title": "العنوان",
+      "description": "الوصف",
+      "primary_button": "الزر الأساسي",
+      "secondary_button": "الزر الثانوي",
+      "trust_text": "نص الثقة",
+      "ticker_tags": "شريط الوسوم المتحرك",
+      "stats": "الإحصائيات",
+      "highlights": "النقاط البارزة",
+      "label": "التسمية",
+      "value": "القيمة",
+      "subtext": "النص الفرعي",
+      "items": "الإحصائيات",
+      "button_text": "نص الزر",
+      "subnotes": "ملاحظات فرعية",
+      "brand_description": "وصف العلامة التجارية",
+      "columns": "أعمدة الروابط",
+      "platform": "المنصة",
+      "resources": "المصادر",
+      "company": "الشركة",
+      "contact": "التواصل",
+      "email": "البريد الإلكتروني",
+      "phone": "الهاتف",
+      "address": "العنوان",
+      "copyright": "حقوق النشر",
+      "bottom_tagline": "الشعار السفلي",
+      "icon": "الأيقونة",
+      "order": "الترتيب"
+    }
   },
   "employeeFinancial": {
     "eyebrow": "الإدارة المالية",

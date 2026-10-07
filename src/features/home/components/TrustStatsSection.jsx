@@ -84,27 +84,20 @@ function AnimatedNumber({ value, duration = 1800 }) {
   return <span ref={ref}>{displayValue}</span>;
 }
 
-export default function TrustStatsSection() {
+export default function TrustStatsSection({ data }) {
   const { t } = useTranslation();
 
-  const stats = [
-    {
-      number: t("home.stats.uptime"),
-      label: t("home.stats.uptimeLabel"),
-    },
-    {
-      number: t("home.stats.speed"),
-      label: t("home.stats.speedLabel"),
-    },
-    {
-      number: t("home.stats.employeesCount"),
-      label: t("home.stats.employeesLabel"),
-    },
-    {
-      number: t("home.stats.security"),
-      label: t("home.stats.securityLabel"),
-    },
+  const fallbackStats = [
+    { number: t("home.stats.uptime"), label: t("home.stats.uptimeLabel") },
+    { number: t("home.stats.speed"), label: t("home.stats.speedLabel") },
+    { number: t("home.stats.employeesCount"), label: t("home.stats.employeesLabel") },
+    { number: t("home.stats.security"), label: t("home.stats.securityLabel") },
   ];
+
+  const stats =
+    Array.isArray(data) && data.length > 0
+      ? data.map((s) => ({ number: s.value, label: s.label }))
+      : fallbackStats;
 
   const containerVariants = {
     hidden: {},

@@ -29,8 +29,8 @@ axiosInstance.interceptors.request.use(
     // Send Accept-Language based on the stored language preference
     const storedLang = localStorage.getItem("i18nextLng");
     const lang = storedLang && storedLang.startsWith("ar") ? "ar" : "en";
-    config.headers["Accept-Language"] = lang;
-    config.headers["App-Language"] = lang;
+    config.headers["Accept-Language"] = config.headers["Accept-Language"] || lang;
+    config.headers["App-Language"] = config.headers["App-Language"] || lang;
 
     return config;
   },
@@ -54,7 +54,8 @@ axiosInstance.interceptors.response.use(
       if (typeof window !== "undefined") {
         window.dispatchEvent(new CustomEvent("auth:unauthorized"));
 
-        const path = window.location.pathname;
+        const path =
+          window.location.pathname.replace(/^\/(ar|en)(?=\/|$)/, "") || "/";
 
         const isAuthPage =
           path.includes("/login") ||

@@ -1,12 +1,6 @@
-import { useEffect, useRef } from "react";
-import {
-  BrowserRouter,
-  Routes,
-  Route,
-  Navigate,
-  useLocation,
-  useNavigate,
-} from "react-router-dom";
+import { useEffect } from "react";
+import { Routes, Route, Navigate } from "react-router-dom";
+import LanguageRouter from "./routes/LanguageRouter";
 import { Toaster } from "react-hot-toast";
 import { useTranslation } from "react-i18next";
 import { AuthProvider } from "./context/AuthContext";
@@ -120,63 +114,63 @@ import DashboardLayout from "./layouts/DashboardLayout";
 })();
 
 // ==================== Language <-> URL (?lang=ar|en) ====================
-function LanguageUrlSync() {
-  const { i18n } = useTranslation();
-  const location = useLocation();
-  const navigate = useNavigate();
+// function LanguageUrlSync() {
+//   const { i18n } = useTranslation();
+//   const location = useLocation();
+//   const navigate = useNavigate();
 
-  const current = i18n.language?.startsWith("ar") ? "ar" : "en";
+//   const current = i18n.language?.startsWith("ar") ? "ar" : "en";
 
-  const prevLang = useRef(current);
+//   const prevLang = useRef(current);
 
-  const rawUrlLang = new URLSearchParams(location.search).get("lang");
+//   const rawUrlLang = new URLSearchParams(location.search).get("lang");
 
-  const urlLang =
-    rawUrlLang === "ar" || rawUrlLang === "en" ? rawUrlLang : null;
+//   const urlLang =
+//     rawUrlLang === "ar" || rawUrlLang === "en" ? rawUrlLang : null;
 
-  // URL -> i18n
-  // أول تحميل / تعديل الرابط يدوي / back
-  useEffect(() => {
-    if (urlLang && urlLang !== current) {
-      i18n.changeLanguage(urlLang);
-    }
+//   // URL -> i18n
+//   // أول تحميل / تعديل الرابط يدوي / back
+//   useEffect(() => {
+//     if (urlLang && urlLang !== current) {
+//       i18n.changeLanguage(urlLang);
+//     }
 
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [urlLang]);
+//     // eslint-disable-next-line react-hooks/exhaustive-deps
+//   }, [urlLang]);
 
-  // i18n -> URL
-  // تغيير اللغة من الـ switcher أو التنقل بين الصفحات
-  useEffect(() => {
-    const langChanged = prevLang.current !== current;
+//   // i18n -> URL
+//   // تغيير اللغة من الـ switcher أو التنقل بين الصفحات
+//   useEffect(() => {
+//     const langChanged = prevLang.current !== current;
 
-    prevLang.current = current;
+//     prevLang.current = current;
 
-    if (urlLang === current) return;
+//     if (urlLang === current) return;
 
-    if (urlLang && !langChanged) {
-      return;
-    }
+//     if (urlLang && !langChanged) {
+//       return;
+//     }
 
-    const params = new URLSearchParams(location.search);
+//     const params = new URLSearchParams(location.search);
 
-    params.set("lang", current);
+//     params.set("lang", current);
 
-    navigate(
-      {
-        pathname: location.pathname,
-        search: `?${params.toString()}`,
-        hash: location.hash,
-      },
-      {
-        replace: true,
-      },
-    );
+//     navigate(
+//       {
+//         pathname: location.pathname,
+//         search: `?${params.toString()}`,
+//         hash: location.hash,
+//       },
+//       {
+//         replace: true,
+//       },
+//     );
 
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [current, location.pathname, location.search]);
+//     // eslint-disable-next-line react-hooks/exhaustive-deps
+//   }, [current, location.pathname, location.search]);
 
-  return null;
-}
+//   return null;
+// }
 
 // ==================== App ====================
 function App() {
@@ -204,9 +198,7 @@ function App() {
   }, [i18n.language]);
 
   return (
-    <BrowserRouter>
-      <LanguageUrlSync />
-
+    <LanguageRouter>
       <AuthProvider>
         {/* ==================== Toast Notifications ==================== */}
         <Toaster
@@ -551,7 +543,7 @@ function App() {
           </Route>
         </Routes>
       </AuthProvider>
-    </BrowserRouter>
+    </LanguageRouter>
   );
 }
 

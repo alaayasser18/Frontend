@@ -25,14 +25,14 @@ const trustFeatures = [
   "Role Governance",
 ];
 
-export default function AboutSection() {
+export default function AboutSection({ data, tickerTags }) {
   const { t } = useTranslation();
   const swiperRef = useRef(null);
 
   // =========================
   // Accordion State
   // =========================
-  const [openItem, setOpenItem] = useState("solution");
+  const [openItem, setOpenItem] = useState("item-0");
 
   const toggleItem = (item) => {
     setOpenItem((current) => (current === item ? null : item));
@@ -43,9 +43,11 @@ export default function AboutSection() {
   });
 
   const baseItems =
-    Array.isArray(rawTicker) && rawTicker.length > 0
-      ? rawTicker
-      : trustFeatures;
+    Array.isArray(tickerTags) && tickerTags.length > 0
+      ? tickerTags
+      : Array.isArray(rawTicker) && rawTicker.length > 0
+        ? rawTicker
+        : trustFeatures;
 
   const repeatedItems = [
     ...baseItems,
@@ -64,32 +66,42 @@ export default function AboutSection() {
   // =========================
   // Accordion Items
   // =========================
-  const accordionItems = [
-    {
-      id: "solution",
-      title: t("home.about.solutionTitle"),
-      description: t("home.about.solutionDesc"),
-      icon: FiCheckCircle,
-      iconWrapper: "bg-[#EAF2ED]",
-      iconColor: "text-[#3F7D5A]",
-    },
-    {
-      id: "problem",
-      title: t("home.about.problemTitle"),
-      description: t("home.about.problemDesc"),
-      icon: FiLayers,
-      iconWrapper: "bg-[#F5F7F8]",
-      iconColor: "text-[#486581]",
-    },
-    {
-      id: "clarity",
-      title: t("home.about.clarityTitle"),
-      description: t("home.about.clarityDesc"),
-      icon: FiZap,
-      iconWrapper: "bg-[#F5F7F8]",
-      iconColor: "text-[#486581]",
-    },
+  const accordionStyles = [
+    { icon: FiCheckCircle, iconWrapper: "bg-[#EAF2ED]", iconColor: "text-[#3F7D5A]" },
+    { icon: FiLayers, iconWrapper: "bg-[#F5F7F8]", iconColor: "text-[#486581]" },
+    { icon: FiZap, iconWrapper: "bg-[#F5F7F8]", iconColor: "text-[#486581]" },
   ];
+
+  const fallbackHighlights = [
+    { title: t("home.about.solutionTitle"), description: t("home.about.solutionDesc") },
+    { title: t("home.about.problemTitle"), description: t("home.about.problemDesc") },
+    { title: t("home.about.clarityTitle"), description: t("home.about.clarityDesc") },
+  ];
+
+  const highlights =
+    Array.isArray(data?.highlights) && data.highlights.length > 0
+      ? data.highlights
+      : fallbackHighlights;
+
+  const accordionItems = highlights.map((h, i) => ({
+    id: `item-${i}`,
+    title: h.title,
+    description: h.description,
+    ...accordionStyles[i % accordionStyles.length],
+  }));
+
+  const fallbackStats = [1, 2, 3].map((n) => ({
+    title: t(`home.about.stat${n}Value`),
+    sub: t(`home.about.stat${n}Label`),
+  }));
+
+  const aboutStats =
+    Array.isArray(data?.stats) && data.stats.length > 0
+      ? data.stats.map((s) => ({
+        title: `${s.value ?? ""} ${s.label ?? ""}`.trim(),
+        sub: s.subtext,
+      }))
+      : fallbackStats;
 
   return (
     <>
@@ -239,7 +251,7 @@ export default function AboutSection() {
       "
                 />
 
-                <span>{t("home.about.badge")}</span>
+                <span>{data?.badge || t("home.about.badge")}</span>
               </div>
 
               {/* Desktop Only Content */}
@@ -257,7 +269,7 @@ export default function AboutSection() {
         sm:text-4xl
       "
                 >
-                  {t("home.about.title")}
+                  {data?.title || t("home.about.title")}
                 </h2>
 
                 <p
@@ -269,7 +281,7 @@ export default function AboutSection() {
         text-[#6B7785]
       "
                 >
-                  {t("home.about.subtitle")}
+                  {data?.description || t("home.about.subtitle")}
                 </p>
 
                 <div
@@ -281,104 +293,23 @@ export default function AboutSection() {
         sm:grid-cols-3
       "
                 >
-                  <div
-                    className="
-          rounded-xl
-          border border-[#D9E2EC]
-          bg-white
-          p-4
-          shadow-sm
-        "
-                  >
-                    <strong
-                      className="
-            block
-            text-lg
-            font-bold
-            text-[#243B53]
-          "
+                  {aboutStats.map((stat, i) => (
+                    <div
+                      key={i}
+                      className="rounded-xl border border-[#D9E2EC] bg-white p-4 shadow-sm"
                     >
-                      {t("home.about.stat1Value")}
-                    </strong>
+                      <strong
+                        className={`block text-lg font-bold ${i === 2 ? "text-[#3F7D5A]" : "text-[#243B53]"
+                          }`}
+                      >
+                        {stat.title}
+                      </strong>
 
-                    <span
-                      className="
-            mt-1
-            block
-            text-xs
-            leading-5
-            text-[#6B7785]
-          "
-                    >
-                      {t("home.about.stat1Label")}
-                    </span>
-                  </div>
-
-                  <div
-                    className="
-          rounded-xl
-          border border-[#D9E2EC]
-          bg-white
-          p-4
-          shadow-sm
-        "
-                  >
-                    <strong
-                      className="
-            block
-            text-lg
-            font-bold
-            text-[#243B53]
-          "
-                    >
-                      {t("home.about.stat2Value")}
-                    </strong>
-
-                    <span
-                      className="
-            mt-1
-            block
-            text-xs
-            leading-5
-            text-[#6B7785]
-          "
-                    >
-                      {t("home.about.stat2Label")}
-                    </span>
-                  </div>
-
-                  <div
-                    className="
-          rounded-xl
-          border border-[#D9E2EC]
-          bg-white
-          p-4
-          shadow-sm
-        "
-                  >
-                    <strong
-                      className="
-            block
-            text-lg
-            font-bold
-            text-[#3F7D5A]
-          "
-                    >
-                      {t("home.about.stat3Value")}
-                    </strong>
-
-                    <span
-                      className="
-            mt-1
-            block
-            text-xs
-            leading-5
-            text-[#6B7785]
-          "
-                    >
-                      {t("home.about.stat3Label")}
-                    </span>
-                  </div>
+                      <span className="mt-1 block text-xs leading-5 text-[#6B7785]">
+                        {stat.sub}
+                      </span>
+                    </div>
+                  ))}
                 </div>
               </div>
             </motion.div>

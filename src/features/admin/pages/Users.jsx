@@ -154,8 +154,9 @@ const Toggle = ({ checked, onChange, label }) => (
     aria-checked={checked}
     aria-label={label}
     onClick={onChange}
-    className={`inline-flex h-6 w-11 items-center rounded-full p-0.5 transition-colors duration-200 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-[#486581]/40 ${checked ? "bg-[#12B76A]" : "bg-[#d9e2ec]"
-      }`}
+    className={`inline-flex h-6 w-11 items-center rounded-full p-0.5 transition-colors duration-200 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-[#486581]/40 ${
+      checked ? "bg-[#12B76A]" : "bg-[#d9e2ec]"
+    }`}
   >
     <motion.span
       layout
@@ -254,27 +255,6 @@ const Users = () => {
 
   // Extracted live employees list
   const employeesList = useMemo(() => {
-<<<<<<< HEAD
-    if (Array.isArray(employeesResponse?.data?.employees)) {
-      return employeesResponse.data.employees;
-    }
-    if (Array.isArray(employeesResponse?.employees)) {
-      return employeesResponse.employees;
-    }
-    if (Array.isArray(employeesResponse?.data?.data?.employees)) {
-      return employeesResponse.data.data.employees;
-    }
-    if (Array.isArray(employeesResponse?.data?.data)) {
-      return employeesResponse.data.data;
-    }
-    if (Array.isArray(employeesResponse?.data)) {
-      return employeesResponse.data;
-    }
-    if (Array.isArray(employeesResponse)) {
-      return employeesResponse;
-    }
-    return [];
-=======
     const candidates = [
       employeesResponse?.data?.employees,
       employeesResponse?.employees,
@@ -284,7 +264,6 @@ const Users = () => {
       employeesResponse,
     ];
     return candidates.find(Array.isArray) ?? [];
->>>>>>> 95be42f99e123720c8a260308aa0d0c8dbc209c3
   }, [employeesResponse]);
 
   // Permissions list from backend
@@ -343,7 +322,11 @@ const Users = () => {
         role: user.role,
         phone: user.phone || null,
         job_title: user.job_title || null,
-        department: user.department?.name || user.department_name || user.department || null,
+        department:
+          user.department?.name ||
+          user.department_name ||
+          user.department ||
+          null,
         status: user.status || "Active",
         permissions: user.permissions || [],
         access:
@@ -463,7 +446,7 @@ const Users = () => {
         onSuccess: (res) => {
           toast.success(
             res?.message ||
-            t("usersPage.createSuccess", "Employee created successfully."),
+              t("usersPage.createSuccess", "Employee created successfully."),
           );
           handleCloseModal();
           refetchEmployees();
@@ -531,7 +514,7 @@ const Users = () => {
     } catch (err) {
       toast.error(
         err?.response?.data?.message ||
-        (isRtl ? "حدث خطأ" : "Failed to update HR fields"),
+          (isRtl ? "حدث خطأ" : "Failed to update HR fields"),
       );
       console.error(err);
     }
@@ -544,7 +527,7 @@ const Users = () => {
       accessMap[user.id] !== undefined
         ? accessMap[user.id]
         : user.status
-          ? (user.status.toLowerCase() === "active" || user.status === "نشط")
+          ? user.status.toLowerCase() === "active" || user.status === "نشط"
           : true;
 
     const nextActive = !isCurrentlyActive;
@@ -563,8 +546,12 @@ const Users = () => {
       });
       toast.success(
         nextActive
-          ? (isRtl ? "تم تفعيل الحساب بنجاح" : "Account activated successfully")
-          : (isRtl ? "تم تعطيل الحساب بنجاح" : "Account deactivated successfully"),
+          ? isRtl
+            ? "تم تفعيل الحساب بنجاح"
+            : "Account activated successfully"
+          : isRtl
+            ? "تم تعطيل الحساب بنجاح"
+            : "Account deactivated successfully",
       );
       refetchEmployees();
     } catch (err) {
@@ -575,7 +562,7 @@ const Users = () => {
       }));
       toast.error(
         err?.response?.data?.message ||
-        (isRtl ? "فشل تحديث حالة الحساب" : "Failed to update account status"),
+          (isRtl ? "فشل تحديث حالة الحساب" : "Failed to update account status"),
       );
     }
   };
@@ -697,8 +684,9 @@ const Users = () => {
           <div className="flex flex-wrap gap-3">
             <div className="relative min-w-56 flex-1">
               <FiSearch
-                className={`absolute top-1/2 -translate-y-1/2 text-[#829ab1] ${isRtl ? "right-3" : "left-3"
-                  }`}
+                className={`absolute top-1/2 -translate-y-1/2 text-[#829ab1] ${
+                  isRtl ? "right-3" : "left-3"
+                }`}
                 size={16}
               />
 
@@ -707,8 +695,9 @@ const Users = () => {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder={t("usersPage.searchPlaceholder", "Search users")}
-                className={`w-full rounded-lg border border-[#d9e2ec] py-2.5 text-sm text-[#1e293b] placeholder:text-[#829ab1] outline-none focus:border-[#486581] focus:ring-1 focus:ring-[#486581]/20 transition ${isRtl ? "pr-9 pl-3" : "pl-9 pr-3"
-                  }`}
+                className={`w-full rounded-lg border border-[#d9e2ec] py-2.5 text-sm text-[#1e293b] placeholder:text-[#829ab1] outline-none focus:border-[#486581] focus:ring-1 focus:ring-[#486581]/20 transition ${
+                  isRtl ? "pr-9 pl-3" : "pl-9 pr-3"
+                }`}
               />
             </div>
 
@@ -825,7 +814,7 @@ const Users = () => {
 
                       const isUserActive = user.status
                         ? user.status.toLowerCase() === "active" ||
-                        user.status === "نشط"
+                          user.status === "نشط"
                         : true;
 
                       const currentAccess =
@@ -1153,9 +1142,9 @@ const Users = () => {
                         {isDepartmentsLoading
                           ? t("departments.loading", "Loading departments...")
                           : t(
-                            "departments.selectDepartment",
-                            "Select Department",
-                          )}
+                              "departments.selectDepartment",
+                              "Select Department",
+                            )}
                       </option>
 
                       {departments.map((department) => (
@@ -1301,14 +1290,16 @@ const Users = () => {
                             key={perm}
                             type="button"
                             onClick={() => togglePermission(perm)}
-                            className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition cursor-pointer ${isSelected
+                            className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition cursor-pointer ${
+                              isSelected
                                 ? "bg-[#243B53] text-white shadow-xs"
                                 : "bg-white text-[#486581] border border-[#d9e2ec] hover:border-[#9fb3c8]"
-                              }`}
+                            }`}
                           >
                             <span
-                              className={`size-1.5 rounded-full ${isSelected ? "bg-[#12B76A]" : "bg-[#9fb3c8]"
-                                }`}
+                              className={`size-1.5 rounded-full ${
+                                isSelected ? "bg-[#12B76A]" : "bg-[#9fb3c8]"
+                              }`}
                             />
                             {perm}
                           </button>

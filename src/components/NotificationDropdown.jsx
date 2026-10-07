@@ -15,15 +15,21 @@ import { useNotifications } from "../context/NotificationContext";
 import { useAuth } from "../context/AuthContext";
 
 const CATEGORY_META = {
-  evaluations: { icon: FiStar, iconClass: "text-indigo-500", bgClass: "bg-indigo-50" },
+  evaluations: {
+    icon: FiStar,
+    iconClass: "text-indigo-500",
+    bgClass: "bg-indigo-50",
+  },
   security: { icon: FiShield, iconClass: "text-red-400", bgClass: "bg-red-50" },
   system: { icon: FiSettings, iconClass: "text-sky-500", bgClass: "bg-sky-50" },
 };
 const getCategoryMeta = (cat) =>
-  CATEGORY_META[cat] || { icon: FiBell, iconClass: "text-slate-400", bgClass: "bg-slate-100" };
+  CATEGORY_META[cat] || {
+    icon: FiBell,
+    iconClass: "text-slate-400",
+    bgClass: "bg-slate-100",
+  };
 
-<<<<<<< HEAD
-=======
 const ROUTE_MAP = {
   admin: "/admin/notifications",
   owner: "/admin/notifications",
@@ -33,9 +39,12 @@ const ROUTE_MAP = {
 };
 
 const getNotificationsRoute = (role) =>
-  ROUTE_MAP[String(role || "").trim().toLowerCase()] || "/admin/notifications";
+  ROUTE_MAP[
+    String(role || "")
+      .trim()
+      .toLowerCase()
+  ] || "/admin/notifications";
 
->>>>>>> 6e4c0b25f8460a4c69b899c7b6443e5369faa2fc
 const NotificationDropdown = ({ isOpen, onClose, role }) => {
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
@@ -53,17 +62,23 @@ const NotificationDropdown = ({ isOpen, onClose, role }) => {
   const panelRef = useRef(null);
 
   const getTargetRoute = () => {
-    if (location.pathname.startsWith("/employee")) return "/employee/notifications";
+    if (location.pathname.startsWith("/employee"))
+      return "/employee/notifications";
     if (location.pathname.startsWith("/hr")) return "/hr/notifications";
-    if (location.pathname.startsWith("/manager")) return "/manager/notifications";
-    if (location.pathname.startsWith("/admin") || location.pathname.startsWith("/owner"))
+    if (location.pathname.startsWith("/manager"))
+      return "/manager/notifications";
+    if (
+      location.pathname.startsWith("/admin") ||
+      location.pathname.startsWith("/owner")
+    )
       return "/admin/notifications";
 
     const normalized = String(
-      role || currentUser?.role || localStorage.getItem("role") || ""
+      role || currentUser?.role || localStorage.getItem("role") || "",
     ).toLowerCase();
 
-    if (normalized === "owner" || normalized === "admin") return "/admin/notifications";
+    if (normalized === "owner" || normalized === "admin")
+      return "/admin/notifications";
     if (normalized === "hr") return "/hr/notifications";
     if (normalized === "manager") return "/manager/notifications";
     return "/employee/notifications";
@@ -88,11 +103,7 @@ const NotificationDropdown = ({ isOpen, onClose, role }) => {
 
   const handleSeeAll = () => {
     onClose();
-<<<<<<< HEAD
-    navigate(getTargetRoute());
-=======
     navigate(getNotificationsRoute(currentRole));
->>>>>>> 6e4c0b25f8460a4c69b899c7b6443e5369faa2fc
   };
 
   const handleNotificationClick = (notif) => {
@@ -100,13 +111,9 @@ const NotificationDropdown = ({ isOpen, onClose, role }) => {
       toggleNotificationRead(notif.id);
     }
     onClose();
-<<<<<<< HEAD
-    navigate(getTargetRoute(), { state: { selectedNotificationId: notif.id } });
-=======
     navigate(getNotificationsRoute(currentRole), {
       state: { selectedNotificationId: notif.id },
     });
->>>>>>> 6e4c0b25f8460a4c69b899c7b6443e5369faa2fc
   };
 
   const preview = notifications.slice(0, 5);
@@ -163,7 +170,9 @@ const NotificationDropdown = ({ isOpen, onClose, role }) => {
             {preview.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-10 text-slate-400 text-sm gap-2">
                 <FiBell className="w-7 h-7 opacity-40" />
-                <span>{t("portal.noNotifications", "No notifications yet")}</span>
+                <span>
+                  {t("portal.noNotifications", "No notifications yet")}
+                </span>
               </div>
             ) : (
               preview.map((notif, idx) => {
@@ -241,21 +250,13 @@ const NotificationDropdown = ({ isOpen, onClose, role }) => {
           {/* Footer */}
           <div className="flex items-center justify-between px-4 py-2.5 border-t border-slate-100 bg-slate-50">
             <span className="text-[12px] text-slate-400">
-<<<<<<< HEAD
               {notifications.length > 5
                 ? `+${notifications.length - 5} more`
-                : `${notifications.length} ${t("portal.total", "total")}`}
-            </span>
-            <button
-              onClick={handleSeeAll}
-              className="flex items-center gap-1.5 bg-[#243b53] hover:bg-[#334e68] text-white text-[12px] font-semibold px-3.5 py-1.5 rounded-lg transition cursor-pointer"
-=======
-              {notifications.length > 5 ? `+${notifications.length - 5} more` : ""}
+                : ""}
             </span>
             <button
               onClick={handleSeeAll}
               className="flex items-center gap-1.5 bg-[#243b53] hover:bg-[#334e68] text-white text-[12px] font-semibold px-3.5 py-1.5 rounded-lg transition"
->>>>>>> 6e4c0b25f8460a4c69b899c7b6443e5369faa2fc
             >
               <FiCheck className="w-3 h-3" />
               {t("portal.seeAll", "See all notifications")}

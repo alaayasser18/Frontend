@@ -222,7 +222,7 @@ const ProfileSettings = ({ role = "employee" }) => {
           </p>
 
           <h1 className="text-2xl md:text-[28px] font-bold text-[#1e293b] tracking-tight">
-            {t("profileSettingsPage.title", "Profile & settings")}
+            {t("profileSettingsPage.title", "Settings")}
           </h1>
 
           <p className="text-sm text-[#64748b] mt-1">
@@ -335,7 +335,7 @@ const ProfileSettings = ({ role = "employee" }) => {
           </p>
 
           <h1 className="text-2xl md:text-[28px] font-bold text-[#1e293b] tracking-tight">
-            {t("profileSettingsPage.title", "Profile & settings")}
+            {t("profileSettingsPage.title", "Settings")}
           </h1>
 
           <p className="text-sm text-[#64748b] mt-1 font-normal">

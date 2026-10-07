@@ -851,6 +851,7 @@
     ]
   },
   "portal": {
+    "calendar": "التقويم",
     "holidays": "العطلات والمواسم",
     "aiInsights": "رؤى الذكاء الاصطناعي",
     "performanceMetrics": "مؤشرات الأداء",

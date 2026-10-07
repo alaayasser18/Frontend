@@ -145,6 +145,12 @@ export const navConfig = {
       icon: MdEventAvailable,
     },
     {
+      titleKey: "portal.calendar",
+      title: "Calendar",
+      path: "/admin/calendar",
+      icon: MdCalendarMonth,
+    },
+    {
       titleKey: "portal.auditLogs",
       title: "Audit Logs",
       path: "/admin/audit",
@@ -194,6 +200,13 @@ export const navConfig = {
     {
       titleKey: "portal.attendance",
       path: "/hr/attendance",
+      icon: MdCalendarMonth,
+      section: "OPERATIONS",
+    },
+    {
+      titleKey: "portal.calendar",
+      title: "Calendar",
+      path: "/hr/calendar",
       icon: MdCalendarMonth,
       section: "OPERATIONS",
     },
@@ -282,6 +295,13 @@ export const navConfig = {
       section: "GROWTH & GOVERNANCE",
     },
     {
+      titleKey: "portal.auditLogs",
+      title: "Audit Logs",
+      path: "/hr/audit",
+      icon: MdHistory,
+      section: "GROWTH & GOVERNANCE",
+    },
+    {
       titleKey: "portal.notifications",
       path: "/hr/notifications",
       icon: MdNotifications,
@@ -362,6 +382,12 @@ export const navConfig = {
       icon: MdDateRange,
     },
     {
+      titleKey: "portal.calendar",
+      title: "Calendar",
+      path: "/manager/calendar",
+      icon: MdCalendarMonth,
+    },
+    {
       titleKey: "portal.aiTeamInsights",
       title: "AI Team Insights",
       path: "/manager/ai-insights",
@@ -421,6 +447,12 @@ export const navConfig = {
       title: "Company Holidays",
       path: "/employee/holidays",
       icon: MdEventAvailable,
+    },
+    {
+      titleKey: "portal.calendar",
+      title: "Calendar",
+      path: "/employee/calendar",
+      icon: FiCalendar,
     },
     {
       titleKey: "portal.myPerformance",

@@ -82,6 +82,7 @@ import HrHolidays from "./features/hr/pages/holidays";
 import EmployeeHolidays from "./features/employee/pages/Holidays";
 import Reports from "./features/hr/pages/reports";
 import HrProfileSettings from "./features/hr/pages/ProfileSettings";
+import CalendarPage from "./features/calendar/pages/CalendarPage";
 
 // ==================== Layout ====================
 import DashboardLayout from "./layouts/DashboardLayout";
@@ -340,6 +341,11 @@ function App() {
 
               <Route path="/admin/holidays" element={<AdminHolidays />} />
 
+              <Route
+                path="/admin/calendar"
+                element={<CalendarPage customRole="admin" />}
+              />
+
               <Route path="/admin/profile" element={<AdminProfileSettings />} />
 
               <Route path="/admin/goals" element={<Goals />} />
@@ -425,6 +431,16 @@ function App() {
 
                 <Route path="holidays" element={<HrHolidays />} />
 
+                <Route
+                  path="calendar"
+                  element={<CalendarPage customRole="hr" />}
+                />
+
+                <Route
+                  path="audit"
+                  element={<ActivityLog role="HR" />}
+                />
+
                 <Route path="reports" element={<Reports />} />
 
                 <Route path="notifications" element={<Notification />} />
@@ -479,6 +495,10 @@ function App() {
               />
 
               <Route path="/manager/holidays" element={<ManagerHolidays />} />
+              <Route
+                path="/manager/calendar"
+                element={<CalendarPage customRole="manager" />}
+              />
 
               <Route path="/manager/ai-insights" element={<AITeamInsights />} />
 
@@ -521,6 +541,10 @@ function App() {
               />
 
               <Route path="/employee/holidays" element={<EmployeeHolidays />} />
+              <Route
+                path="/employee/calendar"
+                element={<CalendarPage customRole="employee" />}
+              />
 
               <Route path="/employee/ai-assistant" element={<AIAssistant />} />
 

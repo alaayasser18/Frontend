@@ -19,6 +19,8 @@ import {
 
 import { useTodayAttendance } from "../../hooks/useTodayAttendance";
 import { checkIn, checkOut } from "../../api/attendanceApi";
+import CalendarModal from "../../../calendar/components/CalendarModal";
+import { getCalendarEvents } from "../../../../api/calendarApi";
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -99,7 +101,7 @@ const formatTime = (totalSeconds) => {
 };
 
 export default function HomeDashboard() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const navigate = useNavigate();
 
   const {
@@ -110,9 +112,41 @@ export default function HomeDashboard() {
   } = useTodayAttendance();
 
   const [showCalendarModal, setShowCalendarModal] = useState(false);
+  const [todayEvents, setTodayEvents] = useState([]);
   const [secondsWorked, setSecondsWorked] = useState(0);
   const [actionLoading, setActionLoading] = useState(false);
   const [actionError, setActionError] = useState("");
+
+  useEffect(() => {
+    const fetchTodayEvents = async () => {
+      try {
+        const today = new Date();
+        const y = today.getFullYear();
+        const m = String(today.getMonth() + 1).padStart(2, "0");
+        const d = String(today.getDate()).padStart(2, "0");
+        const todayStr = `${y}-${m}-${d}`;
+        const lang = i18n.language?.startsWith("ar") ? "ar" : "en";
+
+        const res = await getCalendarEvents({
+          from: todayStr,
+          to: todayStr,
+          lang,
+        });
+
+        if (res && res.success && Array.isArray(res.data)) {
+          setTodayEvents(res.data);
+        } else if (Array.isArray(res?.data)) {
+          setTodayEvents(res.data);
+        } else if (Array.isArray(res)) {
+          setTodayEvents(res);
+        }
+      } catch (err) {
+        console.error("Error fetching today events:", err);
+      }
+    };
+
+    fetchTodayEvents();
+  }, [i18n.language]);
 
   const attendance = attendanceResponse?.data;
   const widgets = attendance?.widgets;
@@ -750,53 +784,77 @@ export default function HomeDashboard() {
           </div>
 
           <div className="space-y-4 pt-1">
-            <div className="flex items-center gap-3 text-xs">
-              <span className="font-medium text-[#829ab1] w-16 shrink-0">
-                10:30 AM
-              </span>
+            {todayEvents.length > 0 ? (
+              todayEvents.map((ev, idx) => {
+                const isLeave = ev.type === "leave";
+                const isDeadline = ev.type === "task_deadline";
+                const isHoliday = ev.type === "holiday";
+                const dotColor = isLeave
+                  ? "bg-[#10b981]"
+                  : isDeadline
+                  ? "bg-[#f59e0b]"
+                  : isHoliday
+                  ? "bg-[#8b5cf6]"
+                  : "bg-[#3b82f6]";
 
-              <span className="h-2 w-2 rounded-full bg-[#3b82f6] shrink-0" />
+                const typeLabel = isLeave
+                  ? t("calendar.leave", "Leave")
+                  : isDeadline
+                  ? t("calendar.deadline", "Task Deadline")
+                  : isHoliday
+                  ? t("calendar.holiday", "Official Holiday")
+                  : t("calendar.companyEvent", "Company Event");
 
-              <div className="min-w-0">
-                <p className="font-semibold text-[#102a43]">
-                  {t(
-                    "employee.home.productSync",
-                    "Product sync",
-                  )}
-                </p>
+                return (
+                  <div key={idx} className="flex items-center gap-3 text-xs">
+                    <span className="font-medium text-[#829ab1] w-20 shrink-0">
+                      {ev.date}
+                    </span>
+                    <span className={`h-2 w-2 rounded-full shrink-0 ${dotColor}`} />
+                    <div className="min-w-0">
+                      <p className="font-semibold text-[#102a43]">
+                        {typeLabel}
+                      </p>
+                      <p className="text-[#829ab1]">
+                        #{ev.reference}
+                      </p>
+                    </div>
+                  </div>
+                );
+              })
+            ) : (
+              <>
+                <div className="flex items-center gap-3 text-xs">
+                  <span className="font-medium text-[#829ab1] w-16 shrink-0">
+                    10:30 AM
+                  </span>
+                  <span className="h-2 w-2 rounded-full bg-[#3b82f6] shrink-0" />
+                  <div className="min-w-0">
+                    <p className="font-semibold text-[#102a43]">
+                      {t("employee.home.productSync", "Product sync")}
+                    </p>
+                    <p className="text-[#829ab1]">
+                      {t("employee.home.meetingRoom", "Meeting room 4B · 45 min")}
+                    </p>
+                  </div>
+                </div>
 
-                <p className="text-[#829ab1]">
-                  {t(
-                    "employee.home.meetingRoom",
-                    "Meeting room 4B · 45 min",
-                  )}
-                </p>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-3 text-xs">
-              <span className="font-medium text-[#829ab1] w-16 shrink-0">
-                02:00 PM
-              </span>
-
-              <span className="h-2 w-2 rounded-full bg-[#10b981] shrink-0" />
-
-              <div className="min-w-0">
-                <p className="font-semibold text-[#102a43]">
-                  {t(
-                    "employee.home.focusTime",
-                    "Focus time",
-                  )}
-                </p>
-
-                <p className="text-[#829ab1]">
-                  {t(
-                    "employee.home.operationsReportShort",
-                    "Q2 Operations report",
-                  )}
-                </p>
-              </div>
-            </div>
+                <div className="flex items-center gap-3 text-xs">
+                  <span className="font-medium text-[#829ab1] w-16 shrink-0">
+                    02:00 PM
+                  </span>
+                  <span className="h-2 w-2 rounded-full bg-[#10b981] shrink-0" />
+                  <div className="min-w-0">
+                    <p className="font-semibold text-[#102a43]">
+                      {t("employee.home.focusTime", "Focus time")}
+                    </p>
+                    <p className="text-[#829ab1]">
+                      {t("employee.home.operationsReportShort", "Q2 Operations report")}
+                    </p>
+                  </div>
+                </div>
+              </>
+            )}
           </div>
         </div>
 
@@ -891,152 +949,12 @@ export default function HomeDashboard() {
         </div>
       </motion.div>
 
-      {/* 6. Calendar Modal */}
-      <AnimatePresence>
-        {showCalendarModal && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            onClick={() => setShowCalendarModal(false)}
-            className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 p-4 backdrop-blur-sm"
-          >
-            <motion.div
-              initial={{
-                opacity: 0,
-                scale: 0.96,
-                y: 10,
-              }}
-              animate={{
-                opacity: 1,
-                scale: 1,
-                y: 0,
-              }}
-              exit={{
-                opacity: 0,
-                scale: 0.96,
-                y: 10,
-              }}
-              transition={{ duration: 0.2 }}
-              onClick={(e) => e.stopPropagation()}
-              className="w-full max-w-lg rounded-2xl bg-white p-6 shadow-xl"
-            >
-              <div className="flex items-center justify-between mb-4">
-                <button
-                  type="button"
-                  className="flex h-8 w-8 items-center justify-center rounded-lg border border-[#e2e8f0] text-[#64748b] hover:bg-[#f8fafc] transition"
-                >
-                  <FiChevronLeft className="w-4 h-4" />
-                </button>
-
-                <h3 className="text-sm font-bold text-[#102a43]">
-                  {t(
-                    "employee.home.monthName",
-                    "June 2026",
-                  )}
-                </h3>
-
-                <button
-                  type="button"
-                  className="flex h-8 w-8 items-center justify-center rounded-lg border border-[#e2e8f0] text-[#64748b] hover:bg-[#f8fafc] transition"
-                >
-                  <FiChevronRight className="w-4 h-4" />
-                </button>
-              </div>
-
-              <div className="grid grid-cols-7 text-center text-[11px] font-bold text-[#94a3b8] py-2 border-b border-[#f1f5f9]">
-                <span>Sun</span>
-                <span>Mon</span>
-                <span>Tue</span>
-                <span>Wed</span>
-                <span>Thu</span>
-                <span>Fri</span>
-                <span>Sat</span>
-              </div>
-
-              <div className="grid grid-cols-7 text-center gap-1 py-3 text-xs font-medium text-[#1e293b]">
-                <span className="py-2 text-[#cbd5e1]">
-                  31
-                </span>
-
-                <span className="py-2">1</span>
-                <span className="py-2">2</span>
-                <span className="py-2">3</span>
-                <span className="py-2">4</span>
-                <span className="py-2">5</span>
-                <span className="py-2">6</span>
-                <span className="py-2">7</span>
-                <span className="py-2">8</span>
-
-                <span className="py-2 font-bold text-[#059669] bg-[#ecfdf5] rounded-lg">
-                  9
-                </span>
-
-                <span className="py-2">10</span>
-                <span className="py-2">11</span>
-                <span className="py-2">12</span>
-                <span className="py-2">13</span>
-                <span className="py-2">14</span>
-                <span className="py-2">15</span>
-                <span className="py-2">16</span>
-                <span className="py-2">17</span>
-                <span className="py-2">18</span>
-                <span className="py-2">19</span>
-                <span className="py-2">20</span>
-                <span className="py-2">21</span>
-                <span className="py-2">22</span>
-                <span className="py-2">23</span>
-                <span className="py-2">24</span>
-                <span className="py-2">25</span>
-                <span className="py-2">26</span>
-                <span className="py-2">27</span>
-                <span className="py-2">28</span>
-                <span className="py-2">29</span>
-                <span className="py-2">30</span>
-              </div>
-
-              <div className="flex items-center justify-between border-t border-[#f1f5f9] pt-4 mt-2">
-                <div className="flex items-center gap-3 text-xs text-[#64748b]">
-                  <div className="flex items-center gap-1.5">
-                    <span className="h-2 w-2 rounded-full bg-[#10b981]" />
-
-                    <span>
-                      {t(
-                        "employee.home.today",
-                        "Today",
-                      )}
-                    </span>
-                  </div>
-
-                  <div className="flex items-center gap-1.5">
-                    <span className="h-2 w-2 rounded-full bg-[#3b82f6]" />
-
-                    <span>
-                      {t(
-                        "employee.home.event",
-                        "Events",
-                      )}
-                    </span>
-                  </div>
-                </div>
-
-                <button
-                  type="button"
-                  onClick={() =>
-                    setShowCalendarModal(false)
-                  }
-                  className="rounded-xl bg-[#102a43] px-4 py-2 text-xs font-semibold text-white hover:bg-[#1c364f] transition"
-                >
-                  {t(
-                    "employee.home.close",
-                    "Close",
-                  )}
-                </button>
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {/* 6. Live Connected Calendar Modal */}
+      <CalendarModal
+        isOpen={showCalendarModal}
+        onClose={() => setShowCalendarModal(false)}
+        role="employee"
+      />
     </motion.div>
   );
 }

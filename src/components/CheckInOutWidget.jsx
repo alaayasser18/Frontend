@@ -87,11 +87,7 @@ export default function CheckInOutWidget({ compact = false, className = "" }) {
         longitude: location.longitude,
       });
     },
-    onSuccess: (res) => {
-      toast.success(
-        res?.message ||
-          t("attendance.checkedInSuccess", "Checked in successfully!")
-      );
+    onSuccess: () => {
       refetchAttendance();
       queryClient.invalidateQueries({ queryKey: ["attendance"] });
     },
@@ -113,11 +109,7 @@ export default function CheckInOutWidget({ compact = false, className = "" }) {
         longitude: location?.longitude,
       });
     },
-    onSuccess: (res) => {
-      toast.success(
-        res?.message ||
-          t("attendance.checkedOutSuccess", "Checked out successfully!")
-      );
+    onSuccess: () => {
       refetchAttendance();
       queryClient.invalidateQueries({ queryKey: ["attendance"] });
     },

@@ -6,7 +6,7 @@ import {
     FiLoader,
     FiAlertCircle,
 } from "react-icons/fi";
-const API_BASE_URL = "https://nontelepathically-pamphletary-cyndi.ngrok-free.dev/api";
+const API_BASE_URL = "https://workwise-production-3941.up.railway.app/api";
 const getAuthHeaders = () => {
     const token =
         localStorage.getItem("token") ||

@@ -14,7 +14,7 @@ export default defineConfig({
   server: {
     proxy: {
       "/api": {
-        target: "https://nontelepathically-pamphletary-cyndi.ngrok-free.dev",
+        target: "https://workwise-production-3941.up.railway.app",
         changeOrigin: true,
         secure: true,
       },

@@ -8,7 +8,7 @@ import {
     FiAlertCircle,
     FiArrowRight,
 } from "react-icons/fi";
-const API_BASE_URL = "https://nontelepathically-pamphletary-cyndi.ngrok-free.dev/api";
+const API_BASE_URL = "https://workwise-production-3941.up.railway.app/api";
 const getAuthHeaders = () => {
     const token =
         localStorage.getItem("token") ||
@@ -118,9 +118,8 @@ const PoliciesList = () => {
                                             {policy.title}
                                         </h3>
                                         <span
-                                            className={`rounded-full border px-2 py-0.5 text-[10px] font-bold uppercase ${
-                                                STATUS_BADGES[policy.status] || STATUS_BADGES.draft
-                                            }`}
+                                            className={`rounded-full border px-2 py-0.5 text-[10px] font-bold uppercase ${STATUS_BADGES[policy.status] || STATUS_BADGES.draft
+                                                }`}
                                         >
                                             {policy.status}
                                         </span>

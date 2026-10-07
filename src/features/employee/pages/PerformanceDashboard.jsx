@@ -1,22 +1,14 @@
 import { useEffect, useState } from "react";
+import axiosInstance from "../../../utils/axiosInstance";
 
 export default function PerformanceDashboard() {
   const [data, setData] = useState(null);
   const [error, setError] = useState("");
 
   useEffect(() => {
-    fetch(
-      "https://nontelepathically-pamphletary-cyndi.ngrok-free.dev/api/employee/performance-dashboard",
-      {
-        headers: {
-          Accept: "application/json",
-          "ngrok-skip-browser-warning": "true",
-          Authorization: "Bearer " + localStorage.getItem("token"),
-        },
-      }
-    )
-      .then((res) => res.json())
-      .then((json) => setData(json.data))
+    axiosInstance
+      .get("/employee/performance-dashboard")
+      .then((res) => setData(res.data?.data || res.data))
       .catch(() => setError("حصل خطأ في الاتصال بالسيرفر"));
   }, []);
 

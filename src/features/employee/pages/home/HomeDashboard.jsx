@@ -93,21 +93,18 @@ export default function HomeDashboard() {
   const attendance = attendanceResponse?.data || attendanceResponse;
   const widgets = attendance?.widgets;
 
-  const hasCheckedIn = Boolean(attendance?.check_in_time);
-  const hasCheckedOut = Boolean(attendance?.check_out_time);
+  const checkInTime = attendance?.check_in || attendance?.check_in_time || null;
+  const checkOutTime = attendance?.check_out || attendance?.check_out_time || null;
 
-  const canCheckOut =
-    attendance?.can_check_out === true ||
-    (hasCheckedIn && !hasCheckedOut);
+  const hasCheckedIn = Boolean(checkInTime);
+  const hasCheckedOut = Boolean(checkOutTime);
 
-  const isCheckedIn = canCheckOut;
+  const isOnShift = hasCheckedIn && !hasCheckedOut;
+  const isCheckedIn = isOnShift;
+  const isShiftFinished = hasCheckedIn && hasCheckedOut;
 
-  const canCheckIn =
-    attendance?.can_check_in === true ||
-    (!hasCheckedIn && !canCheckOut);
-
-  const isShiftFinished =
-    hasCheckedIn && hasCheckedOut && attendance?.can_check_in === false;
+  const isCheckInDisabled = hasCheckedIn;
+  const isCheckOutDisabled = !hasCheckedIn || hasCheckedOut;
 
   useEffect(() => {
     if (!attendance) {
@@ -121,13 +118,13 @@ export default function HomeDashboard() {
     setSecondsWorked(initialWorkedSeconds);
   }, [
     attendance?.worked_time,
-    attendance?.check_in_time,
-    attendance?.check_out_time,
+    checkInTime,
+    checkOutTime,
     attendance?.status,
   ]);
 
   useEffect(() => {
-    if (!isCheckedIn) {
+    if (!isOnShift) {
       return;
     }
 
@@ -136,14 +133,15 @@ export default function HomeDashboard() {
     }, 1000);
 
     return () => clearInterval(timer);
-  }, [isCheckedIn]);
+  }, [isOnShift]);
 
   const handleCheckIn = async () => {
+    if (isCheckInDisabled || actionLoading) return;
     try {
       setActionLoading(true);
       setActionError("");
 
-      const location = await getCurrentLocation();
+      const location = await getCurrentLocation({ required: true });
 
       const res = await checkIn({
         latitude: location.latitude,
@@ -168,11 +166,17 @@ export default function HomeDashboard() {
   };
 
   const handleCheckOut = async () => {
+    if (isCheckOutDisabled || actionLoading) return;
     try {
       setActionLoading(true);
       setActionError("");
 
-      const res = await checkOut();
+      const location = await getCurrentLocation({ required: false });
+
+      const res = await checkOut({
+        latitude: location?.latitude,
+        longitude: location?.longitude,
+      });
 
       toast.success(res?.message || t("attendance.checkedOutSuccess", "Checked out successfully!"));
       await refetchAttendance();
@@ -351,7 +355,7 @@ export default function HomeDashboard() {
                       "employee.home.checkedInAt",
                       "Checked in at",
                     )}{" "}
-                    {attendance?.check_in_time || "--"}
+                    {checkInTime || "--"}
                   </p>
                 </div>
 
@@ -394,7 +398,7 @@ export default function HomeDashboard() {
 
                 <div>
                   <h2 className="text-2xl md:text-[26px] font-bold text-white tracking-tight">
-                    {attendance?.check_out_time
+                    {checkOutTime
                       ? t(
                           "employee.home.checkedOut",
                           "You're checked out",
@@ -406,13 +410,11 @@ export default function HomeDashboard() {
                   </h2>
 
                   <p className="text-xs text-white/70 mt-1">
-                    {attendance?.check_out_time
+                    {checkOutTime
                       ? `${t(
                           "employee.home.checkedOutAt",
                           "Checked out at",
-                        )} ${
-                          attendance.check_out_time
-                        }`
+                        )} ${checkOutTime}`
                       : t(
                           "employee.home.checkInFromWorkplace",
                           "Check in from your designated workplace",
@@ -453,39 +455,69 @@ export default function HomeDashboard() {
                 : formatTime(secondsWorked)}
             </div>
 
-          {isShiftFinished ? (
-            <div className="inline-flex items-center gap-2 rounded-xl bg-emerald-500/20 border border-emerald-400/30 px-4 py-2.5 text-xs font-bold text-emerald-300">
-              <FiCheck className="w-4 h-4" />
-              <span>{t("attendance.shiftFinished", "Shift Completed")}</span>
+            <div className="flex flex-wrap items-center gap-2">
+              {/* Check In Button */}
+              <motion.button
+                whileHover={!isCheckInDisabled ? { scale: 1.02 } : {}}
+                whileTap={!isCheckInDisabled ? { scale: 0.98 } : {}}
+                type="button"
+                onClick={handleCheckIn}
+                disabled={isCheckInDisabled || actionLoading}
+                className={`inline-flex items-center gap-1.5 rounded-xl px-4 py-2.5 text-xs font-bold transition shadow-sm ${
+                  isCheckInDisabled
+                    ? "bg-white/15 text-white/50 border border-white/10 cursor-not-allowed"
+                    : "bg-emerald-500 hover:bg-emerald-600 text-white cursor-pointer"
+                }`}
+              >
+                {actionLoading && !hasCheckedIn ? (
+                  <span>{t("attendance.loading", "Please wait...")}</span>
+                ) : hasCheckedIn ? (
+                  <>
+                    <FiCheck className="w-3.5 h-3.5 text-emerald-300" />
+                    <span>
+                      {t("attendance.checkedIn", "Checked In")}
+                      {checkInTime ? ` (${checkInTime})` : ""}
+                    </span>
+                  </>
+                ) : (
+                  <>
+                    <span>{t("employee.home.checkIn", "Check in")}</span>
+                    <FiArrowRight className="w-3.5 h-3.5" />
+                  </>
+                )}
+              </motion.button>
+
+              {/* Check Out Button */}
+              <motion.button
+                whileHover={!isCheckOutDisabled ? { scale: 1.02 } : {}}
+                whileTap={!isCheckOutDisabled ? { scale: 0.98 } : {}}
+                type="button"
+                onClick={handleCheckOut}
+                disabled={isCheckOutDisabled || actionLoading}
+                className={`inline-flex items-center gap-1.5 rounded-xl px-4 py-2.5 text-xs font-bold transition shadow-sm ${
+                  isCheckOutDisabled
+                    ? "bg-white/15 text-white/50 border border-white/10 cursor-not-allowed"
+                    : "bg-rose-500 hover:bg-rose-600 text-white cursor-pointer"
+                }`}
+              >
+                {actionLoading && isOnShift ? (
+                  <span>{t("attendance.loading", "Please wait...")}</span>
+                ) : hasCheckedOut ? (
+                  <>
+                    <FiCheck className="w-3.5 h-3.5 text-slate-300" />
+                    <span>
+                      {t("attendance.checkedOut", "Checked Out")}
+                      {checkOutTime ? ` (${checkOutTime})` : ""}
+                    </span>
+                  </>
+                ) : (
+                  <>
+                    <span>{t("employee.home.checkOut", "Check out")}</span>
+                    <FiArrowRight className="w-3.5 h-3.5" />
+                  </>
+                )}
+              </motion.button>
             </div>
-          ) : (
-            <motion.button
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              type="button"
-              onClick={handleAttendanceAction}
-              disabled={actionLoading}
-              className={`inline-flex items-center gap-2 rounded-xl px-5 py-2.5 text-xs font-bold transition shadow-sm cursor-pointer disabled:opacity-60 ${
-                canCheckOut
-                  ? "bg-rose-500 text-white hover:bg-rose-600"
-                  : "bg-white text-[#102a43] hover:bg-slate-50"
-              }`}
-            >
-              {actionLoading ? (
-                <span>{t("attendance.loading", "Please wait...")}</span>
-              ) : canCheckOut ? (
-                <>
-                  <span>{t("employee.home.checkOut", "Check out")}</span>
-                  <FiArrowRight className="w-3.5 h-3.5" />
-                </>
-              ) : (
-                <>
-                  <span>{t("employee.home.checkIn", "Check in")}</span>
-                  <FiArrowRight className="w-3.5 h-3.5" />
-                </>
-              )}
-            </motion.button>
-          )}
           </div>
         </div>
 

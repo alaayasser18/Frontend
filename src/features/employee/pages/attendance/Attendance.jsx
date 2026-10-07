@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
+import { useQueryClient } from "@tanstack/react-query";
 import { motion } from "framer-motion";
 import {
   FiArrowRight,
@@ -8,6 +9,9 @@ import {
   FiMapPin,
   FiNavigation,
   FiRefreshCw,
+  FiCheckCircle,
+  FiLogIn,
+  FiLogOut,
 } from "react-icons/fi";
 
 import {
@@ -23,6 +27,7 @@ import toast from "react-hot-toast";
 
 export default function Attendance() {
   const { t } = useTranslation();
+  const queryClient = useQueryClient();
 
   const [actionLoading, setActionLoading] = useState(false);
   const [actionError, setActionError] = useState("");
@@ -144,6 +149,49 @@ export default function Attendance() {
     },
   ).format(new Date());
 
+  const parseWorkedTime = (timeString) => {
+    if (!timeString) return 0;
+    const parts = String(timeString).split(":").map(Number);
+    if (parts.length !== 3 || parts.some(Number.isNaN)) return 0;
+    const [h, m, s] = parts;
+    return h * 3600 + m * 60 + s;
+  };
+
+  const formatTime = (totalSeconds) => {
+    const s = Math.max(0, Number(totalSeconds) || 0);
+    const hh = String(Math.floor(s / 3600)).padStart(2, "0");
+    const mm = String(Math.floor((s % 3600) / 60)).padStart(2, "0");
+    const ss = String(s % 60).padStart(2, "0");
+    return `${hh}:${mm}:${ss}`;
+  };
+
+  const checkInTime = attendance?.check_in || attendance?.check_in_time || null;
+  const checkOutTime = attendance?.check_out || attendance?.check_out_time || null;
+
+  const hasCheckedIn = Boolean(checkInTime);
+  const hasCheckedOut = Boolean(checkOutTime);
+
+  const isOnShift = hasCheckedIn && !hasCheckedOut;
+  const isShiftFinished = hasCheckedIn && hasCheckedOut;
+
+  // Check In is disabled ONLY if already checked in today
+  const isCheckInDisabled = hasCheckedIn;
+
+  // Check Out is disabled if not checked in yet OR already checked out today
+  const isCheckOutDisabled = !hasCheckedIn || hasCheckedOut;
+
+  const [secondsWorked, setSecondsWorked] = useState(0);
+
+  useEffect(() => {
+    setSecondsWorked(parseWorkedTime(attendance?.worked_time));
+  }, [attendance?.worked_time, checkInTime, checkOutTime]);
+
+  useEffect(() => {
+    if (!isOnShift) return;
+    const timer = setInterval(() => setSecondsWorked((p) => p + 1), 1000);
+    return () => clearInterval(timer);
+  }, [isOnShift]);
+
   /*
    * ============================
    * Status
@@ -152,33 +200,14 @@ export default function Attendance() {
 
   const statusText =
     attendance?.status ||
-    t(
-      "employee.attendancePage.noStatus",
-      "No attendance status",
-    );
+    (isShiftFinished
+      ? t("employee.attendancePage.shiftFinished", "Shift Completed")
+      : isOnShift
+      ? t("employee.attendancePage.onShift", "On Shift")
+      : t("employee.attendancePage.noStatus", "Off Shift"));
 
   const isInsideRadius =
     attendance?.is_inside_radius === true;
-
-  const hasCheckedIn  = Boolean(attendance?.check_in_time);
-  const hasCheckedOut = Boolean(attendance?.check_out_time);
-
-  // ── أولوية لقيم الـ API، ثم fallback من البيانات الفعلية ──
-  const canCheckIn = attendance
-    ? attendance.can_check_in === true
-    : false;
-
-  const canCheckOut = attendance
-    ? attendance.can_check_out === true ||
-      (hasCheckedIn && !hasCheckedOut && attendance.can_check_in !== true)
-    : false;
-
-  // الشيفت انتهى لما يكون الموظف دخل وخرج
-  const isShiftFinished = hasCheckedIn && hasCheckedOut;
-
-  const isOnShift =
-    canCheckOut ||
-    statusText.toLowerCase() === "on shift";
 
   const locationStatus = isInsideRadius
     ? t(
@@ -202,13 +231,13 @@ export default function Attendance() {
    */
 
   const handleCheckIn = async () => {
-    if (actionLoading) return;
+    if (actionLoading || isCheckInDisabled) return;
 
     setActionLoading(true);
     setActionError("");
 
     try {
-      const location = await getCurrentLocation();
+      const location = await getCurrentLocation({ required: true });
 
       const res = await checkIn({
         latitude: location.latitude,
@@ -220,6 +249,7 @@ export default function Attendance() {
           t("attendance.checkedInSuccess", "Checked in successfully!")
       );
 
+      queryClient.invalidateQueries({ queryKey: ["attendance"] });
       await refetchToday();
       await refetchHistory();
     } catch (error) {
@@ -245,19 +275,25 @@ export default function Attendance() {
    */
 
   const handleCheckOut = async () => {
-    if (actionLoading) return;
+    if (actionLoading || isCheckOutDisabled) return;
 
     setActionLoading(true);
     setActionError("");
 
     try {
-      const res = await checkOut();
+      const location = await getCurrentLocation();
+
+      const res = await checkOut({
+        latitude: location.latitude,
+        longitude: location.longitude,
+      });
 
       toast.success(
         res?.message ||
           t("attendance.checkedOutSuccess", "Checked out successfully!")
       );
 
+      queryClient.invalidateQueries({ queryKey: ["attendance"] });
       await refetchToday();
       await refetchHistory();
     } catch (error) {
@@ -468,28 +504,28 @@ export default function Attendance() {
             </p>
 
             <h3 className="mt-2 text-xl font-bold text-[#1c364f]">
-              {canCheckOut
+              {isShiftFinished
+                ? t(
+                    "employee.attendancePage.shiftComplete",
+                    "Shift complete for today",
+                  )
+                : isOnShift
                 ? t(
                     "employee.attendancePage.checkedInTitle",
                     "You're checked in",
                   )
-                : canCheckIn
-                  ? t(
-                      "employee.attendancePage.notCheckedInTitle",
-                      "You're not checked in",
-                    )
-                  : t(
-                      "employee.attendancePage.attendanceStatus",
-                      "Attendance status",
-                    )}
+                : t(
+                    "employee.attendancePage.notCheckedInTitle",
+                    "You're not checked in",
+                  )}
             </h3>
 
             <p className="mt-1 text-sm text-[#64748b]">
-              {attendance?.check_in_time
+              {checkInTime
                 ? `${t(
                     "employee.attendancePage.checkedInAt",
                     "Checked in at",
-                  )} ${attendance.check_in_time}`
+                  )} ${checkInTime}`
                 : t(
                     "employee.attendancePage.noCheckIn",
                     "No check-in recorded yet.",
@@ -526,74 +562,92 @@ export default function Attendance() {
                 )}
               </p>
 
-              <p className="mt-2 text-2xl font-bold tracking-tight text-[#1c364f]">
-                {attendance?.worked_time || "00:00:00"}
+              <p className="mt-2 font-mono text-2xl font-bold tracking-tight text-[#1c364f]">
+                {isOnShift
+                  ? formatTime(secondsWorked)
+                  : attendance?.worked_time || "00:00:00"}
               </p>
             </div>
 
             <div className="mt-5 flex flex-col gap-2.5">
               {/* ── زرار Check In ── */}
-              {canCheckIn && (
-                <button
-                  type="button"
-                  onClick={handleCheckIn}
-                  disabled={actionLoading || todayLoading}
-                  className="flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-600 px-4 py-3 text-xs font-semibold text-white shadow-sm transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-50"
-                >
-                  {actionLoading ? (
-                    <>
-                      <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-white/30 border-t-white" />
-                      {t("common.loading", "Loading...")}
-                    </>
-                  ) : (
-                    <>
-                      {t("employee.attendancePage.checkIn", "Check in")}
-                      <FiArrowRight className="h-3.5 w-3.5" />
-                    </>
-                  )}
-                </button>
-              )}
+              <button
+                type="button"
+                onClick={handleCheckIn}
+                disabled={isCheckInDisabled || actionLoading || todayLoading}
+                className={`flex w-full items-center justify-center gap-2 rounded-xl px-4 py-3 text-xs font-semibold shadow-sm transition ${
+                  isCheckInDisabled
+                    ? "bg-slate-100 text-slate-400 border border-slate-200 cursor-not-allowed opacity-75"
+                    : "bg-emerald-600 text-white hover:bg-emerald-700 cursor-pointer disabled:opacity-50"
+                }`}
+              >
+                {actionLoading && !hasCheckedIn ? (
+                  <>
+                    <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+                    {t("common.loading", "Loading...")}
+                  </>
+                ) : hasCheckedIn ? (
+                  <>
+                    <FiCheckCircle className="h-3.5 w-3.5 text-emerald-600" />
+                    <span>
+                      {t("employee.attendancePage.checkedInAlready", "Checked In")}
+                      {checkInTime ? ` (${checkInTime})` : ""}
+                    </span>
+                  </>
+                ) : (
+                  <>
+                    <FiLogIn className="h-3.5 w-3.5" />
+                    <span>{t("employee.attendancePage.checkIn", "Check in")}</span>
+                    <FiArrowRight className="h-3.5 w-3.5" />
+                  </>
+                )}
+              </button>
 
               {/* ── زرار Check Out ── */}
-              {canCheckOut && (
-                <button
-                  type="button"
-                  onClick={handleCheckOut}
-                  disabled={actionLoading || todayLoading}
-                  className="flex w-full items-center justify-center gap-2 rounded-xl bg-rose-600 px-4 py-3 text-xs font-semibold text-white shadow-sm transition hover:bg-rose-700 disabled:cursor-not-allowed disabled:opacity-50"
-                >
-                  {actionLoading ? (
-                    <>
-                      <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-white/30 border-t-white" />
-                      {t("common.loading", "Loading...")}
-                    </>
-                  ) : (
-                    <>
-                      {t("employee.attendancePage.checkOut", "Check out")}
-                      <FiArrowRight className="h-3.5 w-3.5" />
-                    </>
-                  )}
-                </button>
-              )}
+              <button
+                type="button"
+                onClick={handleCheckOut}
+                disabled={isCheckOutDisabled || actionLoading || todayLoading}
+                className={`flex w-full items-center justify-center gap-2 rounded-xl px-4 py-3 text-xs font-semibold shadow-sm transition ${
+                  hasCheckedOut
+                    ? "bg-slate-100 text-slate-400 border border-slate-200 cursor-not-allowed opacity-75"
+                    : !hasCheckedIn
+                    ? "bg-slate-100 text-slate-400 border border-slate-200 cursor-not-allowed opacity-60"
+                    : "bg-rose-600 text-white hover:bg-rose-700 cursor-pointer disabled:opacity-50"
+                }`}
+              >
+                {actionLoading && isOnShift ? (
+                  <>
+                    <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+                    {t("common.loading", "Loading...")}
+                  </>
+                ) : hasCheckedOut ? (
+                  <>
+                    <FiCheckCircle className="h-3.5 w-3.5 text-slate-500" />
+                    <span>
+                      {t("employee.attendancePage.checkedOutAlready", "Checked Out")}
+                      {checkOutTime ? ` (${checkOutTime})` : ""}
+                    </span>
+                  </>
+                ) : (
+                  <>
+                    <FiLogOut className="h-3.5 w-3.5" />
+                    <span>{t("employee.attendancePage.checkOut", "Check out")}</span>
+                    <FiArrowRight className="h-3.5 w-3.5" />
+                  </>
+                )}
+              </button>
 
               {/* ── الشيفت انتهى ── */}
               {isShiftFinished && (
-                <div className="flex w-full items-center justify-center gap-2 rounded-xl bg-slate-100 px-4 py-3 text-xs font-semibold text-slate-500">
-                  <span>✓</span>
-                  {t(
-                    "employee.attendancePage.shiftComplete",
-                    "Shift complete for today",
-                  )}
-                </div>
-              )}
-
-              {/* ── لا توجد بيانات بعد ── */}
-              {!canCheckIn && !canCheckOut && !isShiftFinished && (
-                <div className="flex w-full items-center justify-center gap-2 rounded-xl bg-slate-100 px-4 py-3 text-xs font-semibold text-slate-400">
-                  {t(
-                    "employee.attendancePage.noAttendanceToday",
-                    "No attendance record yet",
-                  )}
+                <div className="flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-50 border border-emerald-200 px-4 py-2 text-xs font-semibold text-emerald-700">
+                  <FiCheckCircle className="h-3.5 w-3.5 text-emerald-600" />
+                  <span>
+                    {t(
+                      "employee.attendancePage.shiftComplete",
+                      "Shift complete for today",
+                    )}
+                  </span>
                 </div>
               )}
             </div>
@@ -644,7 +698,7 @@ export default function Attendance() {
           </div>
 
           <p className="mt-4 text-lg font-bold text-[#1c364f]">
-            {attendance?.check_in_time || "—"}
+            {checkInTime || "—"}
           </p>
         </motion.div>
 
@@ -665,7 +719,7 @@ export default function Attendance() {
           </div>
 
           <p className="mt-4 text-lg font-bold text-[#1c364f]">
-            {attendance?.check_out_time || "—"}
+            {checkOutTime || "—"}
           </p>
         </motion.div>
 
@@ -685,9 +739,10 @@ export default function Attendance() {
             </span>
           </div>
 
-          <p className="mt-4 text-lg font-bold text-[#1c364f]">
-            {attendance?.worked_time ||
-              "00:00:00"}
+          <p className="mt-4 font-mono text-lg font-bold text-[#1c364f]">
+            {isOnShift
+              ? formatTime(secondsWorked)
+              : attendance?.worked_time || "00:00:00"}
           </p>
         </motion.div>
       </div>

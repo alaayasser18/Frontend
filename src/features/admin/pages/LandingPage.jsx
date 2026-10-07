@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { motion, AnimatePresence } from "framer-motion";
 import toast from "react-hot-toast";
-import { LuPenLine, LuPlus, LuX, LuTrash2, LuInfo, LuTriangleAlert } from "react-icons/lu";
+import { LuPenLine, LuPlus, LuX, LuTrash2, LuInfo, LuTriangleAlert, LuStar } from "react-icons/lu";
 import {
     useLandingSections,
     useLandingFeatures,
@@ -14,6 +14,10 @@ import {
     useCreateLandingRole,
     useUpdateLandingRole,
     useDeleteLandingRole,
+    useLandingPlans,
+    useCreateLandingPlan,
+    useUpdateLandingPlan,
+    useDeleteLandingPlan,
 } from "../hooks";
 
 // =========================
@@ -700,6 +704,232 @@ function RoleModal({ role, lang, isRtl, onClose }) {
         </Modal>
     );
 }
+
+// =========================
+// Plan create/edit modal
+// =========================
+function PlanModal({ plan, lang, isRtl, onClose }) {
+    const { t } = useTranslation();
+    const isEditing = !!plan;
+    const [name, setName] = useState(plan?.name ?? "");
+    const [description, setDescription] = useState(plan?.description ?? "");
+    const [price, setPrice] = useState(plan?.price ?? "");
+    const [billingPeriod, setBillingPeriod] = useState(plan?.billing_period ?? "");
+    const [isPopular, setIsPopular] = useState(!!plan?.is_popular);
+    const [features, setFeatures] = useState(plan?.features?.length ? [...plan.features] : [""]);
+    const [buttonText, setButtonText] = useState(plan?.button_text ?? "");
+    const [buttonLink, setButtonLink] = useState(plan?.button_link ?? "");
+    const [order, setOrder] = useState(plan?.order != null ? String(plan.order) : "");
+
+    const createMutation = useCreateLandingPlan(lang);
+    const updateMutation = useUpdateLandingPlan(lang);
+    const pending = createMutation.isPending || updateMutation.isPending;
+
+    const handleSubmit = (e) => {
+        e.preventDefault();
+        const cleanFeatures = features.map((f) => f.trim()).filter(Boolean);
+        if (cleanFeatures.length === 0) {
+            toast.error(t("landingPageAdmin.featuresRequired"));
+            return;
+        }
+
+        // اختياري: في التعديل بنبعت null لو اتمسح، وفي الإنشاء بنتجاهله لو فاضي
+        const optional = (value) => {
+            const v = value.trim();
+            if (v !== "") return v;
+            return isEditing ? null : undefined;
+        };
+
+        const payload = {
+            name: name.trim(),
+            price: price.trim(),
+            is_popular: isPopular,
+            features: cleanFeatures,
+            description: optional(description),
+            billing_period: optional(billingPeriod),
+            button_text: optional(buttonText),
+            button_link: optional(buttonLink),
+            ...(order !== "" ? { order: Number(order) } : {}),
+        };
+
+        const opts = {
+            onSuccess: (res) => {
+                toast.success(
+                    res?.message ||
+                    t(isEditing ? "landingPageAdmin.planUpdated" : "landingPageAdmin.planCreated"),
+                );
+                onClose();
+            },
+            onError: (err) => toast.error(getError(err, t("landingPageAdmin.saveFailed"))),
+        };
+
+        if (isEditing) {
+            updateMutation.mutate({ id: plan.id, payload }, opts);
+        } else {
+            createMutation.mutate({ ...payload, is_active: true }, opts);
+        }
+    };
+
+    const labelCls = "text-[14px] font-medium text-[#486581]";
+
+    return (
+        <Modal
+            wide
+            isRtl={isRtl}
+            onClose={onClose}
+            title={t(isEditing ? "landingPageAdmin.editPlan" : "landingPageAdmin.addPlan")}
+        >
+            <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+                <div className="flex flex-col gap-[6px]">
+                    <label className={labelCls}>{t("landingPageAdmin.fields.name")}</label>
+                    <input
+                        type="text"
+                        maxLength={255}
+                        required
+                        value={name}
+                        onChange={(e) => setName(e.target.value)}
+                        className={`${inputCls} h-[42px]`}
+                    />
+                </div>
+
+                <div className="flex flex-col gap-[6px]">
+                    <label className={labelCls}>{t("landingPageAdmin.fields.description")}</label>
+                    <textarea
+                        rows={3}
+                        value={description}
+                        onChange={(e) => setDescription(e.target.value)}
+                        className={`${inputCls} py-2 resize-y`}
+                    />
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="flex flex-col gap-[6px]">
+                        <label className={labelCls}>{t("landingPageAdmin.fields.price")}</label>
+                        <input
+                            type="text"
+                            maxLength={255}
+                            required
+                            value={price}
+                            onChange={(e) => setPrice(e.target.value)}
+                            className={`${inputCls} h-[42px]`}
+                        />
+                        <span className="text-[12px] text-[#829ab1]">{t("landingPageAdmin.priceHint")}</span>
+                    </div>
+
+                    <div className="flex flex-col gap-[6px]">
+                        <label className={labelCls}>{t("landingPageAdmin.fields.billing_period")}</label>
+                        <input
+                            type="text"
+                            maxLength={255}
+                            value={billingPeriod}
+                            onChange={(e) => setBillingPeriod(e.target.value)}
+                            className={`${inputCls} h-[42px]`}
+                        />
+                    </div>
+                </div>
+
+                <div className="flex flex-col gap-2">
+                    <label className={labelCls}>{t("landingPageAdmin.fields.features")}</label>
+                    {features.map((item, i) => (
+                        <div key={i} className="flex items-center gap-2">
+                            <input
+                                type="text"
+                                value={item}
+                                onChange={(e) => setFeatures((prev) => prev.map((x, idx) => (idx === i ? e.target.value : x)))}
+                                className={`${inputCls} h-[40px]`}
+                            />
+                            <button
+                                type="button"
+                                onClick={() => setFeatures((prev) => prev.filter((_, idx) => idx !== i))}
+                                aria-label={t("landingPageAdmin.remove")}
+                                className={`${iconBtn} !border-[#fecaca] !text-[#dc2626] hover:!bg-[#fef2f2]`}
+                            >
+                                <LuTrash2 size={15} />
+                            </button>
+                        </div>
+                    ))}
+                    <button
+                        type="button"
+                        onClick={() => setFeatures((prev) => [...prev, ""])}
+                        className={`${btnSecondary} !h-9 self-start`}
+                    >
+                        <LuPlus size={15} />
+                        {t("landingPageAdmin.addItem")}
+                    </button>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="flex flex-col gap-[6px]">
+                        <label className={labelCls}>{t("landingPageAdmin.fields.button_text")}</label>
+                        <input
+                            type="text"
+                            maxLength={255}
+                            value={buttonText}
+                            onChange={(e) => setButtonText(e.target.value)}
+                            className={`${inputCls} h-[42px]`}
+                        />
+                    </div>
+
+                    <div className="flex flex-col gap-[6px]">
+                        <label className={labelCls}>{t("landingPageAdmin.fields.button_link")}</label>
+                        <input
+                            type="text"
+                            maxLength={255}
+                            dir="ltr"
+                            value={buttonLink}
+                            onChange={(e) => setButtonLink(e.target.value)}
+                            placeholder="/contact-sales"
+                            className={`${inputCls} h-[42px]`}
+                        />
+                    </div>
+                </div>
+
+                <div className="flex flex-col gap-[6px]">
+                    <label className={labelCls}>{t("landingPageAdmin.fields.order")}</label>
+                    <input
+                        type="number"
+                        min="0"
+                        value={order}
+                        onChange={(e) => setOrder(e.target.value)}
+                        className={`${inputCls} h-[42px]`}
+                    />
+                    <span className="text-[12px] text-[#829ab1]">{t("landingPageAdmin.orderHint")}</span>
+                </div>
+
+                <div className="flex items-center justify-between">
+                    <label htmlFor="plan-is-popular" className={labelCls}>
+                        {t("landingPageAdmin.fields.is_popular")}
+                    </label>
+                    <button
+                        id="plan-is-popular"
+                        type="button"
+                        role="switch"
+                        aria-checked={isPopular}
+                        onClick={() => setIsPopular((prev) => !prev)}
+                        className={`relative w-11 h-6 rounded-full border-0 cursor-pointer p-0 outline-none transition-colors duration-200 ease-in-out ${isPopular ? "bg-[#5b8c6a]" : "bg-[#bcccdc]"
+                            }`}
+                    >
+                        <span
+                            className={`absolute top-1 w-4 h-4 rounded-full bg-white shadow-[0_1px_3px_rgba(0,0,0,0.18)] transition-[left] duration-200 ease-in-out ${isPopular ? "left-6" : "left-1"
+                                }`}
+                        />
+                    </button>
+                </div>
+
+                <div className="flex justify-end gap-[10px] mt-2">
+                    <button type="button" onClick={onClose} className={btnSecondary}>
+                        {t("landingPageAdmin.cancel")}
+                    </button>
+                    <button type="submit" disabled={pending} className={btnPrimary}>
+                        {pending
+                            ? t("landingPageAdmin.saving")
+                            : t(isEditing ? "landingPageAdmin.save" : "landingPageAdmin.addPlan")}
+                    </button>
+                </div>
+            </form>
+        </Modal>
+    );
+}
 // =========================
 // Skeleton / error / empty
 // =========================
@@ -757,6 +987,9 @@ export default function LandingPage() {
     const deleteFeatureMutation = useDeleteLandingFeature(lang);
     const deleteRoleMutation = useDeleteLandingRole(lang);
 
+    const plansQuery = useLandingPlans(lang);
+    const deletePlanMutation = useDeleteLandingPlan(lang);
+
     const [editingSection, setEditingSection] = useState(null);
     const [featureModal, setFeatureModal] = useState({ open: false, feature: null });
 
@@ -764,6 +997,10 @@ export default function LandingPage() {
     const [roleModal, setRoleModal] = useState({ open: false, role: null });
     const [deletingFeature, setDeletingFeature] = useState(null);
     const [deletingRole, setDeletingRole] = useState(null);
+
+    const [planModal, setPlanModal] = useState({ open: false, plan: null });
+    const [deletingPlan, setDeletingPlan] = useState(null);
+
     const sections = sectionsQuery.data?.data ?? [];
     const features = useMemo(
         () => [...(featuresQuery.data?.data ?? [])].sort((a, b) => (a.order ?? 0) - (b.order ?? 0)),
@@ -773,6 +1010,11 @@ export default function LandingPage() {
     const roles = useMemo(
         () => [...(rolesQuery.data?.data ?? [])].sort((a, b) => (a.order ?? 0) - (b.order ?? 0)),
         [rolesQuery.data],
+    );
+
+    const plans = useMemo(
+        () => [...(plansQuery.data?.data ?? [])].sort((a, b) => (a.order ?? 0) - (b.order ?? 0)),
+        [plansQuery.data],
     );
     const formatDate = (iso) =>
         iso ? new Date(iso).toLocaleString(isRtl ? "ar-EG" : "en-GB") : "—";
@@ -1015,6 +1257,116 @@ export default function LandingPage() {
                         </div>
                     )}
                 </div>
+                        {/* PLANS */}
+        <div className="bg-white border border-[#d9e2ec] rounded-[14px] py-6 px-7 shadow-[0_1px_3px_rgba(16,42,67,0.03)] box-border mt-6">
+          <div className="flex justify-between items-start mb-6 gap-4 flex-wrap">
+            <div>
+              <h2 className="text-[18px] font-bold text-[#243b53] m-0 leading-[1.3]">
+                {t("landingPageAdmin.plansTitle")}
+              </h2>
+              <p className="text-[14px] text-[#829ab1] mt-1 leading-[1.4]">
+                {t("landingPageAdmin.plansSubtitle")}
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => setPlanModal({ open: true, plan: null })}
+              className={btnPrimary}
+            >
+              <LuPlus size={17} />
+              <span>{t("landingPageAdmin.addPlan")}</span>
+            </button>
+          </div>
+
+          {plansQuery.isLoading ? (
+            <CardsSkeleton count={3} />
+          ) : plansQuery.isError ? (
+            <ErrorBox error={plansQuery.error} onRetry={() => plansQuery.refetch()} t={t} />
+          ) : plans.length === 0 ? (
+            <p className="py-12 text-center text-sm text-[#829ab1]">{t("landingPageAdmin.noPlans")}</p>
+          ) : (
+            <div className="grid grid-cols-1 min-[901px]:grid-cols-2 gap-4">
+              {plans.map((plan) => (
+                <div
+                  key={plan.id}
+                  className={`bg-white border rounded-xl py-5 px-[22px] flex flex-col justify-between gap-4 box-border transition-colors duration-150 ${
+                    plan.is_popular
+                      ? "border-[#5b8c6a] hover:border-[#5b8c6a]"
+                      : "border-[#d9e2ec] hover:border-[#bcccdc]"
+                  }`}
+                >
+                  <div className="flex justify-between items-start gap-3">
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap mb-2">
+                        <span className="inline-flex items-center h-[24px] px-[10px] bg-[#e7eef5] text-[#486581] rounded-full text-[11px] font-bold tracking-[0.04em]">
+                          {plan.name}
+                        </span>
+                        {plan.is_popular && (
+                          <span className="inline-flex items-center gap-1 h-[24px] px-[10px] bg-[#e8f3eb] text-[#3f7d5a] rounded-full text-[11px] font-bold">
+                            <LuStar size={12} />
+                            {t("landingPageAdmin.popular")}
+                          </span>
+                        )}
+                      </div>
+                      <h3 className="text-[20px] font-bold text-[#243b53] m-0 leading-[1.2]">{plan.price}</h3>
+                      {plan.billing_period && (
+                        <p className="text-[12px] text-[#829ab1] mt-1 mb-0">{plan.billing_period}</p>
+                      )}
+                      {plan.description && (
+                        <p className="text-[13px] text-[#627d98] mt-2 mb-0 leading-[1.5]">{plan.description}</p>
+                      )}
+                    </div>
+                    <span className="inline-flex items-center h-[26px] px-[10px] bg-[#e7eef5] text-[#486581] rounded-full text-[12px] font-semibold shrink-0 whitespace-nowrap">
+                      #{plan.order}
+                    </span>
+                  </div>
+
+                  <ul className="m-0 p-0 list-none flex flex-col gap-[6px]">
+                    {(plan.features ?? []).map((f, i) => (
+                      <li key={i} className="flex items-start gap-2 text-[13px] text-[#486581] leading-[1.5]">
+                        <span className="w-[6px] h-[6px] rounded-full bg-[#5b8c6a] mt-[7px] shrink-0" />
+                        <span>{f}</span>
+                      </li>
+                    ))}
+                  </ul>
+
+                  <div className="flex justify-between items-center pt-[14px] border-t border-[#eef1f4] gap-3">
+                    <div className="min-w-0 text-[12px] text-[#829ab1]">
+                      {plan.button_text && (
+                        <span className="block truncate">
+                          {t("landingPageAdmin.fields.button_text")}: {plan.button_text}
+                        </span>
+                      )}
+                      {plan.button_link && (
+                        <span dir="ltr" className="block truncate">
+                          {t("landingPageAdmin.fields.button_link")}: {plan.button_link}
+                        </span>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-2 shrink-0">
+                      <button
+                        type="button"
+                        onClick={() => setPlanModal({ open: true, plan })}
+                        aria-label={`${t("landingPageAdmin.edit")} ${plan.name}`}
+                        className={iconBtn}
+                      >
+                        <LuPenLine size={15} />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setDeletingPlan(plan)}
+                        aria-label={`${t("landingPageAdmin.delete")} ${plan.name}`}
+                        className={`${iconBtn} !border-[#fecaca] !text-[#dc2626] hover:!bg-[#fef2f2]`}
+                      >
+                        <LuTrash2 size={15} />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
             </div>
 
             <AnimatePresence>
@@ -1080,6 +1432,32 @@ export default function LandingPage() {
                     />
                 )}
             </AnimatePresence>
+
+                  <AnimatePresence>
+        {planModal.open && (
+          <PlanModal
+            key={`plan-${planModal.plan?.id ?? "new"}`}
+            plan={planModal.plan}
+            lang={lang}
+            isRtl={isRtl}
+            onClose={() => setPlanModal({ open: false, plan: null })}
+          />
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {deletingPlan && (
+          <DeleteModal
+            key={`del-plan-${deletingPlan.id}`}
+            name={deletingPlan.name}
+            id={deletingPlan.id}
+            mutation={deletePlanMutation}
+            successKey="landingPageAdmin.planDeleted"
+            isRtl={isRtl}
+            onClose={() => setDeletingPlan(null)}
+          />
+        )}
+      </AnimatePresence>
         </>
     );
 }

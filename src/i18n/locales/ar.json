@@ -2417,6 +2417,16 @@
     "featureUpdated": "تم تحديث الميزة بنجاح.",
     "iconHint": "اسم الأيقونة، مثل: user-group أو clock أو shield-check.",
     "orderHint": "الأرقام الأصغر تظهر أولاً.",
+    "plansTitle": "باقات الأسعار",
+    "plansSubtitle": "باقات الأسعار المعروضة في الصفحة الرئيسية مرتبة حسب الأولوية.",
+    "addPlan": "إضافة باقة",
+    "editPlan": "تعديل الباقة",
+    "noPlans": "لا توجد باقات بعد. أضف أول باقة.",
+    "planCreated": "تمت إضافة الباقة بنجاح.",
+    "planUpdated": "تم تحديث الباقة بنجاح.",
+    "planDeleted": "تم حذف الباقة بنجاح.",
+    "popular": "الأكثر شعبية",
+    "priceHint": "نص حر، مثل $12 أو مخصص.",
     "sections": {
       "hero": "القسم الرئيسي (Hero)",
       "about": "من نحن",
@@ -2471,7 +2481,12 @@
       "icon": "الأيقونة",
       "order": "الترتيب",
       "role_name": "اسم الدور",
-      "features": "قائمة المميزات"
+      "features": "قائمة المميزات",
+      "name": "اسم الباقة",
+      "price": "السعر",
+      "billing_period": "فترة الفوترة",
+      "is_popular": "الأكثر شعبية",
+      "button_link": "رابط الزر"
     }
   },
   "employeeFinancial": {

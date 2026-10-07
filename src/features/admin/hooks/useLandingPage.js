@@ -10,6 +10,10 @@ import {
   createLandingRole,
   updateLandingRole,
   deleteLandingRole,
+    getLandingPlans,
+  createLandingPlan,
+  updateLandingPlan,
+  deleteLandingPlan,
 } from "../api";
 
 export const useLandingSections = (lang = "en") =>
@@ -83,5 +87,35 @@ export const useDeleteLandingRole = (lang = "en") => {
   return useMutation({
     mutationFn: (id) => deleteLandingRole(id, lang),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["landing-roles"] }),
+  });
+};
+
+export const useLandingPlans = (lang = "en") =>
+  useQuery({
+    queryKey: ["landing-plans", lang],
+    queryFn: () => getLandingPlans(lang),
+  });
+
+export const useCreateLandingPlan = (lang = "en") => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (payload) => createLandingPlan(payload, lang),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["landing-plans"] }),
+  });
+};
+
+export const useUpdateLandingPlan = (lang = "en") => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, payload }) => updateLandingPlan(id, payload, lang),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["landing-plans"] }),
+  });
+};
+
+export const useDeleteLandingPlan = (lang = "en") => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id) => deleteLandingPlan(id, lang),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["landing-plans"] }),
   });
 };

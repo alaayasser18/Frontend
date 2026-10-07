@@ -8,4 +8,9 @@ export {
   useUpdateLandingSection,
   useCreateLandingFeature,
   useUpdateLandingFeature,
+  useDeleteLandingFeature,
+  useLandingRoles,
+  useCreateLandingRole,
+  useUpdateLandingRole,
+  useDeleteLandingRole,
 } from "./useLandingPage";

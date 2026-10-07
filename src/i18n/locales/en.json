@@ -2553,6 +2553,22 @@
     "featureUpdated": "Feature updated successfully.",
     "iconHint": "Icon name, e.g. user-group, clock, shield-check.",
     "orderHint": "Lower numbers appear first.",
+        "rolesTitle": "Target roles",
+    "rolesSubtitle": "Role cards displayed on the landing page, ordered by priority.",
+    "addRole": "Add Role",
+    "editRole": "Edit Role",
+    "noRoles": "No roles yet. Add your first role.",
+    "roleCreated": "Role created successfully.",
+    "roleUpdated": "Role updated successfully.",
+    "roleDeleted": "Role deleted successfully.",
+    "featureDeleted": "Feature deleted successfully.",
+    "featuresRequired": "Add at least one feature to the list.",
+    "delete": "Delete",
+    "deleting": "Deleting...",
+    "confirmDelete": "Yes, Delete",
+    "deleteTitle": "Delete this item?",
+    "deleteMessage": "Are you sure you want to permanently delete \"{{name}}\"? This action cannot be undone.",
+    "deleteFailed": "Failed to delete the item.",
     "sections": {
       "hero": "Hero",
       "about": "About",
@@ -2589,7 +2605,9 @@
       "copyright": "Copyright",
       "bottom_tagline": "Bottom tagline",
       "icon": "Icon",
-      "order": "Order"
+      "order": "Order",
+            "role_name": "Role name",
+      "features": "Features list"
     }
   },
   "employeeFinancial": {

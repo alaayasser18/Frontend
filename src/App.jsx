@@ -50,6 +50,8 @@ import LeaveBalances from "./features/employee/pages/Leave & balances";
 import AIAssistant from "./features/employee/pages/AI Assistant";
 import EmployeeGoals from "./features/employee/pages/Goals";
 import EmployeeFinancial from "./features/employee/pages/Financial";
+import EmployeeEvaluations from "./features/employee/pages/Evaluations";
+import AdminEvaluations from "./features/admin/pages/Evaluations";
 
 // ==================== Manager Pages ====================
 import TeamDashboard from "./features/manager/pages/TeamDashboard";
@@ -74,7 +76,8 @@ import HrEmployees from "./features/hr/pages/employees";
 import HrLeaveRequests from "./features/hr/pages/leaveRequests";
 import HrPayroll from "./features/hr/pages/payroll";
 import HrRewards from "./features/hr/pages/rewards&Bonuses";
-import HrEvaluationsGoals from "./features/hr/pages/evaluations&goals";
+import HrGoals from "./features/hr/pages/goals";
+import HrEvaluations from "./features/hr/pages/evaluations";
 import PerformanceMetrics from "./features/hr/pages/performanceMatrics";
 import AIInsights from "./features/hr/pages/aiInsights";
 import HrCompanyPolicies from "./features/hr/pages/companyPolicies";
@@ -350,6 +353,7 @@ function App() {
 
               <Route path="/admin/goals" element={<Goals />} />
 
+              <Route path="/admin/evaluations" element={<AdminEvaluations />} />
               <Route
                 path="/admin/settings"
                 element={<AdminProfileSettings />}
@@ -408,13 +412,12 @@ function App() {
                   element={<SubmissionReviews role="HR" />}
                 />
 
-                <Route
-                  path="tasks"
-                  element={<TaskManagement role="HR" />}
-                />
+                <Route path="tasks" element={<TaskManagement role="HR" />} />
+                <Route path="goals" element={<HrGoals />} />
+                <Route path="evaluations" element={<HrEvaluations />} />
                 <Route
                   path="evaluations-goals"
-                  element={<HrEvaluationsGoals />}
+                  element={<Navigate to="/hr/evaluations" replace />}
                 />
 
                 <Route
@@ -436,10 +439,7 @@ function App() {
                   element={<CalendarPage customRole="hr" />}
                 />
 
-                <Route
-                  path="audit"
-                  element={<ActivityLog role="HR" />}
-                />
+                <Route path="audit" element={<ActivityLog role="HR" />} />
 
                 <Route path="reports" element={<Reports />} />
 
@@ -562,6 +562,10 @@ function App() {
 
               <Route path="/employee/goals" element={<EmployeeGoals />} />
 
+              <Route
+                path="/employee/evaluations"
+                element={<EmployeeEvaluations />}
+              />
               <Route
                 path="/employee/financial"
                 element={<EmployeeFinancial />}

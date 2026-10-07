@@ -2,28 +2,28 @@ import Echo from "laravel-echo";
 import Pusher from "pusher-js";
 import axiosInstance from "./axiosInstance";
 
-window.Pusher = Pusher;
+if (typeof window !== "undefined") {
+  window.Pusher = Pusher;
+}
 
 const pusherKey = import.meta.env.VITE_REVERB_APP_KEY;
 const pusherHost = import.meta.env.VITE_REVERB_HOST;
-const pusherPort = Number(import.meta.env.VITE_REVERB_PORT);
-const pusherScheme = import.meta.env.VITE_REVERB_SCHEME;
+const pusherPort = import.meta.env.VITE_REVERB_PORT
+  ? parseInt(import.meta.env.VITE_REVERB_PORT, 10)
+  : 443;
+const pusherScheme = import.meta.env.VITE_REVERB_SCHEME || "https";
 
-const hasReverbConfig =
-  Boolean(pusherKey && pusherHost && pusherScheme) &&
-  Number.isInteger(pusherPort) &&
-  pusherPort > 0;
+const hasReverbConfig = Boolean(pusherKey && pusherHost);
 
 const echo = hasReverbConfig
   ? new Echo({
       broadcaster: "reverb",
       key: pusherKey,
       wsHost: pusherHost,
-      wsPort: pusherPort,
-      wssPort: pusherPort,
+      wsPort: pusherPort || 80,
+      wssPort: pusherPort || 443,
       forceTLS: pusherScheme === "https",
       enabledTransports: ["ws", "wss"],
-
       authorizer: (channel) => ({
         authorize: (socketId, callback) => {
           axiosInstance
@@ -41,5 +41,9 @@ const echo = hasReverbConfig
       }),
     })
   : null;
+
+if (typeof window !== "undefined") {
+  window.Echo = echo;
+}
 
 export default echo;

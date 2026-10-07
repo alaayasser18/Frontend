@@ -15,32 +15,46 @@ import echo from "../../../utils/echo";
 // ============================================================
 // HELPER: تحويل بيانات الـ API لـ format متوافق مع الـ UI
 // ============================================================
-const normalizeNotification = (apiNotif) => ({
-  id: apiNotif.id,
-  category: apiNotif.type
-    ? apiNotif.type.split("\\").pop().replace("Notification", "").toLowerCase()
-    : "system",
-  defaultTitle: apiNotif.data?.title || apiNotif.title || "Notification",
-  defaultDesc: apiNotif.data?.body || apiNotif.body || "",
-  isRead: apiNotif.is_read ?? false,
-  timestamp: apiNotif.created_at || new Date().toISOString(),
-  type: apiNotif.type,
-  readAt: apiNotif.read_at,
-  data: apiNotif.data,
-  titleKey: null,
-  descKey: null,
-  badgeKey: null,
-  defaultBadge: apiNotif.data?.title || apiNotif.title || "Notification",
-  actionType: null,
-  actionKey: null,
-  defaultAction: null,
-  initiatorKey: null,
-  defaultInitiator: null,
-  scopeKey: null,
-  defaultScope: null,
-  priorityKey: null,
-  defaultPriority: null,
-});
+const normalizeNotification = (apiNotif) => {
+  const notifData = apiNotif.data || apiNotif;
+  const title =
+    notifData.title ||
+    apiNotif.title ||
+    "Notification";
+  const desc =
+    notifData.body ||
+    notifData.message ||
+    apiNotif.body ||
+    apiNotif.message ||
+    "";
+
+  return {
+    id: apiNotif.id || Date.now().toString(),
+    category: apiNotif.type
+      ? apiNotif.type.split("\\").pop().replace("Notification", "").toLowerCase()
+      : "system",
+    defaultTitle: title,
+    defaultDesc: desc,
+    isRead: apiNotif.is_read ?? (apiNotif.read_at !== null && apiNotif.read_at !== undefined ? true : false),
+    timestamp: apiNotif.created_at || new Date().toISOString(),
+    type: apiNotif.type,
+    readAt: apiNotif.read_at,
+    data: notifData,
+    titleKey: null,
+    descKey: null,
+    badgeKey: null,
+    defaultBadge: title,
+    actionType: null,
+    actionKey: null,
+    defaultAction: null,
+    initiatorKey: null,
+    defaultInitiator: null,
+    scopeKey: null,
+    defaultScope: null,
+    priorityKey: null,
+    defaultPriority: null,
+  };
+};
 
 export const useNotifications = (currentUserId) => {
   const queryClient = useQueryClient();
@@ -316,21 +330,34 @@ export const useNotifications = (currentUserId) => {
 
   // ── Real-time Laravel Echo Subscription ───────────────────
   useEffect(() => {
-    if (isAuthenticated && currentUserId && echo) {
-      const channelName = `notifications.${currentUserId}`;
+    let resolvedUserId = currentUserId;
+    if (!resolvedUserId) {
+      try {
+        const rawUser =
+          localStorage.getItem("user") ||
+          localStorage.getItem("currentUser") ||
+          localStorage.getItem("auth_user");
+        if (rawUser) {
+          const parsed = JSON.parse(rawUser);
+          const user = parsed?.user || parsed?.data || parsed;
+          resolvedUserId = user?.id || user?.userId;
+        }
+      } catch (e) {
+        // ignore
+      }
+    }
+
+    if (isAuthenticated && resolvedUserId && echo) {
+      const channelName = `notifications.${resolvedUserId}`;
       const channel = echo.private(channelName);
 
       channel.notification((notification) => {
-        const normalized =
-          normalizeNotification(notification);
+        const normalized = normalizeNotification(notification);
 
-        queryClient.setQueryData(
-          ["notifications"],
-          (old) => [
-            normalized,
-            ...(old || []),
-          ]
-        );
+        queryClient.setQueryData(["notifications"], (old) => [
+          normalized,
+          ...(old || []),
+        ]);
 
         queryClient.setQueryData(
           ["notifications", "unreadCount"],
@@ -351,11 +378,7 @@ export const useNotifications = (currentUserId) => {
         echo.leave(channelName);
       };
     }
-  }, [
-    isAuthenticated,
-    currentUserId,
-    queryClient,
-  ]);
+  }, [isAuthenticated, currentUserId, queryClient]);
 
   return {
     notifications,

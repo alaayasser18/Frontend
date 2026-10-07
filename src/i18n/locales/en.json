@@ -36,6 +36,11 @@
       "heroDescription": "Access your portal securely to manage your daily workspace, benefits, and workplace tools.",
       "securityBadge": "Enterprise v2026 — Secure Workspace"
     },
+        "activateAccount": {
+      "title": "Activate Your Account",
+      "subtitle": "Enter your work email and we'll send you a verification code to activate your account.",
+      "sendCode": "Send Activation Code"
+    },
     "login": {
       "title": "Welcome Back",
       "noAccount": "Don't have an account?",

@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 
 import { useTranslation } from "react-i18next";
 
@@ -15,10 +15,27 @@ import { useForgotPassword } from "../hooks/useForgotPassword";
 import "../../../styles/auth/ForgotPassword.css";
 
 export default function ForgotPassword() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
 
   const navigate = useNavigate();
+  const { pathname, search } = useLocation();
 
+  const isActivation = pathname.toLowerCase().endsWith("/activation");
+
+  const searchParams = new URLSearchParams(search);
+  const activationLang = searchParams.get("lang");
+
+  const ns = isActivation
+    ? "auth.activateAccount"
+    : "auth.forgotPassword";
+
+  useEffect(() => {
+    if (!isActivation) return;
+
+    if (activationLang === "ar" || activationLang === "en") {
+      i18n.changeLanguage(activationLang);
+    }
+  }, [isActivation, activationLang, i18n]);
   const forgotPasswordMutation = useForgotPassword();
 
   const [email, setEmail] = useState("");
@@ -109,17 +126,12 @@ export default function ForgotPassword() {
 
         sessionStorage.setItem("resetEmail", returnedEmail);
 
-        console.log("Reset email saved:", sessionStorage.getItem("resetEmail"));
+        sessionStorage.setItem(
+          "authFlow",
+          isActivation ? "activation" : "forgotPassword"
+        );
 
-        // =================================================
-        // SUCCESS MESSAGE
-        // =================================================
-
-        toast.success(t("auth.forgotPassword.otpSent"));
-
-        // =================================================
-        // GO TO VERIFY OTP
-        // =================================================
+        toast.success(t(`${ns}.otpSent`));
 
         navigate("/VerifyOTP");
       },
@@ -201,13 +213,17 @@ export default function ForgotPassword() {
             TITLE
         ================================================= */}
 
-        <h1 className="title">{t("auth.forgotPassword.title")}</h1>
+        <h1 className="title">{t(`${ns}.title`)}</h1>
 
         {/* =================================================
             SUBTITLE
         ================================================= */}
 
-        <p className="subtitle">{t("auth.forgotPassword.subtitle")}</p>
+
+        <p className="subtitle">{t(`${ns}.subtitle`)}</p>
+        {forgotPasswordMutation.isPending
+          ? t("auth.forgotPassword.sending")
+          : t(`${ns}.sendCode`)}
 
         {/* =================================================
             FORM

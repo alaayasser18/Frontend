@@ -269,9 +269,18 @@ function App() {
           />
 
           <Route
+            path="/activation"
+            element={
+              <PublicRoute allowAuthenticated>
+                <ForgotPassword />
+              </PublicRoute>
+            }
+          />
+
+          <Route
             path="/VerifyOTP"
             element={
-              <PublicRoute>
+              <PublicRoute allowAuthenticated>
                 <VerifyOTP />
               </PublicRoute>
             }
@@ -280,7 +289,7 @@ function App() {
           <Route
             path="/ResetPassword"
             element={
-              <PublicRoute>
+              <PublicRoute allowAuthenticated>
                 <ResetPassword />
               </PublicRoute>
             }

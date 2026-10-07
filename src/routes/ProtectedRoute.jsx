@@ -39,10 +39,18 @@ export default function ProtectedRoute({ allowedRoles, children }) {
  * Prevents authenticated users from accessing guest-only auth pages (like /login).
  * Redirects them directly to their role-based dashboard.
  */
-export function PublicRoute({ children }) {
+export function PublicRoute({
+  children,
+  allowAuthenticated = false,
+}) {
   const { isAuthenticated, role } = useAuth();
 
-  if (isAuthenticated && role && ROLE_ROUTES[role]) {
+  if (
+    !allowAuthenticated &&
+    isAuthenticated &&
+    role &&
+    ROLE_ROUTES[role]
+  ) {
     return <Navigate to={ROLE_ROUTES[role]} replace />;
   }
 

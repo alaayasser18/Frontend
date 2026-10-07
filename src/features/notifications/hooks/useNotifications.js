@@ -1,4 +1,3 @@
-
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useCallback, useEffect } from "react";
 import toast from "react-hot-toast";
@@ -13,9 +12,31 @@ import {
 import echo from "../../../utils/echo";
 
 // ============================================================
-// HELPER: تحويل بيانات الـ API لـ format متوافق مع الـ UI
+// HELPERS
 // ============================================================
+const extractNotificationsList = (res) => {
+  if (!res) return [];
+  if (Array.isArray(res)) return res;
+  if (Array.isArray(res.data)) return res.data;
+  if (Array.isArray(res.data?.data)) return res.data.data;
+  if (Array.isArray(res.data?.notifications)) return res.data.notifications;
+  if (Array.isArray(res.notifications)) return res.notifications;
+  return [];
+};
+
+const extractUnreadCount = (res) => {
+  if (res == null) return 0;
+  if (typeof res === "number") return res;
+  if (typeof res.data === "number") return res.data;
+  if (typeof res.data?.unread_count === "number") return res.data.unread_count;
+  if (typeof res.unread_count === "number") return res.unread_count;
+  if (typeof res.data?.count === "number") return res.data.count;
+  if (typeof res.count === "number") return res.count;
+  return 0;
+};
+
 const normalizeNotification = (apiNotif) => {
+  if (!apiNotif) return null;
   const notifData = apiNotif.data || apiNotif;
   const title =
     notifData.title ||
@@ -32,10 +53,12 @@ const normalizeNotification = (apiNotif) => {
     id: apiNotif.id || Date.now().toString(),
     category: apiNotif.type
       ? apiNotif.type.split("\\").pop().replace("Notification", "").toLowerCase()
-      : "system",
+      : notifData.category || "system",
     defaultTitle: title,
     defaultDesc: desc,
-    isRead: apiNotif.is_read ?? (apiNotif.read_at !== null && apiNotif.read_at !== undefined ? true : false),
+    isRead:
+      apiNotif.is_read ??
+      (apiNotif.read_at !== null && apiNotif.read_at !== undefined ? true : false),
     timestamp: apiNotif.created_at || new Date().toISOString(),
     type: apiNotif.type,
     readAt: apiNotif.read_at,
@@ -62,6 +85,24 @@ export const useNotifications = (currentUserId) => {
   const token = localStorage.getItem("token");
   const isAuthenticated = !!token;
 
+  // Resolve user id from prop or localStorage
+  let resolvedUserId = currentUserId;
+  if (!resolvedUserId) {
+    try {
+      const rawUser =
+        localStorage.getItem("user") ||
+        localStorage.getItem("currentUser") ||
+        localStorage.getItem("auth_user");
+      if (rawUser) {
+        const parsed = JSON.parse(rawUser);
+        const user = parsed?.user || parsed?.data || parsed;
+        resolvedUserId = user?.id || user?.userId;
+      }
+    } catch {
+      // ignore
+    }
+  }
+
   // ── Queries ───────────────────────────────────────────────
   const {
     data: notifications = [],
@@ -70,20 +111,21 @@ export const useNotifications = (currentUserId) => {
     queryKey: ["notifications"],
     queryFn: async () => {
       const res = await fetchNotifications(1, 100);
-
-      return (res?.data?.notifications || []).map(normalizeNotification);
+      const list = extractNotificationsList(res);
+      return list.map(normalizeNotification).filter(Boolean);
     },
     enabled: isAuthenticated,
+    staleTime: 10 * 1000,
   });
 
   const { data: unreadCount = 0 } = useQuery({
     queryKey: ["notifications", "unreadCount"],
     queryFn: async () => {
       const res = await fetchUnreadCount();
-
-      return res?.data?.unread_count || 0;
+      return extractUnreadCount(res);
     },
     enabled: isAuthenticated,
+    staleTime: 10 * 1000,
   });
 
   // ── Mutations ─────────────────────────────────────────────
@@ -91,57 +133,32 @@ export const useNotifications = (currentUserId) => {
     mutationFn: markNotificationAsRead,
 
     onMutate: async (id) => {
-      await queryClient.cancelQueries({
-        queryKey: ["notifications"],
-      });
+      await queryClient.cancelQueries({ queryKey: ["notifications"] });
+      await queryClient.cancelQueries({ queryKey: ["notifications", "unreadCount"] });
 
-      await queryClient.cancelQueries({
-        queryKey: ["notifications", "unreadCount"],
-      });
-
-      const previousNotifications =
-        queryClient.getQueryData(["notifications"]);
-
-      const previousUnreadCount =
-        queryClient.getQueryData(["notifications", "unreadCount"]);
+      const previousNotifications = queryClient.getQueryData(["notifications"]);
+      const previousUnreadCount = queryClient.getQueryData(["notifications", "unreadCount"]);
 
       queryClient.setQueryData(["notifications"], (old) =>
-        old?.map((n) =>
-          n.id === id
-            ? { ...n, isRead: true }
-            : n
-        )
+        old?.map((n) => (n.id === id ? { ...n, isRead: true } : n))
       );
 
-      queryClient.setQueryData(
-        ["notifications", "unreadCount"],
-        (old) => Math.max(0, (old || 0) - 1)
+      queryClient.setQueryData(["notifications", "unreadCount"], (old) =>
+        Math.max(0, (old || 0) - 1)
       );
 
-      return {
-        previousNotifications,
-        previousUnreadCount,
-      };
+      return { previousNotifications, previousUnreadCount };
     },
 
     onError: (err, id, context) => {
       if (!context) return;
-
-      queryClient.setQueryData(
-        ["notifications"],
-        context.previousNotifications
-      );
-
-      queryClient.setQueryData(
-        ["notifications", "unreadCount"],
-        context.previousUnreadCount
-      );
+      queryClient.setQueryData(["notifications"], context.previousNotifications);
+      queryClient.setQueryData(["notifications", "unreadCount"], context.previousUnreadCount);
     },
 
     onSettled: () => {
-      queryClient.invalidateQueries({
-        queryKey: ["notifications", "unreadCount"],
-      });
+      queryClient.invalidateQueries({ queryKey: ["notifications"] });
+      queryClient.invalidateQueries({ queryKey: ["notifications", "unreadCount"] });
     },
   });
 
@@ -149,60 +166,30 @@ export const useNotifications = (currentUserId) => {
     mutationFn: markAllNotificationsAsRead,
 
     onMutate: async () => {
-      await queryClient.cancelQueries({
-        queryKey: ["notifications"],
-      });
+      await queryClient.cancelQueries({ queryKey: ["notifications"] });
+      await queryClient.cancelQueries({ queryKey: ["notifications", "unreadCount"] });
 
-      await queryClient.cancelQueries({
-        queryKey: ["notifications", "unreadCount"],
-      });
-
-      const previousNotifications =
-        queryClient.getQueryData(["notifications"]);
-
-      const previousUnreadCount =
-        queryClient.getQueryData(["notifications", "unreadCount"]);
+      const previousNotifications = queryClient.getQueryData(["notifications"]);
+      const previousUnreadCount = queryClient.getQueryData(["notifications", "unreadCount"]);
 
       queryClient.setQueryData(["notifications"], (old) =>
-        old?.map((n) => ({
-          ...n,
-          isRead: true,
-        }))
+        old?.map((n) => ({ ...n, isRead: true }))
       );
 
-      queryClient.setQueryData(
-        ["notifications", "unreadCount"],
-        0
-      );
+      queryClient.setQueryData(["notifications", "unreadCount"], 0);
 
-      return {
-        previousNotifications,
-        previousUnreadCount,
-      };
+      return { previousNotifications, previousUnreadCount };
     },
 
     onError: (err, variables, context) => {
       if (!context) return;
-
-      queryClient.setQueryData(
-        ["notifications"],
-        context.previousNotifications
-      );
-
-      queryClient.setQueryData(
-        ["notifications", "unreadCount"],
-        context.previousUnreadCount
-      );
+      queryClient.setQueryData(["notifications"], context.previousNotifications);
+      queryClient.setQueryData(["notifications", "unreadCount"], context.previousUnreadCount);
     },
 
     onSettled: () => {
-      queryClient.invalidateQueries({
-        queryKey: ["notifications"],
-      });
-
-      queryClient.invalidateQueries({
-        queryKey: ["notifications", "unreadCount"],
-      });
+      queryClient.invalidateQueries({ queryKey: ["notifications"] });
+      queryClient.invalidateQueries({ queryKey: ["notifications", "unreadCount"] });
     },
   });
 
@@ -210,33 +197,16 @@ export const useNotifications = (currentUserId) => {
     mutationFn: apiClearAll,
 
     onMutate: async () => {
-      await queryClient.cancelQueries({
-        queryKey: ["notifications"],
-      });
+      await queryClient.cancelQueries({ queryKey: ["notifications"] });
+      await queryClient.cancelQueries({ queryKey: ["notifications", "unreadCount"] });
 
-      await queryClient.cancelQueries({
-        queryKey: ["notifications", "unreadCount"],
-      });
-
-      queryClient.setQueryData(
-        ["notifications"],
-        []
-      );
-
-      queryClient.setQueryData(
-        ["notifications", "unreadCount"],
-        0
-      );
+      queryClient.setQueryData(["notifications"], []);
+      queryClient.setQueryData(["notifications", "unreadCount"], 0);
     },
 
     onSettled: () => {
-      queryClient.invalidateQueries({
-        queryKey: ["notifications"],
-      });
-
-      queryClient.invalidateQueries({
-        queryKey: ["notifications", "unreadCount"],
-      });
+      queryClient.invalidateQueries({ queryKey: ["notifications"] });
+      queryClient.invalidateQueries({ queryKey: ["notifications", "unreadCount"] });
     },
   });
 
@@ -250,13 +220,11 @@ export const useNotifications = (currentUserId) => {
       const previousNotifications = queryClient.getQueryData(["notifications"]);
       const previousUnreadCount = queryClient.getQueryData(["notifications", "unreadCount"]);
 
-      // optimistic: remove from cache immediately
       queryClient.setQueryData(["notifications"], (old) => {
         const target = old?.find((n) => n.id === id);
         if (target && !target.isRead) {
-          queryClient.setQueryData(
-            ["notifications", "unreadCount"],
-            (count) => Math.max(0, (count || 0) - 1)
+          queryClient.setQueryData(["notifications", "unreadCount"], (count) =>
+            Math.max(0, (count || 0) - 1)
           );
         }
         return old?.filter((n) => n.id !== id);
@@ -300,25 +268,15 @@ export const useNotifications = (currentUserId) => {
 
   const toggleNotificationRead = useCallback(
     async (id) => {
-      const notif = notifications.find(
-        (n) => n.id === id
-      );
-
+      const notif = notifications.find((n) => n.id === id);
       if (!notif) return;
 
       if (!notif.isRead) {
         await markAsRead(id);
       } else {
-        queryClient.setQueryData(
-          ["notifications"],
-          (old) =>
-            old?.map((n) =>
-              n.id === id
-                ? { ...n, isRead: false }
-                : n
-            )
+        queryClient.setQueryData(["notifications"], (old) =>
+          old?.map((n) => (n.id === id ? { ...n, isRead: false } : n))
         );
-
         queryClient.setQueryData(
           ["notifications", "unreadCount"],
           (count) => (count || 0) + 1
@@ -328,77 +286,79 @@ export const useNotifications = (currentUserId) => {
     [notifications, markAsRead, queryClient]
   );
 
-  // ── Real-time Laravel Echo Subscription ───────────────────
+  // ── Real-time Laravel Echo & Reverb Subscription ───────────
   useEffect(() => {
-    let resolvedUserId = currentUserId;
-    if (!resolvedUserId) {
-      try {
-        const rawUser =
-          localStorage.getItem("user") ||
-          localStorage.getItem("currentUser") ||
-          localStorage.getItem("auth_user");
-        if (rawUser) {
-          const parsed = JSON.parse(rawUser);
-          const user = parsed?.user || parsed?.data || parsed;
-          resolvedUserId = user?.id || user?.userId;
-        }
-      } catch (e) {
-        // ignore
-      }
-    }
+    if (!isAuthenticated || !resolvedUserId || !echo) return;
 
-    if (isAuthenticated && resolvedUserId && echo) {
-      const channelName = `notifications.${resolvedUserId}`;
-      const channel = echo.private(channelName);
+    const channelName = `App.Models.User.${resolvedUserId}`;
+    console.log(`📡 [Laravel Echo] Subscribing to private channel: private-${channelName}`);
 
-      channel.notification((notification) => {
-        const normalized = normalizeNotification(notification);
+    const channel = echo.private(channelName);
 
-        queryClient.setQueryData(["notifications"], (old) => [
-          normalized,
-          ...(old || []),
-        ]);
+    const handleIncomingNotification = (notificationData) => {
+      console.log("🔔 [Real-time notification received]:", notificationData);
+      const normalized = normalizeNotification(notificationData);
+      if (!normalized) return;
 
-        queryClient.setQueryData(
-          ["notifications", "unreadCount"],
-          (old) => (old || 0) + 1
-        );
-
-        toast(normalized.defaultTitle, {
-          icon: "🔔",
-          style: {
-            borderRadius: "10px",
-            background: "#fff",
-            color: "#102a43",
-          },
-        });
+      queryClient.setQueryData(["notifications"], (old) => {
+        const exists = (old || []).some((item) => item.id === normalized.id);
+        if (exists) return old;
+        return [normalized, ...(old || [])];
       });
 
-      return () => {
-        echo.leave(channelName);
-      };
-    }
-  }, [isAuthenticated, currentUserId, queryClient]);
+      queryClient.setQueryData(
+        ["notifications", "unreadCount"],
+        (old) => (old || 0) + 1
+      );
+
+      // Invalidate queries to sync with backend fresh state
+      queryClient.invalidateQueries({ queryKey: ["notifications"] });
+      queryClient.invalidateQueries({ queryKey: ["notifications", "unreadCount"] });
+
+      toast(normalized.defaultTitle, {
+        icon: "🔔",
+        duration: 4000,
+        style: {
+          borderRadius: "12px",
+          background: "#102a43",
+          color: "#fff",
+          fontWeight: "600",
+          fontSize: "13px",
+        },
+      });
+    };
+
+    // Listen to standard Laravel notification broadcasts
+    channel.notification(handleIncomingNotification);
+
+    // Listen to explicit notification event names
+    channel.listen(
+      ".Illuminate\\Notifications\\Events\\BroadcastNotificationCreated",
+      handleIncomingNotification
+    );
+    channel.listen("BroadcastNotificationCreated", handleIncomingNotification);
+    channel.listen("NotificationSent", handleIncomingNotification);
+    channel.listen(".NotificationSent", handleIncomingNotification);
+
+    return () => {
+      console.log(`🔌 [Laravel Echo] Leaving private channel: private-${channelName}`);
+      echo.leave(channelName);
+    };
+  }, [isAuthenticated, resolvedUserId, queryClient]);
 
   return {
     notifications,
     allNotifications: notifications,
     unreadCount,
-
-    // ✅ FIX:
-    // كان هنا loading وهو غير معرف
-    // الآن نرجع isLoading باسم loading
     loading: isLoading,
-
     markAsRead,
     toggleNotificationRead,
     markAllAsRead,
     clearNotification,
     clearAllNotifications,
-
-    refreshNotifications: () =>
-      queryClient.invalidateQueries({
-        queryKey: ["notifications"],
-      }),
+    refreshNotifications: () => {
+      queryClient.invalidateQueries({ queryKey: ["notifications"] });
+      queryClient.invalidateQueries({ queryKey: ["notifications", "unreadCount"] });
+    },
   };
 };

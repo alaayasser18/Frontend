@@ -94,30 +94,6 @@ const showPopupNotification = (title, body, dedupId) => {
 // key = channelName string, value = { ch, handleNotification }
 const activeSubscriptions = new Map();
 
-// ============================================================
-// HELPERS
-// ============================================================
-const extractNotificationsList = (res) => {
-  if (!res) return [];
-  if (Array.isArray(res)) return res;
-  if (Array.isArray(res.data)) return res.data;
-  if (Array.isArray(res.data?.data)) return res.data.data;
-  if (Array.isArray(res.data?.notifications)) return res.data.notifications;
-  if (Array.isArray(res.notifications)) return res.notifications;
-  return [];
-};
-
-const extractUnreadCount = (res) => {
-  if (res == null) return 0;
-  if (typeof res === "number") return res;
-  if (typeof res.data === "number") return res.data;
-  if (typeof res.data?.unread_count === "number") return res.data.unread_count;
-  if (typeof res.unread_count === "number") return res.unread_count;
-  if (typeof res.data?.count === "number") return res.data.count;
-  if (typeof res.count === "number") return res.count;
-  return 0;
-};
-
 const normalizeNotification = (apiNotif) => {
   const notifData = apiNotif?.notification || apiNotif?.data || apiNotif || {};
 

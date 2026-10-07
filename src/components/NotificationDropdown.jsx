@@ -30,21 +30,6 @@ const getCategoryMeta = (cat) =>
     bgClass: "bg-slate-100",
   };
 
-const ROUTE_MAP = {
-  admin: "/admin/notifications",
-  owner: "/admin/notifications",
-  hr: "/hr/notifications",
-  manager: "/manager/notifications",
-  employee: "/employee/notifications",
-};
-
-const getNotificationsRoute = (role) =>
-  ROUTE_MAP[
-    String(role || "")
-      .trim()
-      .toLowerCase()
-  ] || "/admin/notifications";
-
 const NotificationDropdown = ({ isOpen, onClose, role }) => {
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
@@ -103,7 +88,7 @@ const NotificationDropdown = ({ isOpen, onClose, role }) => {
 
   const handleSeeAll = () => {
     onClose();
-    navigate(getNotificationsRoute(currentRole));
+    navigate(getTargetRoute());
   };
 
   const handleNotificationClick = (notif) => {
@@ -111,7 +96,7 @@ const NotificationDropdown = ({ isOpen, onClose, role }) => {
       toggleNotificationRead(notif.id);
     }
     onClose();
-    navigate(getNotificationsRoute(currentRole), {
+    navigate(getTargetRoute(), {
       state: { selectedNotificationId: notif.id },
     });
   };

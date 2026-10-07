@@ -81,10 +81,14 @@ export const reconnectEcho = () => {
     if (window.Echo) {
       try {
         if (window.Echo.connector?.options?.auth?.headers) {
-          window.Echo.connector.options.auth.headers.Authorization = token ? `Bearer ${token}` : "";
+          window.Echo.connector.options.auth.headers.Authorization = token
+            ? `Bearer ${token}`
+            : "";
         }
         if (window.Echo.connector?.pusher?.config?.auth?.headers) {
-          window.Echo.connector.pusher.config.auth.headers.Authorization = token ? `Bearer ${token}` : "";
+          window.Echo.connector.pusher.config.auth.headers.Authorization = token
+            ? `Bearer ${token}`
+            : "";
         }
         window.Echo.connect();
         console.log("⚡ Echo reconnected");

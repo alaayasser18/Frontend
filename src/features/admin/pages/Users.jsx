@@ -255,16 +255,15 @@ const Users = () => {
 
   // Extracted live employees list
   const employeesList = useMemo(() => {
-    if (Array.isArray(employeesResponse?.data?.data)) {
-      return employeesResponse.data.data;
-    }
-    if (Array.isArray(employeesResponse?.data)) {
-      return employeesResponse.data;
-    }
-    if (Array.isArray(employeesResponse)) {
-      return employeesResponse;
-    }
-    return [];
+    const candidates = [
+      employeesResponse?.data?.employees,
+      employeesResponse?.employees,
+      employeesResponse?.data?.data?.employees,
+      employeesResponse?.data?.data,
+      employeesResponse?.data,
+      employeesResponse,
+    ];
+    return candidates.find(Array.isArray) ?? [];
   }, [employeesResponse]);
 
   // Permissions list from backend
@@ -323,7 +322,11 @@ const Users = () => {
         role: user.role,
         phone: user.phone || null,
         job_title: user.job_title || null,
-        department: user.department?.name || user.department_name || user.department || null,
+        department:
+          user.department?.name ||
+          user.department_name ||
+          user.department ||
+          null,
         status: user.status || "Active",
         permissions: user.permissions || [],
         access:
@@ -524,7 +527,7 @@ const Users = () => {
       accessMap[user.id] !== undefined
         ? accessMap[user.id]
         : user.status
-          ? (user.status.toLowerCase() === "active" || user.status === "نشط")
+          ? user.status.toLowerCase() === "active" || user.status === "نشط"
           : true;
 
     const nextActive = !isCurrentlyActive;
@@ -543,8 +546,12 @@ const Users = () => {
       });
       toast.success(
         nextActive
-          ? (isRtl ? "تم تفعيل الحساب بنجاح" : "Account activated successfully")
-          : (isRtl ? "تم تعطيل الحساب بنجاح" : "Account deactivated successfully"),
+          ? isRtl
+            ? "تم تفعيل الحساب بنجاح"
+            : "Account activated successfully"
+          : isRtl
+            ? "تم تعطيل الحساب بنجاح"
+            : "Account deactivated successfully",
       );
       refetchEmployees();
     } catch (err) {

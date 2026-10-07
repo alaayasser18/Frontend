@@ -198,6 +198,8 @@
   },
   "attendance": {
     "title": "Attendance",
+    "allStatuses": "All statuses",
+    "onShift": "On Shift",
     "checkIn": "Check In",
     "checkOut": "Check Out",
     "present": "Present",
@@ -541,7 +543,10 @@
     "markAllAsRead": "Mark all as read",
     "noNotifications": "No notifications",
     "unread": "Unread",
-    "recentNotifications": "Recent Notifications"
+    "recentNotifications": "Recent Notifications",
+    "newNotification": "New notification",
+    "testTitle": "Test",
+    "testBody": "Test notification"
   },
   "reports": {
     "title": "Reports",
@@ -1022,7 +1027,6 @@
     "myGoals": "My Goals",
     "myPerformance": "My Performance",
     "myEvaluations": "My Evaluations",
-
     "auditLogs": "Audit Logs",
     "administration": "Administration",
     "wiseWork": "WiseWork",
@@ -1435,11 +1439,12 @@
       "needAHand": "Need a hand?",
       "askAi": "Ask the AI Assistant",
       "userName": "Omar Haddad",
-      "userRole": "Senior Product Analyst"
+      "userRole": "Senior Product Analyst",
+      "goals": "Goals"
     },
     "home": {
       "date": "MONDAY, JUNE 9, 2026",
-      "welcome": "Good morning, Omar",
+      "welcome": "Good morning, {{name}}",
       "subtitle": "Here's your workday at a glance.",
       "viewCalendar": "View calendar",
       "onShift": "On Shift",
@@ -2228,7 +2233,8 @@
     "clearFilter": "Clear filter",
     "filteredBy": "Filtered by",
     "reassignTask": "Reassign Task",
-    "reassignTo": "Reassign to"
+    "reassignTo": "Reassign to",
+    "breadcrumb": "Manager Portal / Task Management"
   },
   "managerSubmissions": {
     "title": "Submission Reviews",
@@ -2256,10 +2262,17 @@
     "fetchError": "Failed to load review queue",
     "youssefLotfy": "Youssef Lotfy",
     "salmaNabil": "Salma Nabil",
+    "karimAshraf": "Karim Ashraf",
     "submissionOauth2Title": "Implement OAuth2 Flow",
     "submissionOauth2Notes": "Added refresh token rotation and covered the callback edge cases in integration tests.",
     "submissionQ3ReleaseNotesTitle": "Q3 release notes",
-    "dateSep16": "Sep 16, 2026"
+    "submissionQ3ReleaseNotesNotes": "Updated the quarterly changelog and release summary.",
+    "submissionPaymentTestsTitle": "Payment integration tests",
+    "submissionPaymentTestsNotes": "Completed edge-case coverage for recurring payments.",
+    "dateSep15": "Sep 15, 2026",
+    "dateSep16": "Sep 16, 2026",
+    "dateSep17": "Sep 17, 2026",
+    "breadcrumb": "Manager Portal / Submission Reviews"
   },
   "managerEvaluations": {
     "activeCycle": "Active Evaluation Cycle",
@@ -2298,6 +2311,7 @@
     "breadcrumb": "MANAGER PORTAL / AI TEAM INSIGHTS",
     "title": "AI Team Insights",
     "subtitle": "Keep your team aligned, supported, and moving forward.",
+    "suggestedAction": "Suggested action",
     "skillGapCard": {
       "eyebrow": "GROUNDED MANAGER INTELLIGENCE",
       "title": "Team Skill-Gap Breakdown",
@@ -2323,6 +2337,8 @@
       "high": "High",
       "watch": "Watch",
       "balanced": "Balanced",
+      "sprintLoad": "of sprint load",
+      "suggestedCheckIn": "Suggested check-in",
       "loadDescription": "{{load}}% sprint load · Suggested check-in"
     }
   },
@@ -2336,6 +2352,13 @@
     "approveError": "Could not approve the leave request.",
     "retry": "Retry",
     "searchPlaceholder": "Search team members...",
+    "table": {
+      "member": "Member",
+      "leaveType": "Leave type",
+      "dates": "Dates",
+      "days": "Days",
+      "reason": "Reason"
+    },
     "filters": {
       "all": "Status"
     },
@@ -2358,23 +2381,81 @@
     },
     "actions": {
       "approve": "Approve",
-      "reject": "Decline"
+      "reject": "Decline",
+      "decline": "Decline"
     },
+    "statusApproved": "Approved",
+    "statusDeclined": "Declined",
     "empty": {
       "title": "No leave requests found",
       "description": "There are no leave requests matching your current search or filter."
     }
   },
+  "teamMembers": {
+    "breadcrumb": "Manager Portal / Team Members",
+    "title": "Team Members",
+    "total": "total",
+    "subtitle": "View and manage all employees under your team.",
+    "search": "Search name, email, ID…",
+    "allStatuses": "All statuses",
+    "active": "Active",
+    "inactive": "Inactive",
+    "allTypes": "All types",
+    "fullTime": "Full-time",
+    "partTime": "Part-time",
+    "contract": "Contract",
+    "statusActive": "Active",
+    "statusInactive": "Inactive",
+    "employeeDetails": "Employee details",
+    "email": "Email",
+    "phone": "Phone",
+    "empCode": "Employee code",
+    "startDate": "Start date",
+    "address": "Address",
+    "department": "Department",
+    "location": "Location",
+    "loadError": "Failed to load team members.",
+    "retry": "Retry",
+    "noEmployees": "No employees found.",
+    "joined": "Joined",
+    "viewDetails": "View →",
+    "results": "results"
+  },
   "managerAttendance": {
     "breadcrumb": "MANAGER PORTAL / TEAM ATTENDANCE",
     "title": "Team Attendance",
     "subtitle": "Keep your team aligned, supported, and moving forward.",
+    "detail": {
+      "title": "Attendance detail",
+      "record": "Record",
+      "date": "Date",
+      "worked": "Worked",
+      "checkIn": "Check-in",
+      "checkOut": "Check-out",
+      "noRecord": "No attendance record found for this date."
+    },
+    "present": "Present",
+    "late": "Late",
+    "absent": "Absent",
+    "totalTeam": "Total team",
+    "loadError": "Failed to load attendance data.",
+    "weeklyOverview": "Weekly overview",
+    "search": "Search employee…",
+    "allStatuses": "All statuses",
+    "avgHours": "avg",
+    "noMembers": "No team members found.",
+    "exception": "Exception",
+    "viewDetails": "View",
     "table": {
       "member": "Member",
       "shift": "Shift",
       "checkInTime": "Check-in Time",
       "delayMinutes": "Delay Minutes",
-      "verification": "Verification"
+      "verification": "Verification",
+      "checkIn": "Check-in",
+      "checkOut": "Check-out",
+      "worked": "Worked",
+      "status": "Status"
     },
     "minutes": "min",
     "waived": "Waived",
@@ -2388,6 +2469,7 @@
     "breadcrumb": "MANAGER PORTAL / PERFORMANCE ANALYTICS",
     "title": "Performance Analytics",
     "subtitle": "Keep your team aligned, supported, and moving forward.",
+    "velocity": "Velocity",
     "departmentCompetencyDistribution": "Department competency distribution",
     "teamPerformanceIndex": "Team Performance Index",
     "competencies": {
@@ -2618,6 +2700,10 @@
   "portal": {
     "dashboard": "Dashboard",
     "users": "Users",
+    "dashboardTitle": "Dashboard",
+    "rewards": "Rewards & Bonuses",
+    "evaluations": "Evaluations",
+    "myEvaluations": "My Evaluations",
     "performance": "Performance",
     "goals": "Goals",
     "branches": "Branches",
@@ -2656,7 +2742,7 @@
     "aiAssistant": "AI Assistant",
     "landingPage": "Landing Page"
   },
-    "landingPageAdmin": {
+  "landingPageAdmin": {
     "title": "Landing Page",
     "subtitle": "Manage the public landing page content.",
     "langNotice": "You are editing the {{language}} version of the content. Switch the interface language to edit the other version.",

@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
+import { useAuth } from "../../../../context/AuthContext";
 import {
   FiCalendar,
   FiMapPin,
@@ -77,6 +78,7 @@ const formatTime = (totalSeconds) => {
 export default function HomeDashboard() {
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
+  const { currentUser } = useAuth();
 
   const {
     data: attendanceResponse,
@@ -169,15 +171,11 @@ export default function HomeDashboard() {
 
       const location = await getCurrentLocation({ required: true });
 
-      const res = await checkIn({
+      await checkIn({
         latitude: location.latitude,
         longitude: location.longitude,
       });
 
-      toast.success(
-        res?.message ||
-          t("attendance.checkedInSuccess", "Checked in successfully!"),
-      );
       await refetchAttendance();
     } catch (error) {
       console.error("Check-in failed:", error);
@@ -202,15 +200,11 @@ export default function HomeDashboard() {
 
       const location = await getCurrentLocation({ required: false });
 
-      const res = await checkOut({
+      await checkOut({
         latitude: location?.latitude,
         longitude: location?.longitude,
       });
 
-      toast.success(
-        res?.message ||
-          t("attendance.checkedOutSuccess", "Checked out successfully!"),
-      );
       await refetchAttendance();
     } catch (error) {
       console.error("Check-out failed:", error);
@@ -269,7 +263,10 @@ export default function HomeDashboard() {
           </p>
 
           <h1 className="text-2xl md:text-[28px] font-bold text-[#102a43] tracking-tight">
-            {t("employee.home.welcome", "Good morning, Omar")}
+            {t("employee.home.welcome", {
+              defaultValue: "Good morning, {{name}}",
+              name: currentUser?.name || "",
+            })}
           </h1>
 
           <p className="text-sm text-[#829ab1] mt-1 font-normal">

@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useCallback, useEffect, useRef } from "react";
+import { useCallback, useEffect, useMemo, useRef } from "react";
 import toast from "react-hot-toast";
 import {
   fetchNotifications,
@@ -39,7 +39,7 @@ const getStoredUserId = () => {
         if (id) return id;
       }
     }
-  } catch (_) {
+  } catch {
     // ignore
   }
   return null;
@@ -142,6 +142,16 @@ export const useNotifications = (currentUserId) => {
 
   const token = localStorage.getItem("token");
   const isAuthenticated = !!token;
+  const userId = extractUserId(currentUserId) || getStoredUserId();
+  const notificationQueryKey = useMemo(
+    () => ["notifications", userId, "list"],
+    [userId],
+  );
+  const unreadCountQueryKey = useMemo(
+    () => ["notifications", userId, "unreadCount"],
+    [userId],
+  );
+  const knownUserIdRef = useRef(userId);
 
   // دالة اختبار في الكونسول: window.testNotif()
   useEffect(() => {
@@ -153,7 +163,7 @@ export const useNotifications = (currentUserId) => {
 
   // ── Queries ─────────────────────────────────────────────
   const { data: notifications = [], isLoading } = useQuery({
-    queryKey: ["notifications"],
+    queryKey: notificationQueryKey,
     queryFn: async () => {
       const res = await fetchNotifications(1, 100);
       const rawList =
@@ -164,6 +174,11 @@ export const useNotifications = (currentUserId) => {
         (Array.isArray(res) ? res : []);
 
       const list = (rawList || []).map(normalizeNotification);
+
+      if (knownUserIdRef.current !== userId) {
+        knownUserIdRef.current = userId;
+        knownIdsRef.current = null;
+      }
 
       // أول تحميل → سجل كل الـ IDs الموجودة كـ "معروفة" بدون toast
       if (knownIdsRef.current === null) {
@@ -189,7 +204,7 @@ export const useNotifications = (currentUserId) => {
   });
 
   const { data: unreadCount = 0 } = useQuery({
-    queryKey: ["notifications", "unreadCount"],
+    queryKey: unreadCountQueryKey,
     queryFn: async () => {
       const res = await fetchUnreadCount();
       return (
@@ -209,77 +224,77 @@ export const useNotifications = (currentUserId) => {
   const markAsReadMutation = useMutation({
     mutationFn: markNotificationAsRead,
     onMutate: async (id) => {
-      await queryClient.cancelQueries({ queryKey: ["notifications"] });
-      await queryClient.cancelQueries({ queryKey: ["notifications", "unreadCount"] });
-      const previousNotifications = queryClient.getQueryData(["notifications"]);
-      const previousUnreadCount   = queryClient.getQueryData(["notifications", "unreadCount"]);
-      queryClient.setQueryData(["notifications"], (old) =>
+      await queryClient.cancelQueries({ queryKey: notificationQueryKey });
+      await queryClient.cancelQueries({ queryKey: unreadCountQueryKey });
+      const previousNotifications = queryClient.getQueryData(notificationQueryKey);
+      const previousUnreadCount = queryClient.getQueryData(unreadCountQueryKey);
+      queryClient.setQueryData(notificationQueryKey, (old) =>
         old?.map((n) => (n.id === id ? { ...n, isRead: true } : n))
       );
-      queryClient.setQueryData(["notifications", "unreadCount"], (old) =>
+      queryClient.setQueryData(unreadCountQueryKey, (old) =>
         Math.max(0, (old || 0) - 1)
       );
       return { previousNotifications, previousUnreadCount };
     },
     onError: (_e, _id, context) => {
       if (!context) return;
-      queryClient.setQueryData(["notifications"], context.previousNotifications);
-      queryClient.setQueryData(["notifications", "unreadCount"], context.previousUnreadCount);
+      queryClient.setQueryData(notificationQueryKey, context.previousNotifications);
+      queryClient.setQueryData(unreadCountQueryKey, context.previousUnreadCount);
     },
     onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ["notifications", "unreadCount"] });
+      queryClient.invalidateQueries({ queryKey: unreadCountQueryKey });
     },
   });
 
   const markAllAsReadMutation = useMutation({
     mutationFn: markAllNotificationsAsRead,
     onMutate: async () => {
-      await queryClient.cancelQueries({ queryKey: ["notifications"] });
-      await queryClient.cancelQueries({ queryKey: ["notifications", "unreadCount"] });
-      const previousNotifications = queryClient.getQueryData(["notifications"]);
-      const previousUnreadCount   = queryClient.getQueryData(["notifications", "unreadCount"]);
-      queryClient.setQueryData(["notifications"], (old) =>
+      await queryClient.cancelQueries({ queryKey: notificationQueryKey });
+      await queryClient.cancelQueries({ queryKey: unreadCountQueryKey });
+      const previousNotifications = queryClient.getQueryData(notificationQueryKey);
+      const previousUnreadCount = queryClient.getQueryData(unreadCountQueryKey);
+      queryClient.setQueryData(notificationQueryKey, (old) =>
         old?.map((n) => ({ ...n, isRead: true }))
       );
-      queryClient.setQueryData(["notifications", "unreadCount"], 0);
+      queryClient.setQueryData(unreadCountQueryKey, 0);
       return { previousNotifications, previousUnreadCount };
     },
     onError: (_e, _v, context) => {
       if (!context) return;
-      queryClient.setQueryData(["notifications"], context.previousNotifications);
-      queryClient.setQueryData(["notifications", "unreadCount"], context.previousUnreadCount);
+      queryClient.setQueryData(notificationQueryKey, context.previousNotifications);
+      queryClient.setQueryData(unreadCountQueryKey, context.previousUnreadCount);
     },
     onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ["notifications"] });
-      queryClient.invalidateQueries({ queryKey: ["notifications", "unreadCount"] });
+      queryClient.invalidateQueries({ queryKey: notificationQueryKey });
+      queryClient.invalidateQueries({ queryKey: unreadCountQueryKey });
     },
   });
 
   const clearAllMutation = useMutation({
     mutationFn: apiClearAll,
     onMutate: async () => {
-      await queryClient.cancelQueries({ queryKey: ["notifications"] });
-      await queryClient.cancelQueries({ queryKey: ["notifications", "unreadCount"] });
-      queryClient.setQueryData(["notifications"], []);
-      queryClient.setQueryData(["notifications", "unreadCount"], 0);
+      await queryClient.cancelQueries({ queryKey: notificationQueryKey });
+      await queryClient.cancelQueries({ queryKey: unreadCountQueryKey });
+      queryClient.setQueryData(notificationQueryKey, []);
+      queryClient.setQueryData(unreadCountQueryKey, 0);
     },
     onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ["notifications"] });
-      queryClient.invalidateQueries({ queryKey: ["notifications", "unreadCount"] });
+      queryClient.invalidateQueries({ queryKey: notificationQueryKey });
+      queryClient.invalidateQueries({ queryKey: unreadCountQueryKey });
     },
   });
 
   const deleteOneMutation = useMutation({
     mutationFn: apiDeleteOne,
     onMutate: async (id) => {
-      await queryClient.cancelQueries({ queryKey: ["notifications"] });
-      await queryClient.cancelQueries({ queryKey: ["notifications", "unreadCount"] });
-      const previousNotifications = queryClient.getQueryData(["notifications"]);
-      const previousUnreadCount   = queryClient.getQueryData(["notifications", "unreadCount"]);
-      queryClient.setQueryData(["notifications"], (old) => {
+      await queryClient.cancelQueries({ queryKey: notificationQueryKey });
+      await queryClient.cancelQueries({ queryKey: unreadCountQueryKey });
+      const previousNotifications = queryClient.getQueryData(notificationQueryKey);
+      const previousUnreadCount = queryClient.getQueryData(unreadCountQueryKey);
+      queryClient.setQueryData(notificationQueryKey, (old) => {
         const target = old?.find((n) => n.id === id);
         if (target && !target.isRead) {
-          queryClient.setQueryData(["notifications", "unreadCount"], (c) =>
+          queryClient.setQueryData(unreadCountQueryKey, (c) =>
             Math.max(0, (c || 0) - 1)
           );
         }
@@ -289,12 +304,12 @@ export const useNotifications = (currentUserId) => {
     },
     onError: (_e, _id, context) => {
       if (!context) return;
-      queryClient.setQueryData(["notifications"], context.previousNotifications);
-      queryClient.setQueryData(["notifications", "unreadCount"], context.previousUnreadCount);
+      queryClient.setQueryData(notificationQueryKey, context.previousNotifications);
+      queryClient.setQueryData(unreadCountQueryKey, context.previousUnreadCount);
     },
     onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ["notifications"] });
-      queryClient.invalidateQueries({ queryKey: ["notifications", "unreadCount"] });
+      queryClient.invalidateQueries({ queryKey: notificationQueryKey });
+      queryClient.invalidateQueries({ queryKey: unreadCountQueryKey });
     },
   });
 
@@ -311,26 +326,25 @@ export const useNotifications = (currentUserId) => {
       if (!notif.isRead) {
         await markAsRead(id);
       } else {
-        queryClient.setQueryData(["notifications"], (old) =>
+        queryClient.setQueryData(notificationQueryKey, (old) =>
           old?.map((n) => (n.id === id ? { ...n, isRead: false } : n))
         );
-        queryClient.setQueryData(["notifications", "unreadCount"], (c) => (c || 0) + 1);
+        queryClient.setQueryData(unreadCountQueryKey, (c) => (c || 0) + 1);
       }
     },
-    [notifications, markAsRead, queryClient]
+    [notifications, markAsRead, queryClient, notificationQueryKey, unreadCountQueryKey]
   );
 
   // ── Real-time Echo Subscription (StrictMode-safe) ────────
   useEffect(() => {
-    const resolvedUserId = extractUserId(currentUserId) || getStoredUserId();
-    if (!isAuthenticated || !resolvedUserId) return;
+    if (!isAuthenticated || !userId) return;
 
     const activeEcho = window.Echo || echo || createEcho();
     if (!activeEcho) return;
 
-    try { reconnectEcho(); } catch (_) { /* ignore */ }
+    try { reconnectEcho(); } catch { /* ignore */ }
 
-    const channelName = `notifications.${resolvedUserId}`;
+    const channelName = `notifications.${userId}`;
 
     // لو في subscription موجودة بالفعل لنفس الـ channel، مش هنعمل تانية
     // ده بيحمينا من React StrictMode double-mount في dev
@@ -350,14 +364,14 @@ export const useNotifications = (currentUserId) => {
       if (knownIdsRef.current) knownIdsRef.current.add(dedupKey);
 
       // أضفه للـ cache لو مش موجود
-      queryClient.setQueryData(["notifications"], (old) => {
+      queryClient.setQueryData(notificationQueryKey, (old) => {
         const list = Array.isArray(old) ? old : [];
         if (list.some((item) => String(item.id) === dedupKey)) return list;
         return [normalized, ...list];
       });
 
       // زوِّد العداد
-      queryClient.setQueryData(["notifications", "unreadCount"], (old) => (old || 0) + 1);
+      queryClient.setQueryData(unreadCountQueryKey, (old) => (old || 0) + 1);
 
       // أظهر الـ popup (دالة showPopupNotification نفسها بتتحكم في التكرار)
       showPopupNotification(normalized.defaultTitle, normalized.defaultDesc, dedupKey);
@@ -377,10 +391,10 @@ export const useNotifications = (currentUserId) => {
       // الـ cleanup الحقيقي: لو الـ userId اتغير أو الـ component اتشال فعلاً
       console.log(`🔕 [Reverb] Leaving → private-${channelName}`);
       activeSubscriptions.delete(channelName);
-      try { activeEcho.leave(channelName); } catch (_) { /* ignore */ }
+      try { activeEcho.leave(channelName); } catch { /* ignore */ }
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isAuthenticated, currentUserId]);
+  }, [isAuthenticated, userId]);
 
   return {
     notifications,
@@ -393,7 +407,7 @@ export const useNotifications = (currentUserId) => {
     clearNotification,
     clearAllNotifications,
     refreshNotifications: () =>
-      queryClient.invalidateQueries({ queryKey: ["notifications"] }),
+      queryClient.invalidateQueries({ queryKey: notificationQueryKey }),
   };
 };
  

@@ -255,6 +255,15 @@ const Users = () => {
 
   // Extracted live employees list
   const employeesList = useMemo(() => {
+    if (Array.isArray(employeesResponse?.data?.employees)) {
+      return employeesResponse.data.employees;
+    }
+    if (Array.isArray(employeesResponse?.employees)) {
+      return employeesResponse.employees;
+    }
+    if (Array.isArray(employeesResponse?.data?.data?.employees)) {
+      return employeesResponse.data.data.employees;
+    }
     if (Array.isArray(employeesResponse?.data?.data)) {
       return employeesResponse.data.data;
     }

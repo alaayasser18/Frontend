@@ -24,10 +24,14 @@ const getCategoryMeta = (cat) =>
 
 const ROUTE_MAP = {
   admin: "/admin/notifications",
+  owner: "/admin/notifications",
   hr: "/hr/notifications",
   manager: "/manager/notifications",
   employee: "/employee/notifications",
 };
+
+const getNotificationsRoute = (role) =>
+  ROUTE_MAP[String(role || "").trim().toLowerCase()] || "/admin/notifications";
 
 const NotificationDropdown = ({ isOpen, onClose, role }) => {
   const { t, i18n } = useTranslation();
@@ -67,8 +71,7 @@ const NotificationDropdown = ({ isOpen, onClose, role }) => {
 
   const handleSeeAll = () => {
     onClose();
-    const targetRoute = ROUTE_MAP[currentRole] || "/admin/notifications";
-    navigate(targetRoute);
+    navigate(getNotificationsRoute(currentRole));
   };
 
   const handleNotificationClick = (notif) => {
@@ -76,8 +79,9 @@ const NotificationDropdown = ({ isOpen, onClose, role }) => {
       toggleNotificationRead(notif.id);
     }
     onClose();
-    const targetRoute = ROUTE_MAP[currentRole] || "/admin/notifications";
-    navigate(targetRoute, { state: { selectedNotificationId: notif.id } });
+    navigate(getNotificationsRoute(currentRole), {
+      state: { selectedNotificationId: notif.id },
+    });
   };
 
   const preview = notifications.slice(0, 5);
@@ -187,20 +191,18 @@ const NotificationDropdown = ({ isOpen, onClose, role }) => {
           </div>
 
           {/* Footer */}
-          {notifications.length > 0 && (
-            <div className="flex items-center justify-between px-4 py-2.5 border-t border-slate-100 bg-slate-50">
-              <span className="text-[12px] text-slate-400">
-                {notifications.length > 5 ? `+${notifications.length - 5} more` : ""}
-              </span>
-              <button
-                onClick={handleSeeAll}
-                className="flex items-center gap-1.5 bg-[#243b53] hover:bg-[#334e68] text-white text-[12px] font-semibold px-3.5 py-1.5 rounded-lg transition"
-              >
-                <FiCheck className="w-3 h-3" />
-                {t("portal.seeAll", "See all notifications")}
-              </button>
-            </div>
-          )}
+          <div className="flex items-center justify-between px-4 py-2.5 border-t border-slate-100 bg-slate-50">
+            <span className="text-[12px] text-slate-400">
+              {notifications.length > 5 ? `+${notifications.length - 5} more` : ""}
+            </span>
+            <button
+              onClick={handleSeeAll}
+              className="flex items-center gap-1.5 bg-[#243b53] hover:bg-[#334e68] text-white text-[12px] font-semibold px-3.5 py-1.5 rounded-lg transition"
+            >
+              <FiCheck className="w-3 h-3" />
+              {t("portal.seeAll", "See all notifications")}
+            </button>
+          </div>
         </motion.div>
       )}
     </AnimatePresence>

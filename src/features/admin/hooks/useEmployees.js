@@ -1,10 +1,10 @@
 import { useQuery } from "@tanstack/react-query";
-import { getEmployees } from "../api";
+import { getAllEmployees } from "../api";
 
 export const useEmployees = (params = {}, options = {}) => {
   return useQuery({
     queryKey: ["employees", params],
-    queryFn: () => getEmployees(params),
+    queryFn: () => getAllEmployees(params),
     staleTime: 60 * 1000,
     ...options,
   });

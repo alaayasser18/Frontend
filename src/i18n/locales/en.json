@@ -1416,7 +1416,7 @@
     },
     "home": {
       "date": "MONDAY, JUNE 9, 2026",
-      "welcome": "Good morning, Omar",
+      "welcome": "Good morning, {{name}}",
       "subtitle": "Here's your workday at a glance.",
       "viewCalendar": "View calendar",
       "onShift": "On Shift",

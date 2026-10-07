@@ -34,8 +34,8 @@ const stagger = {
 /* ─── Status badge helper ─── */
 const statusConfig = {
   Present: { cls: "bg-[#ecfdf5] text-[#059669]", dot: "bg-[#059669]" },
-  Late:    { cls: "bg-[#fefce8] text-[#d97706]", dot: "bg-[#d97706]" },
-  Absent:  { cls: "bg-[#fef2f2] text-[#dc2626]", dot: "bg-[#dc2626]" },
+  Late: { cls: "bg-[#fefce8] text-[#d97706]", dot: "bg-[#d97706]" },
+  Absent: { cls: "bg-[#fef2f2] text-[#dc2626]", dot: "bg-[#dc2626]" },
 };
 const getStatusCfg = (status) =>
   statusConfig[status] ?? { cls: "bg-[#f1f5f9] text-[#475569]", dot: "bg-[#94a3b8]" };
@@ -64,7 +64,7 @@ const EmployeeDetailDrawer = ({ employeeId, date, onClose, isArabic }) => {
   } = useManagerEmployeeAttendance(employeeId, date ? { date } : {});
 
   const user = data?.user ?? {};
-  const att  = data?.attendance ?? null;
+  const att = data?.attendance ?? null;
 
   return (
     <motion.div
@@ -184,7 +184,7 @@ const EmployeeDetailDrawer = ({ employeeId, date, onClose, isArabic }) => {
 
                   {att.is_exception && att.exception_reason && (
                     <div className="rounded-xl bg-[#fff7ed] px-3 py-2 text-xs text-[#c2410c]">
-                      <span className="font-semibold">Exception: </span>
+                      <span className="font-semibold">{t("managerAttendance.exception", "Exception")}: </span>
                       {att.exception_reason}
                     </div>
                   )}
@@ -208,9 +208,9 @@ const TeamAttendance = () => {
   const isArabic = i18n.language?.startsWith("ar");
 
   // ── Filters & Pagination ──
-  const [search, setSearch]     = useState("");
+  const [search, setSearch] = useState("");
   const [statusFilter, setStatus] = useState("");
-  const [page, setPage]         = useState(1);
+  const [page, setPage] = useState(1);
   const [selectedDate, setDate] = useState("");
 
   // ── Detail Drawer ──
@@ -224,27 +224,27 @@ const TeamAttendance = () => {
     error,
     refetch,
   } = useManagerAttendanceToday({
-    ...(search      ? { search }      : {}),
+    ...(search ? { search } : {}),
     ...(statusFilter ? { status: statusFilter } : {}),
-    ...(selectedDate ? { date: selectedDate }   : {}),
+    ...(selectedDate ? { date: selectedDate } : {}),
     page,
     per_page: 15,
   });
 
   // ── Derived data ──
-  const summary    = data?.summary ?? {};
-  const weekChart  = data?.weekly_chart ?? [];
-  const teamMeta   = data?.team ?? {};
-  const members    = teamMeta.data ?? [];
-  const meta       = teamMeta.meta ?? {};
-  const lastPage   = meta.last_page ?? 1;
-  const barMax     = getBarMax(weekChart);
+  const summary = data?.summary ?? {};
+  const weekChart = data?.weekly_chart ?? [];
+  const teamMeta = data?.team ?? {};
+  const members = teamMeta.data ?? [];
+  const meta = teamMeta.meta ?? {};
+  const lastPage = meta.last_page ?? 1;
+  const barMax = getBarMax(weekChart);
 
   const summaryCards = [
-    { id: "present", label: t("managerAttendance.present", "Present"),     value: summary.present ?? 0, color: "text-[#059669]", bg: "bg-[#ecfdf5]", icon: FiCheckCircle },
-    { id: "late",    label: t("managerAttendance.late",    "Late"),         value: summary.late    ?? 0, color: "text-[#d97706]", bg: "bg-[#fefce8]", icon: FiClock },
-    { id: "absent",  label: t("managerAttendance.absent",  "Absent"),       value: summary.absent  ?? 0, color: "text-[#dc2626]", bg: "bg-[#fef2f2]", icon: FiXCircle },
-    { id: "total",   label: t("managerAttendance.totalTeam", "Total Team"), value: summary.total_team ?? 0, color: "text-[#486581]", bg: "bg-[#eff6ff]", icon: FiUsers },
+    { id: "present", label: t("managerAttendance.present", "Present"), value: summary.present ?? 0, color: "text-[#059669]", bg: "bg-[#ecfdf5]", icon: FiCheckCircle },
+    { id: "late", label: t("managerAttendance.late", "Late"), value: summary.late ?? 0, color: "text-[#d97706]", bg: "bg-[#fefce8]", icon: FiClock },
+    { id: "absent", label: t("managerAttendance.absent", "Absent"), value: summary.absent ?? 0, color: "text-[#dc2626]", bg: "bg-[#fef2f2]", icon: FiXCircle },
+    { id: "total", label: t("managerAttendance.totalTeam", "Total Team"), value: summary.total_team ?? 0, color: "text-[#486581]", bg: "bg-[#eff6ff]", icon: FiUsers },
   ];
 
   return (
@@ -352,8 +352,8 @@ const TeamAttendance = () => {
                 {weekChart.map((day) => {
                   const total = day.present + day.late + day.absent;
                   const presH = total ? (day.present / barMax) * BAR_H : 0;
-                  const lateH = total ? (day.late    / barMax) * BAR_H : 0;
-                  const absH  = total ? (day.absent  / barMax) * BAR_H : 0;
+                  const lateH = total ? (day.late / barMax) * BAR_H : 0;
+                  const absH = total ? (day.absent / barMax) * BAR_H : 0;
                   const isToday = day.date === data?.selected_date;
                   return (
                     <div key={day.date} className="flex flex-1 min-w-[48px] flex-col items-center gap-1">
@@ -397,8 +397,8 @@ const TeamAttendance = () => {
               <div className="mt-3 flex flex-wrap gap-4">
                 {[
                   { label: t("managerAttendance.present", "Present"), color: "bg-[#34d399]" },
-                  { label: t("managerAttendance.late",    "Late"),    color: "bg-[#fbbf24]" },
-                  { label: t("managerAttendance.absent",  "Absent"),  color: "bg-[#f87171]" },
+                  { label: t("managerAttendance.late", "Late"), color: "bg-[#fbbf24]" },
+                  { label: t("managerAttendance.absent", "Absent"), color: "bg-[#f87171]" },
                 ].map((l) => (
                   <div key={l.label} className="flex items-center gap-1.5">
                     <span className={`h-2.5 w-2.5 rounded-sm ${l.color}`} />
@@ -477,11 +477,11 @@ const TeamAttendance = () => {
                 <table className="w-full text-left rtl:text-right border-collapse">
                   <thead>
                     <tr className="bg-[#f8fafc] border-b border-[#f1f5f9] text-[11px] font-bold tracking-wider text-[#94a3b8]">
-                      <th className="py-4 px-5">{t("managerAttendance.table.member",    "MEMBER")}</th>
-                      <th className="py-4 px-5">{t("managerAttendance.table.checkIn",   "CHECK-IN")}</th>
-                      <th className="py-4 px-5">{t("managerAttendance.table.checkOut",  "CHECK-OUT")}</th>
-                      <th className="py-4 px-5">{t("managerAttendance.table.worked",    "WORKED")}</th>
-                      <th className="py-4 px-5">{t("managerAttendance.table.status",    "STATUS")}</th>
+                      <th className="py-4 px-5">{t("managerAttendance.table.member", "MEMBER")}</th>
+                      <th className="py-4 px-5">{t("managerAttendance.table.checkIn", "CHECK-IN")}</th>
+                      <th className="py-4 px-5">{t("managerAttendance.table.checkOut", "CHECK-OUT")}</th>
+                      <th className="py-4 px-5">{t("managerAttendance.table.worked", "WORKED")}</th>
+                      <th className="py-4 px-5">{t("managerAttendance.table.status", "STATUS")}</th>
                       <th className="py-4 px-5 text-end rtl:text-start">
                         <span className="sr-only">{t("common.details", "Details")}</span>
                       </th>

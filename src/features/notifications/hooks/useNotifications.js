@@ -10,6 +10,7 @@ import {
   deleteNotification as apiDeleteOne,
 } from "../api";
 import echo, { createEcho, reconnectEcho } from "../../../utils/echo";
+import i18n from "../../../i18n/config";
 
 // ============================================================
 // HELPER: استخراج معرف المستخدم من أي شكل من أشكال الكائنات
@@ -61,8 +62,8 @@ const showPopupNotification = (title, body, dedupId) => {
   // امسح بعد 10 ثوانٍ عشان يسمح بالإشعار التاني لو جه تاني
   setTimeout(() => shownToastIds.delete(key), 10_000);
 
-  const displayTitle = title || "إشعار جديد";
-  const displayBody  = body  || "";
+  const displayTitle = title || i18n.t("notifications.newNotification");
+  const displayBody = body || "";
   const message = displayBody
     ? `${displayTitle}\n${displayBody}`
     : displayTitle;
@@ -103,11 +104,15 @@ const normalizeNotification = (apiNotif) => {
   const notifData = apiNotif?.notification || apiNotif?.data || apiNotif || {};
 
   const title =
-    notifData.title || notifData.name || apiNotif?.title || apiNotif?.name || "Notification";
+    notifData.title ||
+    notifData.name ||
+    apiNotif?.title ||
+    apiNotif?.name ||
+    i18n.t("notifications.newNotification");
 
   const desc =
-    notifData.body    || notifData.message || notifData.description || notifData.content ||
-    apiNotif?.body    || apiNotif?.message || apiNotif?.description ||
+    notifData.body || notifData.message || notifData.description || notifData.content ||
+    apiNotif?.body || apiNotif?.message || apiNotif?.description ||
     "";
 
   return {
@@ -146,7 +151,10 @@ export const useNotifications = (currentUserId) => {
   // دالة اختبار في الكونسول: window.testNotif()
   useEffect(() => {
     if (typeof window !== "undefined") {
-      window.testNotif = (t = "تجربة", d = "إشعار تجريبي") =>
+      window.testNotif = (
+        t = i18n.t("notifications.testTitle"),
+        d = i18n.t("notifications.testBody"),
+      ) =>
         showPopupNotification(t, d, `test-${Date.now()}`);
     }
   }, []);
@@ -212,7 +220,7 @@ export const useNotifications = (currentUserId) => {
       await queryClient.cancelQueries({ queryKey: ["notifications"] });
       await queryClient.cancelQueries({ queryKey: ["notifications", "unreadCount"] });
       const previousNotifications = queryClient.getQueryData(["notifications"]);
-      const previousUnreadCount   = queryClient.getQueryData(["notifications", "unreadCount"]);
+      const previousUnreadCount = queryClient.getQueryData(["notifications", "unreadCount"]);
       queryClient.setQueryData(["notifications"], (old) =>
         old?.map((n) => (n.id === id ? { ...n, isRead: true } : n))
       );
@@ -237,7 +245,7 @@ export const useNotifications = (currentUserId) => {
       await queryClient.cancelQueries({ queryKey: ["notifications"] });
       await queryClient.cancelQueries({ queryKey: ["notifications", "unreadCount"] });
       const previousNotifications = queryClient.getQueryData(["notifications"]);
-      const previousUnreadCount   = queryClient.getQueryData(["notifications", "unreadCount"]);
+      const previousUnreadCount = queryClient.getQueryData(["notifications", "unreadCount"]);
       queryClient.setQueryData(["notifications"], (old) =>
         old?.map((n) => ({ ...n, isRead: true }))
       );
@@ -275,7 +283,7 @@ export const useNotifications = (currentUserId) => {
       await queryClient.cancelQueries({ queryKey: ["notifications"] });
       await queryClient.cancelQueries({ queryKey: ["notifications", "unreadCount"] });
       const previousNotifications = queryClient.getQueryData(["notifications"]);
-      const previousUnreadCount   = queryClient.getQueryData(["notifications", "unreadCount"]);
+      const previousUnreadCount = queryClient.getQueryData(["notifications", "unreadCount"]);
       queryClient.setQueryData(["notifications"], (old) => {
         const target = old?.find((n) => n.id === id);
         if (target && !target.isRead) {
@@ -299,10 +307,10 @@ export const useNotifications = (currentUserId) => {
   });
 
   // ── Helpers ──────────────────────────────────────────────
-  const markAsRead          = useCallback((id) => markAsReadMutation.mutateAsync(id),    [markAsReadMutation]);
-  const markAllAsRead       = useCallback(() => markAllAsReadMutation.mutateAsync(),     [markAllAsReadMutation]);
-  const clearAllNotifications = useCallback(() => clearAllMutation.mutateAsync(),        [clearAllMutation]);
-  const clearNotification   = useCallback((id) => deleteOneMutation.mutateAsync(id),    [deleteOneMutation]);
+  const markAsRead = useCallback((id) => markAsReadMutation.mutateAsync(id), [markAsReadMutation]);
+  const markAllAsRead = useCallback(() => markAllAsReadMutation.mutateAsync(), [markAllAsReadMutation]);
+  const clearAllNotifications = useCallback(() => clearAllMutation.mutateAsync(), [clearAllMutation]);
+  const clearNotification = useCallback((id) => deleteOneMutation.mutateAsync(id), [deleteOneMutation]);
 
   const toggleNotificationRead = useCallback(
     async (id) => {
@@ -344,7 +352,7 @@ export const useNotifications = (currentUserId) => {
 
     const handleNotification = (notification) => {
       const normalized = normalizeNotification(notification);
-      const dedupKey   = String(normalized.id);
+      const dedupKey = String(normalized.id);
 
       // أضف الـ ID لـ knownIdsRef عشان الـ polling ميعرضهاش تاني
       if (knownIdsRef.current) knownIdsRef.current.add(dedupKey);
@@ -379,7 +387,7 @@ export const useNotifications = (currentUserId) => {
       activeSubscriptions.delete(channelName);
       try { activeEcho.leave(channelName); } catch (_) { /* ignore */ }
     };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isAuthenticated, currentUserId]);
 
   return {
@@ -396,4 +404,3 @@ export const useNotifications = (currentUserId) => {
       queryClient.invalidateQueries({ queryKey: ["notifications"] }),
   };
 };
- 

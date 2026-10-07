@@ -88,6 +88,161 @@ const modeConfig = {
   manual: { label: "Manual", icon: FiActivity },
 };
 
+const AR_TEXT = {
+  Attendance: "الحضور",
+  Live: "مباشر",
+  "Real-time shift, punctuality, and exception management.": "إدارة الورديات والالتزام بالمواعيد والاستثناءات لحظيًا.",
+  "Real-time employee attendance records for": "سجلات حضور الموظفين لحظيًا بتاريخ",
+  "Records that require HR review for": "سجلات تتطلب مراجعة الموارد البشرية بتاريخ",
+  "Switch to Monthly Summary to export": "انتقل إلى الملخص الشهري للتصدير",
+  "Export monthly attendance to Excel": "تصدير الحضور الشهري إلى Excel",
+  "Exporting...": "جارٍ التصدير...",
+  "Export Excel": "تصدير إلى Excel",
+  "Live Monitor": "المراقبة المباشرة",
+  "Attendance Filters": "تصفية الحضور",
+  "Search and filter attendance records by date": "ابحث في سجلات الحضور وصفِّها حسب التاريخ.",
+  "Search employee or ID...": "ابحث باسم الموظف أو رقمه...",
+  "All statuses": "جميع الحالات",
+  Present: "حاضر",
+  Late: "متأخر",
+  Absent: "غائب",
+  "On Shift": "في الوردية",
+  "All departments": "جميع الأقسام",
+  "All managers": "جميع المديرين",
+  "Monthly Summary Filters": "تصفية الملخص الشهري",
+  "Filter by month and year to view the attendance summary report": "حدّد الشهر والسنة لعرض ملخص الحضور.",
+  "Search employee...": "ابحث عن موظف...",
+  "Present Today": "الحاضرون اليوم",
+  "Across all branches": "في جميع الفروع",
+  "Late Arrivals": "حالات التأخير",
+  "15-minute grace period": "فترة سماح 15 دقيقة",
+  "Unexcused Absences": "حالات الغياب دون عذر",
+  "Requires follow-up": "تتطلب المتابعة",
+  "Approved Leave": "الإجازات المعتمدة",
+  Today: "اليوم",
+  January: "يناير",
+  February: "فبراير",
+  March: "مارس",
+  April: "أبريل",
+  May: "مايو",
+  June: "يونيو",
+  July: "يوليو",
+  August: "أغسطس",
+  September: "سبتمبر",
+  October: "أكتوبر",
+  November: "نوفمبر",
+  December: "ديسمبر",
+  "N/A": "غير متاح",
+  approved: "تمت الموافقة",
+  rejected: "مرفوض",
+  pending: "قيد الانتظار",
+  "on shift": "في الوردية",
+  "Attendance Policy": "سياسة الحضور",
+  "15-minute grace period is active. Late check-ins are automatically flagged for payroll review.": "فترة السماح البالغة 15 دقيقة مفعّلة. تُسجّل حالات الحضور المتأخر تلقائيًا لمراجعتها في الرواتب.",
+  "View policy": "عرض السياسة",
+  "Daily Attendance": "الحضور اليومي",
+  Exceptions: "الاستثناءات",
+  "Monthly Summary": "الملخص الشهري",
+  "Shift & punctuality log": "سجل الورديات والالتزام بالمواعيد",
+  "More": "المزيد",
+  "Loading attendance records...": "جارٍ تحميل سجلات الحضور...",
+  "No attendance records found": "لم يتم العثور على سجلات حضور",
+  "Try changing the date or filters.": "جرّب تغيير التاريخ أو عوامل التصفية.",
+  Employee: "الموظف",
+  Branch: "الفرع",
+  Shift: "الوردية",
+  "Check-in": "تسجيل الحضور",
+  "Check-out": "تسجيل الانصراف",
+  Duration: "المدة",
+  Delay: "التأخير",
+  Mode: "الطريقة",
+  Status: "الحالة",
+  Action: "الإجراء",
+  "Manual Adjustment": "تعديل يدوي",
+  "Attendance Exceptions": "استثناءات الحضور",
+  "Exception Monitor": "متابعة الاستثناءات",
+  "Loading attendance exceptions...": "جارٍ تحميل استثناءات الحضور...",
+  "No attendance exceptions": "لا توجد استثناءات حضور",
+  "There are no exception records for the selected date.": "لا توجد استثناءات مسجلة في التاريخ المحدد.",
+  "Unknown employee": "موظف غير معروف",
+  Date: "التاريخ",
+  Exception: "استثناء",
+  "Exception Reason": "سبب الاستثناء",
+  "No reason provided.": "لم يتم تقديم سبب.",
+  "Admin Note": "ملاحظة المسؤول",
+  Approved: "تمت الموافقة",
+  Rejected: "مرفوض",
+  "Pending Review": "بانتظار المراجعة",
+  "Update Review": "تحديث المراجعة",
+  "Review Exception": "مراجعة الاستثناء",
+  Approve: "موافقة",
+  Reject: "رفض",
+  "Exception status updated successfully.": "تم تحديث حالة الاستثناء بنجاح.",
+  "Exception approved successfully.": "تمت الموافقة على الاستثناء بنجاح.",
+  "Exception rejected successfully.": "تم رفض الاستثناء بنجاح.",
+  "Failed to update exception status.": "تعذر تحديث حالة الاستثناء.",
+  "Downloaded:": "تم التنزيل:",
+  "Failed to export. Please try again.": "تعذر التصدير. يرجى المحاولة مرة أخرى.",
+  "Failed to load data.": "تعذر تحميل البيانات.",
+  "Something went wrong. Please try again.": "حدث خطأ ما. يرجى المحاولة مرة أخرى.",
+  "Monthly Attendance Summary": "ملخص الحضور الشهري",
+  "Attendance breakdown per employee for": "تفاصيل الحضور لكل موظف في",
+  "Monthly Report": "التقرير الشهري",
+  "Loading monthly summary...": "جارٍ تحميل الملخص الشهري...",
+  "No monthly data found": "لا توجد بيانات شهرية",
+  "Try selecting a different month or year.": "جرّب اختيار شهر أو سنة أخرى.",
+  "Job Title": "المسمى الوظيفي",
+  Department: "القسم",
+  "Present Days": "أيام الحضور",
+  "Late Days": "أيام التأخير",
+  "Late Minutes": "دقائق التأخير",
+  "Absent Days": "أيام الغياب",
+  "Worked Hours": "ساعات العمل",
+  d: "يوم",
+  min: "دقيقة",
+  h: "س",
+  "Updated just now": "تم التحديث الآن",
+  "Manual attendance adjustments should be used only when the attendance record needs HR correction.": "يُستخدم تعديل الحضور اليدوي فقط عند الحاجة إلى تصحيح سجل الحضور من الموارد البشرية.",
+  "Review Exception": "مراجعة الاستثناء",
+  "Exception Reason": "سبب الاستثناء",
+  Decision: "القرار",
+  "Add a note explaining your decision...": "أضف ملاحظة توضح قرارك...",
+  "e.g. 09:00 AM": "مثال: 09:00 ص",
+  "e.g. 05:00 PM": "مثال: 05:00 م",
+  "Enter the reason for this manual adjustment...": "أدخل سبب هذا التعديل اليدوي...",
+  "Manual Adjustment": "تعديل يدوي",
+  "Check-in": "تسجيل الحضور",
+  "Check-out": "تسجيل الانصراف",
+  Reason: "السبب",
+  "Save Adjustment": "حفظ التعديل",
+  "Review Exception": "مراجعة الاستثناء",
+  "Admin Note": "ملاحظة المسؤول",
+  "(optional)": "(اختياري)",
+  "Confirm Approval": "تأكيد الموافقة",
+  "Confirm Rejection": "تأكيد الرفض",
+  "Exporting...": "جارٍ التصدير...",
+  "Export Excel": "تصدير إلى Excel",
+  Cancel: "إلغاء",
+  "Saving...": "جارٍ الحفظ...",
+  "No reason provided.": "لم يتم تقديم سبب.",
+  "Update Review": "تحديث المراجعة",
+  "Review Exception": "مراجعة الاستثناء",
+  "No monthly data found": "لا توجد بيانات شهرية",
+  "Try selecting a different month or year.": "جرّب اختيار شهر أو سنة أخرى.",
+  Showing: "عرض",
+  to: "إلى",
+  records: "سجلًا",
+  Page: "صفحة",
+  "Review Exception": "مراجعة الاستثناء",
+  Decision: "القرار",
+  "(optional)": "(اختياري)",
+  Cancel: "إلغاء",
+  "Save Adjustment": "حفظ التعديل",
+  "Saving...": "جارٍ الحفظ...",
+  "Confirm Approval": "تأكيد الموافقة",
+  "Confirm Rejection": "تأكيد الرفض",
+};
+
 // ─────────────────────────────────────────────
 // Sub-components
 // ─────────────────────────────────────────────
@@ -101,17 +256,17 @@ function LoadingSpinner({ label = "Loading..." }) {
   );
 }
 
-function ErrorState({ message }) {
+function ErrorState({ message, text }) {
   return (
     <div className="px-5 py-12 text-center">
       <div className="mx-auto flex h-11 w-11 items-center justify-center rounded-full bg-red-50">
         <FiAlertTriangle className="h-5 w-5 text-red-600" />
       </div>
       <p className="mt-3 text-sm font-semibold text-red-600">
-        Failed to load data.
+        {text("Failed to load data.")}
       </p>
       <p className="mx-auto mt-1 max-w-md text-xs text-slate-500">
-        {message || "Something went wrong. Please try again."}
+        {message || text("Something went wrong. Please try again.")}
       </p>
     </div>
   );
@@ -129,17 +284,17 @@ function EmptyState({ label = "No records found", hint }) {
   );
 }
 
-function PaginationBar({ meta, onPrev, onNext }) {
+function PaginationBar({ meta, onPrev, onNext, text }) {
   if (!meta) return null;
   return (
     <div className="flex flex-col gap-3 border-t border-slate-100 px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
       <p className="text-xs text-slate-500">
-        Showing{" "}
+        {text("Showing")}{" "}
         <span className="font-semibold text-slate-700">{meta.from ?? 0}</span>{" "}
-        to{" "}
+        {text("to")}{" "}
         <span className="font-semibold text-slate-700">{meta.to ?? 0}</span> of{" "}
         <span className="font-semibold text-slate-700">{meta.total ?? 0}</span>{" "}
-        records
+        {text("records")}
       </p>
       <div className="flex items-center gap-2">
         <button
@@ -151,7 +306,7 @@ function PaginationBar({ meta, onPrev, onNext }) {
           <FiChevronLeft className="h-4 w-4" />
         </button>
         <span className="text-xs font-semibold text-slate-600">
-          {meta.current_page} / {meta.last_page}
+          {text("Page")} {meta.current_page} / {meta.last_page}
         </span>
         <button
           type="button"
@@ -171,9 +326,9 @@ function PaginationBar({ meta, onPrev, onNext }) {
 // ─────────────────────────────────────────────
 
 const TABS = [
-  { id: "daily", label: "Daily Attendance" },
-  { id: "exceptions", label: "Exceptions" },
-  { id: "monthly", label: "Monthly Summary" },
+  { id: "daily", label: "Daily Attendance", labelAr: "الحضور اليومي" },
+  { id: "exceptions", label: "Exceptions", labelAr: "الاستثناءات" },
+  { id: "monthly", label: "Monthly Summary", labelAr: "الملخص الشهري" },
 ];
 
 // ─────────────────────────────────────────────
@@ -181,7 +336,9 @@ const TABS = [
 // ─────────────────────────────────────────────
 
 export default function Attendance() {
-  const { t } = useTranslation();
+  const { i18n } = useTranslation();
+  const isArabic = i18n.language?.startsWith("ar");
+  const text = (value) => (isArabic ? AR_TEXT[value] || value : value);
 
   // ── Active tab ──────────────────────────────
   const [activeTab, setActiveTab] = useState("daily");
@@ -368,13 +525,13 @@ export default function Attendance() {
       },
       {
         onSuccess: () => {
-          toast.success("Exception status updated successfully.");
+          toast.success(text("Exception status updated successfully."));
           handleCloseReview();
         },
         onError: (error) => {
           toast.error(
             error?.response?.data?.message ||
-              "Failed to update exception status.",
+            text("Failed to update exception status."),
           );
         },
       },
@@ -392,12 +549,12 @@ export default function Attendance() {
       },
       {
         onSuccess: () => {
-          toast.success(`Exception ${status === "approved" ? "approved" : "rejected"} successfully.`);
+          toast.success(text(status === "approved" ? "Exception approved successfully." : "Exception rejected successfully."));
         },
         onError: (error) => {
           toast.error(
             error?.response?.data?.message ||
-              "Failed to update exception status.",
+            "Failed to update exception status.",
           );
         },
       },
@@ -414,12 +571,12 @@ export default function Attendance() {
       },
       {
         onSuccess: ({ filename }) => {
-          toast.success(`Downloaded: ${filename}`);
+          toast.success(`${text("Downloaded:")} ${filename}`);
         },
         onError: (error) => {
           toast.error(
             error?.response?.data?.message ||
-            "Failed to export. Please try again.",
+            text("Failed to export. Please try again."),
           );
         },
       },
@@ -431,21 +588,21 @@ export default function Attendance() {
   // ─────────────────────────────────────────────
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen bg-slate-50" dir={isArabic ? "rtl" : "ltr"}>
       {/* ── PAGE HEADER ─────────────────────────── */}
       <div className="mb-6 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
         <div>
           <div className="mb-2 flex items-center gap-2">
             <h1 className="text-2xl font-bold tracking-tight text-[#1c364f]">
-              Attendance
+              {text("Attendance")}
             </h1>
             <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-emerald-700">
               <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-              Live
+              {text("Live")}
             </span>
           </div>
           <p className="text-sm text-slate-500">
-            Real-time shift, punctuality, and exception management.
+            {text("Real-time shift, punctuality, and exception management.")}
           </p>
         </div>
 
@@ -460,8 +617,8 @@ export default function Attendance() {
             disabled={activeTab !== "monthly" || exportLoading}
             title={
               activeTab !== "monthly"
-                ? "Switch to Monthly Summary to export"
-                : "Export monthly attendance to Excel"
+                ? text("Switch to Monthly Summary to export")
+                : text("Export monthly attendance to Excel")
             }
             className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-xs font-semibold text-slate-700 shadow-sm transition hover:border-slate-300 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40"
           >
@@ -470,7 +627,7 @@ export default function Attendance() {
             ) : (
               <FiDownload className="h-4 w-4" />
             )}
-            {exportLoading ? "Exporting..." : "Export Excel"}
+            {exportLoading ? text("Exporting...") : text("Export Excel")}
           </button>
 
           <button
@@ -478,7 +635,7 @@ export default function Attendance() {
             className="inline-flex items-center gap-2 rounded-xl bg-[#1c364f] px-4 py-2.5 text-xs font-semibold text-white shadow-sm transition hover:bg-[#24425f]"
           >
             <FiActivity className="h-4 w-4" />
-            Live Monitor
+            {text("Live Monitor")}
           </button>
         </div>
       </div>
@@ -488,10 +645,10 @@ export default function Attendance() {
         <section className="mb-6 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
           <div className="mb-4">
             <h2 className="text-sm font-bold text-[#1c364f]">
-              Attendance Filters
+              {text("Attendance Filters")}
             </h2>
             <p className="mt-1 text-xs text-slate-500">
-              Search and filter attendance records by date
+              {text("Search and filter attendance records by date")}
             </p>
           </div>
 
@@ -506,7 +663,7 @@ export default function Attendance() {
                   setSearchTerm(e.target.value);
                   setDailyPage(1);
                 }}
-                placeholder="Search employee or ID..."
+                placeholder={text("Search employee or ID...")}
                 className="h-11 w-full rounded-xl border border-slate-200 bg-white pl-10 pr-3 text-xs text-slate-700 outline-none transition placeholder:text-slate-400 focus:border-[#1c364f] focus:ring-2 focus:ring-[#1c364f]/10"
               />
             </div>
@@ -535,11 +692,11 @@ export default function Attendance() {
                 }}
                 className="h-11 w-full appearance-none rounded-xl border border-slate-200 bg-white px-3 pr-9 text-xs text-slate-700 outline-none transition focus:border-[#1c364f] focus:ring-2 focus:ring-[#1c364f]/10"
               >
-                <option value="">All statuses</option>
-                <option value="Present">Present</option>
-                <option value="Late">Late</option>
-                <option value="Absent">Absent</option>
-                <option value="On Shift">On Shift</option>
+                <option value="">{text("All statuses")}</option>
+                <option value="Present">{text("Present")}</option>
+                <option value="Late">{text("Late")}</option>
+                <option value="Absent">{text("Absent")}</option>
+                <option value="On Shift">{text("On Shift")}</option>
               </select>
               <FiChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
             </div>
@@ -554,7 +711,7 @@ export default function Attendance() {
                 }}
                 className="h-11 w-full appearance-none rounded-xl border border-slate-200 bg-white px-3 pr-9 text-xs text-slate-700 outline-none transition focus:border-[#1c364f] focus:ring-2 focus:ring-[#1c364f]/10"
               >
-                <option value="">All departments</option>
+                <option value="">{text("All departments")}</option>
               </select>
               <FiChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
             </div>
@@ -569,7 +726,7 @@ export default function Attendance() {
                 }}
                 className="h-11 w-full appearance-none rounded-xl border border-slate-200 bg-white px-3 pr-9 text-xs text-slate-700 outline-none transition focus:border-[#1c364f] focus:ring-2 focus:ring-[#1c364f]/10"
               >
-                <option value="">All managers</option>
+                <option value="">{text("All managers")}</option>
               </select>
               <FiChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
             </div>
@@ -582,10 +739,10 @@ export default function Attendance() {
         <section className="mb-6 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
           <div className="mb-4">
             <h2 className="text-sm font-bold text-[#1c364f]">
-              Monthly Summary Filters
+              {text("Monthly Summary Filters")}
             </h2>
             <p className="mt-1 text-xs text-slate-500">
-              Filter by month and year to view the attendance summary report
+              {text("Filter by month and year to view the attendance summary report")}
             </p>
           </div>
 
@@ -604,7 +761,7 @@ export default function Attendance() {
                   "January", "February", "March", "April", "May", "June",
                   "July", "August", "September", "October", "November", "December",
                 ].map((m, i) => (
-                  <option key={m} value={i + 1}>{m}</option>
+                  <option key={m} value={i + 1}>{text(m)}</option>
                 ))}
               </select>
               <FiChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
@@ -637,7 +794,7 @@ export default function Attendance() {
                   setMonthlySearch(e.target.value);
                   setMonthlyPage(1);
                 }}
-                placeholder="Search employee..."
+                placeholder={text("Search employee...")}
                 className="h-11 w-full rounded-xl border border-slate-200 bg-white pl-10 pr-3 text-xs text-slate-700 outline-none transition placeholder:text-slate-400 focus:border-[#1c364f] focus:ring-2 focus:ring-[#1c364f]/10"
               />
             </div>
@@ -652,7 +809,7 @@ export default function Attendance() {
                 }}
                 className="h-11 w-full appearance-none rounded-xl border border-slate-200 bg-white px-3 pr-9 text-xs text-slate-700 outline-none transition focus:border-[#1c364f] focus:ring-2 focus:ring-[#1c364f]/10"
               >
-                <option value="">All departments</option>
+                <option value="">{text("All departments")}</option>
               </select>
               <FiChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
             </div>
@@ -709,12 +866,12 @@ export default function Attendance() {
                 <div className="flex items-start justify-between">
                   <div>
                     <p className="text-[11px] font-bold uppercase tracking-wide text-slate-400">
-                      {card.label}
+                      {text(card.label)}
                     </p>
                     <p className="mt-2 text-3xl font-bold text-[#1c364f]">
                       {card.value}
                     </p>
-                    <p className="mt-1 text-xs text-slate-500">{card.hint}</p>
+                    <p className="mt-1 text-xs text-slate-500">{text(card.hint)}</p>
                   </div>
                   <div
                     className={`flex h-10 w-10 items-center justify-center rounded-xl ${card.bg}`}
@@ -738,11 +895,10 @@ export default function Attendance() {
               </div>
               <div>
                 <h3 className="text-sm font-bold text-[#1c364f]">
-                  Attendance Policy
+                  {text("Attendance Policy")}
                 </h3>
                 <p className="mt-1 max-w-2xl text-xs leading-5 text-slate-600">
-                  15-minute grace period is active. Late check-ins are
-                  automatically flagged for payroll review.
+                  {text("15-minute grace period is active. Late check-ins are automatically flagged for payroll review.")}
                 </p>
               </div>
             </div>
@@ -750,7 +906,7 @@ export default function Attendance() {
               type="button"
               className="inline-flex shrink-0 items-center gap-1.5 text-xs font-bold text-[#1c364f] transition hover:underline"
             >
-              View policy
+              {text("View policy")}
               <FiArrowUpRight className="h-3.5 w-3.5" />
             </button>
           </div>
@@ -765,11 +921,11 @@ export default function Attendance() {
             type="button"
             onClick={() => setActiveTab(tab.id)}
             className={`flex-1 rounded-lg px-4 py-2.5 text-xs font-semibold transition ${activeTab === tab.id
-                ? "bg-[#1c364f] text-white shadow-sm"
-                : "text-slate-500 hover:bg-slate-50 hover:text-slate-700"
+              ? "bg-[#1c364f] text-white shadow-sm"
+              : "text-slate-500 hover:bg-slate-50 hover:text-slate-700"
               }`}
           >
-            {tab.label}
+            {isArabic ? tab.labelAr : tab.label}
             {tab.id === "exceptions" &&
               (exceptionsMeta?.total ?? 0) > 0 && (
                 <span className="ml-2 rounded-full bg-red-500 px-1.5 py-0.5 text-[9px] font-bold text-white">
@@ -789,33 +945,33 @@ export default function Attendance() {
             <div>
               <div className="flex items-center gap-2">
                 <h2 className="text-sm font-bold text-[#1c364f]">
-                  Shift &amp; punctuality log
+                  {text("Shift & punctuality log")}
                 </h2>
                 <span className="rounded-full bg-slate-100 px-2.5 py-1 text-[10px] font-bold text-slate-600">
                   {dailyMeta.total ?? 0}
                 </span>
               </div>
               <p className="mt-1 text-xs text-slate-500">
-                Real-time employee attendance records for {selectedDate}.
+                {text("Real-time employee attendance records for")} {selectedDate}.
               </p>
             </div>
             <button
               type="button"
               className="inline-flex items-center gap-2 self-start rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-600 transition hover:bg-slate-50 sm:self-auto"
             >
-              More
+              {text("More")}
               <FiMoreHorizontal className="h-4 w-4" />
             </button>
           </div>
 
           {dailyLoading ? (
-            <LoadingSpinner label="Loading attendance records..." />
+            <LoadingSpinner label={text("Loading attendance records...")} />
           ) : dailyError ? (
-            <ErrorState message={dailyErrorObj?.message} />
+            <ErrorState message={dailyErrorObj?.message} text={text} />
           ) : employees.length === 0 ? (
             <EmptyState
-              label="No attendance records found"
-              hint="Try changing the date or filters."
+              label={text("No attendance records found")}
+              hint={text("Try changing the date or filters.")}
             />
           ) : (
             <>
@@ -831,7 +987,7 @@ export default function Attendance() {
                           key={col}
                           className="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-wide text-slate-400 first:px-5"
                         >
-                          {col}
+                          {text(col)}
                         </th>
                       ))}
                     </tr>
@@ -901,7 +1057,7 @@ export default function Attendance() {
                               <span
                                 className={`h-1.5 w-1.5 rounded-full ${rowStatus.dot}`}
                               />
-                              {row.status || "—"}
+                              {text(row.status || "—")}
                             </span>
                           </td>
                           <td className="px-4 py-4">
@@ -910,7 +1066,7 @@ export default function Attendance() {
                               onClick={() => handleOpenAdjustment(row)}
                               className="whitespace-nowrap rounded-lg border border-slate-200 bg-white px-3 py-2 text-[10px] font-bold text-[#1c364f] transition hover:border-[#1c364f]/20 hover:bg-slate-50"
                             >
-                              Manual Adjustment
+                              {text("Manual Adjustment")}
                             </button>
                           </td>
                         </tr>
@@ -921,6 +1077,7 @@ export default function Attendance() {
               </div>
               <PaginationBar
                 meta={dailyMeta}
+                text={text}
                 onPrev={() =>
                   setDailyPage((p) => Math.max(1, p - 1))
                 }
@@ -944,7 +1101,7 @@ export default function Attendance() {
             <div>
               <div className="flex items-center gap-2">
                 <h2 className="text-sm font-bold text-[#1c364f]">
-                  Attendance Exceptions
+                  {text("Attendance Exceptions")}
                 </h2>
                 {(exceptionsMeta?.total ?? 0) > 0 && (
                   <span className="rounded-full bg-red-50 px-2.5 py-1 text-[10px] font-bold text-red-600">
@@ -953,29 +1110,29 @@ export default function Attendance() {
                 )}
               </div>
               <p className="mt-1 text-xs text-slate-500">
-                Records that require HR review for {selectedDate}.
+                {text("Records that require HR review for")} {selectedDate}.
               </p>
             </div>
             <div className="flex items-center gap-2 rounded-full bg-red-50 px-3 py-1.5 text-[10px] font-bold uppercase tracking-wide text-red-600">
               <FiAlertTriangle className="h-3.5 w-3.5" />
-              Exception Monitor
+              {text("Exception Monitor")}
             </div>
           </div>
 
           {exceptionsLoading ? (
-            <LoadingSpinner label="Loading attendance exceptions..." />
+            <LoadingSpinner label={text("Loading attendance exceptions...")} />
           ) : exceptionsError ? (
-            <ErrorState message={exceptionsErrorObj?.message} />
+            <ErrorState message={exceptionsErrorObj?.message} text={text} />
           ) : exceptions.length === 0 ? (
             <div className="px-5 py-10 text-center">
               <div className="mx-auto flex h-11 w-11 items-center justify-center rounded-full bg-emerald-50">
                 <FiCheckCircle className="h-5 w-5 text-emerald-600" />
               </div>
               <p className="mt-3 text-sm font-semibold text-slate-700">
-                No attendance exceptions
+                {text("No attendance exceptions")}
               </p>
               <p className="mt-1 text-xs text-slate-500">
-                There are no exception records for the selected date.
+                {text("There are no exception records for the selected date.")}
               </p>
             </div>
           ) : (
@@ -996,7 +1153,7 @@ export default function Attendance() {
                           </div>
                           <div className="min-w-0">
                             <h3 className="truncate text-sm font-bold text-[#1c364f]">
-                              {exception.user?.name || "Unknown employee"}
+                              {exception.user?.name || text("Unknown employee")}
                             </h3>
                             <p className="mt-1 text-xs text-slate-500">
                               {exception.user?.employee_code || "—"}
@@ -1021,7 +1178,7 @@ export default function Attendance() {
                           ].map((item) => (
                             <div key={item.label}>
                               <p className="text-[10px] font-bold uppercase tracking-wide text-slate-400">
-                                {item.label}
+                                {text(item.label)}
                               </p>
                               <p className="mt-1 text-xs font-semibold text-slate-700">
                                 {item.value || "—"}
@@ -1030,7 +1187,7 @@ export default function Attendance() {
                           ))}
                           <div>
                             <p className="text-[10px] font-bold uppercase tracking-wide text-slate-400">
-                              Status
+                              {text("Status")}
                             </p>
                             <span
                               className={`mt-1 inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[10px] font-bold ${exStatus.badge}`}
@@ -1038,7 +1195,7 @@ export default function Attendance() {
                               <span
                                 className={`h-1.5 w-1.5 rounded-full ${exStatus.dot}`}
                               />
-                              {exception.status || "Exception"}
+                              {text(exception.status || "Exception")}
                             </span>
                           </div>
                         </div>
@@ -1049,10 +1206,10 @@ export default function Attendance() {
                         <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                           <div>
                             <p className="text-[10px] font-bold uppercase tracking-wide text-red-400">
-                              Exception Reason
+                              {text("Exception Reason")}
                             </p>
                             <p className="mt-1 text-xs font-semibold leading-5 text-red-700">
-                              {exception.exception_reason || exception.exception?.reason || "No reason provided."}
+                              {exception.exception_reason || exception.exception?.reason || text("No reason provided.")}
                             </p>
                           </div>
                           <div className="flex shrink-0 items-center gap-1.5 text-xs font-medium text-slate-500">
@@ -1064,7 +1221,7 @@ export default function Attendance() {
                         {/* Admin note if already reviewed */}
                         {exception.exception?.admin_note && (
                           <div className="mt-3 rounded-lg border border-red-100 bg-white px-3 py-2">
-                            <p className="text-[10px] font-bold uppercase tracking-wide text-slate-400">Admin Note</p>
+                            <p className="text-[10px] font-bold uppercase tracking-wide text-slate-400">{text("Admin Note")}</p>
                             <p className="mt-0.5 text-xs text-slate-600">{exception.exception.admin_note}</p>
                           </div>
                         )}
@@ -1074,17 +1231,17 @@ export default function Attendance() {
                           {exception.exception?.status === "approved" ? (
                             <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-3 py-1 text-[10px] font-bold text-emerald-700">
                               <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-                              Approved
+                              {text("Approved")}
                             </span>
                           ) : exception.exception?.status === "rejected" ? (
                             <span className="inline-flex items-center gap-1.5 rounded-full bg-red-50 px-3 py-1 text-[10px] font-bold text-red-600">
                               <span className="h-1.5 w-1.5 rounded-full bg-red-500" />
-                              Rejected
+                              {text("Rejected")}
                             </span>
                           ) : (
                             <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-50 px-3 py-1 text-[10px] font-bold text-amber-700">
                               <span className="h-1.5 w-1.5 rounded-full bg-amber-500" />
-                              Pending Review
+                              {text("Pending Review")}
                             </span>
                           )}
 
@@ -1093,7 +1250,7 @@ export default function Attendance() {
                             onClick={() => handleOpenReview(exception)}
                             className="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-[10px] font-bold text-[#1c364f] transition hover:bg-slate-50 shadow-sm"
                           >
-                            {exception.exception?.status ? "Update Review" : "Review Exception"}
+                            {exception.exception?.status ? text("Update Review") : text("Review Exception")}
                           </button>
 
                           <button
@@ -1102,7 +1259,7 @@ export default function Attendance() {
                             onClick={() => handleQuickReview(exception, "approved")}
                             className="rounded-lg bg-emerald-600 px-3 py-1.5 text-[10px] font-bold text-white transition hover:bg-emerald-700 disabled:opacity-50 shadow-sm"
                           >
-                            Approve
+                            {text("Approve")}
                           </button>
 
                           <button
@@ -1111,7 +1268,7 @@ export default function Attendance() {
                             onClick={() => handleQuickReview(exception, "rejected")}
                             className="rounded-lg bg-rose-600 px-3 py-1.5 text-[10px] font-bold text-white transition hover:bg-rose-700 disabled:opacity-50 shadow-sm"
                           >
-                            Reject
+                            {text("Reject")}
                           </button>
                         </div>
                       </div>
@@ -1122,6 +1279,7 @@ export default function Attendance() {
               {exceptionsMeta && (
                 <PaginationBar
                   meta={exceptionsMeta}
+                  text={text}
                   onPrev={() => setExceptionsPage((p) => Math.max(1, p - 1))}
                   onNext={() =>
                     setExceptionsPage((p) =>
@@ -1144,34 +1302,34 @@ export default function Attendance() {
             <div>
               <div className="flex items-center gap-2">
                 <h2 className="text-sm font-bold text-[#1c364f]">
-                  Monthly Attendance Summary
+                  {text("Monthly Attendance Summary")}
                 </h2>
                 <span className="rounded-full bg-slate-100 px-2.5 py-1 text-[10px] font-bold text-slate-600">
                   {monthlyMeta?.total ?? 0}
                 </span>
               </div>
               <p className="mt-1 text-xs text-slate-500">
-                Attendance breakdown per employee for{" "}
+                {text("Attendance breakdown per employee for")}{" "}
                 {new Date(monthlyYear, monthlyMonth - 1).toLocaleString(
-                  "default",
+                  isArabic ? "ar-EG" : "en-US",
                   { month: "long", year: "numeric" },
                 )}
               </p>
             </div>
             <div className="flex items-center gap-2 rounded-full bg-blue-50 px-3 py-1.5 text-[10px] font-bold uppercase tracking-wide text-blue-600">
               <FiBarChart2 className="h-3.5 w-3.5" />
-              Monthly Report
+              {text("Monthly Report")}
             </div>
           </div>
 
           {monthlyLoading ? (
-            <LoadingSpinner label="Loading monthly summary..." />
+            <LoadingSpinner label={text("Loading monthly summary...")} />
           ) : monthlyError ? (
-            <ErrorState message={monthlyErrorObj?.message} />
+            <ErrorState message={monthlyErrorObj?.message} text={text} />
           ) : monthlySummary.length === 0 ? (
             <EmptyState
-              label="No monthly data found"
-              hint="Try selecting a different month or year."
+              label={text("No monthly data found")}
+              hint={text("Try selecting a different month or year.")}
             />
           ) : (
             <>
@@ -1188,7 +1346,7 @@ export default function Attendance() {
                           key={col}
                           className="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-wide text-slate-400 first:px-5"
                         >
-                          {col}
+                          {text(col)}
                         </th>
                       ))}
                     </tr>
@@ -1222,24 +1380,24 @@ export default function Attendance() {
                         </td>
                         <td className="px-4 py-4">
                           <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-1 text-[10px] font-bold text-emerald-700">
-                            {row.summary?.present_days ?? 0}d
+                            {row.summary?.present_days ?? 0} {text("d")}
                           </span>
                         </td>
                         <td className="px-4 py-4">
                           <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2 py-1 text-[10px] font-bold text-amber-700">
-                            {row.summary?.late_days ?? 0}d
+                            {row.summary?.late_days ?? 0} {text("d")}
                           </span>
                         </td>
                         <td className="px-4 py-4 text-xs font-medium text-slate-600">
-                          {row.summary?.late_minutes_total ?? 0} min
+                          {row.summary?.late_minutes_total ?? 0} {text("min")}
                         </td>
                         <td className="px-4 py-4">
                           <span className="inline-flex items-center gap-1 rounded-full bg-red-50 px-2 py-1 text-[10px] font-bold text-red-600">
-                            {row.summary?.absent_days ?? 0}d
+                            {row.summary?.absent_days ?? 0} {text("d")}
                           </span>
                         </td>
                         <td className="px-4 py-4 text-xs font-medium text-slate-600">
-                          {row.summary?.total_worked_hours || "0.0h"}
+                          {(row.summary?.total_worked_hours || "0.0") + text("h")}
                         </td>
                       </tr>
                     ))}
@@ -1248,6 +1406,7 @@ export default function Attendance() {
               </div>
               <PaginationBar
                 meta={monthlyMeta}
+                text={text}
                 onPrev={() => setMonthlyPage((p) => Math.max(1, p - 1))}
                 onNext={() =>
                   setMonthlyPage((p) =>
@@ -1263,7 +1422,7 @@ export default function Attendance() {
       {/* ── TIMESTAMP ───────────────────────────── */}
       <div className="mt-4 flex items-center justify-end gap-1.5 text-[10px] text-slate-400">
         <FiClock className="h-3 w-3" />
-        Updated just now
+        {text("Updated just now")}
       </div>
 
       {/* ═══════════════════════════════════════════
@@ -1290,7 +1449,7 @@ export default function Attendance() {
               <div className="flex items-center justify-between border-b border-slate-100 px-5 py-4">
                 <div>
                   <h2 className="text-sm font-bold text-[#1c364f]">
-                    Manual Adjustment
+                    {text("Manual Adjustment")}
                   </h2>
                   <p className="mt-1 text-xs text-slate-500">
                     {selectedEmployee.name} · {selectedEmployee.employee_code}
@@ -1313,7 +1472,7 @@ export default function Attendance() {
                 <div className="grid gap-4 sm:grid-cols-2">
                   <div>
                     <label className="mb-2 block text-xs font-semibold text-slate-600">
-                      Check-in
+                      {text("Check-in")}
                     </label>
                     <input
                       type="text"
@@ -1324,13 +1483,13 @@ export default function Attendance() {
                           checkIn: e.target.value,
                         }))
                       }
-                      placeholder="e.g. 09:00 AM"
+                      placeholder={text("e.g. 09:00 AM")}
                       className="h-11 w-full rounded-xl border border-slate-200 px-3 text-xs text-slate-700 outline-none transition placeholder:text-slate-400 focus:border-[#1c364f] focus:ring-2 focus:ring-[#1c364f]/10"
                     />
                   </div>
                   <div>
                     <label className="mb-2 block text-xs font-semibold text-slate-600">
-                      Check-out
+                      {text("Check-out")}
                     </label>
                     <input
                       type="text"
@@ -1341,7 +1500,7 @@ export default function Attendance() {
                           checkOut: e.target.value,
                         }))
                       }
-                      placeholder="e.g. 05:00 PM"
+                      placeholder={text("e.g. 05:00 PM")}
                       className="h-11 w-full rounded-xl border border-slate-200 px-3 text-xs text-slate-700 outline-none transition placeholder:text-slate-400 focus:border-[#1c364f] focus:ring-2 focus:ring-[#1c364f]/10"
                     />
                   </div>
@@ -1349,7 +1508,7 @@ export default function Attendance() {
 
                 <div>
                   <label className="mb-2 block text-xs font-semibold text-slate-600">
-                    Reason
+                    {text("Reason")}
                   </label>
                   <textarea
                     value={adjustmentForm.reason}
@@ -1360,7 +1519,7 @@ export default function Attendance() {
                       }))
                     }
                     rows={4}
-                    placeholder="Enter the reason for this manual adjustment..."
+                    placeholder={text("Enter the reason for this manual adjustment...")}
                     className="w-full resize-none rounded-xl border border-slate-200 px-3 py-3 text-xs text-slate-700 outline-none transition placeholder:text-slate-400 focus:border-[#1c364f] focus:ring-2 focus:ring-[#1c364f]/10"
                   />
                 </div>
@@ -1369,8 +1528,7 @@ export default function Attendance() {
                   <div className="flex items-start gap-2">
                     <FiShield className="mt-0.5 h-4 w-4 shrink-0 text-amber-600" />
                     <p className="text-[11px] leading-5 text-amber-700">
-                      Manual attendance adjustments should be used only when
-                      the attendance record needs HR correction.
+                      {text("Manual attendance adjustments should be used only when the attendance record needs HR correction.")}
                     </p>
                   </div>
                 </div>
@@ -1381,14 +1539,14 @@ export default function Attendance() {
                     onClick={handleCloseAdjustment}
                     className="rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-xs font-semibold text-slate-600 transition hover:bg-slate-50"
                   >
-                    Cancel
+                    {text("Cancel")}
                   </button>
                   <button
                     type="submit"
                     className="inline-flex items-center gap-2 rounded-xl bg-[#1c364f] px-4 py-2.5 text-xs font-semibold text-white transition hover:bg-[#24425f]"
                   >
                     <FiSave className="h-3.5 w-3.5" />
-                    Save Adjustment
+                    {text("Save Adjustment")}
                   </button>
                 </div>
               </form>
@@ -1420,7 +1578,7 @@ export default function Attendance() {
               <div className="flex items-center justify-between border-b border-slate-100 px-5 py-4">
                 <div>
                   <h2 className="text-sm font-bold text-[#1c364f]">
-                    Review Exception
+                    {text("Review Exception")}
                   </h2>
                   <p className="mt-1 text-xs text-slate-500">
                     {reviewException.user?.name} ·{" "}
@@ -1441,19 +1599,19 @@ export default function Attendance() {
                 {/* Exception info */}
                 <div className="rounded-xl border border-red-100 bg-red-50/60 px-4 py-3">
                   <p className="text-[10px] font-bold uppercase tracking-wide text-red-400">
-                    Exception Reason
+                    {text("Exception Reason")}
                   </p>
                   <p className="mt-1 text-xs leading-5 text-red-700">
                     {reviewException.exception_reason ||
                       reviewException.exception?.reason ||
-                      "No reason provided."}
+                      text("No reason provided.")}
                   </p>
                 </div>
 
                 {/* Status */}
                 <div>
                   <label className="mb-2 block text-xs font-semibold text-slate-600">
-                    Decision
+                    {text("Decision")}
                   </label>
                   <div className="grid grid-cols-2 gap-3">
                     <button
@@ -1461,28 +1619,26 @@ export default function Attendance() {
                       onClick={() =>
                         setReviewForm((f) => ({ ...f, status: "approved" }))
                       }
-                      className={`flex items-center justify-center gap-2 rounded-xl border px-4 py-3 text-xs font-bold transition ${
-                        reviewForm.status === "approved"
-                          ? "border-emerald-300 bg-emerald-50 text-emerald-700"
-                          : "border-slate-200 bg-white text-slate-500 hover:bg-slate-50"
-                      }`}
+                      className={`flex items-center justify-center gap-2 rounded-xl border px-4 py-3 text-xs font-bold transition ${reviewForm.status === "approved"
+                        ? "border-emerald-300 bg-emerald-50 text-emerald-700"
+                        : "border-slate-200 bg-white text-slate-500 hover:bg-slate-50"
+                        }`}
                     >
                       <span className="h-2 w-2 rounded-full bg-emerald-500" />
-                      Approve
+                      {text("Approve")}
                     </button>
                     <button
                       type="button"
                       onClick={() =>
                         setReviewForm((f) => ({ ...f, status: "rejected" }))
                       }
-                      className={`flex items-center justify-center gap-2 rounded-xl border px-4 py-3 text-xs font-bold transition ${
-                        reviewForm.status === "rejected"
-                          ? "border-red-300 bg-red-50 text-red-600"
-                          : "border-slate-200 bg-white text-slate-500 hover:bg-slate-50"
-                      }`}
+                      className={`flex items-center justify-center gap-2 rounded-xl border px-4 py-3 text-xs font-bold transition ${reviewForm.status === "rejected"
+                        ? "border-red-300 bg-red-50 text-red-600"
+                        : "border-slate-200 bg-white text-slate-500 hover:bg-slate-50"
+                        }`}
                     >
                       <span className="h-2 w-2 rounded-full bg-red-500" />
-                      Reject
+                      {text("Reject")}
                     </button>
                   </div>
                 </div>
@@ -1490,9 +1646,9 @@ export default function Attendance() {
                 {/* Admin note */}
                 <div>
                   <label className="mb-2 block text-xs font-semibold text-slate-600">
-                    Admin Note{" "}
+                    {text("Admin Note")}{" "}
                     <span className="font-normal text-slate-400">
-                      (optional)
+                      {text("(optional)")}
                     </span>
                   </label>
                   <textarea
@@ -1504,7 +1660,7 @@ export default function Attendance() {
                       }))
                     }
                     rows={3}
-                    placeholder="Add a note explaining your decision..."
+                    placeholder={text("Add a note explaining your decision...")}
                     className="w-full resize-none rounded-xl border border-slate-200 px-3 py-3 text-xs text-slate-700 outline-none transition placeholder:text-slate-400 focus:border-[#1c364f] focus:ring-2 focus:ring-[#1c364f]/10"
                   />
                 </div>
@@ -1515,16 +1671,15 @@ export default function Attendance() {
                     onClick={handleCloseReview}
                     className="rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-xs font-semibold text-slate-600 transition hover:bg-slate-50"
                   >
-                    Cancel
+                    {text("Cancel")}
                   </button>
                   <button
                     type="submit"
                     disabled={updateExceptionLoading}
-                    className={`inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-xs font-semibold text-white transition ${
-                      reviewForm.status === "approved"
-                        ? "bg-emerald-600 hover:bg-emerald-700"
-                        : "bg-red-600 hover:bg-red-700"
-                    } disabled:cursor-not-allowed disabled:opacity-60`}
+                    className={`inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-xs font-semibold text-white transition ${reviewForm.status === "approved"
+                      ? "bg-emerald-600 hover:bg-emerald-700"
+                      : "bg-red-600 hover:bg-red-700"
+                      } disabled:cursor-not-allowed disabled:opacity-60`}
                   >
                     {updateExceptionLoading ? (
                       <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-white/40 border-t-white" />
@@ -1532,10 +1687,10 @@ export default function Attendance() {
                       <FiSave className="h-3.5 w-3.5" />
                     )}
                     {updateExceptionLoading
-                      ? "Saving..."
+                      ? text("Saving...")
                       : reviewForm.status === "approved"
-                        ? "Confirm Approval"
-                        : "Confirm Rejection"}
+                        ? text("Confirm Approval")
+                        : text("Confirm Rejection")}
                   </button>
                 </div>
               </form>

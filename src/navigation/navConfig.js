@@ -11,6 +11,7 @@ import {
   MdCalendarMonth,
   MdAccountBalanceWallet,
   MdCardGiftcard,
+  MdEventAvailable,
 } from "react-icons/md";
 
 import {
@@ -34,7 +35,6 @@ import {
   MdAssignmentTurnedIn,
   MdInsights,
   MdCalendarToday,
-  MdEventAvailable,
   MdDateRange,
 } from "react-icons/md";
 
@@ -73,6 +73,7 @@ export const navConfig = {
       title: "Departments & Teams",
       path: "/admin/departments",
       icon: MdLocationCity,
+      section: "OPERATIONS",
     },
     {
       titleKey: "portal.submissionReviews",
@@ -135,28 +136,39 @@ export const navConfig = {
       section: "GROWTH & GOVERNANCE",
     },
     {
+      titleKey: "portal.companyPolicies",
+      title: "Company Policies",
+      path: "/admin/policies",
+      icon: FiBookOpen,
+      section: "GROWTH & GOVERNANCE",
+    },
+    {
       titleKey: "portal.attendance",
       title: "Attendance",
       path: "/admin/attendance",
       icon: MdCalendarMonth,
+      section: "GROWTH & GOVERNANCE",
     },
     {
       titleKey: "portal.leaveRequests",
       title: "Leave Requests",
       path: "/admin/leave-requests",
       icon: MdEventNote,
+      section: "GROWTH & GOVERNANCE",
     },
     {
       titleKey: "portal.holidays",
       title: "Holidays & Seasons",
       path: "/admin/holidays",
       icon: MdEventAvailable,
+      section: "GROWTH & GOVERNANCE",
     },
     {
       titleKey: "portal.calendar",
       title: "Calendar",
       path: "/admin/calendar",
       icon: MdCalendarMonth,
+      section: "GROWTH & GOVERNANCE",
     },
     {
       titleKey: "portal.auditLogs",
@@ -389,6 +401,12 @@ export const navConfig = {
       title: "Team Leave Approvals",
       path: "/manager/leave-approvals",
       icon: MdEventAvailable,
+    },
+    {
+      titleKey: "portal.companyPolicies",
+      title: "Company Policies",
+      path: "/manager/policies",
+      icon: FiBookOpen,
     },
     {
       titleKey: "portal.holidays",

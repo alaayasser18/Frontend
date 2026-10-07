@@ -103,7 +103,7 @@
       "didntReceive": "Didn't receive the code?",
       "sending": "Sending...",
       "backToSignIn": "← Back to Sign In",
-      "emailSentTo": "We sent the verification code to",
+      "emailSentTo": "We sent the verification code to ",
       "emailNotFound": "Email not found. Please request a new OTP.",
       "codeLengthError": "Please enter the 6-digit verification code.",
       "validationError": "Invalid or expired OTP.",

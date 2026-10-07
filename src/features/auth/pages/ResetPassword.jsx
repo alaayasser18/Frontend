@@ -8,10 +8,12 @@ import "../../../styles/auth/ResetPassword.css";
 
 import MainAuthForm from "../components/MainAuthForm";
 import { useResetPassword } from "../hooks/useResetPassword";
+import { useAuth } from "../../../context/AuthContext";
 
 const ResetPassword = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const { clearAuthSession } = useAuth();
 
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -55,7 +57,6 @@ const ResetPassword = () => {
 
     if (strengthScore < 5) {
       toast.error(t("auth.resetPassword.errorRequirements"));
-
       return;
     }
 
@@ -65,7 +66,6 @@ const ResetPassword = () => {
 
     if (newPassword !== confirmPassword) {
       toast.error(t("auth.resetPassword.errorMismatch"));
-
       return;
     }
 
@@ -120,14 +120,32 @@ const ResetPassword = () => {
         console.log("Reset Password response:", data);
         console.log("=================================");
 
-        // Remove temporary reset data
+        // =================================================
+        // REMOVE TEMPORARY RESET DATA
+        // =================================================
+
         sessionStorage.removeItem("resetEmail");
         sessionStorage.removeItem("resetToken");
+        sessionStorage.removeItem("authFlow");
 
-        // Success message
+        // =================================================
+        // CLEAR ANY OLD AUTH SESSION
+        // =================================================
+        // This is important if an Admin/Owner was logged in
+        // in the same browser before starting activation.
+
+        clearAuthSession();
+
+        // =================================================
+        // SUCCESS MESSAGE
+        // =================================================
+
         toast.success(t("auth.resetPassword.success"));
 
-        // Go directly to Login
+        // =================================================
+        // GO TO LOGIN
+        // =================================================
+
         setTimeout(() => {
           navigate("/login", {
             replace: true,
@@ -149,12 +167,25 @@ const ResetPassword = () => {
         const status = error?.response?.status;
 
         // =================================================
+        // GET ACTUAL BACKEND MESSAGE
+        // =================================================
+
+        const backendMessage =
+          error?.response?.data?.message ||
+          error?.response?.data?.error ||
+          error?.response?.data?.errors?.[0] ||
+          error?.message;
+
+        // =================================================
         // 422
         // Invalid / expired reset token
         // =================================================
 
         if (status === 422) {
-          toast.error(t("auth.resetPassword.errorGeneric"));
+          toast.error(
+            backendMessage ||
+              t("auth.resetPassword.errorGeneric")
+          );
 
           sessionStorage.removeItem("resetToken");
           sessionStorage.removeItem("resetEmail");
@@ -174,16 +205,22 @@ const ResetPassword = () => {
         // =================================================
 
         if (status === 429) {
-          toast.error(t("auth.resetPassword.errorGeneric"));
+          toast.error(
+            backendMessage ||
+              t("auth.resetPassword.errorGeneric")
+          );
 
           return;
         }
 
         // =================================================
-        // OTHER ERRORS
+        // OTHER BACKEND ERRORS
         // =================================================
 
-        toast.error(t("auth.resetPassword.errorGeneric"));
+        toast.error(
+          backendMessage ||
+            t("auth.resetPassword.errorGeneric")
+        );
       },
     });
   };
@@ -195,11 +232,14 @@ const ResetPassword = () => {
   return (
     <MainAuthForm>
       <div className="reset-password-card">
+
         {/* =================================================
             TITLE
         ================================================= */}
 
-        <h1>{t("auth.resetPassword.title")}</h1>
+        <h1>
+          {t("auth.resetPassword.title")}
+        </h1>
 
         <p className="reset-password-description">
           {t("auth.resetPassword.subtitle")}
@@ -219,7 +259,9 @@ const ResetPassword = () => {
               id="newPassword"
               type={showNewPassword ? "text" : "password"}
               autoComplete="new-password"
-              placeholder={t("auth.resetPassword.newPasswordPlaceholder")}
+              placeholder={t(
+                "auth.resetPassword.newPasswordPlaceholder"
+              )}
               value={newPassword}
               onChange={(e) => setNewPassword(e.target.value)}
               disabled={resetPasswordMutation.isPending}
@@ -228,7 +270,9 @@ const ResetPassword = () => {
             <button
               type="button"
               className="password-toggle"
-              onClick={() => setShowNewPassword((prev) => !prev)}
+              onClick={() =>
+                setShowNewPassword((prev) => !prev)
+              }
               disabled={resetPasswordMutation.isPending}
             >
               {showNewPassword ? <FaEyeSlash /> : <FaEye />}
@@ -250,9 +294,12 @@ const ResetPassword = () => {
             />
           </div>
 
-          <span>{t("auth.resetPassword.strength")}</span>
+          <span>
+            {t("auth.resetPassword.strength")}
+          </span>
 
           <div className="requirements">
+
             {/* LENGTH */}
 
             <div
@@ -322,6 +369,7 @@ const ResetPassword = () => {
 
               {t("auth.resetPassword.reqSpecial")}
             </div>
+
           </div>
         </div>
 
@@ -337,21 +385,35 @@ const ResetPassword = () => {
           <div className="password-input-wrapper">
             <input
               id="confirmPassword"
-              type={showConfirmPassword ? "text" : "password"}
+              type={
+                showConfirmPassword
+                  ? "text"
+                  : "password"
+              }
               autoComplete="new-password"
-              placeholder={t("auth.resetPassword.confirmPasswordPlaceholder")}
+              placeholder={t(
+                "auth.resetPassword.confirmPasswordPlaceholder"
+              )}
               value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
+              onChange={(e) =>
+                setConfirmPassword(e.target.value)
+              }
               disabled={resetPasswordMutation.isPending}
             />
 
             <button
               type="button"
               className="password-toggle"
-              onClick={() => setShowConfirmPassword((prev) => !prev)}
+              onClick={() =>
+                setShowConfirmPassword((prev) => !prev)
+              }
               disabled={resetPasswordMutation.isPending}
             >
-              {showConfirmPassword ? <FaEyeSlash /> : <FaEye />}
+              {showConfirmPassword ? (
+                <FaEyeSlash />
+              ) : (
+                <FaEye />
+              )}
             </button>
           </div>
         </div>
@@ -370,6 +432,7 @@ const ResetPassword = () => {
             ? t("auth.resetPassword.resetting")
             : t("auth.resetPassword.resetButton")}
         </button>
+
       </div>
     </MainAuthForm>
   );

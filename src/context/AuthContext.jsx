@@ -8,6 +8,7 @@ import {
 } from "react";
 import { ROLE_ROUTES } from "../utils/roleRoutes";
 import { logoutUser } from "../features/auth/api";
+import { disconnectEcho, reconnectEcho } from "../utils/echo";
 
 const AuthContext = createContext(null);
 
@@ -86,6 +87,7 @@ export const AuthProvider = ({ children }) => {
   // Sync state if 401 unauthorized event fires from axios interceptor
   useEffect(() => {
     const handleUnauthorized = () => {
+      disconnectEcho();
       setAuthState({
         token: null,
         user: null,
@@ -136,6 +138,9 @@ export const AuthProvider = ({ children }) => {
       } catch (e) {
         console.error("Failed to persist auth data to localStorage", e);
       }
+
+      // Reconnect WebSockets with new session
+      reconnectEcho();
     },
     [],
   );
@@ -155,6 +160,9 @@ export const AuthProvider = ({ children }) => {
         // Continue with local cleanup even if API call fails
         console.warn("Backend logout failed (token may already be expired)", e);
       }
+
+      // Disconnect WebSockets
+      disconnectEcho();
 
       setAuthState({
         token: null,

@@ -365,7 +365,7 @@ export default function AdminAttendance() {
         onError: (error) => {
           toast.error(
             error?.response?.data?.message ||
-              "Failed to update exception status.",
+            "Failed to update exception status.",
           );
         },
       },
@@ -388,7 +388,7 @@ export default function AdminAttendance() {
         onError: (error) => {
           toast.error(
             error?.response?.data?.message ||
-              "Failed to update exception status.",
+            "Failed to update exception status.",
           );
         },
       },
@@ -410,7 +410,7 @@ export default function AdminAttendance() {
         onError: (error) => {
           toast.error(
             error?.response?.data?.message ||
-              "Failed to export. Please try again.",
+            "Failed to export. Please try again.",
           );
         },
       },
@@ -516,11 +516,11 @@ export default function AdminAttendance() {
                 }}
                 className="h-11 w-full appearance-none rounded-xl border border-slate-200 bg-white px-3 pr-9 text-xs text-slate-700 outline-none transition focus:border-[#1c364f] focus:ring-2 focus:ring-[#1c364f]/10"
               >
-                <option value="">All statuses</option>
-                <option value="Present">Present</option>
-                <option value="Late">Late</option>
-                <option value="Absent">Absent</option>
-                <option value="On Shift">On Shift</option>
+                <option value="">{t("attendance.allStatuses", "All statuses")}</option>
+                <option value="Present">{t("attendance.present", "Present")}</option>
+                <option value="Late">{t("attendance.late", "Late")}</option>
+                <option value="Absent">{t("attendance.absent", "Absent")}</option>
+                <option value="On Shift">{t("attendance.onShift", "On Shift")}</option>
               </select>
               <FiChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
             </div>
@@ -576,8 +576,8 @@ export default function AdminAttendance() {
                 className="h-11 w-full appearance-none rounded-xl border border-slate-200 bg-white px-3 pr-9 text-xs text-slate-700 outline-none transition focus:border-[#1c364f] focus:ring-2 focus:ring-[#1c364f]/10"
               >
                 {[
-                  "January","February","March","April","May","June",
-                  "July","August","September","October","November","December",
+                  "January", "February", "March", "April", "May", "June",
+                  "July", "August", "September", "October", "November", "December",
                 ].map((m, i) => (
                   <option key={m} value={i + 1}>{m}</option>
                 ))}
@@ -693,11 +693,10 @@ export default function AdminAttendance() {
             key={tab.id}
             type="button"
             onClick={() => setActiveTab(tab.id)}
-            className={`flex-1 rounded-lg px-4 py-2.5 text-xs font-semibold transition ${
-              activeTab === tab.id
-                ? "bg-[#1c364f] text-white shadow-sm"
-                : "text-slate-500 hover:bg-slate-50 hover:text-slate-700"
-            }`}
+            className={`flex-1 rounded-lg px-4 py-2.5 text-xs font-semibold transition ${activeTab === tab.id
+              ? "bg-[#1c364f] text-white shadow-sm"
+              : "text-slate-500 hover:bg-slate-50 hover:text-slate-700"
+              }`}
           >
             {tab.label}
             {tab.id === "exceptions" && (exceptionsMeta?.total ?? 0) > 0 && (
@@ -741,7 +740,7 @@ export default function AdminAttendance() {
                 <table className="w-full min-w-[1150px]">
                   <thead>
                     <tr className="border-b border-slate-100 bg-slate-50/70">
-                      {["Employee","Branch","Shift","Check-in","Check-out","Duration","Delay","Mode","Status","Action"].map((col) => (
+                      {["Employee", "Branch", "Shift", "Check-in", "Check-out", "Duration", "Delay", "Mode", "Status", "Action"].map((col) => (
                         <th key={col} className="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-wide text-slate-400 first:px-5">
                           {col}
                         </th>
@@ -1022,7 +1021,7 @@ export default function AdminAttendance() {
                 <table className="w-full min-w-[900px]">
                   <thead>
                     <tr className="border-b border-slate-100 bg-slate-50/70">
-                      {["Employee","Job Title","Department","Present Days","Late Days","Late Minutes","Absent Days","Worked Hours"].map((col) => (
+                      {["Employee", "Job Title", "Department", "Present Days", "Late Days", "Late Minutes", "Absent Days", "Worked Hours"].map((col) => (
                         <th key={col} className="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-wide text-slate-400 first:px-5">
                           {col}
                         </th>
@@ -1231,11 +1230,10 @@ export default function AdminAttendance() {
                     <button
                       type="button"
                       onClick={() => setReviewForm((f) => ({ ...f, status: "approved" }))}
-                      className={`flex items-center justify-center gap-2 rounded-xl border px-4 py-3 text-xs font-bold transition ${
-                        reviewForm.status === "approved"
-                          ? "border-emerald-300 bg-emerald-50 text-emerald-700"
-                          : "border-slate-200 bg-white text-slate-500 hover:bg-slate-50"
-                      }`}
+                      className={`flex items-center justify-center gap-2 rounded-xl border px-4 py-3 text-xs font-bold transition ${reviewForm.status === "approved"
+                        ? "border-emerald-300 bg-emerald-50 text-emerald-700"
+                        : "border-slate-200 bg-white text-slate-500 hover:bg-slate-50"
+                        }`}
                     >
                       <span className="h-2 w-2 rounded-full bg-emerald-500" />
                       Approve
@@ -1243,11 +1241,10 @@ export default function AdminAttendance() {
                     <button
                       type="button"
                       onClick={() => setReviewForm((f) => ({ ...f, status: "rejected" }))}
-                      className={`flex items-center justify-center gap-2 rounded-xl border px-4 py-3 text-xs font-bold transition ${
-                        reviewForm.status === "rejected"
-                          ? "border-red-300 bg-red-50 text-red-600"
-                          : "border-slate-200 bg-white text-slate-500 hover:bg-slate-50"
-                      }`}
+                      className={`flex items-center justify-center gap-2 rounded-xl border px-4 py-3 text-xs font-bold transition ${reviewForm.status === "rejected"
+                        ? "border-red-300 bg-red-50 text-red-600"
+                        : "border-slate-200 bg-white text-slate-500 hover:bg-slate-50"
+                        }`}
                     >
                       <span className="h-2 w-2 rounded-full bg-red-500" />
                       Reject
@@ -1279,11 +1276,10 @@ export default function AdminAttendance() {
                   <button
                     type="submit"
                     disabled={updateExceptionLoading}
-                    className={`inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-xs font-semibold text-white transition ${
-                      reviewForm.status === "approved"
-                        ? "bg-emerald-600 hover:bg-emerald-700"
-                        : "bg-red-600 hover:bg-red-700"
-                    } disabled:cursor-not-allowed disabled:opacity-60`}
+                    className={`inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-xs font-semibold text-white transition ${reviewForm.status === "approved"
+                      ? "bg-emerald-600 hover:bg-emerald-700"
+                      : "bg-red-600 hover:bg-red-700"
+                      } disabled:cursor-not-allowed disabled:opacity-60`}
                   >
                     {updateExceptionLoading ? (
                       <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-white/40 border-t-white" />

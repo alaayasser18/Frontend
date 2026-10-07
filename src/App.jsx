@@ -32,11 +32,12 @@ import AdminAdvances from "./features/admin/pages/AdvancesDeductions";
 import AdminRewards from "./features/admin/pages/Rewards";
 import AdminAttendance from "./features/admin/pages/Attendance";
 import AdminHolidays from "./features/admin/pages/Holidays";
+import AdminPolicies from "./features/admin/pages/Policies";
 import LandingPage from "./features/admin/pages/LandingPage";
 
 // ==================== Employee Pages ====================
 import EmployeePerformance from "./features/employee/pages/Performance";
-import CompanyPolicies from "./features/employee/pages/Policies";
+import PoliciesList from "./features/employee/pages/PoliciesList";
 import Tasks from "./features/employee/pages/Tasks";
 import EmployeeProfileSettings from "./features/employee/pages/ProfileSettings";
 import HomeDashboard from "./features/employee/pages/home/HomeDashboard";
@@ -45,6 +46,8 @@ import LeaveBalances from "./features/employee/pages/Leave & balances";
 import AIAssistant from "./features/employee/pages/AI Assistant";
 import EmployeeGoals from "./features/employee/pages/Goals";
 import EmployeeFinancial from "./features/employee/pages/Financial";
+import EmployeeEvaluations from "./features/employee/pages/Evaluations";
+import AdminEvaluations from "./features/admin/pages/Evaluations";
 
 // ==================== Manager Pages ====================
 import TeamDashboard from "./features/manager/pages/TeamDashboard";
@@ -54,11 +57,13 @@ import TeamEvaluations from "./features/manager/pages/TeamEvaluations";
 import TeamGoals from "./features/manager/pages/TeamGoals";
 import PerformanceAnalytics from "./features/manager/pages/PerformanceAnalytics";
 import TeamAttendance from "./features/manager/pages/TeamAttendance";
+import TeamMembers from "./features/manager/pages/TeamMembers";
 import TeamLeaveApprovals from "./features/manager/pages/TeamLeaveApprovals";
 import DepartmentDirectory from "./features/departments/pages/DepartmentDirectory";
 import AITeamInsights from "./features/manager/pages/AITeamInsights";
 import ProfileSetting from "./features/manager/pages/ProfileSetting";
 import ManagerHolidays from "./features/manager/pages/Holidays";
+import ManagerPolicies from "./features/manager/pages/CompanyPolicies";
 
 // ==================== HR Pages ====================
 import HrDashboard from "./features/hr/pages/hrDashboard";
@@ -69,14 +74,17 @@ import HrEmployees from "./features/hr/pages/employees";
 import HrLeaveRequests from "./features/hr/pages/leaveRequests";
 import HrPayroll from "./features/hr/pages/payroll";
 import HrRewards from "./features/hr/pages/rewards&Bonuses";
-import HrEvaluationsGoals from "./features/hr/pages/evaluations&goals";
+import HrGoals from "./features/hr/pages/goals";
+import HrEvaluations from "./features/hr/pages/evaluations";
 import PerformanceMetrics from "./features/hr/pages/performanceMatrics";
 import AIInsights from "./features/hr/pages/aiInsights";
-import HrCompanyPolicies from "./features/hr/pages/companyPolicies";
+import HrPolicies from "./features/hr/pages/managePolicies";
 import HrHolidays from "./features/hr/pages/holidays";
 import EmployeeHolidays from "./features/employee/pages/Holidays";
 import Reports from "./features/hr/pages/reports";
 import HrProfileSettings from "./features/hr/pages/ProfileSettings";
+import CalendarPage from "./features/calendar/pages/CalendarPage";
+import CompanyEventsPage from "./features/events/pages/CompanyEventsPage";
 
 // ==================== Layout ====================
 import DashboardLayout from "./layouts/DashboardLayout";
@@ -342,9 +350,26 @@ function App() {
 
               <Route path="/admin/holidays" element={<AdminHolidays />} />
 
+              <Route
+                path="/admin/calendar"
+                element={<CalendarPage customRole="admin" />}
+              />
+
+              <Route
+                path="/admin/events"
+                element={<CompanyEventsPage customRole="admin" />}
+              />
+              <Route
+                path="/admin/company-events"
+                element={<Navigate to="/admin/events" replace />}
+              />
+
               <Route path="/admin/profile" element={<AdminProfileSettings />} />
 
               <Route path="/admin/goals" element={<Goals />} />
+
+              <Route path="/admin/evaluations" element={<AdminEvaluations />} />
+              <Route path="/admin/policies" element={<AdminPolicies />} />
 
               <Route
                 path="/admin/settings"
@@ -406,13 +431,12 @@ function App() {
                   element={<SubmissionReviews role="HR" />}
                 />
 
-                <Route
-                  path="tasks"
-                  element={<TaskManagement role="HR" />}
-                />
+                <Route path="tasks" element={<TaskManagement role="HR" />} />
+                <Route path="goals" element={<HrGoals />} />
+                <Route path="evaluations" element={<HrEvaluations />} />
                 <Route
                   path="evaluations-goals"
-                  element={<HrEvaluationsGoals />}
+                  element={<Navigate to="/hr/evaluations" replace />}
                 />
 
                 <Route
@@ -422,12 +446,25 @@ function App() {
 
                 <Route path="ai-insights" element={<AIInsights />} />
 
-                <Route
-                  path="company-policies"
-                  element={<HrCompanyPolicies />}
-                />
+                <Route path="company-policies" element={<HrPolicies />} />
 
                 <Route path="holidays" element={<HrHolidays />} />
+
+                <Route
+                  path="calendar"
+                  element={<CalendarPage customRole="hr" />}
+                />
+
+                <Route
+                  path="events"
+                  element={<CompanyEventsPage customRole="hr" />}
+                />
+                <Route
+                  path="company-events"
+                  element={<Navigate to="/hr/events" replace />}
+                />
+
+                <Route path="audit" element={<ActivityLog role="HR" />} />
 
                 <Route path="reports" element={<Reports />} />
 
@@ -450,6 +487,8 @@ function App() {
               />
 
               <Route path="/manager/dashboard" element={<TeamDashboard />} />
+
+              <Route path="/manager/members" element={<TeamMembers />} />
 
               <Route path="/manager/tasks" element={<TaskManagement />} />
 
@@ -483,8 +522,22 @@ function App() {
               />
 
               <Route path="/manager/holidays" element={<ManagerHolidays />} />
+              <Route
+                path="/manager/calendar"
+                element={<CalendarPage customRole="manager" />}
+              />
+              <Route
+                path="/manager/events"
+                element={<CompanyEventsPage customRole="manager" />}
+              />
+              <Route
+                path="/manager/company-events"
+                element={<Navigate to="/manager/events" replace />}
+              />
 
               <Route path="/manager/ai-insights" element={<AITeamInsights />} />
+
+              <Route path="/manager/policies" element={<ManagerPolicies />} />
 
               <Route path="/manager/notifications" element={<Notification />} />
 
@@ -525,6 +578,18 @@ function App() {
               />
 
               <Route path="/employee/holidays" element={<EmployeeHolidays />} />
+              <Route
+                path="/employee/calendar"
+                element={<CalendarPage customRole="employee" />}
+              />
+              <Route
+                path="/employee/events"
+                element={<CompanyEventsPage customRole="employee" />}
+              />
+              <Route
+                path="/employee/company-events"
+                element={<Navigate to="/employee/events" replace />}
+              />
 
               <Route path="/employee/ai-assistant" element={<AIAssistant />} />
 
@@ -538,10 +603,14 @@ function App() {
                 element={<Notification />}
               />
 
-              <Route path="/employee/policies" element={<CompanyPolicies />} />
+              <Route path="/employee/policies" element={<PoliciesList />} />
 
               <Route path="/employee/goals" element={<EmployeeGoals />} />
 
+              <Route
+                path="/employee/evaluations"
+                element={<EmployeeEvaluations />}
+              />
               <Route
                 path="/employee/financial"
                 element={<EmployeeFinancial />}

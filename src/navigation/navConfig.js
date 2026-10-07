@@ -11,6 +11,7 @@ import {
   MdCalendarMonth,
   MdAccountBalanceWallet,
   MdCardGiftcard,
+  MdEventAvailable,
   MdWeb,
 } from "react-icons/md";
 
@@ -25,6 +26,7 @@ import {
   FiBell,
   FiTarget,
   FiDollarSign,
+  FiAward,
 } from "react-icons/fi";
 
 import {
@@ -34,7 +36,6 @@ import {
   MdAssignmentTurnedIn,
   MdInsights,
   MdCalendarToday,
-  MdEventAvailable,
   MdDateRange,
 } from "react-icons/md";
 
@@ -73,6 +74,7 @@ export const navConfig = {
       title: "Departments & Teams",
       path: "/admin/departments",
       icon: MdLocationCity,
+      section: "OPERATIONS",
     },
     {
       titleKey: "portal.submissionReviews",
@@ -128,22 +130,53 @@ export const navConfig = {
       section: "GROWTH & GOVERNANCE",
     },
     {
+      titleKey: "portal.evaluations",
+      title: "Evaluations",
+      path: "/admin/evaluations",
+      icon: MdTrackChanges,
+      section: "GROWTH & GOVERNANCE",
+    },
+    {
+      titleKey: "portal.companyPolicies",
+      title: "Company Policies",
+      path: "/admin/policies",
+      icon: FiBookOpen,
+      section: "GROWTH & GOVERNANCE",
+    },
+    {
       titleKey: "portal.attendance",
       title: "Attendance",
       path: "/admin/attendance",
       icon: MdCalendarMonth,
+      section: "GROWTH & GOVERNANCE",
     },
     {
       titleKey: "portal.leaveRequests",
       title: "Leave Requests",
       path: "/admin/leave-requests",
       icon: MdEventNote,
+      section: "GROWTH & GOVERNANCE",
     },
     {
       titleKey: "portal.holidays",
       title: "Holidays & Seasons",
       path: "/admin/holidays",
       icon: MdEventAvailable,
+      section: "GROWTH & GOVERNANCE",
+    },
+    {
+      titleKey: "portal.calendar",
+      title: "Calendar",
+      path: "/admin/calendar",
+      icon: MdCalendarMonth,
+      section: "GROWTH & GOVERNANCE",
+    },
+    {
+      titleKey: "portal.companyEvents",
+      title: "Company Events",
+      path: "/admin/events",
+      icon: FiAward,
+      section: "GROWTH & GOVERNANCE",
     },
     {
       titleKey: "portal.auditLogs",
@@ -207,6 +240,20 @@ export const navConfig = {
       section: "OPERATIONS",
     },
     {
+      titleKey: "portal.calendar",
+      title: "Calendar",
+      path: "/hr/calendar",
+      icon: MdCalendarMonth,
+      section: "OPERATIONS",
+    },
+    {
+      titleKey: "portal.companyEvents",
+      title: "Company Events",
+      path: "/hr/events",
+      icon: FiAward,
+      section: "OPERATIONS",
+    },
+    {
       titleKey: "portal.leaveRequests",
       path: "/hr/leave-requests",
       icon: MdEventNote,
@@ -249,10 +296,17 @@ export const navConfig = {
 
     // ================= GROWTH & GOVERNANCE =================
     {
-      titleKey: "portal.evaluationsGoals",
-      title: "Evaluations & Goals",
-      path: "/hr/evaluations-goals",
+      titleKey: "portal.goals",
+      title: "Goals",
+      path: "/hr/goals",
       icon: MdTrackChanges,
+      section: "GROWTH & GOVERNANCE",
+    },
+    {
+      titleKey: "portal.evaluations",
+      title: "Evaluations",
+      path: "/hr/evaluations",
+      icon: MdAssessment,
       section: "GROWTH & GOVERNANCE",
     },
     {
@@ -291,6 +345,13 @@ export const navConfig = {
       section: "GROWTH & GOVERNANCE",
     },
     {
+      titleKey: "portal.auditLogs",
+      title: "Audit Logs",
+      path: "/hr/audit",
+      icon: MdHistory,
+      section: "GROWTH & GOVERNANCE",
+    },
+    {
       titleKey: "portal.notifications",
       path: "/hr/notifications",
       icon: MdNotifications,
@@ -315,6 +376,12 @@ export const navConfig = {
       title: "Team Dashboard",
       path: "/manager/dashboard",
       icon: MdGridView,
+    },
+    {
+      titleKey: "portal.teamMembers",
+      title: "Team Members",
+      path: "/manager/members",
+      icon: MdPeople,
     },
     {
       titleKey: "portal.taskManagement",
@@ -365,10 +432,28 @@ export const navConfig = {
       icon: MdEventAvailable,
     },
     {
+      titleKey: "portal.companyPolicies",
+      title: "Company Policies",
+      path: "/manager/policies",
+      icon: FiBookOpen,
+    },
+    {
       titleKey: "portal.holidays",
       title: "Official Holidays",
       path: "/manager/holidays",
       icon: MdDateRange,
+    },
+    {
+      titleKey: "portal.calendar",
+      title: "Calendar",
+      path: "/manager/calendar",
+      icon: MdCalendarMonth,
+    },
+    {
+      titleKey: "portal.companyEvents",
+      title: "Company Events",
+      path: "/manager/events",
+      icon: FiAward,
     },
     {
       titleKey: "portal.aiTeamInsights",
@@ -432,6 +517,18 @@ export const navConfig = {
       icon: MdEventAvailable,
     },
     {
+      titleKey: "portal.calendar",
+      title: "Calendar",
+      path: "/employee/calendar",
+      icon: FiCalendar,
+    },
+    {
+      titleKey: "portal.companyEvents",
+      title: "Company Events",
+      path: "/employee/events",
+      icon: FiAward,
+    },
+    {
       titleKey: "portal.myPerformance",
       title: "My Performance",
       path: "/employee/performance",
@@ -442,6 +539,12 @@ export const navConfig = {
       title: "My Goals",
       path: "/employee/goals",
       icon: FiTarget,
+    },
+    {
+      titleKey: "portal.myEvaluations",
+      title: "My Evaluations",
+      path: "/employee/evaluations",
+      icon: FiAward,
     },
     {
       titleKey: "portal.myFinancials",

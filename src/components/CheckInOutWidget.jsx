@@ -1,46 +1,24 @@
 import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import {
   FiMapPin,
-  FiClock,
-  FiCheckCircle,
   FiLogIn,
   FiLogOut,
-  FiAlertTriangle,
   FiLoader,
+  FiCheckCircle,
 } from "react-icons/fi";
 import toast from "react-hot-toast";
-import { checkIn, checkOut, getTodayAttendance } from "../features/employee/api/attendanceApi";
-import { useTodayAttendance } from "../features/employee/hooks/useTodayAttendance";
-
-// ─────────────────────────────────────────────
-// Helpers
-// ─────────────────────────────────────────────
-
-const getCurrentLocation = () =>
-  new Promise((resolve) => {
-    if (!navigator.geolocation) {
-      // Geolocation not supported — proceed without coords
-      resolve({ latitude: null, longitude: null });
-      return;
-    }
-    navigator.geolocation.getCurrentPosition(
-      (pos) =>
-        resolve({
-          latitude: pos.coords.latitude,
-          longitude: pos.coords.longitude,
-        }),
-      // On denial/error — proceed without coords (API may still allow it)
-      () => resolve({ latitude: null, longitude: null }),
-      { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 },
-    );
-  });
+import { checkIn, checkOut } from "../features/employee/api/attendanceApi";
+import {
+  useTodayAttendance,
+  getCurrentLocation,
+} from "../features/employee/hooks/useTodayAttendance";
 
 const parseWorkedTime = (timeString) => {
   if (!timeString) return 0;
-  const parts = timeString.split(":").map(Number);
+  const parts = String(timeString).split(":").map(Number);
   if (parts.length !== 3 || parts.some(Number.isNaN)) return 0;
   const [h, m, s] = parts;
   return h * 3600 + m * 60 + s;
@@ -54,18 +32,10 @@ const formatTime = (totalSeconds) => {
   return `${hh}:${mm}:${ss}`;
 };
 
-// ─────────────────────────────────────────────
-// CheckInOutWidget
-// ─────────────────────────────────────────────
-
 /**
  * Reusable Check-in / Check-out widget.
  * Works for Employee, HR, and Manager roles.
- * Uses the shared /attendance/check-in and /attendance/check-out endpoints.
- *
- * Props:
- *  - compact: boolean — if true, renders a smaller inline version (for dashboards)
- *  - className: extra wrapper classNames
+ * Uses the shared /api/attendance/check-in and /api/attendance/check-out endpoints.
  */
 export default function CheckInOutWidget({ compact = false, className = "" }) {
   const { t } = useTranslation();
@@ -77,105 +47,139 @@ export default function CheckInOutWidget({ compact = false, className = "" }) {
     refetch: refetchAttendance,
   } = useTodayAttendance();
 
-  const attendance = attendanceResponse?.data;
-  const canCheckIn = attendance?.can_check_in === true;
-  const canCheckOut = attendance?.can_check_out === true;
-  const isCheckedIn = attendance?.can_check_out === true;
+  const attendance = attendanceResponse?.data || attendanceResponse;
+
+  // Extract check-in / check-out times safely from backend
+  const checkInTime = attendance?.check_in || attendance?.check_in_time || null;
+  const checkOutTime = attendance?.check_out || attendance?.check_out_time || null;
+
+  const hasCheckedIn = Boolean(checkInTime);
+  const hasCheckedOut = Boolean(checkOutTime);
+
+  const isOnShift = hasCheckedIn && !hasCheckedOut;
+  const isShiftFinished = hasCheckedIn && hasCheckedOut;
+
+  // Check In is disabled ONLY if already checked in today
+  const isCheckInDisabled = hasCheckedIn;
+
+  // Check Out is disabled if not checked in yet OR already checked out today
+  const isCheckOutDisabled = !hasCheckedIn || hasCheckedOut;
 
   // Live timer
   const [secondsWorked, setSecondsWorked] = useState(0);
 
   useEffect(() => {
     setSecondsWorked(parseWorkedTime(attendance?.worked_time));
-  }, [attendance?.worked_time, attendance?.check_in_time, attendance?.check_out_time]);
+  }, [attendance?.worked_time, checkInTime, checkOutTime]);
 
   useEffect(() => {
-    if (!isCheckedIn) return;
+    if (!isOnShift) return;
     const timer = setInterval(() => setSecondsWorked((p) => p + 1), 1000);
     return () => clearInterval(timer);
-  }, [isCheckedIn]);
+  }, [isOnShift]);
 
-  // ── Check-in mutation ──────────────────────
+  // Check-in mutation
   const { mutate: doCheckIn, isPending: checkInLoading } = useMutation({
     mutationFn: async () => {
-      const location = await getCurrentLocation();
-      return checkIn(location);
+      const location = await getCurrentLocation({ required: true });
+      return checkIn({
+        latitude: location.latitude,
+        longitude: location.longitude,
+      });
     },
     onSuccess: () => {
-      toast.success(t("attendance.checkedInSuccess", "Checked in successfully!"));
       refetchAttendance();
-      queryClient.invalidateQueries({ queryKey: ["attendance", "today"] });
+      queryClient.invalidateQueries({ queryKey: ["attendance"] });
     },
     onError: (error) => {
       toast.error(
         error?.response?.data?.message ||
           error?.message ||
-          t("attendance.checkInError", "Unable to check in."),
+          t("attendance.checkInError", "Unable to check in.")
       );
     },
   });
 
-  // ── Check-out mutation ─────────────────────
+  // Check-out mutation
   const { mutate: doCheckOut, isPending: checkOutLoading } = useMutation({
-    mutationFn: checkOut,
+    mutationFn: async () => {
+      const location = await getCurrentLocation({ required: false });
+      return checkOut({
+        latitude: location?.latitude,
+        longitude: location?.longitude,
+      });
+    },
     onSuccess: () => {
-      toast.success(t("attendance.checkedOutSuccess", "Checked out successfully!"));
       refetchAttendance();
-      queryClient.invalidateQueries({ queryKey: ["attendance", "today"] });
+      queryClient.invalidateQueries({ queryKey: ["attendance"] });
     },
     onError: (error) => {
       toast.error(
         error?.response?.data?.message ||
           error?.message ||
-          t("attendance.checkOutError", "Unable to check out."),
+          t("attendance.checkOutError", "Unable to check out.")
       );
     },
   });
 
-  const isLoading = checkInLoading || checkOutLoading || attendanceLoading;
-  const isDisabled = isLoading || (!canCheckIn && !canCheckOut);
-  const isCheckOutMode = canCheckOut || (Boolean(attendance?.check_in_time) && !canCheckIn);
+  const isActionPending = checkInLoading || checkOutLoading;
 
-  const handleAction = () => {
-    if (canCheckIn) {
-      doCheckIn();
-    } else if (canCheckOut) {
-      doCheckOut();
-    }
-  };
-
-  // ── COMPACT MODE (for dashboards) ──────────
+  // ── COMPACT MODE (for dashboards & headers) ──────────
   if (compact) {
     return (
       <div className={`flex items-center gap-2 ${className}`}>
+        {/* Check In button */}
         <button
           type="button"
-          onClick={handleAction}
-          disabled={isDisabled}
-          className={`inline-flex items-center gap-1.5 rounded-xl px-4 py-2 text-xs font-bold transition shadow-sm ${
-            isDisabled
-              ? "border border-slate-200 bg-slate-100 text-slate-400 cursor-not-allowed shadow-none"
-              : canCheckOut
-                ? "bg-rose-500 hover:bg-rose-600 text-white cursor-pointer"
-                : "bg-emerald-600 hover:bg-emerald-700 text-white cursor-pointer"
+          onClick={() => !isCheckInDisabled && !isActionPending && doCheckIn()}
+          disabled={isCheckInDisabled || isActionPending}
+          className={`inline-flex items-center gap-1.5 rounded-xl px-3.5 py-2 text-xs font-bold transition shadow-sm ${
+            isCheckInDisabled
+              ? "bg-slate-100 text-slate-400 border border-slate-200 cursor-not-allowed opacity-75"
+              : "bg-emerald-600 hover:bg-emerald-700 text-white cursor-pointer"
           }`}
         >
-          {isLoading ? (
+          {checkInLoading ? (
             <FiLoader className="h-3.5 w-3.5 animate-spin" />
-          ) : isCheckOutMode ? (
-            <FiLogOut className="h-3.5 w-3.5" />
+          ) : hasCheckedIn ? (
+            <FiCheckCircle className="h-3.5 w-3.5 text-emerald-600" />
           ) : (
             <FiLogIn className="h-3.5 w-3.5" />
           )}
-          {isLoading
-            ? t("attendance.loading", "Please wait...")
-            : isCheckOutMode
-              ? t("attendance.checkOut", "Check Out")
+          <span>
+            {hasCheckedIn
+              ? `${t("attendance.checkedIn", "Checked In")}${checkInTime ? ` (${checkInTime})` : ""}`
               : t("attendance.checkIn", "Check In")}
+          </span>
         </button>
 
-        {isCheckedIn && (
-          <span className="font-mono text-[11px] text-slate-500">
+        {/* Check Out button */}
+        <button
+          type="button"
+          onClick={() => !isCheckOutDisabled && !isActionPending && doCheckOut()}
+          disabled={isCheckOutDisabled || isActionPending}
+          className={`inline-flex items-center gap-1.5 rounded-xl px-3.5 py-2 text-xs font-bold transition shadow-sm ${
+            isCheckOutDisabled
+              ? "bg-slate-100 text-slate-400 border border-slate-200 cursor-not-allowed opacity-60"
+              : "bg-rose-500 hover:bg-rose-600 text-white cursor-pointer"
+          }`}
+        >
+          {checkOutLoading ? (
+            <FiLoader className="h-3.5 w-3.5 animate-spin" />
+          ) : hasCheckedOut ? (
+            <FiCheckCircle className="h-3.5 w-3.5 text-slate-500" />
+          ) : (
+            <FiLogOut className="h-3.5 w-3.5" />
+          )}
+          <span>
+            {hasCheckedOut
+              ? `${t("attendance.checkedOut", "Checked Out")}${checkOutTime ? ` (${checkOutTime})` : ""}`
+              : t("attendance.checkOut", "Check Out")}
+          </span>
+        </button>
+
+        {isOnShift && (
+          <span className="font-mono text-[11px] font-bold text-[#102a43] bg-slate-100 px-2 py-1 rounded-lg">
             {formatTime(secondsWorked)}
           </span>
         )}
@@ -183,7 +187,7 @@ export default function CheckInOutWidget({ compact = false, className = "" }) {
     );
   }
 
-  // ── FULL MODE (for dedicated pages) ────────
+  // ── FULL MODE (for dedicated attendance pages) ────────
   return (
     <div
       className={`overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm ${className}`}
@@ -206,7 +210,7 @@ export default function CheckInOutWidget({ compact = false, className = "" }) {
           </div>
 
           {/* Live badge */}
-          {isCheckedIn && (
+          {isOnShift && (
             <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-emerald-700">
               <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-500" />
               Live
@@ -216,87 +220,127 @@ export default function CheckInOutWidget({ compact = false, className = "" }) {
       </div>
 
       <div className="p-5">
-        {attendanceLoading ? (
-          <div className="flex items-center gap-2 text-xs text-slate-400">
-            <FiLoader className="h-4 w-4 animate-spin" />
-            Loading attendance status...
+        {/* Stats row */}
+        <div className="mb-5 grid grid-cols-3 gap-3">
+          <div className="rounded-xl bg-slate-50 p-3 text-center">
+            <p className="text-[10px] font-bold uppercase tracking-wide text-slate-400">
+              Check-in
+            </p>
+            <p className="mt-1 text-sm font-bold text-[#1c364f]">
+              {checkInTime || "—"}
+            </p>
           </div>
-        ) : (
-          <>
-            {/* Stats row */}
-            <div className="mb-5 grid grid-cols-3 gap-3">
-              <div className="rounded-xl bg-slate-50 p-3 text-center">
-                <p className="text-[10px] font-bold uppercase tracking-wide text-slate-400">
-                  Check-in
-                </p>
-                <p className="mt-1 text-sm font-bold text-[#1c364f]">
-                  {attendance?.check_in_time || "—"}
-                </p>
-              </div>
-              <div className="rounded-xl bg-slate-50 p-3 text-center">
-                <p className="text-[10px] font-bold uppercase tracking-wide text-slate-400">
-                  Check-out
-                </p>
-                <p className="mt-1 text-sm font-bold text-[#1c364f]">
-                  {attendance?.check_out_time || "—"}
-                </p>
-              </div>
-              <div className="rounded-xl bg-slate-50 p-3 text-center">
-                <p className="text-[10px] font-bold uppercase tracking-wide text-slate-400">
-                  Worked
-                </p>
-                <p className="mt-1 font-mono text-sm font-bold text-[#1c364f]">
-                  {isCheckedIn ? formatTime(secondsWorked) : (attendance?.worked_time || "—")}
-                </p>
-              </div>
-            </div>
+          <div className="rounded-xl bg-slate-50 p-3 text-center">
+            <p className="text-[10px] font-bold uppercase tracking-wide text-slate-400">
+              Check-out
+            </p>
+            <p className="mt-1 text-sm font-bold text-[#1c364f]">
+              {checkOutTime || "—"}
+            </p>
+          </div>
+          <div className="rounded-xl bg-slate-50 p-3 text-center">
+            <p className="text-[10px] font-bold uppercase tracking-wide text-slate-400">
+              Worked
+            </p>
+            <p className="mt-1 font-mono text-sm font-bold text-[#1c364f]">
+              {isOnShift
+                ? formatTime(secondsWorked)
+                : attendance?.worked_time || "—"}
+            </p>
+          </div>
+        </div>
 
-            {/* Location */}
-            {attendance?.distance_meters !== undefined && attendance?.distance_meters !== null && (
-              <div
-                className={`mb-4 flex items-center gap-2 rounded-xl px-3 py-2.5 text-xs font-medium ${
-                  attendance?.is_inside_radius
-                    ? "bg-emerald-50 text-emerald-700"
-                    : "bg-amber-50 text-amber-700"
-                }`}
-              >
-                <FiMapPin className="h-3.5 w-3.5 shrink-0" />
-                {attendance?.is_inside_radius
-                  ? `Inside workplace radius · ${Number(attendance.distance_meters).toFixed(0)}m from office`
-                  : `Outside workplace radius · ${Number(attendance.distance_meters).toFixed(0)}m from office`}
-              </div>
-            )}
-
-            {/* Action button */}
-            <motion.button
-              type="button"
-              onClick={handleAction}
-              disabled={isDisabled}
-              whileTap={!isDisabled ? { scale: 0.98 } : undefined}
-              className={`w-full rounded-xl px-4 py-3 text-sm font-bold shadow-sm transition ${
-                isDisabled
-                  ? "border border-slate-200 bg-slate-100 text-slate-400 cursor-not-allowed shadow-none"
-                  : canCheckOut
-                    ? "bg-rose-500 hover:bg-rose-600 text-white cursor-pointer"
-                    : "bg-emerald-600 hover:bg-emerald-700 text-white cursor-pointer"
+        {/* Location badge */}
+        {attendance?.distance_meters !== undefined &&
+          attendance?.distance_meters !== null && (
+            <div
+              className={`mb-4 flex items-center gap-2 rounded-xl px-3 py-2.5 text-xs font-medium ${
+                attendance?.is_inside_radius
+                  ? "bg-emerald-50 text-emerald-700"
+                  : "bg-amber-50 text-amber-700"
               }`}
             >
-              <span className="flex items-center justify-center gap-2">
-                {isLoading ? (
-                  <FiLoader className="h-4 w-4 animate-spin" />
-                ) : isCheckOutMode ? (
-                  <FiLogOut className="h-4 w-4" />
-                ) : (
-                  <FiLogIn className="h-4 w-4" />
-                )}
-                {isLoading
-                  ? t("attendance.loading", "Please wait...")
-                  : isCheckOutMode
-                    ? t("attendance.checkOut", "Check Out")
-                    : t("attendance.checkIn", "Check In")}
-              </span>
-            </motion.button>
-          </>
+              <FiMapPin className="h-3.5 w-3.5 shrink-0" />
+              {attendance?.is_inside_radius
+                ? `Inside workplace radius · ${Number(
+                    attendance.distance_meters
+                  ).toFixed(0)}m from office`
+                : `Outside workplace radius · ${Number(
+                    attendance.distance_meters
+                  ).toFixed(0)}m from office`}
+            </div>
+          )}
+
+        {/* Action buttons */}
+        <div className="flex flex-col sm:flex-row gap-3">
+          {/* Check In Button */}
+          <motion.button
+            type="button"
+            onClick={() => !isCheckInDisabled && !isActionPending && doCheckIn()}
+            disabled={isCheckInDisabled || isActionPending}
+            whileTap={!isCheckInDisabled ? { scale: 0.98 } : {}}
+            className={`flex-1 rounded-xl px-4 py-3 text-xs font-bold shadow-sm transition ${
+              isCheckInDisabled
+                ? "bg-slate-100 text-slate-400 border border-slate-200 cursor-not-allowed opacity-75"
+                : "bg-emerald-600 hover:bg-emerald-700 text-white cursor-pointer"
+            }`}
+          >
+            <span className="flex items-center justify-center gap-2">
+              {checkInLoading ? (
+                <FiLoader className="h-4 w-4 animate-spin" />
+              ) : hasCheckedIn ? (
+                <FiCheckCircle className="h-4 w-4 text-emerald-600" />
+              ) : (
+                <FiLogIn className="h-4 w-4" />
+              )}
+              {checkInLoading
+                ? t("attendance.loading", "Please wait...")
+                : hasCheckedIn
+                ? `${t("attendance.checkedIn", "Checked In")}${checkInTime ? ` (${checkInTime})` : ""}`
+                : t("attendance.checkIn", "Check In")}
+            </span>
+          </motion.button>
+
+          {/* Check Out Button */}
+          <motion.button
+            type="button"
+            onClick={() => !isCheckOutDisabled && !isActionPending && doCheckOut()}
+            disabled={isCheckOutDisabled || isActionPending}
+            whileTap={!isCheckOutDisabled ? { scale: 0.98 } : {}}
+            className={`flex-1 rounded-xl px-4 py-3 text-xs font-bold shadow-sm transition ${
+              isCheckOutDisabled
+                ? "bg-slate-100 text-slate-400 border border-slate-200 cursor-not-allowed opacity-60"
+                : "bg-rose-500 hover:bg-rose-600 text-white cursor-pointer"
+            }`}
+          >
+            <span className="flex items-center justify-center gap-2">
+              {checkOutLoading ? (
+                <FiLoader className="h-4 w-4 animate-spin" />
+              ) : hasCheckedOut ? (
+                <FiCheckCircle className="h-4 w-4 text-slate-500" />
+              ) : (
+                <FiLogOut className="h-4 w-4" />
+              )}
+              {checkOutLoading
+                ? t("attendance.loading", "Please wait...")
+                : hasCheckedOut
+                ? `${t("attendance.checkedOut", "Checked Out")}${checkOutTime ? ` (${checkOutTime})` : ""}`
+                : t("attendance.checkOut", "Check Out")}
+            </span>
+          </motion.button>
+        </div>
+
+        {/* Shift finished status */}
+        {isShiftFinished && (
+          <div className="mt-3 w-full rounded-xl bg-emerald-50 border border-emerald-200 p-2.5 text-center text-xs font-bold text-emerald-700 flex items-center justify-center gap-2">
+            <FiCheckCircle className="h-4 w-4" />
+            <span>
+              {t(
+                "attendance.shiftFinishedFull",
+                "Shift completed for today. Thank you!"
+              )}
+            </span>
+          </div>
         )}
       </div>
     </div>

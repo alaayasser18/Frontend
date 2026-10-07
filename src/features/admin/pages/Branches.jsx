@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import {
   LuBuilding2,
   LuChevronRight,
@@ -12,59 +12,14 @@ import {
 } from "react-icons/lu";
 import { useTranslation } from "react-i18next";
 import { motion, AnimatePresence } from "framer-motion";
+import {
+  useActiveCompanyLocation,
+  useCreateCompanyLocation,
+  useUpdateCompanyLocation,
+  useDeactivateCompanyLocation,
+  useActivateCompanyLocation,
+} from "../../../hooks/useCompanyLocations";
 
-// =========================
-// API CONFIG
-// =========================
-const getApiRoot = () => {
-  const raw = (
-    import.meta.env.VITE_API_BASE_URL ||
-    import.meta.env.VITE_API_URL ||
-    ""
-  ).replace(/\/+$/, "");
-
-  if (!raw) return "/api";
-  return raw.endsWith("/api") ? raw : `${raw}/api`;
-};
-
-const API_ROOT = getApiRoot();
-
-// POST (إضافة) / PUT (تعديل) / DELETE (تعطيل) + /{id}
-const ENDPOINT_MUTATE = "/locations/company/location";
-
-// GET — الفرع المفعّل (من التوثيق: Get active company location)
-const ENDPOINT_GET = "/locations/company/location/active";
-
-// تجهيز الرابط من غير تكرار api
-const buildUrl = (path) => {
-  const cleanPath = path.startsWith("/") ? path : `/${path}`;
-  return API_ROOT.endsWith("/api") && cleanPath.startsWith("/api")
-    ? `${API_ROOT.replace(/\/api$/, "")}${cleanPath}`
-    : `${API_ROOT}${cleanPath}`;
-};
-
-// استخراج الليستة من أي شكل رد — حتى كائن واحد
-const extractList = (json) => {
-  if (!json) return null;
-  if (Array.isArray(json)) return json;
-  if (Array.isArray(json.data)) return json.data;
-  if (Array.isArray(json.data?.data)) return json.data.data;
-  if (Array.isArray(json.data?.locations)) return json.data.locations;
-  if (Array.isArray(json.locations)) return json.locations;
-
-  // السيرفر ممكن يرجع كائن واحد (location واحد لكل شركة)
-  if (json.data && typeof json.data === "object" && !Array.isArray(json.data)) {
-    return [json.data];
-  }
-  if (json.success === true) return [];
-  return null;
-};
-
-const isValidResponse = (json) => {
-  if (!json) return false;
-  if (json.success === false) return false;
-  return extractList(json) !== null;
-};
 
 const formatCoordinates = (latitude, longitude) => {
   const lat = Number(latitude);
@@ -107,118 +62,50 @@ export default function Branches() {
   const { t, i18n } = useTranslation();
 
   const isRtl = i18n.language?.startsWith("ar");
-  const lang = isRtl ? "ar" : "en";
 
   // =========================
-  // Data State
+  // React Query Hooks
   // =========================
-  const [branches, setBranches] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [apiError, setApiError] = useState(null);
+  const {
+    data: activeLocation,
+    isLoading: loading,
+    isError,
+    error: fetchError,
+    refetch: refetchLocation,
+  } = useActiveCompanyLocation();
+
+  // Normalize: API returns either a single object or null
+  const branches = activeLocation ? [activeLocation] : [];
+  const apiError = isError
+    ? fetchError?.response?.data?.message || fetchError?.message || null
+    : null;
+
+  const createMutation    = useCreateCompanyLocation();
+  const updateMutation    = useUpdateCompanyLocation();
+  const deactivateMutation = useDeactivateCompanyLocation();
+  const activateMutation   = useActivateCompanyLocation();
 
   // =========================
   // Modal State
   // =========================
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isModalOpen, setIsModalOpen]     = useState(false);
   const [editingBranch, setEditingBranch] = useState(null);
 
   // Delete Confirmation State
   const [deletingBranch, setDeletingBranch] = useState(null);
-  const [deleting, setDeleting] = useState(false);
+  const deleting = deactivateMutation.isPending;
 
   // =========================
   // Toast / Form State
   // =========================
   const [toast, setToast] = useState({ visible: false, title: "", message: "" });
 
-  const [branchName, setBranchName] = useState("");
-  const [latitude, setLatitude] = useState("30.0444");
-  const [longitude, setLongitude] = useState("31.2357");
+  const [branchName, setBranchName]       = useState("");
+  const [latitude, setLatitude]           = useState("30.0444");
+  const [longitude, setLongitude]         = useState("31.2357");
   const [geofenceRadius, setGeofenceRadius] = useState("350");
-  const [isActive, setIsActive] = useState(true);
-  const [submitting, setSubmitting] = useState(false);
-
-  // =========================
-  // دالة موحدة لأي طلب API
-  // =========================
-  const request = useCallback(
-    async (path, options = {}) => {
-      const token = localStorage.getItem("token");
-      const currentLang = i18n.language?.startsWith("ar") ? "ar" : "en";
-
-      // lang كـ query parameter (حسب التوثيق)
-      const separator = path.includes("?") ? "&" : "?";
-      const url = `${buildUrl(path)}${separator}lang=${currentLang}`;
-
-      const response = await fetch(url, {
-        ...options,
-        headers: {
-          Accept: "application/json",
-          "Accept-Language": currentLang,
-          "ngrok-skip-browser-warning": "true",
-          ...(options.body ? { "Content-Type": "application/json" } : {}),
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
-        },
-      });
-
-      const json = await response.json().catch(() => null);
-      return { ok: response.ok, status: response.status, json };
-    },
-    [i18n.language]
-  );
-
-  // =====================================================
-  // FETCH — Get active company location
-  // =====================================================
-  const fetchBranches = useCallback(
-    async (signal) => {
-      setLoading(true);
-      setApiError(null);
-
-      try {
-        const { ok, status, json } = await request(ENDPOINT_GET, { signal });
-
-        if (ok && isValidResponse(json)) {
-          console.info("[Branches] ✅ List loaded");
-          setBranches(extractList(json));
-          setLoading(false);
-          return;
-        }
-
-        // ✅ 404 مع "No active company location found" مش error —
-        // معناه الشركة معندهاش فرع مفعّل → نعرض الحالة الفاضية عادي
-        if (
-          status === 404 &&
-          (json?.message || "").toLowerCase().includes("no active company location")
-        ) {
-          setBranches([]);
-          setLoading(false);
-          return;
-        }
-
-        // 401 — التوكن خلص
-        if (status === 401) {
-          setApiError("Unauthenticated — please login again.");
-          setLoading(false);
-          return;
-        }
-
-        setApiError(json?.message || `Failed to load locations (${status})`);
-      } catch (e) {
-        if (e.name === "AbortError") return;
-        setApiError(e.message);
-      } finally {
-        setLoading(false);
-      }
-    },
-    [request]
-  );
-
-  useEffect(() => {
-    const controller = new AbortController();
-    fetchBranches(controller.signal);
-    return () => controller.abort();
-  }, [fetchBranches]);
+  const [isActive, setIsActive]           = useState(true);
+  const submitting = createMutation.isPending || updateMutation.isPending;
 
   // =========================
   // Toast
@@ -281,114 +168,53 @@ export default function Branches() {
   };
 
   // =====================================================
-  // Toggle GPS — PUT ثم PATCH كـ fallback
+  // Toggle GPS — activate/deactivate endpoints
   // =====================================================
   const handleToggleGps = async (branch) => {
-    const previousState = !!branch.is_active;
-    const newState = !previousState;
-
-    // Optimistic update
-    setBranches((prev) =>
-      prev.map((item) =>
-        item.id === branch.id ? { ...item, is_active: newState } : item
-      )
-    );
-
-    showSuccessToast(
-      newState
-        ? t("branchesPage.gpsEnabledToastTitle")
-        : t("branchesPage.gpsDisabledToastTitle"),
-      newState
-        ? t("branchesPage.gpsEnabledToastMessage", { name: branch.name })
-        : t("branchesPage.gpsDisabledToastMessage", { name: branch.name })
-    );
-
-    const payload = JSON.stringify({
-      name: branch.name,
-      latitude: Number(branch.latitude),
-      longitude: Number(branch.longitude),
-      radius: Number(branch.radius) || 350,
-      is_active: newState,
-    });
+    const newState = !branch.is_active;
 
     try {
-      let { ok, status, json } = await request(
-        `${ENDPOINT_MUTATE}/${branch.id}`,
-        {
-          method: "PUT",
-          body: payload,
-        }
+      if (newState) {
+        await activateMutation.mutateAsync(branch.id);
+      } else {
+        await deactivateMutation.mutateAsync(branch.id);
+      }
+      showSuccessToast(
+        newState
+          ? t("branchesPage.gpsEnabledToastTitle", "Location Activated")
+          : t("branchesPage.gpsDisabledToastTitle", "Location Deactivated"),
+        newState
+          ? t("branchesPage.gpsEnabledToastMessage", { name: branch.name, defaultValue: `${branch.name} is now active.` })
+          : t("branchesPage.gpsDisabledToastMessage", { name: branch.name, defaultValue: `${branch.name} has been deactivated.` })
       );
-
-      if (!ok) {
-        ({ ok } = await request(`${ENDPOINT_MUTATE}/${branch.id}`, {
-          method: "PATCH",
-          body: payload,
-        }));
-      }
-
-      if (!ok) {
-        throw new Error(json?.message || `Update failed (${status})`);
-      }
     } catch (e) {
-      // Rollback
-      setBranches((prev) =>
-        prev.map((item) =>
-          item.id === branch.id ? { ...item, is_active: previousState } : item
-        )
-      );
       showSuccessToast(
         t("branchesPage.updateFailedTitle", "Error"),
-        e.message || t("branchesPage.updateFailed", "Failed to update location.")
+        e?.response?.data?.message || e?.message || t("branchesPage.updateFailed", "Failed to update location.")
       );
     }
   };
 
   // =====================================================
-  // DELETE — Deactivate (حسب التوثيق)
-  // DELETE /locations/company/location/{id}?lang=xx
+  // DELETE — Deactivate via PATCH /deactivate
   // =====================================================
   const handleDeleteBranch = async () => {
     if (!deletingBranch || deleting) return;
 
-    setDeleting(true);
-
     const branchToDelete = deletingBranch;
 
     try {
-      const { ok, status, json } = await request(
-        `${ENDPOINT_MUTATE}/${branchToDelete.id}`,
-        { method: "DELETE" }
-      );
-
-      if (!ok) {
-        if (status === 401) {
-          throw new Error("Unauthenticated — please login again.");
-        }
-        if (status === 404) {
-          throw new Error("Company location not found.");
-        }
-        if (status === 500) {
-          throw new Error("Something went wrong on the server.");
-        }
-        throw new Error(json?.message || `Failed (${status})`);
-      }
-
-      // نجاح — نشيل الكارت من الواجهة
-      setBranches((prev) =>
-        prev.filter((item) => item.id !== branchToDelete.id)
-      );
-
+      await deactivateMutation.mutateAsync(branchToDelete.id);
       setDeletingBranch(null);
-
       showSuccessToast(
-        json?.message || "Location deactivated",
-        `"${branchToDelete.name}" was deactivated successfully.`
+        t("branchesPage.deactivatedTitle", "Location Deactivated"),
+        `"${branchToDelete.name}" ${t("branchesPage.deactivatedMsg", "was deactivated successfully.")}`
       );
     } catch (e) {
-      showSuccessToast(t("branchesPage.updateFailedTitle", "Error"), e.message);
-    } finally {
-      setDeleting(false);
+      showSuccessToast(
+        t("branchesPage.updateFailedTitle", "Error"),
+        e?.response?.data?.message || e?.message
+      );
     }
   };
 
@@ -397,91 +223,55 @@ export default function Branches() {
   // =====================================================
   const handleSubmit = async (event) => {
     event.preventDefault();
+    if (!branchName.trim() || submitting) return;
 
-    if (!branchName.trim() || submitting) {
-      return;
-    }
-
-    setSubmitting(true);
-
-    const body = JSON.stringify({
+    const body = {
       name: branchName.trim(),
       latitude: Number(latitude),
       longitude: Number(longitude),
       radius: Number(geofenceRadius) || 350,
       is_active: isActive,
-    });
+    };
 
     const isEditing = !!editingBranch;
 
     try {
-      const { ok, status, json } = await request(
-        isEditing ? `${ENDPOINT_MUTATE}/${editingBranch.id}` : ENDPOINT_MUTATE,
-        {
-          method: isEditing ? "PUT" : "POST",
-          body,
-        }
-      );
-
-      // 422 — الشركة ليها location بالفعل → refresh وفتح وضع التعديل
-      if (status === 422) {
-        const msg = json?.message || "";
-
-        if (msg.toLowerCase().includes("already has a location")) {
-          setIsModalOpen(false);
-
-          await fetchBranches(new AbortController().signal);
-
-          showSuccessToast(
-            "Location already exists",
-            "Your company already has a location — you can edit it instead."
-          );
-          return;
-        }
-
-        let firstError = null;
-        if (json?.errors && typeof json.errors === "object") {
-          const firstKey = Object.keys(json.errors)[0];
-          firstError = json.errors[firstKey]?.[0] ?? null;
-        }
-        throw new Error(firstError || msg || "Validation failed");
-      }
-
-      if (!ok) {
-        if (status === 401) {
-          throw new Error("Unauthenticated — please login again.");
-        }
-        throw new Error(json?.message || `Failed (${status})`);
-      }
-
-      const saved = json?.data;
-
       if (isEditing) {
-        setBranches((prev) =>
-          prev.map((item) =>
-            item.id === editingBranch.id
-              ? { ...item, ...(saved || {}), id: item.id }
-              : item
-          )
-        );
-      } else if (saved && saved.id) {
-        setBranches((prev) => [...prev, saved]);
+        await updateMutation.mutateAsync({ id: editingBranch.id, body });
       } else {
-        await fetchBranches(new AbortController().signal);
+        await createMutation.mutateAsync(body);
       }
 
       closeModal();
-
       showSuccessToast(
-        json?.message || (isEditing ? "Location updated" : "Location added"),
         isEditing
-          ? "Your location was updated successfully."
-          : "The new location was added successfully."
+          ? t("branchesPage.updatedTitle", "Location Updated")
+          : t("branchesPage.addedTitle", "Location Added"),
+        isEditing
+          ? t("branchesPage.updatedMsg", "Your location was updated successfully.")
+          : t("branchesPage.addedMsg", "The new location was added successfully.")
       );
     } catch (e) {
-      showSuccessToast(t("branchesPage.updateFailedTitle", "Error"), e.message);
-    } finally {
-      setSubmitting(false);
+      const serverMsg =
+        e?.response?.data?.errors
+          ? Object.values(e.response.data.errors).flat()[0]
+          : e?.response?.data?.message || e?.message;
+
+      // 422: already has a location → switch to edit mode
+      if (e?.response?.status === 422) {
+        const msg = (serverMsg || "").toLowerCase();
+        if (msg.includes("already") || msg.includes("exists")) {
+          closeModal();
+          refetchLocation();
+          showSuccessToast(
+            t("branchesPage.alreadyExistsTitle", "Location already exists"),
+            t("branchesPage.alreadyExistsMsg", "Your company already has a location — you can edit it instead.")
+          );
+          return;
+        }
+      }
+
+      showSuccessToast(t("branchesPage.updateFailedTitle", "Error"), serverMsg || "Failed");
     }
   };
 
@@ -543,11 +333,11 @@ export default function Branches() {
             </div>
 
             <h1 className="text-[28px] font-bold leading-[1.2] text-[#243b53] tracking-[-0.02em]">
-              Locations
+              {t("branchesPage.title", "Locations")}
             </h1>
 
             <p className="text-[14px] text-[#627d98] mt-[6px] leading-[1.4]">
-              Configure and manage your WiseWork locations.
+              {t("branchesPage.subtitle", "Configure and manage your WiseWork locations.")}
             </p>
           </div>
 
@@ -560,7 +350,7 @@ export default function Branches() {
           >
             <LuArrowUpRight size={17} />
 
-            <span>Export Config</span>
+            <span>{t("branchesPage.exportConfig", "Export Config")}</span>
           </motion.button>
         </div>
 
@@ -573,7 +363,7 @@ export default function Branches() {
 
             <button
               type="button"
-              onClick={() => fetchBranches(new AbortController().signal)}
+              onClick={() => refetchLocation()}
               className="h-9 px-4 bg-white border border-[#fecaca] rounded-lg text-[#dc2626] text-[13px] font-semibold cursor-pointer transition-colors duration-150 hover:bg-[#fef2f2]"
             >
               Retry
@@ -586,13 +376,13 @@ export default function Branches() {
           <div className="flex justify-between items-start mb-6 gap-4 flex-wrap">
             <div>
               <h2 className="text-[18px] font-bold text-[#243b53] m-0 leading-[1.3]">
-                Branch locations
+                {t("branchesPage.cardTitle", "Branch locations")}
               </h2>
 
               <p className="text-[14px] text-[#829ab1] mt-1 leading-[1.4]">
                 {hasNoLocation
-                  ? "Add your company location to enable GPS enforcement"
-                  : "Configure GPS enforcement for your location"}
+                  ? t("branchesPage.noLocationDesc", "Add your company location to enable GPS enforcement")
+                  : t("branchesPage.cardSubtitle", "Configure GPS enforcement for your location")}
               </p>
             </div>
 
@@ -607,7 +397,11 @@ export default function Branches() {
             >
               {hasNoLocation ? <LuPlus size={17} /> : <LuPenLine size={17} />}
 
-              <span>{hasNoLocation ? "Add Location" : "Edit Location"}</span>
+              <span>
+                {hasNoLocation
+                  ? t("branchesPage.addLocation", "Add Location")
+                  : t("branchesPage.editLocation", "Edit Location")}
+              </span>
             </motion.button>
           </div>
 
@@ -631,7 +425,10 @@ export default function Branches() {
             </div>
           ) : branches.length === 0 ? (
             <p className="py-12 text-center text-sm text-[#829ab1]">
-              No locations found — add your first location to get started
+              {t(
+                "branchesPage.noLocationsFound",
+                "No locations found — add your first location to get started"
+              )}
             </p>
           ) : (
             <div className="grid grid-cols-1 min-[901px]:grid-cols-2 gap-4">
@@ -752,13 +549,15 @@ export default function Branches() {
             >
               <div className="flex justify-between items-center mb-5">
                 <h2 className="text-[18px] font-bold text-[#243b53] m-0">
-                  {editingBranch ? "Edit Location" : "Add Location"}
+                  {editingBranch
+                    ? t("branchesPage.modalTitleEdit", "Edit Location")
+                    : t("branchesPage.modalTitle", "Add Location")}
                 </h2>
 
                 <button
                   type="button"
                   onClick={closeModal}
-                  aria-label="Close modal"
+                  aria-label={t("branchesPage.closeModal", "Close modal")}
                   className="bg-transparent border-0 text-[#627d98] p-[6px] rounded-md cursor-pointer flex items-center justify-center transition-all duration-150 hover:bg-[#f0f4f7] hover:text-[#243b53]"
                 >
                   <LuX size={20} />
@@ -771,13 +570,16 @@ export default function Branches() {
                     htmlFor="branch-name"
                     className="text-[14px] font-medium text-[#486581]"
                   >
-                    Location Name
+                    {t("branchesPage.branchNameLabel", "Location Name")}
                   </label>
 
                   <input
                     id="branch-name"
                     type="text"
-                    placeholder="e.g. Cairo Headquarters"
+                    placeholder={t(
+                      "branchesPage.branchNamePlaceholder",
+                      "e.g. Cairo Headquarters"
+                    )}
                     value={branchName}
                     onChange={(event) => setBranchName(event.target.value)}
                     required
@@ -790,7 +592,7 @@ export default function Branches() {
                     htmlFor="branch-latitude"
                     className="text-[14px] font-medium text-[#486581]"
                   >
-                    Latitude
+                    {t("branchesPage.latitudeLabel", "Latitude")}
                   </label>
 
                   <input
@@ -810,7 +612,7 @@ export default function Branches() {
                     htmlFor="branch-longitude"
                     className="text-[14px] font-medium text-[#486581]"
                   >
-                    Longitude
+                    {t("branchesPage.longitudeLabel", "Longitude")}
                   </label>
 
                   <input
@@ -830,7 +632,7 @@ export default function Branches() {
                     htmlFor="geofence-radius"
                     className="text-[14px] font-medium text-[#486581]"
                   >
-                    Geofence Radius (meters)
+                    {t("branchesPage.geofenceRadiusLabel", "Geofence Radius (meters)")}
                   </label>
 
                   <input
@@ -849,7 +651,7 @@ export default function Branches() {
                     htmlFor="branch-is-active"
                     className="text-[14px] font-medium text-[#486581]"
                   >
-                    Active
+                    {t("branchesPage.activeLabel", "Active")}
                   </label>
 
                   <button
@@ -876,7 +678,7 @@ export default function Branches() {
                     onClick={closeModal}
                     className="h-10 px-[18px] bg-white border border-[#bcccdc] rounded-lg text-[#486581] text-[14px] font-semibold cursor-pointer transition-all duration-150 hover:bg-[#f0f4f7]"
                   >
-                    Cancel
+                    {t("branchesPage.cancel", "Cancel")}
                   </button>
 
                   <button
@@ -885,10 +687,10 @@ export default function Branches() {
                     className="h-10 px-[18px] bg-[#243b53] border-0 rounded-lg text-white text-[14px] font-semibold cursor-pointer transition-colors duration-150 hover:bg-[#334e68] disabled:opacity-60 disabled:cursor-not-allowed"
                   >
                     {submitting
-                      ? "Saving..."
+                      ? t("branchesPage.saving", "Saving...")
                       : editingBranch
-                      ? "Save Changes"
-                      : "Add Location"}
+                      ? t("branchesPage.saveChanges", "Save Changes")
+                      : t("branchesPage.addLocation", "Add Location")}
                   </button>
                 </div>
               </form>
@@ -927,13 +729,14 @@ export default function Branches() {
                 </div>
 
                 <h2 className="text-[18px] font-bold text-[#243b53] m-0 mb-2">
-                  Deactivate Location?
+                  {t("branchesPage.deactivateModalTitle", "Deactivate Location?")}
                 </h2>
 
                 <p className="text-[14px] text-[#627d98] leading-[1.6] m-0 mb-6">
-                  Are you sure you want to deactivate{" "}
-                  <strong>"{deletingBranch.name}"</strong>? It will no longer be
-                  available for GPS enforcement.
+                  {t("branchesPage.deactivateModalDesc", {
+                    name: deletingBranch.name,
+                    defaultValue: `Are you sure you want to deactivate "${deletingBranch.name}"? It will no longer be available for GPS enforcement.`,
+                  })}
                 </p>
 
                 <div className="flex justify-center gap-[10px] w-full">
@@ -943,7 +746,7 @@ export default function Branches() {
                     onClick={() => setDeletingBranch(null)}
                     className="flex-1 h-10 bg-white border border-[#bcccdc] rounded-lg text-[#486581] text-[14px] font-semibold cursor-pointer transition-all duration-150 hover:bg-[#f0f4f7] disabled:opacity-60"
                   >
-                    Cancel
+                    {t("branchesPage.cancel", "Cancel")}
                   </button>
 
                   <button
@@ -952,7 +755,9 @@ export default function Branches() {
                     onClick={handleDeleteBranch}
                     className="flex-1 h-10 bg-[#dc2626] border-0 rounded-lg text-white text-[14px] font-semibold cursor-pointer transition-colors duration-150 hover:bg-[#b91c1c] disabled:opacity-60 disabled:cursor-not-allowed"
                   >
-                    {deleting ? "Deleting..." : "Yes, Deactivate"}
+                    {deleting
+                      ? t("branchesPage.deleting", "Deleting...")
+                      : t("branchesPage.confirmDeactivate", "Yes, Deactivate")}
                   </button>
                 </div>
               </div>

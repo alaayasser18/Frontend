@@ -24,6 +24,53 @@ export const getEmployees = async (params = {}) => {
   return response.data;
 };
 
+// Fetch every page for views that do not provide pagination controls.
+export const getAllEmployees = async (params = {}) => {
+  const employees = [];
+  let page = 1;
+
+  while (true) {
+    const response = await getEmployees({
+      ...params,
+      page,
+      per_page: params.per_page || 100,
+    });
+    const currentPage = [
+      response?.data?.employees,
+      response?.employees,
+      response?.data?.data?.employees,
+      response?.data?.data,
+      response?.data,
+      response,
+    ].find(Array.isArray);
+
+    if (!currentPage) {
+      throw new Error("The employees response from the server is invalid.");
+    }
+
+    employees.push(...currentPage);
+
+    const pagination = [
+      response?.data?.meta,
+      response?.data?.data?.meta,
+      response?.data,
+      response?.data?.data,
+      response?.meta,
+      response,
+    ].find(
+      (candidate) =>
+        candidate?.last_page != null || candidate?.lastPage != null,
+    );
+
+    const lastPage = Number(pagination?.last_page ?? pagination?.lastPage);
+    if (!Number.isFinite(lastPage) || lastPage <= page) break;
+
+    page += 1;
+  }
+
+  return employees;
+};
+
 // Create a new employee (Owner & HR)
 export const createEmployee = async (employeeData, lang) => {
   const response = await axiosInstance.post("/employees", employeeData, {

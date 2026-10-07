@@ -161,8 +161,8 @@ const SubmissionReviews = ({ role: propRole }) => {
         const items = Array.isArray(queueData)
           ? queueData
           : Array.isArray(queueData?.data)
-          ? queueData.data
-          : [];
+            ? queueData.data
+            : [];
 
         // Normalize submission records
         const mapped = items.map((sub, idx) => ({
@@ -184,14 +184,14 @@ const SubmissionReviews = ({ role: propRole }) => {
         setError(
           err.response?.data?.message ||
             err.message ||
-            t("managerSubmissions.fetchError", "Failed to load review queue")
+            t("managerSubmissions.fetchError", "Failed to load review queue"),
         );
       } finally {
         setLoading(false);
         setRefreshing(false);
       }
     },
-    [i18n.language, perPage, selectedQueueId, t]
+    [i18n.language, perPage, selectedQueueId, t],
   );
 
   useEffect(() => {
@@ -217,7 +217,9 @@ const SubmissionReviews = ({ role: propRole }) => {
   const handleToggleExpand = async (submission) => {
     const nextExpanded = !submission.expanded;
     setSubmissions((prev) =>
-      prev.map((s) => (s.id === submission.id ? { ...s, expanded: nextExpanded } : s))
+      prev.map((s) =>
+        s.id === submission.id ? { ...s, expanded: nextExpanded } : s,
+      ),
     );
 
     // If expanding and detailed relations aren't present yet, fetch them
@@ -235,8 +237,8 @@ const SubmissionReviews = ({ role: propRole }) => {
                     ...detailsRes.data,
                     expanded: true,
                   }
-                : s
-            )
+                : s,
+            ),
           );
         }
       } catch (err) {
@@ -271,7 +273,7 @@ const SubmissionReviews = ({ role: propRole }) => {
           <span>{message}</span>
         </motion.div>
       ),
-      { position: isRtl ? "bottom-left" : "bottom-right" }
+      { position: isRtl ? "bottom-left" : "bottom-right" },
     );
   };
 
@@ -283,7 +285,7 @@ const SubmissionReviews = ({ role: propRole }) => {
       await approveSubmission(id, { lang });
 
       setSubmissions((prev) =>
-        prev.map((s) => (s.id === id ? { ...s, status: "Approved" } : s))
+        prev.map((s) => (s.id === id ? { ...s, status: "Approved" } : s)),
       );
 
       try {
@@ -291,13 +293,13 @@ const SubmissionReviews = ({ role: propRole }) => {
         const taskId = sub?.task_id || sub?.task?.id;
         if (taskId) {
           const cache = JSON.parse(
-            localStorage.getItem("wisework_task_submissions_cache") || "{}"
+            localStorage.getItem("wisework_task_submissions_cache") || "{}",
           );
           if (cache[taskId]) {
             cache[taskId] = { ...cache[taskId], status: "Approved" };
             localStorage.setItem(
               "wisework_task_submissions_cache",
-              JSON.stringify(cache)
+              JSON.stringify(cache),
             );
           }
         }
@@ -306,14 +308,14 @@ const SubmissionReviews = ({ role: propRole }) => {
       showToast(
         t(
           "managerSubmissions.toastApproved",
-          "Submission approved and task completed"
-        )
+          "Submission approved and task completed",
+        ),
       );
     } catch (err) {
       showToast(
         err.response?.data?.message ||
           t("managerSubmissions.errorApprove", "Failed to approve submission"),
-        true
+        true,
       );
     } finally {
       setSubmittingAction(false);
@@ -338,9 +340,9 @@ const SubmissionReviews = ({ role: propRole }) => {
       showToast(
         t(
           "managerSubmissions.feedbackRequired",
-          "Please enter feedback explaining the changes needed"
+          "Please enter feedback explaining the changes needed",
         ),
-        true
+        true,
       );
       return;
     }
@@ -351,7 +353,7 @@ const SubmissionReviews = ({ role: propRole }) => {
       await requestSubmissionChanges(
         changeModalSubmission.id,
         { feedback: feedbackText.trim() },
-        { lang }
+        { lang },
       );
 
       setSubmissions((prev) =>
@@ -370,8 +372,8 @@ const SubmissionReviews = ({ role: propRole }) => {
                   },
                 ],
               }
-            : s
-        )
+            : s,
+        ),
       );
 
       try {
@@ -379,13 +381,13 @@ const SubmissionReviews = ({ role: propRole }) => {
           changeModalSubmission?.task_id || changeModalSubmission?.task?.id;
         if (taskId) {
           const cache = JSON.parse(
-            localStorage.getItem("wisework_task_submissions_cache") || "{}"
+            localStorage.getItem("wisework_task_submissions_cache") || "{}",
           );
           if (cache[taskId]) {
             cache[taskId] = { ...cache[taskId], status: "Changes Requested" };
             localStorage.setItem(
               "wisework_task_submissions_cache",
-              JSON.stringify(cache)
+              JSON.stringify(cache),
             );
           }
         }
@@ -393,16 +395,16 @@ const SubmissionReviews = ({ role: propRole }) => {
 
       handleCloseChangeModal();
       showToast(
-        t("managerSubmissions.toastChangeRequested", "Change request sent")
+        t("managerSubmissions.toastChangeRequested", "Change request sent"),
       );
     } catch (err) {
       showToast(
         err.response?.data?.message ||
           t(
             "managerSubmissions.errorChangeRequest",
-            "Failed to request changes"
+            "Failed to request changes",
           ),
-        true
+        true,
       );
     } finally {
       setSubmittingAction(false);
@@ -427,9 +429,9 @@ const SubmissionReviews = ({ role: propRole }) => {
       showToast(
         t(
           "managerSubmissions.feedbackRequired",
-          "Please enter feedback explaining the reason for rejection"
+          "Please enter feedback explaining the reason for rejection",
         ),
-        true
+        true,
       );
       return;
     }
@@ -440,7 +442,7 @@ const SubmissionReviews = ({ role: propRole }) => {
       await rejectSubmission(
         rejectModalSubmission.id,
         { feedback: feedbackText.trim() },
-        { lang }
+        { lang },
       );
 
       setSubmissions((prev) =>
@@ -459,8 +461,8 @@ const SubmissionReviews = ({ role: propRole }) => {
                   },
                 ],
               }
-            : s
-        )
+            : s,
+        ),
       );
 
       try {
@@ -468,13 +470,13 @@ const SubmissionReviews = ({ role: propRole }) => {
           rejectModalSubmission?.task_id || rejectModalSubmission?.task?.id;
         if (taskId) {
           const cache = JSON.parse(
-            localStorage.getItem("wisework_task_submissions_cache") || "{}"
+            localStorage.getItem("wisework_task_submissions_cache") || "{}",
           );
           if (cache[taskId]) {
             cache[taskId] = { ...cache[taskId], status: "Rejected" };
             localStorage.setItem(
               "wisework_task_submissions_cache",
-              JSON.stringify(cache)
+              JSON.stringify(cache),
             );
           }
         }
@@ -486,7 +488,7 @@ const SubmissionReviews = ({ role: propRole }) => {
       showToast(
         err.response?.data?.message ||
           t("managerSubmissions.errorReject", "Failed to reject submission"),
-        true
+        true,
       );
     } finally {
       setSubmittingAction(false);
@@ -530,14 +532,17 @@ const SubmissionReviews = ({ role: propRole }) => {
     }
     return t(
       "managerSubmissions.breadcrumb",
-      "MANAGER PORTAL / SUBMISSION REVIEWS"
+      "MANAGER PORTAL / SUBMISSION REVIEWS",
     );
   }, [portalRole, isRtl, t]);
 
   const totalPages = Math.ceil(total / perPage) || 1;
 
   return (
-    <div className="w-full space-y-6 pb-12 font-sans" dir={isRtl ? "rtl" : "ltr"}>
+    <div
+      className="w-full space-y-6 pb-12 font-sans"
+      dir={isRtl ? "rtl" : "ltr"}
+    >
       {/* 1. Header & Controls */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
@@ -550,7 +555,7 @@ const SubmissionReviews = ({ role: propRole }) => {
           <p className="text-sm text-[#829ab1] mt-1 font-normal">
             {t(
               "managerSubmissions.subtitle",
-              "Keep your team aligned, supported, and moving forward."
+              "Keep your team aligned, supported, and moving forward.",
             )}
           </p>
         </div>
@@ -589,7 +594,7 @@ const SubmissionReviews = ({ role: propRole }) => {
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder={t(
               "managerSubmissions.searchPlaceholder",
-              "Search by task, member, or notes..."
+              "Search by task, member, or notes...",
             )}
             className="w-full h-10 ps-9 pe-3 text-xs text-[#102a43] placeholder:text-[#94a3b8] rounded-xl border border-[#e2e8f0] focus:outline-none focus:border-[#486581] focus:ring-1 focus:ring-[#486581] transition bg-[#f8fafc]"
           />
@@ -668,7 +673,8 @@ const SubmissionReviews = ({ role: propRole }) => {
           <AnimatePresence>
             {filteredSubmissions.map((submission) => {
               const statusCfg =
-                STATUS_CONFIG[submission.status] || STATUS_CONFIG["Pending Review"];
+                STATUS_CONFIG[submission.status] ||
+                STATUS_CONFIG["Pending Review"];
               const StatusIcon = statusCfg.icon;
 
               const taskTitle =
@@ -681,7 +687,7 @@ const SubmissionReviews = ({ role: propRole }) => {
                 `Member #${submission.user_id}`;
               const submittedDate = formatDateTime(
                 submission.submitted_at || submission.created_at,
-                isRtl
+                isRtl,
               );
 
               const attachments = submission.attachments || [];
@@ -707,7 +713,9 @@ const SubmissionReviews = ({ role: propRole }) => {
                       className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold border ${statusCfg.badge}`}
                     >
                       <StatusIcon className="w-3.5 h-3.5" />
-                      <span>{isRtl ? statusCfg.labelAr : statusCfg.labelEn}</span>
+                      <span>
+                        {isRtl ? statusCfg.labelAr : statusCfg.labelEn}
+                      </span>
                     </span>
 
                     <button
@@ -721,8 +729,8 @@ const SubmissionReviews = ({ role: propRole }) => {
                             ? "طي"
                             : "Collapse"
                           : isRtl
-                          ? "عرض التفاصيل"
-                          : "View Details"}
+                            ? "عرض التفاصيل"
+                            : "View Details"}
                       </span>
                       {submission.expanded ? (
                         <FiChevronUp className="w-4 h-4" />
@@ -772,7 +780,7 @@ const SubmissionReviews = ({ role: propRole }) => {
                             <span className="font-bold text-[#102a43] me-1">
                               {t(
                                 "managerSubmissions.submitterNotes",
-                                "Submitter notes:"
+                                "Submitter notes:",
                               )}
                             </span>
                             {submission.note}
@@ -798,7 +806,9 @@ const SubmissionReviews = ({ role: propRole }) => {
                           {/* Attached Files List */}
                           <div>
                             <p className="text-[11px] font-bold uppercase tracking-wider text-[#94a3b8] mb-2">
-                              {isRtl ? "الملفات المرفقة" : "Attached Deliverables"}
+                              {isRtl
+                                ? "الملفات المرفقة"
+                                : "Attached Deliverables"}
                             </p>
                             {attachments.length > 0 ? (
                               <div className="flex flex-wrap gap-2">
@@ -840,7 +850,9 @@ const SubmissionReviews = ({ role: propRole }) => {
                           {reviews.length > 0 && (
                             <div>
                               <p className="text-[11px] font-bold uppercase tracking-wider text-[#94a3b8] mb-2">
-                                {isRtl ? "سجل المراجعات والتعليقات" : "Review History"}
+                                {isRtl
+                                  ? "سجل المراجعات والتعليقات"
+                                  : "Review History"}
                               </p>
                               <div className="space-y-2">
                                 {reviews.map((rev, rIdx) => (
@@ -890,7 +902,7 @@ const SubmissionReviews = ({ role: propRole }) => {
                             <span>
                               {t(
                                 "managerSubmissions.approveComplete",
-                                "Approve & Complete"
+                                "Approve & Complete",
                               )}
                             </span>
                           </motion.button>
@@ -907,7 +919,7 @@ const SubmissionReviews = ({ role: propRole }) => {
                             >
                               {t(
                                 "managerSubmissions.requestChanges",
-                                "Request Changes"
+                                "Request Changes",
                               )}
                             </motion.button>
 
@@ -976,7 +988,7 @@ const SubmissionReviews = ({ role: propRole }) => {
           <p className="text-xs text-[#829ab1] mt-1 max-w-sm">
             {t(
               "managerSubmissions.noSubmissionsDesc",
-              "There are currently no deliverables in this queue awaiting review."
+              "There are currently no deliverables in this queue awaiting review.",
             )}
           </p>
         </motion.div>
@@ -1037,7 +1049,7 @@ const SubmissionReviews = ({ role: propRole }) => {
                 onChange={(e) => setFeedbackText(e.target.value)}
                 placeholder={t(
                   "managerSubmissions.changePlaceholder",
-                  "Explain what needs to change in detail..."
+                  "Explain what needs to change in detail...",
                 )}
                 rows={4}
                 required
@@ -1066,7 +1078,7 @@ const SubmissionReviews = ({ role: propRole }) => {
                       : "Sending..."
                     : t(
                         "managerSubmissions.sendChangeRequest",
-                        "Send Change Request"
+                        "Send Change Request",
                       )}
                 </motion.button>
               </div>
@@ -1130,7 +1142,7 @@ const SubmissionReviews = ({ role: propRole }) => {
                 onChange={(e) => setFeedbackText(e.target.value)}
                 placeholder={t(
                   "managerSubmissions.rejectPlaceholder",
-                  "Provide clear feedback on why this submission was rejected..."
+                  "Provide clear feedback on why this submission was rejected...",
                 )}
                 rows={4}
                 required

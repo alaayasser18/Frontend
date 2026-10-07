@@ -9,20 +9,11 @@ import {
   FiInfo,
   FiTrendingUp,
   FiUsers,
+  FiRefreshCw,
 } from "react-icons/fi";
 
 import { LuSparkles } from "react-icons/lu";
-
-// =========================
-// API CONFIG — نفس نظام PerformanceAnalytics
-// =========================
-const RAW_BASE = (
-  import.meta.env.VITE_API_BASE_URL ||
-  import.meta.env.VITE_API_URL ||
-  ""
-).replace(/\/+$/, "");
-
-const API_ROOT = RAW_BASE.endsWith("/api") ? RAW_BASE : `${RAW_BASE}/api`;
+import { useCompanyPerformance } from "../../../hooks/usePerformance";
 
 // تنسيق الأرقام — مفيش كسور عشرية طويلة
 const fmt = (value) => {
@@ -86,9 +77,6 @@ const PerformanceMetrics = () => {
   // STATE
   // =====================================================
   const [progressStarted, setProgressStarted] = useState(false);
-  const [data, setData] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
   const [page, setPage] = useState(1);
 
   // =====================================================
@@ -100,53 +88,17 @@ const PerformanceMetrics = () => {
   }, []);
 
   // =====================================================
-  // FETCH — GET /api/hr/company-performance
+  // DATA — GET /api/hr/company-performance
   // =====================================================
-  useEffect(() => {
-    const controller = new AbortController();
+  const {
+    data,
+    isLoading: loading,
+    isError,
+    error: queryError,
+    refetch,
+  } = useCompanyPerformance({ page, per_page: 10 });
 
-    const fetchData = async () => {
-      setLoading(true);
-      setError(null);
-      try {
-        const params = new URLSearchParams({
-          page: String(page),
-          per_page: "10",
-        });
-
-        const token = localStorage.getItem("token");
-
-        const response = await fetch(
-          `${API_ROOT}/hr/company-performance?${params.toString()}`,
-          {
-            signal: controller.signal,
-            headers: {
-              Accept: "application/json",
-              "Accept-Language": localStorage.getItem("lang") || "en",
-              ...(token ? { Authorization: `Bearer ${token}` } : {}),
-              "ngrok-skip-browser-warning": "true",
-            },
-          },
-        );
-
-        if (!response.ok) {
-          const err = await response.json().catch(() => null);
-          throw new Error(err?.message || `Failed to load (${response.status})`);
-        }
-
-        const json = await response.json();
-        setData(json?.data ?? null);
-      } catch (e) {
-        if (e.name === "AbortError") return;
-        setError(e.message);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchData();
-    return () => controller.abort();
-  }, [page]);
+  const error = queryError?.response?.data?.message || queryError?.message || null;
 
   // =====================================================
   // DERIVED DATA
@@ -253,6 +205,32 @@ const PerformanceMetrics = () => {
   // =====================================================
   // PAGE
   // =====================================================
+  if (loading)
+    return (
+      <div
+        dir={isArabic ? "rtl" : "ltr"}
+        className="flex min-h-[60vh] items-center justify-center text-[#627d98]"
+      >
+        <FiRefreshCw className="h-7 w-7 animate-spin" />
+      </div>
+    );
+
+  if (isError)
+    return (
+      <div
+        dir={isArabic ? "rtl" : "ltr"}
+        className="flex min-h-[60vh] flex-col items-center justify-center gap-3 text-[#dc2626]"
+      >
+        <p className="text-sm font-semibold">{error || "Failed to load data."}</p>
+        <button
+          onClick={() => refetch()}
+          className="rounded-xl bg-[#dc2626] px-4 py-2 text-xs font-bold text-white hover:bg-[#b91c1c] transition-colors"
+        >
+          Retry
+        </button>
+      </div>
+    );
+
   return (
     <motion.div
       dir={isArabic ? "rtl" : "ltr"}

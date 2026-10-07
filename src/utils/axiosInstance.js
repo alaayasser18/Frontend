@@ -52,6 +52,13 @@ axiosInstance.interceptors.response.use(
       localStorage.removeItem("rememberMe");
 
       if (typeof window !== "undefined") {
+        if (window.Echo) {
+          try {
+            window.Echo.disconnect();
+          } catch (e) {
+            // ignore
+          }
+        }
         window.dispatchEvent(new CustomEvent("auth:unauthorized"));
 
         const path =

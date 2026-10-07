@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState, useMemo } from "react";
 import { motion } from "framer-motion";
 import { useTranslation } from "react-i18next";
 import {
@@ -6,7 +6,10 @@ import {
   FiUsers,
   FiAward,
   FiAlertTriangle,
+  FiRefreshCw,
+  FiAlertCircle,
 } from "react-icons/fi";
+import { useTeamPerformance } from "../../../hooks/usePerformance";
 
 const fadeUp = {
   hidden: { opacity: 0, y: 8 },
@@ -18,16 +21,6 @@ const staggerContainer = {
   visible: { transition: { staggerChildren: 0.06 } },
 };
 
-// =========================
-// API CONFIG
-// =========================
-const RAW_BASE = (
-  import.meta.env.VITE_API_BASE_URL ||
-  import.meta.env.VITE_API_URL ||
-  ""
-).replace(/\/+$/, "");
-
-const API_ROOT = RAW_BASE.endsWith("/api") ? RAW_BASE : `${RAW_BASE}/api`;
 
 // تنسيق الأرقام — 85.5 تفضل 85.5، و 92 تفضل 92
 const fmt = (value) => {
@@ -90,59 +83,13 @@ const PerformanceAnalytics = () => {
   // =========================
   // STATES
   // =========================
-  const [data, setData] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
   const [page, setPage] = useState(1);
 
   // =========================
-  // FETCH — GET /api/manager/team-performance
+  // DATA — GET /api/manager/team-performance
   // =========================
-  useEffect(() => {
-    const controller = new AbortController();
+  const { data, isLoading: loading, isError, error, refetch } = useTeamPerformance({ page, per_page: 10 });
 
-    const fetchData = async () => {
-      setLoading(true);
-      setError(null);
-      try {
-        const params = new URLSearchParams({
-          page: String(page),
-          per_page: "10",
-        });
-
-        const token = localStorage.getItem("token");
-
-        const response = await fetch(
-          `${API_ROOT}/manager/team-performance?${params.toString()}`,
-          {
-            signal: controller.signal,
-            headers: {
-              Accept: "application/json",
-              "Accept-Language": localStorage.getItem("lang") || "en",
-              ...(token ? { Authorization: `Bearer ${token}` } : {}),
-              "ngrok-skip-browser-warning": "true",
-            },
-          },
-        );
-
-        if (!response.ok) {
-          const err = await response.json().catch(() => null);
-          throw new Error(err?.message || `Failed to load (${response.status})`);
-        }
-
-        const json = await response.json();
-        setData(json?.data ?? null);
-      } catch (e) {
-        if (e.name === "AbortError") return;
-        setError(e.message);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchData();
-    return () => controller.abort();
-  }, [page]);
 
   // =====================================================
   // DERIVED DATA — الربط بالحقول بتاعتك بالظبط:

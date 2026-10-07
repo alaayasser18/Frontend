@@ -4,7 +4,7 @@ console.log("API URL:", import.meta.env.VITE_API_BASE_URL);
 
 const rawBaseUrl =
   import.meta.env.VITE_API_BASE_URL ||
-  "https://nontelepathically-pamphletary-cyndi.ngrok-free.dev/api";
+  "https://workwise-production-3941.up.railway.app/api";
 
 const getBaseUrl = () => {
   const trimmed = (rawBaseUrl || "").trim().replace(/\/+$/, "");

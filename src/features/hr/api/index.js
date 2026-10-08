@@ -353,7 +353,7 @@ export const rejectLeaveRequest = async (id, rejectionReason, lang = "en") => {
 };
 
 // =====================================================
-// FINANCIAL DEDUCTIONS
+// FINANCIAL DEDUCTIONS & BONUSES
 // =====================================================
 
 /**
@@ -363,6 +363,52 @@ export const rejectLeaveRequest = async (id, rejectionReason, lang = "en") => {
 export const getFinancialDeductions = async (params = {}, lang = "en") => {
   const response = await axiosInstance.get("/financial/deductions", {
     params,
+    headers: {
+      Accept: "application/json",
+      "Accept-Language": lang,
+    },
+  });
+
+  return response.data;
+};
+
+/**
+ * POST /api/financial/deductions
+ * Record a deduction or penalty (Owner / HR)
+ */
+export const createFinancialDeduction = async (data = {}, lang = "en") => {
+  const response = await axiosInstance.post("/financial/deductions", data, {
+    headers: {
+      Accept: "application/json",
+      "Accept-Language": lang,
+    },
+  });
+
+  return response.data;
+};
+
+/**
+ * GET /api/financial/bonuses
+ * List bonuses and incentives (HR / Owner / All Roles)
+ */
+export const getFinancialBonuses = async (params = {}, lang = "en") => {
+  const response = await axiosInstance.get("/financial/bonuses", {
+    params,
+    headers: {
+      Accept: "application/json",
+      "Accept-Language": lang,
+    },
+  });
+
+  return response.data;
+};
+
+/**
+ * POST /api/financial/bonuses
+ * Issue a bonus or incentive (Owner / HR)
+ */
+export const createFinancialBonus = async (data = {}, lang = "en") => {
+  const response = await axiosInstance.post("/financial/bonuses", data, {
     headers: {
       Accept: "application/json",
       "Accept-Language": lang,

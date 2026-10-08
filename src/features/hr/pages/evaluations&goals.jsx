@@ -264,9 +264,17 @@ const EvaluationsGoals = () => {
 
   const goalsData = goalsResponse?.data;
 
-  const goals = Array.isArray(goalsData?.goals) ? goalsData.goals : [];
+  const goals = useMemo(() => {
+    if (Array.isArray(goalsData?.goals)) return goalsData.goals;
+    if (Array.isArray(goalsData?.data?.goals)) return goalsData.data.goals;
+    if (Array.isArray(goalsData?.data)) return goalsData.data;
+    if (Array.isArray(goalsData)) return goalsData;
+    if (Array.isArray(goalsResponse?.goals)) return goalsResponse.goals;
+    if (Array.isArray(goalsResponse)) return goalsResponse;
+    return [];
+  }, [goalsResponse, goalsData]);
 
-  const meta = goalsData?.meta || {};
+  const meta = goalsData?.meta || goalsResponse?.meta || {};
 
   const lastPage = Number(meta?.last_page || 1);
 

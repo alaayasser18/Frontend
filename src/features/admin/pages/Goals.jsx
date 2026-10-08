@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 
 import {
   FiPlus,
@@ -204,9 +204,17 @@ const Goals = () => {
 
   const goalsData = goalsResponse?.data;
 
-  const goals = Array.isArray(goalsData?.goals) ? goalsData.goals : [];
+  const goals = useMemo(() => {
+    if (Array.isArray(goalsData?.goals)) return goalsData.goals;
+    if (Array.isArray(goalsData?.data?.goals)) return goalsData.data.goals;
+    if (Array.isArray(goalsData?.data)) return goalsData.data;
+    if (Array.isArray(goalsData)) return goalsData;
+    if (Array.isArray(goalsResponse?.goals)) return goalsResponse.goals;
+    if (Array.isArray(goalsResponse)) return goalsResponse;
+    return [];
+  }, [goalsResponse, goalsData]);
 
-  const meta = goalsData?.meta || {};
+  const meta = goalsData?.meta || goalsResponse?.meta || {};
 
   const lastPage = Number(meta?.last_page || 1);
 
@@ -237,30 +245,19 @@ const Goals = () => {
           },
         });
 
-        /*
-         * Swagger response:
-         *
-         * {
-         *   success: true,
-         *   message: "...",
-         *   data: {
-         *     current_page: 1,
-         *     last_page: 2,
-         *     total: 22,
-         *     employees: [...]
-         *   }
-         * }
-         */
-
         const responseData = response?.data?.data;
 
         const employeesPage = Array.isArray(responseData?.employees)
           ? responseData.employees
+          : Array.isArray(responseData)
+          ? responseData
+          : Array.isArray(response?.data?.employees)
+          ? response.data.employees
           : [];
 
         allEmployees = [...allEmployees, ...employeesPage];
 
-        lastEmployeePage = Number(responseData?.last_page || 1);
+        lastEmployeePage = Number(responseData?.last_page || response?.data?.last_page || 1);
 
         currentEmployeePage += 1;
       } while (currentEmployeePage <= lastEmployeePage);
@@ -283,6 +280,10 @@ const Goals = () => {
       setEmployeesLoading(false);
     }
   };
+
+  useEffect(() => {
+    loadEmployees();
+  }, [lang]);
 
   // =====================================================
   // OPEN CREATE

@@ -99,7 +99,11 @@ const Financial = () => {
     isError: salariesError,
     error: salariesErrorObj,
     refetch: refetchSalaries,
-  } = useMySalaries({ page: activeTab === "salaries" ? currentPage : 1, per_page: 10, lang });
+  } = useMySalaries({
+    page: activeTab === "salaries" ? currentPage : 1,
+    per_page: 10,
+    lang,
+  });
 
   const {
     data: advancesResponse,
@@ -107,7 +111,11 @@ const Financial = () => {
     isError: advancesError,
     error: advancesErrorObj,
     refetch: refetchAdvances,
-  } = useAdvances({ page: activeTab === "advances" ? currentPage : 1, per_page: 10, lang });
+  } = useAdvances({
+    page: activeTab === "advances" ? currentPage : 1,
+    per_page: 10,
+    lang,
+  });
 
   const {
     data: deductionsResponse,
@@ -115,7 +123,11 @@ const Financial = () => {
     isError: deductionsError,
     error: deductionsErrorObj,
     refetch: refetchDeductions,
-  } = useDeductions({ page: activeTab === "deductions" ? currentPage : 1, per_page: 10, lang });
+  } = useDeductions({
+    page: activeTab === "deductions" ? currentPage : 1,
+    per_page: 10,
+    lang,
+  });
 
   const {
     data: bonusesResponse,
@@ -123,7 +135,11 @@ const Financial = () => {
     isError: bonusesError,
     error: bonusesErrorObj,
     refetch: refetchBonuses,
-  } = useBonuses({ page: activeTab === "bonuses" ? currentPage : 1, per_page: 10, lang });
+  } = useBonuses({
+    page: activeTab === "bonuses" ? currentPage : 1,
+    per_page: 10,
+    lang,
+  });
 
   const createAdvanceMutation = useCreateAdvance();
 
@@ -171,11 +187,19 @@ const Financial = () => {
           stats: bonusesResponse?.data?.stats || null,
         };
       default:
-        return { items: [], meta: null, isLoading: false, isError: false, error: null, refetch: () => { } };
+        return {
+          items: [],
+          meta: null,
+          isLoading: false,
+          isError: false,
+          error: null,
+          refetch: () => {},
+        };
     }
   };
 
-  const { items, meta, isLoading, isError, error, refetch, stats } = getActiveData();
+  const { items, meta, isLoading, isError, error, refetch, stats } =
+    getActiveData();
 
   const totalPages = meta?.last_page || 1;
 
@@ -199,7 +223,12 @@ const Financial = () => {
     const { requested_amount, repayment_months, reason } = advanceForm;
 
     if (!requested_amount || !repayment_months || !reason) {
-      toast.error(t("employeeFinancial.advance.requiredFields", "All fields are required."));
+      toast.error(
+        t(
+          "employeeFinancial.advance.requiredFields",
+          "All fields are required.",
+        ),
+      );
       return;
     }
 
@@ -214,14 +243,26 @@ const Financial = () => {
         lang,
       });
 
-      toast.success(t("employeeFinancial.advance.success", "Advance request submitted successfully."));
+      toast.success(
+        t(
+          "employeeFinancial.advance.success",
+          "Advance request submitted successfully.",
+        ),
+      );
       setShowAdvanceModal(false);
-      setAdvanceForm({ requested_amount: "", repayment_months: "", reason: "" });
+      setAdvanceForm({
+        requested_amount: "",
+        repayment_months: "",
+        reason: "",
+      });
     } catch (err) {
       const message =
         err?.response?.data?.message ||
         err?.message ||
-        t("employeeFinancial.advance.error", "Failed to submit advance request.");
+        t(
+          "employeeFinancial.advance.error",
+          "Failed to submit advance request.",
+        );
       toast.error(message);
     }
   };
@@ -270,12 +311,17 @@ const Financial = () => {
 
   const getStatusLabel = (status) => {
     const s = status?.toLowerCase();
-    if (s === "approved") return t("employeeFinancial.status.approved", "Approved");
-    if (s === "rejected") return t("employeeFinancial.status.rejected", "Rejected");
-    if (s === "pending") return t("employeeFinancial.status.pending", "Pending");
-    if (s === "finalized") return t("employeeFinancial.status.finalized", "Finalized");
+    if (s === "approved")
+      return t("employeeFinancial.status.approved", "Approved");
+    if (s === "rejected")
+      return t("employeeFinancial.status.rejected", "Rejected");
+    if (s === "pending")
+      return t("employeeFinancial.status.pending", "Pending");
+    if (s === "finalized")
+      return t("employeeFinancial.status.finalized", "Finalized");
     if (s === "queued") return t("employeeFinancial.status.queued", "Queued");
-    if (s === "cancelled") return t("employeeFinancial.status.cancelled", "Cancelled");
+    if (s === "cancelled")
+      return t("employeeFinancial.status.cancelled", "Cancelled");
     if (s === "manual") return t("employeeFinancial.status.manual", "Manual");
     return status;
   };
@@ -324,10 +370,14 @@ const Financial = () => {
       a.remove();
       window.URL.revokeObjectURL(url);
       toast.success(
-        isRtl ? "تم تحميل قسيمة الراتب بنجاح" : "Payslip downloaded successfully",
+        isRtl
+          ? "تم تحميل قسيمة الراتب بنجاح"
+          : "Payslip downloaded successfully",
       );
     } catch (err) {
-      let errMsg = isRtl ? "فشل تحميل قسيمة الراتب" : "Failed to download payslip";
+      let errMsg = isRtl
+        ? "فشل تحميل قسيمة الراتب"
+        : "Failed to download payslip";
       if (err.response?.data?.message) errMsg = err.response.data.message;
       toast.error(errMsg);
     } finally {
@@ -400,7 +450,9 @@ const Financial = () => {
           {(() => {
             const style = getStatusStyle(item.status);
             return (
-              <span className={`inline-flex items-center gap-1.5 rounded-full px-3 py-0.5 text-xs font-semibold border ${style.bg} ${style.text} ${style.border}`}>
+              <span
+                className={`inline-flex items-center gap-1.5 rounded-full px-3 py-0.5 text-xs font-semibold border ${style.bg} ${style.text} ${style.border}`}
+              >
                 <span className={`h-1.5 w-1.5 rounded-full ${style.dot}`} />
                 {getStatusLabel(item.status)}
               </span>
@@ -415,30 +467,42 @@ const Financial = () => {
           <p className="text-[10px] font-semibold text-[#94a3b8] uppercase tracking-wider mb-1">
             {t("employeeFinancial.salary.basic", "Basic")}
           </p>
-          <p className="text-sm font-bold text-[#102a43]">{formatCurrency(item.basic_salary)}</p>
+          <p className="text-sm font-bold text-[#102a43]">
+            {formatCurrency(item.basic_salary)}
+          </p>
         </div>
         <div className="rounded-xl bg-[#f0fdf4] p-3 border border-[#dcfce7]">
           <p className="text-[10px] font-semibold text-[#16a34a] uppercase tracking-wider mb-1">
             {t("employeeFinancial.salary.bonuses", "Bonuses")}
           </p>
-          <p className="text-sm font-bold text-[#166534]">+{formatCurrency(item.total_bonuses)}</p>
+          <p className="text-sm font-bold text-[#166534]">
+            +{formatCurrency(item.total_bonuses)}
+          </p>
         </div>
         <div className="rounded-xl bg-[#fef2f2] p-3 border border-[#fecaca]">
           <p className="text-[10px] font-semibold text-[#dc2626] uppercase tracking-wider mb-1">
             {t("employeeFinancial.salary.deductions", "Deductions")}
           </p>
-          <p className="text-sm font-bold text-[#991b1b]">-{formatCurrency(item.total_deductions)}</p>
+          <p className="text-sm font-bold text-[#991b1b]">
+            -{formatCurrency(item.total_deductions)}
+          </p>
         </div>
         <div className="rounded-xl bg-[#fffbeb] p-3 border border-[#fde68a]">
           <p className="text-[10px] font-semibold text-[#d97706] uppercase tracking-wider mb-1">
             {t("employeeFinancial.salary.loan", "Loan")}
           </p>
-          <p className="text-sm font-bold text-[#92400e]">-{formatCurrency(item.loan_installment)}</p>
+          <p className="text-sm font-bold text-[#92400e]">
+            -{formatCurrency(item.loan_installment)}
+          </p>
         </div>
-        <div className="rounded-xl bg-[#1c364f] p-3 col-span-2 sm:col-span-1">          <p className="text-[10px] font-semibold text-white/60 uppercase tracking-wider mb-1">
-          {t("employeeFinancial.salary.net", "Net")}
-        </p>
-          <p className="text-sm font-bold text-white">{formatCurrency(item.net_salary)}</p>
+        <div className="rounded-xl bg-[#1c364f] p-3 col-span-2 sm:col-span-1">
+          {" "}
+          <p className="text-[10px] font-semibold text-white/60 uppercase tracking-wider mb-1">
+            {t("employeeFinancial.salary.net", "Net")}
+          </p>
+          <p className="text-sm font-bold text-white">
+            {formatCurrency(item.net_salary)}
+          </p>
         </div>
       </div>
     </motion.article>
@@ -456,17 +520,23 @@ const Financial = () => {
       className="relative rounded-2xl border border-[#e2e8f0] bg-white p-6 pl-10 rtl:pr-10 rtl:pl-6 shadow-[0_1px_3px_rgba(0,0,0,0.02)] hover:border-[#cbd5e1] hover:shadow-md transition-shadow"
     >
       {/* Side stripe */}
-      <div className={`absolute left-5 rtl:left-auto rtl:right-5 top-6 bottom-6 w-[3.5px] rounded-full ${getStatusStyle(item.status).dot}`} />
+      <div
+        className={`absolute left-5 rtl:left-auto rtl:right-5 top-6 bottom-6 w-[3.5px] rounded-full ${getStatusStyle(item.status).dot}`}
+      />
 
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2.5">
           <FiUser className="h-4 w-4 text-[#64748b]" />
-          <span className="text-sm font-bold text-[#102a43]">{item.employee_name}</span>
+          <span className="text-sm font-bold text-[#102a43]">
+            {item.employee_name}
+          </span>
         </div>
         {(() => {
           const style = getStatusStyle(item.status);
           return (
-            <span className={`inline-flex items-center gap-1.5 rounded-full px-3 py-0.5 text-xs font-semibold border ${style.bg} ${style.text} ${style.border}`}>
+            <span
+              className={`inline-flex items-center gap-1.5 rounded-full px-3 py-0.5 text-xs font-semibold border ${style.bg} ${style.text} ${style.border}`}
+            >
               <span className={`h-1.5 w-1.5 rounded-full ${style.dot}`} />
               {getStatusLabel(item.status)}
             </span>
@@ -476,7 +546,9 @@ const Financial = () => {
 
       {/* Reason */}
       {item.reason && (
-        <p className="text-xs text-[#627d98] mb-4 line-clamp-2">{item.reason}</p>
+        <p className="text-xs text-[#627d98] mb-4 line-clamp-2">
+          {item.reason}
+        </p>
       )}
 
       {/* Financial info */}
@@ -485,19 +557,25 @@ const Financial = () => {
           <p className="text-[10px] font-semibold text-[#94a3b8] uppercase tracking-wider mb-1">
             {t("employeeFinancial.advance.amount", "Amount")}
           </p>
-          <p className="text-sm font-bold text-[#102a43]">{formatCurrency(item.requested_amount)}</p>
+          <p className="text-sm font-bold text-[#102a43]">
+            {formatCurrency(item.requested_amount)}
+          </p>
         </div>
         <div className="rounded-xl bg-[#f8fafc] p-3 border border-[#f1f5f9]">
           <p className="text-[10px] font-semibold text-[#94a3b8] uppercase tracking-wider mb-1">
             {t("employeeFinancial.advance.months", "Months")}
           </p>
-          <p className="text-sm font-bold text-[#102a43]">{item.repayment_months}</p>
+          <p className="text-sm font-bold text-[#102a43]">
+            {item.repayment_months}
+          </p>
         </div>
         <div className="rounded-xl bg-[#f8fafc] p-3 border border-[#f1f5f9]">
           <p className="text-[10px] font-semibold text-[#94a3b8] uppercase tracking-wider mb-1">
             {t("employeeFinancial.advance.monthly", "Monthly")}
           </p>
-          <p className="text-sm font-bold text-[#102a43]">{formatCurrency(item.monthly_deduction)}</p>
+          <p className="text-sm font-bold text-[#102a43]">
+            {formatCurrency(item.monthly_deduction)}
+          </p>
         </div>
       </div>
 
@@ -526,7 +604,9 @@ const Financial = () => {
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2.5">
           <FiUser className="h-4 w-4 text-[#64748b]" />
-          <span className="text-sm font-bold text-[#102a43]">{item.employee_name}</span>
+          <span className="text-sm font-bold text-[#102a43]">
+            {item.employee_name}
+          </span>
         </div>
         <div className="flex items-center gap-2">
           {item.type && (
@@ -537,7 +617,9 @@ const Financial = () => {
           {(() => {
             const style = getStatusStyle(item.status);
             return (
-              <span className={`inline-flex items-center gap-1.5 rounded-full px-3 py-0.5 text-xs font-semibold border ${style.bg} ${style.text} ${style.border}`}>
+              <span
+                className={`inline-flex items-center gap-1.5 rounded-full px-3 py-0.5 text-xs font-semibold border ${style.bg} ${style.text} ${style.border}`}
+              >
                 <span className={`h-1.5 w-1.5 rounded-full ${style.dot}`} />
                 {getStatusLabel(item.status)}
               </span>
@@ -554,8 +636,12 @@ const Financial = () => {
       {/* Amount & Date */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <span className="text-lg font-bold text-[#dc2626]">-{formatCurrency(item.amount)}</span>
-          <span className="text-xs text-[#94a3b8]">{t("employeeFinancial.currency", "EGP")}</span>
+          <span className="text-lg font-bold text-[#dc2626]">
+            -{formatCurrency(item.amount)}
+          </span>
+          <span className="text-xs text-[#94a3b8]">
+            {t("employeeFinancial.currency", "EGP")}
+          </span>
         </div>
         <div className="flex items-center gap-1.5 text-xs text-[#94a3b8]">
           <FiCalendar className="h-3.5 w-3.5" />
@@ -582,7 +668,9 @@ const Financial = () => {
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2.5">
           <FiUser className="h-4 w-4 text-[#64748b]" />
-          <span className="text-sm font-bold text-[#102a43]">{item.employee_name}</span>
+          <span className="text-sm font-bold text-[#102a43]">
+            {item.employee_name}
+          </span>
           {item.role && (
             <span className="inline-flex rounded-full bg-[#f1f5f9] px-2.5 py-0.5 text-[10px] font-semibold text-[#64748b] border border-[#e2e8f0]">
               {item.role}
@@ -592,7 +680,9 @@ const Financial = () => {
         {(() => {
           const style = getStatusStyle(item.status);
           return (
-            <span className={`inline-flex items-center gap-1.5 rounded-full px-3 py-0.5 text-xs font-semibold border ${style.bg} ${style.text} ${style.border}`}>
+            <span
+              className={`inline-flex items-center gap-1.5 rounded-full px-3 py-0.5 text-xs font-semibold border ${style.bg} ${style.text} ${style.border}`}
+            >
               <span className={`h-1.5 w-1.5 rounded-full ${style.dot}`} />
               {getStatusLabel(item.status)}
             </span>
@@ -606,25 +696,33 @@ const Financial = () => {
           <p className="text-[10px] font-semibold text-[#16a34a] uppercase tracking-wider mb-1">
             {t("employeeFinancial.bonus.amount", "Amount")}
           </p>
-          <p className="text-sm font-bold text-[#166534]">+{formatCurrency(item.amount)}</p>
+          <p className="text-sm font-bold text-[#166534]">
+            +{formatCurrency(item.amount)}
+          </p>
         </div>
         <div className="rounded-xl bg-[#f8fafc] p-3 border border-[#f1f5f9]">
           <p className="text-[10px] font-semibold text-[#94a3b8] uppercase tracking-wider mb-1">
             {t("employeeFinancial.bonus.type", "Type")}
           </p>
-          <p className="text-xs font-bold text-[#102a43] truncate">{item.incentive_type || "—"}</p>
+          <p className="text-xs font-bold text-[#102a43] truncate">
+            {item.incentive_type || "—"}
+          </p>
         </div>
         <div className="rounded-xl bg-[#f8fafc] p-3 border border-[#f1f5f9]">
           <p className="text-[10px] font-semibold text-[#94a3b8] uppercase tracking-wider mb-1">
             {t("employeeFinancial.bonus.month", "Month")}
           </p>
-          <p className="text-xs font-bold text-[#102a43]">{item.target_month || "—"}</p>
+          <p className="text-xs font-bold text-[#102a43]">
+            {item.target_month || "—"}
+          </p>
         </div>
         <div className="rounded-xl bg-[#f8fafc] p-3 border border-[#f1f5f9]">
           <p className="text-[10px] font-semibold text-[#94a3b8] uppercase tracking-wider mb-1">
             {t("employeeFinancial.bonus.approvedBy", "Approved By")}
           </p>
-          <p className="text-xs font-bold text-[#102a43] truncate">{item.approved_by || "—"}</p>
+          <p className="text-xs font-bold text-[#102a43] truncate">
+            {item.approved_by || "—"}
+          </p>
         </div>
       </div>
 
@@ -659,22 +757,34 @@ const Financial = () => {
     salaries: {
       icon: FiFileText,
       title: t("employeeFinancial.empty.salaries", "No salary records"),
-      desc: t("employeeFinancial.empty.salariesDesc", "Your salary history will appear here once payroll is processed."),
+      desc: t(
+        "employeeFinancial.empty.salariesDesc",
+        "Your salary history will appear here once payroll is processed.",
+      ),
     },
     advances: {
       icon: FiDollarSign,
       title: t("employeeFinancial.empty.advances", "No advance requests"),
-      desc: t("employeeFinancial.empty.advancesDesc", "You haven't submitted any salary advance requests yet."),
+      desc: t(
+        "employeeFinancial.empty.advancesDesc",
+        "You haven't submitted any salary advance requests yet.",
+      ),
     },
     deductions: {
       icon: FiTrendingDown,
       title: t("employeeFinancial.empty.deductions", "No deductions"),
-      desc: t("employeeFinancial.empty.deductionsDesc", "You have no deductions or penalties on record."),
+      desc: t(
+        "employeeFinancial.empty.deductionsDesc",
+        "You have no deductions or penalties on record.",
+      ),
     },
     bonuses: {
       icon: FiAward,
       title: t("employeeFinancial.empty.bonuses", "No bonuses"),
-      desc: t("employeeFinancial.empty.bonusesDesc", "No bonuses or incentives have been recorded yet."),
+      desc: t(
+        "employeeFinancial.empty.bonusesDesc",
+        "No bonuses or incentives have been recorded yet.",
+      ),
     },
   };
 
@@ -723,7 +833,9 @@ const Financial = () => {
           className="inline-flex items-center gap-2 rounded-xl bg-[#1c364f] px-5 py-2.5 text-xs font-semibold text-white hover:bg-[#254360] transition shadow-sm self-start"
         >
           <FiPlus className="h-4 w-4" />
-          <span>{t("employeeFinancial.requestAdvance", "Request Advance")}</span>
+          <span>
+            {t("employeeFinancial.requestAdvance", "Request Advance")}
+          </span>
         </motion.button>
       </motion.div>
 
@@ -810,10 +922,11 @@ const Financial = () => {
               whileTap={{ scale: 0.96 }}
               type="button"
               onClick={() => handleTabChange(tab.id)}
-              className={`relative inline-flex items-center gap-2 rounded-full px-4 py-1.5 text-xs font-semibold transition-colors duration-200 ${isActive
-                ? "bg-[#1c364f] text-white"
-                : "bg-white border border-[#e2e8f0] text-[#64748b] hover:bg-[#f8fafc]"
-                }`}
+              className={`relative inline-flex items-center gap-2 rounded-full px-4 py-1.5 text-xs font-semibold transition-colors duration-200 ${
+                isActive
+                  ? "bg-[#1c364f] text-white"
+                  : "bg-white border border-[#e2e8f0] text-[#64748b] hover:bg-[#f8fafc]"
+              }`}
             >
               <TabIcon className="h-3.5 w-3.5" />
               <span>{t(tab.labelKey, tab.defaultLabel)}</span>
@@ -851,7 +964,9 @@ const Financial = () => {
             className="flex flex-col items-center justify-center rounded-2xl border border-[#fecaca] bg-[#fef2f2] p-12 text-center"
           >
             <FiAlertCircle className="h-8 w-8 text-[#ef4444] mb-2" />
-            <p className="text-sm font-semibold text-[#991b1b]">{errorMessage}</p>
+            <p className="text-sm font-semibold text-[#991b1b]">
+              {errorMessage}
+            </p>
 
             <motion.button
               whileHover={{ scale: 1.02 }}
@@ -883,7 +998,9 @@ const Financial = () => {
               return (
                 <>
                   <EmptyIcon className="h-8 w-8 text-[#94a3b8] mb-2" />
-                  <p className="text-sm font-semibold text-[#102a43]">{cfg.title}</p>
+                  <p className="text-sm font-semibold text-[#102a43]">
+                    {cfg.title}
+                  </p>
                   <p className="text-xs text-[#829ab1] mt-1">{cfg.desc}</p>
                 </>
               );
@@ -945,10 +1062,11 @@ const Financial = () => {
                   key={page}
                   type="button"
                   onClick={() => setCurrentPage(page)}
-                  className={`flex h-9 min-w-[36px] items-center justify-center rounded-lg text-xs font-semibold transition ${currentPage === page
-                    ? "bg-[#1c364f] text-white"
-                    : "border border-[#e2e8f0] bg-white text-[#64748b] hover:bg-[#f8fafc]"
-                    }`}
+                  className={`flex h-9 min-w-[36px] items-center justify-center rounded-lg text-xs font-semibold transition ${
+                    currentPage === page
+                      ? "bg-[#1c364f] text-white"
+                      : "border border-[#e2e8f0] bg-white text-[#64748b] hover:bg-[#f8fafc]"
+                  }`}
                 >
                   {page}
                 </motion.button>,
@@ -1015,7 +1133,10 @@ const Financial = () => {
                     {t("employeeFinancial.advance.newRequest", "NEW REQUEST")}
                   </p>
                   <h2 className="text-lg font-bold text-[#102a43] mt-0.5">
-                    {t("employeeFinancial.advance.title", "Request Salary Advance")}
+                    {t(
+                      "employeeFinancial.advance.title",
+                      "Request Salary Advance",
+                    )}
                   </h2>
                 </div>
                 <button
@@ -1032,7 +1153,10 @@ const Financial = () => {
                 {/* Amount */}
                 <div>
                   <label className="block text-xs font-semibold text-[#334155] mb-1.5">
-                    {t("employeeFinancial.advance.amountLabel", "Requested Amount")}
+                    {t(
+                      "employeeFinancial.advance.amountLabel",
+                      "Requested Amount",
+                    )}
                   </label>
                   <div className="relative">
                     <FiDollarSign className="absolute left-3 rtl:left-auto rtl:right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#94a3b8]" />
@@ -1041,9 +1165,15 @@ const Financial = () => {
                       min="1"
                       value={advanceForm.requested_amount}
                       onChange={(e) =>
-                        setAdvanceForm((f) => ({ ...f, requested_amount: e.target.value }))
+                        setAdvanceForm((f) => ({
+                          ...f,
+                          requested_amount: e.target.value,
+                        }))
                       }
-                      placeholder={t("employeeFinancial.advance.amountPlaceholder", "e.g. 5000")}
+                      placeholder={t(
+                        "employeeFinancial.advance.amountPlaceholder",
+                        "e.g. 5000",
+                      )}
                       className="w-full rounded-xl border border-[#e2e8f0] bg-[#f8fafc] py-2.5 pl-10 pr-4 rtl:pr-10 rtl:pl-4 text-sm text-[#102a43] placeholder:text-[#94a3b8] focus:border-[#6366f1] focus:ring-1 focus:ring-[#6366f1] focus:outline-none transition"
                     />
                   </div>
@@ -1052,7 +1182,10 @@ const Financial = () => {
                 {/* Repayment Months */}
                 <div>
                   <label className="block text-xs font-semibold text-[#334155] mb-1.5">
-                    {t("employeeFinancial.advance.repaymentLabel", "Repayment Months")}
+                    {t(
+                      "employeeFinancial.advance.repaymentLabel",
+                      "Repayment Months",
+                    )}
                   </label>
                   <div className="relative">
                     <FiClock className="absolute left-3 rtl:left-auto rtl:right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#94a3b8]" />
@@ -1062,25 +1195,38 @@ const Financial = () => {
                       max="24"
                       value={advanceForm.repayment_months}
                       onChange={(e) =>
-                        setAdvanceForm((f) => ({ ...f, repayment_months: e.target.value }))
+                        setAdvanceForm((f) => ({
+                          ...f,
+                          repayment_months: e.target.value,
+                        }))
                       }
-                      placeholder={t("employeeFinancial.advance.monthsPlaceholder", "e.g. 5")}
+                      placeholder={t(
+                        "employeeFinancial.advance.monthsPlaceholder",
+                        "e.g. 5",
+                      )}
                       className="w-full rounded-xl border border-[#e2e8f0] bg-[#f8fafc] py-2.5 pl-10 pr-4 rtl:pr-10 rtl:pl-4 text-sm text-[#102a43] placeholder:text-[#94a3b8] focus:border-[#6366f1] focus:ring-1 focus:ring-[#6366f1] focus:outline-none transition"
                     />
                   </div>
 
                   {/* Monthly deduction preview */}
-                  {advanceForm.requested_amount && advanceForm.repayment_months && (
-                    <motion.p
-                      initial={{ opacity: 0, height: 0 }}
-                      animate={{ opacity: 1, height: "auto" }}
-                      className="mt-2 text-xs text-[#6366f1] font-medium"
-                    >
-                      {t("employeeFinancial.advance.monthlyDeduction", "Monthly deduction")}: {formatCurrency(
-                        Number(advanceForm.requested_amount) / Number(advanceForm.repayment_months),
-                      )}
-                    </motion.p>
-                  )}
+                  {advanceForm.requested_amount &&
+                    advanceForm.repayment_months && (
+                      <motion.p
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: "auto" }}
+                        className="mt-2 text-xs text-[#6366f1] font-medium"
+                      >
+                        {t(
+                          "employeeFinancial.advance.monthlyDeduction",
+                          "Monthly deduction",
+                        )}
+                        :{" "}
+                        {formatCurrency(
+                          Number(advanceForm.requested_amount) /
+                            Number(advanceForm.repayment_months),
+                        )}
+                      </motion.p>
+                    )}
                 </div>
 
                 {/* Reason */}
@@ -1094,7 +1240,10 @@ const Financial = () => {
                     onChange={(e) =>
                       setAdvanceForm((f) => ({ ...f, reason: e.target.value }))
                     }
-                    placeholder={t("employeeFinancial.advance.reasonPlaceholder", "Describe why you need this advance...")}
+                    placeholder={t(
+                      "employeeFinancial.advance.reasonPlaceholder",
+                      "Describe why you need this advance...",
+                    )}
                     className="w-full rounded-xl border border-[#e2e8f0] bg-[#f8fafc] py-2.5 px-4 text-sm text-[#102a43] placeholder:text-[#94a3b8] focus:border-[#6366f1] focus:ring-1 focus:ring-[#6366f1] focus:outline-none transition resize-none"
                   />
                 </div>
@@ -1115,8 +1264,14 @@ const Financial = () => {
                     )}
                     <span>
                       {createAdvanceMutation.isPending
-                        ? t("employeeFinancial.advance.submitting", "Submitting...")
-                        : t("employeeFinancial.advance.submit", "Submit Request")}
+                        ? t(
+                            "employeeFinancial.advance.submitting",
+                            "Submitting...",
+                          )
+                        : t(
+                            "employeeFinancial.advance.submit",
+                            "Submit Request",
+                          )}
                     </span>
                   </motion.button>
 

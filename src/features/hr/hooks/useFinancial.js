@@ -3,6 +3,9 @@ import {
   getFinancialAdvances,
   updateAdvanceStatus,
   getFinancialDeductions,
+  createFinancialDeduction,
+  getFinancialBonuses,
+  createFinancialBonus,
   getFinancialPayroll,
   finalizeFinancialPayroll,
 } from "../api";
@@ -68,6 +71,64 @@ export const useHrDeductions = ({
 };
 
 // =====================================================
+// CREATE DEDUCTION (HR / OWNER)
+// POST /api/financial/deductions
+// =====================================================
+export const useCreateDeduction = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ data, lang = "en" }) =>
+      createFinancialDeduction(data, lang),
+
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ["hr-deductions"],
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["employee-deductions"],
+      });
+    },
+  });
+};
+
+// =====================================================
+// GET HR BONUSES & CREATE BONUS (HR / OWNER)
+// GET /api/financial/bonuses & POST /api/financial/bonuses
+// =====================================================
+export const useHrBonuses = ({ page = 1, per_page = 10, lang = "en" } = {}) => {
+  return useQuery({
+    queryKey: ["hr-bonuses", page, per_page, lang],
+    queryFn: () =>
+      getFinancialBonuses(
+        {
+          page,
+          per_page,
+        },
+        lang,
+      ),
+  });
+};
+
+export const useCreateBonus = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ data, lang = "en" }) =>
+      createFinancialBonus(data, lang),
+
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ["hr-bonuses"],
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["employee-bonuses"],
+      });
+    },
+  });
+};
+
+// =====================================================
 // GET HR / OWNER PAYROLL
 // GET /api/financial/payroll
 // =====================================================
@@ -115,7 +176,9 @@ export const useFinalizePayroll = () => {
       queryClient.invalidateQueries({
         queryKey: ["hr-deductions"],
       });
+      queryClient.invalidateQueries({
+        queryKey: ["hr-bonuses"],
+      });
     },
   });
 };
-

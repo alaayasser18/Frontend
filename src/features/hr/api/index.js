@@ -532,42 +532,72 @@ export const exportHrMonthlySummary = async ({
   search,
   perPage,
 }) => {
-  const response = await axiosInstance.get("/hr/attendance/export", {
-    params: {
-      month,
-      year,
-      department_id: departmentId || undefined,
-      search: search || undefined,
-      per_page: perPage || undefined,
-    },
-    responseType: "blob",
-  });
+  try {
+    const response = await axiosInstance.get("/hr/attendance/export", {
+      params: {
+        month,
+        year,
+        department_id: departmentId || undefined,
+        search: search || undefined,
+        per_page: perPage || undefined,
+      },
+      headers: {
+        Accept: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/json",
+      },
+      responseType: "blob",
+    });
 
-  // Build a filename from Content-Disposition or a default
-  const disposition = response.headers?.["content-disposition"] || "";
+    // Check if the response is actually a JSON error payload returned inside a blob
+    if (response.data?.type === "application/json") {
+      const text = await response.data.text();
+      try {
+        const json = JSON.parse(text);
+        if (json.success === false || json.error || json.message) {
+          throw new Error(json.message || json.error || "Export failed");
+        }
+      } catch (jsonErr) {
+        if (jsonErr.message !== "Export failed") throw jsonErr;
+      }
+    }
 
-  let filename = `attendance-${year}-${String(month).padStart(2, "0")}.xlsx`;
+    // Build a filename from Content-Disposition or a default
+    const disposition = response.headers?.["content-disposition"] || "";
+    let filename = `attendance-${year}-${String(month).padStart(2, "0")}.xlsx`;
 
-  const match = disposition.match(/filename[^;=\n]*=(['"]?)([^'"\n]+)\1/);
+    const match = disposition.match(/filename[^;=\n]*=(['"]?)([^'"\n]+)\1/);
+    if (match?.[2]) {
+      filename = match[2].trim();
+    }
 
-  if (match?.[2]) {
-    filename = match[2].trim();
+    // Trigger browser download with proper Excel mime type
+    const blob = new Blob([response.data], {
+      type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+
+    link.href = url;
+    link.setAttribute("download", filename);
+
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+
+    return { success: true, filename };
+  } catch (error) {
+    if (error.response?.data instanceof Blob) {
+      try {
+        const text = await error.response.data.text();
+        const json = JSON.parse(text);
+        if (json?.message) {
+          error.message = json.message;
+        }
+      } catch (_) {}
+    }
+    throw error;
   }
-
-  // Trigger browser download
-  const url = URL.createObjectURL(new Blob([response.data]));
-  const link = document.createElement("a");
-
-  link.href = url;
-  link.setAttribute("download", filename);
-
-  document.body.appendChild(link);
-  link.click();
-  link.remove();
-
-  URL.revokeObjectURL(url);
-
-  return { success: true, filename };
 };
 
 // UPDATE ATTENDANCE EXCEPTION STATUS

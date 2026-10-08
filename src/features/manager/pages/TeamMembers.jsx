@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useTranslation } from "react-i18next";
+import toast from "react-hot-toast";
 import {
   FiSearch,
   FiFilter,
@@ -15,8 +16,12 @@ import {
   FiX,
   FiBriefcase,
   FiCalendar,
+  FiTrash2,
+  FiLoader,
 } from "react-icons/fi";
 import { useManagerEmployees } from "../hooks/useManagerData";
+import { useDeleteEmployee } from "../../../hooks/useDeleteEmployee"; // adjust path if needed
+import { useAuth } from "../../../context/AuthContext"; // adjust path if needed
 
 /* ─── Animation presets ─── */
 const fadeUp = { hidden: { opacity: 0, y: 8 }, visible: { opacity: 1, y: 0 } };
@@ -58,7 +63,7 @@ const empTypeCfg = {
 const getEmpType = (t) => empTypeCfg[t] ?? "bg-[#f1f5f9] text-[#475569]";
 
 /* ─── Employee Detail Drawer ─── */
-const EmployeeDrawer = ({ employee, onClose, isArabic, t }) => {
+const EmployeeDrawer = ({ employee, onClose, onDelete, canDelete, isArabic, t }) => {
   if (!employee) return null;
   const cfg = getStatusCfg(employee.status);
 
@@ -168,6 +173,18 @@ const EmployeeDrawer = ({ employee, onClose, isArabic, t }) => {
               </div>
             )}
           </div>
+
+          {/* Delete */}
+          {canDelete && (
+            <button
+              type="button"
+              onClick={() => onDelete(employee)}
+              className="flex w-full items-center justify-center gap-2 rounded-xl border border-[#fecaca] bg-[#fef2f2] py-2.5 text-sm font-semibold text-[#dc2626] hover:bg-[#fee2e2] transition"
+            >
+              <FiTrash2 className="h-4 w-4" />
+              {t("teamMembers.deleteEmployee", "Delete employee")}
+            </button>
+          )}
         </div>
       </motion.div>
     </motion.div>
@@ -178,6 +195,9 @@ const EmployeeDrawer = ({ employee, onClose, isArabic, t }) => {
 const TeamMembers = () => {
   const { t, i18n } = useTranslation();
   const isArabic = i18n.language?.startsWith("ar");
+  const lang = isArabic ? "ar" : "en";
+
+  const { currentUser } = useAuth();
 
   // ── Filters ──
   const [search, setSearch] = useState("");
@@ -185,6 +205,33 @@ const TeamMembers = () => {
   const [empType, setEmpType] = useState("");
   const [page, setPage] = useState(1);
   const [selectedEmployee, setSelected] = useState(null);
+
+  // ── Delete ──
+  const deleteEmployeeMutation = useDeleteEmployee(lang);
+  const [employeeToDelete, setEmployeeToDelete] = useState(null);
+
+  const isSelf = (emp) => String(emp?.id) === String(currentUser?.id);
+
+  const handleConfirmDelete = async () => {
+    if (!employeeToDelete) return;
+    if (isSelf(employeeToDelete)) return;
+
+    try {
+      const res = await deleteEmployeeMutation.mutateAsync(employeeToDelete.id);
+      toast.success(
+        res?.message ||
+          t("teamMembers.deleteSuccess", "Employee deleted successfully."),
+      );
+      if (selectedEmployee?.id === employeeToDelete.id) setSelected(null);
+      setEmployeeToDelete(null);
+    } catch (err) {
+      toast.error(
+        err?.response?.data?.message ||
+          t("teamMembers.deleteError", "Failed to delete employee."),
+      );
+      setEmployeeToDelete(null);
+    }
+  };
 
   // ── Query ──
   const {
@@ -356,6 +403,21 @@ const TeamMembers = () => {
                         <p className="truncate text-[15px] font-bold text-[#1e293b]">{emp.name}</p>
                         <p className="truncate text-xs text-[#64748b]">{emp.job_title || "—"}</p>
                       </div>
+
+                      {!isSelf(emp) && (
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setEmployeeToDelete(emp);
+                          }}
+                          className="shrink-0 flex h-8 w-8 items-center justify-center rounded-lg text-[#94a3b8] hover:bg-[#fef2f2] hover:text-[#dc2626] transition"
+                          title={t("teamMembers.delete", "Delete")}
+                          aria-label={t("teamMembers.delete", "Delete")}
+                        >
+                          <FiTrash2 className="h-4 w-4" />
+                        </button>
+                      )}
                     </div>
 
                     {/* Badges */}
@@ -451,7 +513,66 @@ const TeamMembers = () => {
             isArabic={isArabic}
             t={t}
             onClose={() => setSelected(null)}
+            canDelete={!isSelf(selectedEmployee)}
+            onDelete={(emp) => setEmployeeToDelete(emp)}
           />
+        )}
+      </AnimatePresence>
+
+      {/* ── DELETE CONFIRM MODAL ── */}
+      <AnimatePresence>
+        {employeeToDelete && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[60] flex items-center justify-center bg-black/40 p-4 backdrop-blur-sm"
+            onClick={() =>
+              !deleteEmployeeMutation.isPending && setEmployeeToDelete(null)
+            }
+          >
+            <motion.div
+              initial={{ scale: 0.95, y: 12, opacity: 0 }}
+              animate={{ scale: 1, y: 0, opacity: 1 }}
+              exit={{ scale: 0.95, y: 8, opacity: 0 }}
+              onClick={(e) => e.stopPropagation()}
+              dir={isArabic ? "rtl" : "ltr"}
+              className="w-full max-w-sm rounded-2xl bg-white p-6 shadow-2xl"
+            >
+              <h3 className="text-[17px] font-bold text-[#1e293b]">
+                {t("teamMembers.deleteEmployee", "Delete employee")}
+              </h3>
+              <p className="mt-2 text-sm text-[#64748b]">
+                {t(
+                  "teamMembers.deleteConfirm",
+                  "Are you sure you want to delete {{name}}? This action cannot be undone.",
+                  { name: employeeToDelete.name },
+                )}
+              </p>
+
+              <div className="mt-6 flex justify-end gap-3">
+                <button
+                  type="button"
+                  onClick={() => setEmployeeToDelete(null)}
+                  disabled={deleteEmployeeMutation.isPending}
+                  className="rounded-lg border border-[#e2e8f0] px-4 py-2.5 text-sm font-semibold text-[#475569] hover:bg-[#f8fafc] transition disabled:opacity-50"
+                >
+                  {t("teamMembers.cancel", "Cancel")}
+                </button>
+                <button
+                  type="button"
+                  onClick={handleConfirmDelete}
+                  disabled={deleteEmployeeMutation.isPending}
+                  className="inline-flex items-center gap-2 rounded-lg bg-[#dc2626] px-4 py-2.5 text-sm font-semibold text-white hover:bg-[#b91c1c] transition disabled:opacity-60"
+                >
+                  {deleteEmployeeMutation.isPending && (
+                    <FiLoader className="h-4 w-4 animate-spin" />
+                  )}
+                  {t("teamMembers.delete", "Delete")}
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
         )}
       </AnimatePresence>
     </motion.div>

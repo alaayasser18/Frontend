@@ -196,6 +196,29 @@ export const getFinancialAdvances = async (params = {}, lang = "en") => {
   return response.data;
 };
 
+// 3. BONUSES
+export const getFinancialBonuses = async (params = {}, lang = "en") => {
+  const response = await axiosInstance.get("/financial/bonuses", {
+    params,
+    headers: {
+      Accept: "application/json",
+      "Accept-Language": lang,
+    },
+  });
+  return response.data;
+};
+
+export const createFinancialBonus = async (bonusData, lang = "en") => {
+  const response = await axiosInstance.post("/financial/bonuses", bonusData, {
+    params: { lang },
+    headers: {
+      Accept: "application/json",
+      "Accept-Language": lang,
+    },
+  });
+  return response.data;
+};
+
 // =====================================================
 // DEPARTMENTS
 // =====================================================
@@ -625,3 +648,16 @@ export const createHoliday = async (holidayData) => {
   const response = await axiosInstance.post("/holidays", holidayData);
   return response.data;
 };
+
+export const createFinancialDeduction = async (deductionData, lang = "en") => {
+  const response = await axiosInstance.post("/financial/deductions", deductionData, {
+    params: { lang },
+    headers: {
+      Accept: "application/json",
+      "Accept-Language": lang,
+    },
+  });
+  return response.data;
+};
+
+

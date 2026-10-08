@@ -1,14 +1,8 @@
 import { useState, useMemo } from "react";
 import { useTranslation } from "react-i18next";
-import {
-  FiSearch,
-  FiPlus,
-  FiX,
-  FiChevronRight,
-  FiCheckCircle,
-  FiLoader,
-  FiEdit2,
-} from "react-icons/fi";
+import { FiSearch, FiPlus, FiX, FiChevronRight, FiCheckCircle, FiLoader, FiEdit2, FiTrash2 } from "react-icons/fi";
+import { useDeleteEmployee } from "../../../hooks/useDeleteEmployee"; // عدّل المسار
+import { useAuth } from "../../../context/AuthContext";
 import { LuArrowUpRight } from "react-icons/lu";
 import { motion, AnimatePresence } from "framer-motion";
 import toast from "react-hot-toast";
@@ -154,9 +148,8 @@ const Toggle = ({ checked, onChange, label }) => (
     aria-checked={checked}
     aria-label={label}
     onClick={onChange}
-    className={`inline-flex h-6 w-11 items-center rounded-full p-0.5 transition-colors duration-200 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-[#486581]/40 ${
-      checked ? "bg-[#12B76A]" : "bg-[#d9e2ec]"
-    }`}
+    className={`inline-flex h-6 w-11 items-center rounded-full p-0.5 transition-colors duration-200 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-[#486581]/40 ${checked ? "bg-[#12B76A]" : "bg-[#d9e2ec]"
+      }`}
   >
     <motion.span
       layout
@@ -238,6 +231,27 @@ const Users = () => {
   const createEmployeeMutation = useCreateEmployee();
   const updateHrFieldsMutation = useUpdateEmployeeHrFields(currentLang);
 
+  const { currentUser } = useAuth();
+  const deleteEmployeeMutation = useDeleteEmployee(currentLang);
+  const [userToDelete, setUserToDelete] = useState(null);
+
+  const handleConfirmDelete = async () => {
+    if (!userToDelete) return;
+    if (String(userToDelete.id) === String(currentUser?.id)) return;
+
+    try {
+      const res = await deleteEmployeeMutation.mutateAsync(userToDelete.id);
+      toast.success(
+        res?.message || (isRtl ? "تم حذف الموظف بنجاح" : "Employee deleted successfully."),
+      );
+      setUserToDelete(null);
+    } catch (err) {
+      toast.error(
+        err?.response?.data?.message ||
+        (isRtl ? "فشل حذف الموظف" : "Failed to delete employee."),
+      );
+    }
+  };
   // API shape: { success, message, data: { links, meta, departments: [] } }
   // Also tolerates axios interceptors that already unwrap the body.
   const departments = useMemo(() => {
@@ -446,7 +460,7 @@ const Users = () => {
         onSuccess: (res) => {
           toast.success(
             res?.message ||
-              t("usersPage.createSuccess", "Employee created successfully."),
+            t("usersPage.createSuccess", "Employee created successfully."),
           );
           handleCloseModal();
           refetchEmployees();
@@ -514,7 +528,7 @@ const Users = () => {
     } catch (err) {
       toast.error(
         err?.response?.data?.message ||
-          (isRtl ? "حدث خطأ" : "Failed to update HR fields"),
+        (isRtl ? "حدث خطأ" : "Failed to update HR fields"),
       );
       console.error(err);
     }
@@ -562,7 +576,7 @@ const Users = () => {
       }));
       toast.error(
         err?.response?.data?.message ||
-          (isRtl ? "فشل تحديث حالة الحساب" : "Failed to update account status"),
+        (isRtl ? "فشل تحديث حالة الحساب" : "Failed to update account status"),
       );
     }
   };
@@ -684,9 +698,8 @@ const Users = () => {
           <div className="flex flex-wrap gap-3">
             <div className="relative min-w-56 flex-1">
               <FiSearch
-                className={`absolute top-1/2 -translate-y-1/2 text-[#829ab1] ${
-                  isRtl ? "right-3" : "left-3"
-                }`}
+                className={`absolute top-1/2 -translate-y-1/2 text-[#829ab1] ${isRtl ? "right-3" : "left-3"
+                  }`}
                 size={16}
               />
 
@@ -695,9 +708,8 @@ const Users = () => {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder={t("usersPage.searchPlaceholder", "Search users")}
-                className={`w-full rounded-lg border border-[#d9e2ec] py-2.5 text-sm text-[#1e293b] placeholder:text-[#829ab1] outline-none focus:border-[#486581] focus:ring-1 focus:ring-[#486581]/20 transition ${
-                  isRtl ? "pr-9 pl-3" : "pl-9 pr-3"
-                }`}
+                className={`w-full rounded-lg border border-[#d9e2ec] py-2.5 text-sm text-[#1e293b] placeholder:text-[#829ab1] outline-none focus:border-[#486581] focus:ring-1 focus:ring-[#486581]/20 transition ${isRtl ? "pr-9 pl-3" : "pl-9 pr-3"
+                  }`}
               />
             </div>
 
@@ -814,7 +826,7 @@ const Users = () => {
 
                       const isUserActive = user.status
                         ? user.status.toLowerCase() === "active" ||
-                          user.status === "نشط"
+                        user.status === "نشط"
                         : true;
 
                       const currentAccess =
@@ -924,7 +936,17 @@ const Users = () => {
                               >
                                 <FiEdit2 size={16} />
                               </button>
-
+                                {String(user.id) !== String(currentUser?.id) && (
+  <button
+    type="button"
+    onClick={() => setUserToDelete(user)}
+    className="text-[#64748b] hover:text-red-600 transition cursor-pointer"
+    title={isRtl ? "حذف الموظف" : "Delete employee"}
+    aria-label={isRtl ? "حذف الموظف" : "Delete employee"}
+  >
+    <FiTrash2 size={16} />
+  </button>
+)}
                               <Toggle
                                 checked={currentAccess}
                                 onChange={() => handleToggleAccess(user)}
@@ -1142,9 +1164,9 @@ const Users = () => {
                         {isDepartmentsLoading
                           ? t("departments.loading", "Loading departments...")
                           : t(
-                              "departments.selectDepartment",
-                              "Select Department",
-                            )}
+                            "departments.selectDepartment",
+                            "Select Department",
+                          )}
                       </option>
 
                       {departments.map((department) => (
@@ -1290,16 +1312,14 @@ const Users = () => {
                             key={perm}
                             type="button"
                             onClick={() => togglePermission(perm)}
-                            className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition cursor-pointer ${
-                              isSelected
-                                ? "bg-[#243B53] text-white shadow-xs"
-                                : "bg-white text-[#486581] border border-[#d9e2ec] hover:border-[#9fb3c8]"
-                            }`}
+                            className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition cursor-pointer ${isSelected
+                              ? "bg-[#243B53] text-white shadow-xs"
+                              : "bg-white text-[#486581] border border-[#d9e2ec] hover:border-[#9fb3c8]"
+                              }`}
                           >
                             <span
-                              className={`size-1.5 rounded-full ${
-                                isSelected ? "bg-[#12B76A]" : "bg-[#9fb3c8]"
-                              }`}
+                              className={`size-1.5 rounded-full ${isSelected ? "bg-[#12B76A]" : "bg-[#9fb3c8]"
+                                }`}
                             />
                             {perm}
                           </button>
@@ -1484,6 +1504,59 @@ const Users = () => {
           </motion.div>
         )}
       </AnimatePresence>
+      <AnimatePresence>
+  {userToDelete && (
+    <motion.div
+      variants={modalBackdrop}
+      initial="hidden"
+      animate="visible"
+      exit="exit"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-[#102a43]/40 p-4"
+      onMouseDown={(e) => {
+        if (e.target === e.currentTarget && !deleteEmployeeMutation.isPending)
+          setUserToDelete(null);
+      }}
+    >
+      <motion.div
+        variants={modalPanel}
+        initial="hidden"
+        animate="visible"
+        exit="exit"
+        dir={isRtl ? "rtl" : "ltr"}
+        className="w-full max-w-sm rounded-2xl bg-white p-6 shadow-xl"
+      >
+        <h3 className="text-[18px] font-bold text-[#243B53]">
+          {isRtl ? "حذف الموظف" : "Delete employee"}
+        </h3>
+        <p className="mt-2 text-sm text-[#627d98]">
+          {isRtl
+            ? `هل أنت متأكد من حذف ${userToDelete.name}؟ لا يمكن التراجع عن هذا الإجراء.`
+            : `Are you sure you want to delete ${userToDelete.name}? This action cannot be undone.`}
+        </p>
+
+        <div className="mt-6 flex justify-end gap-3">
+          <button
+            type="button"
+            onClick={() => setUserToDelete(null)}
+            disabled={deleteEmployeeMutation.isPending}
+            className="rounded-lg border border-[#d9e2ec] px-4 py-2.5 text-sm font-semibold text-[#486581] hover:bg-[#f0f4f7] transition cursor-pointer disabled:opacity-50"
+          >
+            {isRtl ? "إلغاء" : "Cancel"}
+          </button>
+          <button
+            type="button"
+            onClick={handleConfirmDelete}
+            disabled={deleteEmployeeMutation.isPending}
+            className="inline-flex items-center gap-2 rounded-lg bg-red-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-red-700 transition cursor-pointer disabled:opacity-60"
+          >
+            {deleteEmployeeMutation.isPending && <FiLoader className="animate-spin" size={15} />}
+            {isRtl ? "حذف" : "Delete"}
+          </button>
+        </div>
+      </motion.div>
+    </motion.div>
+  )}
+</AnimatePresence>
     </div>
   );
 };

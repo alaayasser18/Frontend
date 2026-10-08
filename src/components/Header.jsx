@@ -12,6 +12,7 @@ import {
 
 import LanguageSwitcher from "./LanguageSwitcher";
 import NotificationDropdown from "./NotificationDropdown";
+import SecureImage from "./SecureImage";
 import { useNotifications } from "../context/NotificationContext";
 import { useAuth } from "../context/AuthContext";
 
@@ -174,9 +175,18 @@ const Header = ({ onToggleMenu, role }) => {
             className="flex items-center gap-2 px-2 py-1 max-[760px]:px-0.5 rounded-lg hover:bg-[#f0f4f7] transition cursor-pointer border-0 bg-transparent shrink-0"
           >
             <div
-              className={`w-8 h-8 rounded-full ${avatarBg} flex items-center justify-center text-xs font-bold ${avatarColor}`}
+              className={`w-8 h-8 rounded-full ${avatarBg} flex items-center justify-center text-xs font-bold ${avatarColor} overflow-hidden shrink-0`}
             >
-              {avatarText}
+              {currentUser?.avatar_url || currentUser?.avatar ? (
+                <SecureImage
+                  src={currentUser?.avatar_url || currentUser?.avatar}
+                  alt={displayName}
+                  className="w-full h-full object-cover"
+                  fallback={avatarText}
+                />
+              ) : (
+                avatarText
+              )}
             </div>
 
             <div className="flex flex-col text-left rtl:text-right max-[760px]:hidden">

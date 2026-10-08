@@ -18,8 +18,9 @@ import {
   FiSave,
   FiEye,
   FiEyeOff,
+  FiTrash2
 } from "react-icons/fi";
-
+import { useDeleteEmployee } from "../../../hooks/useDeleteEmployee"; // عدّل المسار
 import {
   useEmployees,
   useCreateEmployee,
@@ -135,6 +136,31 @@ function EmployeesPage() {
 
   const changeStatusMutation = useChangeEmployeeAccountStatus(apiLang);
 
+  const deleteEmployeeMutation = useDeleteEmployee(apiLang);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+
+  const handleDeleteEmployee = async () => {
+    if (!selectedEmployee?.id) return;
+    if (String(currentUser?.id) === String(selectedEmployee.id)) return;
+
+    try {
+      const res = await deleteEmployeeMutation.mutateAsync(selectedEmployee.id);
+      toast.success(
+        res?.message || (isArabic ? "تم حذف الموظف بنجاح" : "Employee deleted successfully."),
+      );
+      setShowDeleteConfirm(false);
+      setSelectedEmployee(null);
+      setIsEditMode(false);
+    } catch (error) {
+      toast.error(
+        getApiErrorMessage(
+          error,
+          isArabic ? "فشل حذف الموظف." : "Failed to delete employee.",
+        ),
+      );
+      setShowDeleteConfirm(false);
+    }
+  };
   const { role, hasPermission, currentUser } = useAuth();
 
   const canUpdateHrFields =
@@ -970,13 +996,10 @@ function EmployeesPage() {
   // =====================================================
 
   const closeProfile = () => {
-    if (updateEmployeeMutation.isPending || changeStatusMutation.isPending) {
-      return;
-    }
-
+    if (updateEmployeeMutation.isPending || changeStatusMutation.isPending || deleteEmployeeMutation.isPending) return;
     setSelectedEmployee(null);
-
     setIsEditMode(false);
+    setShowDeleteConfirm(false);
   };
 
   // =====================================================
@@ -1087,7 +1110,7 @@ function EmployeesPage() {
 
           statusType:
             String(updatedEmployee.status || payload.status).toLowerCase() ===
-            "active"
+              "active"
               ? "success"
               : "danger",
         }));
@@ -1281,9 +1304,8 @@ function EmployeesPage() {
               className="relative w-full md:max-w-md"
             >
               <div
-                className={`pointer-events-none absolute inset-y-0 flex items-center ${
-                  isArabic ? "right-0 pr-3.5" : "left-0 pl-3.5"
-                }`}
+                className={`pointer-events-none absolute inset-y-0 flex items-center ${isArabic ? "right-0 pr-3.5" : "left-0 pl-3.5"
+                  }`}
               >
                 <FiSearch size={17} className="text-[#94a3b8]" />
               </div>
@@ -1293,9 +1315,8 @@ function EmployeesPage() {
                 placeholder={t.searchPlaceholder}
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className={`h-11 w-full rounded-lg border border-[#e2e8f0] bg-white text-sm text-[#1e293b] outline-none transition-all placeholder:text-[#94a3b8] focus:border-[#cbd5e1] focus:ring-2 focus:ring-[#f1f5f9] ${
-                  isArabic ? "pl-10 pr-10 text-right" : "pl-10 pr-10 text-left"
-                }`}
+                className={`h-11 w-full rounded-lg border border-[#e2e8f0] bg-white text-sm text-[#1e293b] outline-none transition-all placeholder:text-[#94a3b8] focus:border-[#cbd5e1] focus:ring-2 focus:ring-[#f1f5f9] ${isArabic ? "pl-10 pr-10 text-right" : "pl-10 pr-10 text-left"
+                  }`}
               />
 
               <AnimatePresence>
@@ -1315,9 +1336,8 @@ function EmployeesPage() {
                     }}
                     type="button"
                     onClick={() => setSearchTerm("")}
-                    className={`absolute top-1/2 flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-lg bg-[#edf3f7] text-[#6d879d] transition hover:bg-[#e2ebf1] hover:text-[#315d80] ${
-                      isArabic ? "left-2" : "right-2"
-                    }`}
+                    className={`absolute top-1/2 flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-lg bg-[#edf3f7] text-[#6d879d] transition hover:bg-[#e2ebf1] hover:text-[#315d80] ${isArabic ? "left-2" : "right-2"
+                      }`}
                   >
                     <FiX size={14} />
                   </motion.button>
@@ -1372,9 +1392,8 @@ function EmployeesPage() {
                   ].map((header) => (
                     <th
                       key={header}
-                      className={`px-5 py-4 text-[11px] font-bold tracking-wider text-[#94a3b8] ${
-                        isArabic ? "text-right" : "text-left"
-                      }`}
+                      className={`px-5 py-4 text-[11px] font-bold tracking-wider text-[#94a3b8] ${isArabic ? "text-right" : "text-left"
+                        }`}
                     >
                       {header}
                     </th>
@@ -1891,9 +1910,8 @@ function EmployeesPage() {
                           type="button"
                           onClick={() => setIsPermissionsOpen((prev) => !prev)}
                           disabled={permissions.length === 0 || permissionsLoading}
-                          className={`flex min-h-11 w-full items-center justify-between gap-3 rounded-lg border border-[#e2e8f0] bg-white px-3.5 py-2.5 text-sm text-[#1e293b] outline-none transition hover:bg-[#f8fafc] focus:border-[#cbd5e1] focus:ring-2 focus:ring-[#f1f5f9] disabled:cursor-not-allowed disabled:bg-[#f8fafc] ${
-                            isArabic ? "text-right" : "text-left"
-                          }`}
+                          className={`flex min-h-11 w-full items-center justify-between gap-3 rounded-lg border border-[#e2e8f0] bg-white px-3.5 py-2.5 text-sm text-[#1e293b] outline-none transition hover:bg-[#f8fafc] focus:border-[#cbd5e1] focus:ring-2 focus:ring-[#f1f5f9] disabled:cursor-not-allowed disabled:bg-[#f8fafc] ${isArabic ? "text-right" : "text-left"
+                            }`}
                         >
                           <span
                             className={
@@ -1913,9 +1931,8 @@ function EmployeesPage() {
 
                           <FiChevronDown
                             size={16}
-                            className={`shrink-0 text-[#64748b] transition-transform ${
-                              isPermissionsOpen ? "rotate-180" : ""
-                            }`}
+                            className={`shrink-0 text-[#64748b] transition-transform ${isPermissionsOpen ? "rotate-180" : ""
+                              }`}
                           />
                         </button>
 
@@ -1946,11 +1963,10 @@ function EmployeesPage() {
                                 return (
                                   <label
                                     key={permission}
-                                    className={`flex cursor-pointer items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-[#475569] transition hover:bg-[#f8fafc] ${
-                                      isArabic
-                                        ? "flex-row-reverse justify-between"
-                                        : ""
-                                    }`}
+                                    className={`flex cursor-pointer items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-[#475569] transition hover:bg-[#f8fafc] ${isArabic
+                                      ? "flex-row-reverse justify-between"
+                                      : ""
+                                      }`}
                                   >
                                     <input
                                       type="checkbox"
@@ -1961,8 +1977,8 @@ function EmployeesPage() {
                                           ...prev,
                                           permissions: checked
                                             ? prev.permissions.filter(
-                                                (item) => item !== permission,
-                                              )
+                                              (item) => item !== permission,
+                                            )
                                             : [...prev.permissions, permission],
                                         }));
                                       }}
@@ -2058,11 +2074,11 @@ function EmployeesPage() {
                         !permissionsQueryFailed &&
                         !permissionsResponseInvalid &&
                         permissions.length === 0 && (
-                        <p className="mt-1.5 text-[11px] text-[#94a3b8]">
-                          {isArabic
-                            ? "لا توجد صلاحيات متاحة"
-                            : "No permissions available"}
-                        </p>
+                          <p className="mt-1.5 text-[11px] text-[#94a3b8]">
+                            {isArabic
+                              ? "لا توجد صلاحيات متاحة"
+                              : "No permissions available"}
+                          </p>
                         )}
                     </div>
                   </div>
@@ -2175,9 +2191,8 @@ function EmployeesPage() {
                     updateEmployeeMutation.isPending ||
                     changeStatusMutation.isPending
                   }
-                  className={`absolute top-5 flex h-8 w-8 items-center justify-center rounded-lg bg-[#edf3f7] text-[#64748b] transition hover:bg-[#e2e8f0] hover:text-[#1e293b] disabled:cursor-not-allowed disabled:opacity-50 ${
-                    isArabic ? "left-5" : "right-5"
-                  }`}
+                  className={`absolute top-5 flex h-8 w-8 items-center justify-center rounded-lg bg-[#edf3f7] text-[#64748b] transition hover:bg-[#e2e8f0] hover:text-[#1e293b] disabled:cursor-not-allowed disabled:opacity-50 ${isArabic ? "left-5" : "right-5"
+                    }`}
                 >
                   <FiX size={16} />
                 </button>
@@ -2268,25 +2283,24 @@ function EmployeesPage() {
                           type="button"
                           onClick={handleChangeAccountStatus}
                           disabled={changeStatusMutation.isPending}
-                          className={`flex w-full items-center justify-center gap-2 rounded-lg border py-2.5 text-sm font-semibold transition disabled:cursor-not-allowed disabled:opacity-50 ${
-                            String(
+                          className={`flex w-full items-center justify-center gap-2 rounded-lg border py-2.5 text-sm font-semibold transition disabled:cursor-not-allowed disabled:opacity-50 ${String(
                             selectedEmployee.status ||
-                              employeeDetails?.status ||
-                                "",
-                            ).toLowerCase() === "active"
-                              ? "border-red-100 bg-red-50 text-red-700 hover:bg-red-100"
-                              : "border-emerald-100 bg-emerald-50 text-emerald-700 hover:bg-emerald-100"
-                          }`}
+                            employeeDetails?.status ||
+                            "",
+                          ).toLowerCase() === "active"
+                            ? "border-red-100 bg-red-50 text-red-700 hover:bg-red-100"
+                            : "border-emerald-100 bg-emerald-50 text-emerald-700 hover:bg-emerald-100"
+                            }`}
                         >
                           <FiPower size={15} />
 
                           {changeStatusMutation.isPending
                             ? t.updating
                             : String(
-                                  selectedEmployee.status ||
-                                    employeeDetails?.status ||
-                                    "",
-                                ).toLowerCase() === "active"
+                              selectedEmployee.status ||
+                              employeeDetails?.status ||
+                              "",
+                            ).toLowerCase() === "active"
                               ? t.deactivate
                               : t.activate}
                         </button>
@@ -2301,6 +2315,47 @@ function EmployeesPage() {
                       />
                     )}
 
+                    {currentUser?.id !== selectedEmployee.id && (
+                      !showDeleteConfirm ? (
+                        <button
+                          type="button"
+                          onClick={() => setShowDeleteConfirm(true)}
+                          disabled={changeStatusMutation.isPending}
+                          className="flex w-full items-center justify-center gap-2 rounded-lg border border-red-100 bg-white py-2.5 text-sm font-semibold text-red-700 transition hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50"
+                        >
+                          <FiTrash2 size={15} />
+                          {isArabic ? "حذف الموظف" : "Delete Employee"}
+                        </button>
+                      ) : (
+                        <div className="rounded-lg border border-red-100 bg-red-50 p-3">
+                          <p className="text-xs font-medium text-red-700">
+                            {isArabic
+                              ? "هل أنت متأكد؟ لا يمكن التراجع عن الحذف."
+                              : "Are you sure? This cannot be undone."}
+                          </p>
+                          <div className="mt-3 flex gap-2">
+                            <button
+                              type="button"
+                              onClick={() => setShowDeleteConfirm(false)}
+                              disabled={deleteEmployeeMutation.isPending}
+                              className="flex-1 rounded-lg border border-[#e2e8f0] bg-white py-2 text-sm font-semibold text-[#475569] disabled:opacity-50"
+                            >
+                              {t.cancel}
+                            </button>
+                            <button
+                              type="button"
+                              onClick={handleDeleteEmployee}
+                              disabled={deleteEmployeeMutation.isPending}
+                              className="flex-1 rounded-lg bg-red-600 py-2 text-sm font-semibold text-white hover:bg-red-700 disabled:opacity-50"
+                            >
+                              {deleteEmployeeMutation.isPending
+                                ? (isArabic ? "جاري الحذف..." : "Deleting...")
+                                : (isArabic ? "تأكيد الحذف" : "Confirm Delete")}
+                            </button>
+                          </div>
+                        </div>
+                      )
+                    )}
                     <button
                       type="button"
                       onClick={closeProfile}
@@ -2571,13 +2626,10 @@ function FormInput({
           min={min}
           maxLength={maxLength}
           aria-invalid={Boolean(error)}
-          className={`h-11 w-full rounded-lg border ${
-            error ? "border-red-500" : "border-[#e2e8f0]"
-          } bg-white px-3.5 ${
-            endAdornment ? "pe-10" : ""
-          } text-sm text-[#1e293b] outline-none transition placeholder:text-[#94a3b8] focus:border-[#cbd5e1] focus:ring-2 focus:ring-[#f1f5f9] ${
-            isArabic ? "text-right" : "text-left"
-          }`}
+          className={`h-11 w-full rounded-lg border ${error ? "border-red-500" : "border-[#e2e8f0]"
+            } bg-white px-3.5 ${endAdornment ? "pe-10" : ""
+            } text-sm text-[#1e293b] outline-none transition placeholder:text-[#94a3b8] focus:border-[#cbd5e1] focus:ring-2 focus:ring-[#f1f5f9] ${isArabic ? "text-right" : "text-left"
+            }`}
         />
         {endAdornment && (
           <span className="absolute inset-y-0 end-0 flex items-center px-3">
@@ -2623,9 +2675,8 @@ function FormSelect({
         onChange={(e) => onChange(e.target.value)}
         required={required}
         aria-invalid={Boolean(error)}
-        className={`h-11 w-full rounded-lg border ${
-          error ? "border-red-500" : "border-[#e2e8f0]"
-        } bg-white px-3.5 text-sm text-[#1e293b] outline-none transition focus:border-[#cbd5e1] focus:ring-2 focus:ring-[#f1f5f9]`}
+        className={`h-11 w-full rounded-lg border ${error ? "border-red-500" : "border-[#e2e8f0]"
+          } bg-white px-3.5 text-sm text-[#1e293b] outline-none transition focus:border-[#cbd5e1] focus:ring-2 focus:ring-[#f1f5f9]`}
       >
         {placeholder && (
           <option value="" disabled>

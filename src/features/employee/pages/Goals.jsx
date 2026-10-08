@@ -104,13 +104,37 @@ const Goals = () => {
   const markCompletedMutation = useMarkGoalCompleted();
 
   // =====================================================
-  // Response Data
+  // Response Data & Selected Goal Resolution
   // =====================================================
 
-  const goals = goalsResponse?.data?.goals || [];
-  const meta = goalsResponse?.data?.meta || null;
+  const goals = useMemo(() => {
+    const data = goalsResponse?.data;
+    if (Array.isArray(data?.goals)) return data.goals;
+    if (Array.isArray(data)) return data;
+    if (Array.isArray(goalsResponse?.goals)) return goalsResponse.goals;
+    if (Array.isArray(goalsResponse)) return goalsResponse;
+    return [];
+  }, [goalsResponse]);
 
-  const selectedGoal = goalDetailsResponse?.data || null;
+  const meta = goalsResponse?.data?.meta || goalsResponse?.meta || null;
+
+  const goalFromList = useMemo(() => {
+    if (!selectedGoalId) return null;
+    return goals.find((g) => String(g.id) === String(selectedGoalId)) || null;
+  }, [goals, selectedGoalId]);
+
+  const selectedGoal = useMemo(() => {
+    if (!selectedGoalId) return null;
+
+    const rawData = goalDetailsResponse?.data;
+    const apiGoal =
+      rawData?.goal ||
+      (rawData && typeof rawData === "object" && !Array.isArray(rawData) && (rawData.title || rawData.id) ? rawData : null) ||
+      goalDetailsResponse?.goal ||
+      (goalDetailsResponse && typeof goalDetailsResponse === "object" && !Array.isArray(goalDetailsResponse) && (goalDetailsResponse.title || goalDetailsResponse.id) ? goalDetailsResponse : null);
+
+    return apiGoal || goalFromList;
+  }, [selectedGoalId, goalDetailsResponse, goalFromList]);
 
   // =====================================================
   // Error Message
@@ -483,7 +507,8 @@ const Goals = () => {
                       duration: 0.15,
                     },
                   }}
-                  className="relative flex flex-col justify-between rounded-2xl border border-[#e2e8f0] bg-white p-6 pl-10 pr-6 rtl:pr-10 rtl:pl-6 shadow-[0_1px_3px_rgba(0,0,0,0.02)] hover:border-[#cbd5e1] hover:shadow-md transition-shadow"
+                  onClick={() => handleViewDetails(goal.id)}
+                  className="relative flex flex-col justify-between rounded-2xl border border-[#e2e8f0] bg-white p-6 pl-10 pr-6 rtl:pr-10 rtl:pl-6 shadow-[0_1px_3px_rgba(0,0,0,0.02)] hover:border-[#cbd5e1] hover:shadow-md transition-all cursor-pointer"
                 >
                   {/* Side Stripe */}
 
@@ -507,16 +532,17 @@ const Goals = () => {
 
                       {/* Menu */}
 
-                      <div className="relative">
+                      <div className="relative" onClick={(e) => e.stopPropagation()}>
                         <button
                           type="button"
                           className="text-[#94a3b8] hover:text-[#1e293b] p-1 transition"
                           aria-label="More options"
-                          onClick={() =>
+                          onClick={(e) => {
+                            e.stopPropagation();
                             setOpenMenuId(
                               openMenuId === goal.id ? null : goal.id,
-                            )
-                          }
+                            );
+                          }}
                         >
                           <FiMoreHorizontal className="h-5 w-5" />
                         </button>
@@ -640,7 +666,10 @@ const Goals = () => {
                             scale: 0.98,
                           }}
                           type="button"
-                          onClick={() => handleMarkCompleted(goal.id)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleMarkCompleted(goal.id);
+                          }}
                           disabled={isCompleting}
                           className="inline-flex items-center gap-2 rounded-xl border border-[#bbf7d0] bg-[#f0fdf4] px-4 py-2 text-xs font-semibold text-[#166534] hover:bg-[#dcfce7] transition shadow-sm disabled:opacity-50"
                         >
@@ -873,46 +902,24 @@ const Goals = () => {
               onClick={(e) => e.stopPropagation()}
               className="w-full max-w-[500px] rounded-2xl bg-white p-7 shadow-2xl"
             >
-              {detailLoading ? (
-                <div className="flex flex-col items-center justify-center py-12">
-                  <FiLoader className="h-7 w-7 text-[#3b82f6] animate-spin mb-3" />
-
-                  <p className="text-sm text-[#829ab1]">
-                    {t("employeeGoals.loadingDetails", "Loading details...")}
-                  </p>
-                </div>
-              ) : detailError ? (
-                <div className="flex flex-col items-center justify-center py-12 text-center">
-                  <FiAlertCircle className="h-7 w-7 text-[#ef4444] mb-3" />
-
-                  <p className="text-sm text-[#991b1b]">
-                    {t(
-                      "employeeGoals.errors.detailFailed",
-                      "Failed to retrieve goal details.",
-                    )}
-                  </p>
-
-                  <button
-                    type="button"
-                    onClick={handleCloseDetail}
-                    className="mt-4 rounded-xl bg-[#1c364f] px-4 py-2 text-xs font-semibold text-white"
-                  >
-                    {t("common.close", "Close")}
-                  </button>
-                </div>
-              ) : selectedGoal ? (
+              {selectedGoal ? (
                 <>
                   {/* Header */}
 
                   <div className="flex items-start justify-between pb-4">
-                    <div>
-                      <p className="text-[11px] font-bold uppercase tracking-wider text-[#94a3b8]">
-                        {t("employeeGoals.goalDetails", "GOAL DETAILS")}
-                      </p>
+                    <div className="flex items-center gap-2">
+                      <div>
+                        <p className="text-[11px] font-bold uppercase tracking-wider text-[#94a3b8]">
+                          {t("employeeGoals.goalDetails", "GOAL DETAILS")}
+                        </p>
 
-                      <h2 className="text-lg font-bold text-[#102a43] mt-0.5">
-                        {selectedGoal.title}
-                      </h2>
+                        <h2 className="text-lg font-bold text-[#102a43] mt-0.5">
+                          {selectedGoal.title}
+                        </h2>
+                      </div>
+                      {detailLoading && (
+                        <FiLoader className="h-4 w-4 text-[#3b82f6] animate-spin ml-2" />
+                      )}
                     </div>
 
                     <button

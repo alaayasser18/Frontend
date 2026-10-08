@@ -197,6 +197,29 @@ export const AuthProvider = ({ children }) => {
     [role],
   );
 
+  const clearAuthSession = useCallback(() => {
+    disconnectEcho();
+
+    setAuthState({
+      token: null,
+      user: null,
+      role: null,
+      permissions: [],
+    });
+
+    try {
+      localStorage.removeItem("token");
+      localStorage.removeItem("user");
+      localStorage.removeItem("role");
+      localStorage.removeItem("permissions");
+      localStorage.removeItem("currentUser");
+      localStorage.removeItem("admin");
+      localStorage.removeItem("auth_user");
+      localStorage.removeItem("rememberMe");
+    } catch (e) {
+      console.error("Failed to clear auth session", e);
+    }
+  }, []);
   /**
    * Permission helper
    */
@@ -254,6 +277,7 @@ export const AuthProvider = ({ children }) => {
         isAuthenticated,
         login,
         logout,
+        clearAuthSession,
         hasPermission,
         setCurrentUser,
         ROLE_ROUTES,

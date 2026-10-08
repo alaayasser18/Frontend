@@ -118,12 +118,40 @@ export const getDeductions = async (params = {}, lang = "en") => {
 };
 
 /**
+ * POST /api/financial/deductions
+ * Record a deduction or penalty (Owner / HR)
+ */
+export const createDeduction = async (data, lang = "en") => {
+  const response = await axiosInstance.post("/financial/deductions", data, {
+    headers: {
+      "Accept-Language": lang,
+    },
+  });
+
+  return response.data;
+};
+
+/**
  * GET /api/financial/bonuses
  * List bonuses and incentives (All Roles)
  */
 export const getBonuses = async (params = {}, lang = "en") => {
   const response = await axiosInstance.get("/financial/bonuses", {
     params,
+    headers: {
+      "Accept-Language": lang,
+    },
+  });
+
+  return response.data;
+};
+
+/**
+ * POST /api/financial/bonuses
+ * Issue a bonus or incentive (Owner / HR)
+ */
+export const createBonus = async (data, lang = "en") => {
+  const response = await axiosInstance.post("/financial/bonuses", data, {
     headers: {
       "Accept-Language": lang,
     },

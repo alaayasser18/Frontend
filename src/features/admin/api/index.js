@@ -189,3 +189,47 @@ export const updateLandingFeature = async (id, payload, lang = "en") => {
   );
   return res.data;
 };
+
+export const deleteLandingFeature = async (id, lang = "en") => {
+  const res = await axiosInstance.delete(`/owner/landing-page/features/${id}`, langConfig(lang));
+  return res.data;
+};
+
+export const getLandingRoles = async (lang = "en") => {
+  const res = await axiosInstance.get("/owner/landing-page/roles", langConfig(lang));
+  return res.data;
+};
+
+export const createLandingRole = async (payload, lang = "en") => {
+  const res = await axiosInstance.post("/owner/landing-page/roles", payload, langConfig(lang));
+  return res.data;
+};
+
+export const updateLandingRole = async (id, payload, lang = "en") => {
+  const res = await axiosInstance.put(`/owner/landing-page/roles/${id}`, payload, langConfig(lang));
+  return res.data;
+};
+
+export const deleteLandingRole = async (id, lang = "en") => {
+  const res = await axiosInstance.delete(`/owner/landing-page/roles/${id}`, langConfig(lang));
+  return res.data;
+};
+export const getLandingPlans = async (lang = "en") => {
+  const res = await axiosInstance.get("/owner/landing-page/plans", langConfig(lang));
+  return res.data;
+};
+
+export const createLandingPlan = async (payload, lang = "en") => {
+  const res = await axiosInstance.post("/owner/landing-page/plans", payload, langConfig(lang));
+  return res.data;
+};
+
+export const updateLandingPlan = async (id, payload, lang = "en") => {
+  const res = await axiosInstance.put(`/owner/landing-page/plans/${id}`, payload, langConfig(lang));
+  return res.data;
+};
+
+export const deleteLandingPlan = async (id, lang = "en") => {
+  const res = await axiosInstance.delete(`/owner/landing-page/plans/${id}`, langConfig(lang));
+  return res.data;
+};

@@ -1,12 +1,13 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 
 import { useTranslation } from "react-i18next";
 
 import { FiMail } from "react-icons/fi";
 
 import { toast } from "react-hot-toast";
+import { useAuth } from "../../../context/AuthContext";
 
 import MainAuthForm from "../components/MainAuthForm";
 
@@ -15,9 +16,45 @@ import { useForgotPassword } from "../hooks/useForgotPassword";
 import "../../../styles/auth/ForgotPassword.css";
 
 export default function ForgotPassword() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const { clearAuthSession } = useAuth();
 
   const navigate = useNavigate();
+  const { pathname, search } = useLocation();
+
+  const isActivation = pathname.toLowerCase().endsWith("/activation");
+
+  const searchParams = new URLSearchParams(search);
+  const activationLang = searchParams.get("lang");
+
+  const ns = isActivation
+    ? "auth.activateAccount"
+    : "auth.forgotPassword";
+
+  // =====================================================
+  // CLEAR OLD AUTH SESSION ON ACTIVATION
+  // =====================================================
+
+  const activationSessionCleared = useRef(false);
+
+  useEffect(() => {
+    if (!isActivation || activationSessionCleared.current) return;
+
+    activationSessionCleared.current = true;
+
+    // Clear any previous Admin/Owner session
+    clearAuthSession();
+
+    // Apply activation language from ?lang=ar / ?lang=en
+    if (activationLang === "ar" || activationLang === "en") {
+      i18n.changeLanguage(activationLang);
+    }
+  }, [
+    isActivation,
+    activationLang,
+    i18n,
+    clearAuthSession,
+  ]);
 
   const forgotPasswordMutation = useForgotPassword();
 
@@ -32,9 +69,9 @@ export default function ForgotPassword() {
 
     const trimmedEmail = email.trim();
 
-    // =====================================================
+    // ===================================================
     // FRONTEND VALIDATION
-    // =====================================================
+    // ===================================================
 
     if (!trimmedEmail) {
       toast.error(t("auth.forgotPassword.emailRequired"));
@@ -48,9 +85,9 @@ export default function ForgotPassword() {
       return;
     }
 
-    // =====================================================
+    // ===================================================
     // REQUEST DATA
-    // =====================================================
+    // ===================================================
 
     /*
       Swagger:
@@ -74,14 +111,14 @@ export default function ForgotPassword() {
     console.log("Forgot Password data:", forgotPasswordData);
     console.log("=================================");
 
-    // =====================================================
+    // ===================================================
     // SEND REQUEST
-    // =====================================================
+    // ===================================================
 
     forgotPasswordMutation.mutate(forgotPasswordData, {
-      // ===================================================
+      // =================================================
       // SUCCESS
-      // ===================================================
+      // =================================================
 
       onSuccess: (data) => {
         console.log("=================================");
@@ -109,24 +146,19 @@ export default function ForgotPassword() {
 
         sessionStorage.setItem("resetEmail", returnedEmail);
 
-        console.log("Reset email saved:", sessionStorage.getItem("resetEmail"));
+        sessionStorage.setItem(
+          "authFlow",
+          isActivation ? "activation" : "forgotPassword"
+        );
 
-        // =================================================
-        // SUCCESS MESSAGE
-        // =================================================
-
-        toast.success(t("auth.forgotPassword.otpSent"));
-
-        // =================================================
-        // GO TO VERIFY OTP
-        // =================================================
+        toast.success(t(`${ns}.otpSent`));
 
         navigate("/VerifyOTP");
       },
 
-      // ===================================================
+      // =================================================
       // ERROR
-      // ===================================================
+      // =================================================
 
       onError: (error) => {
         console.log("=================================");
@@ -140,7 +172,10 @@ export default function ForgotPassword() {
 
         const responseData = error?.response?.data;
 
-        const backendMessage = responseData?.message;
+        const backendMessage =
+          responseData?.message ||
+          responseData?.error ||
+          responseData?.errors?.[0];
 
         // =================================================
         // 422 VALIDATION
@@ -149,13 +184,10 @@ export default function ForgotPassword() {
         if (status === 422) {
           sessionStorage.removeItem("resetEmail");
 
-          // نستخدم ترجمة الـ frontend بدل رسالة الـ backend
-          toast.error(t("auth.forgotPassword.emailNotFound"));
-
-          // // الرجوع إلى Login بعد ظهور الرسالة
-          // setTimeout(() => {
-          //   navigate("/login", { replace: true });
-          // }, 1500);
+          toast.error(
+            backendMessage ||
+              t("auth.forgotPassword.emailNotFound")
+          );
 
           return;
         }
@@ -166,7 +198,8 @@ export default function ForgotPassword() {
 
         if (status === 429) {
           toast.error(
-            backendMessage || t("auth.forgotPassword.tooManyRequests"),
+            backendMessage ||
+              t("auth.forgotPassword.tooManyRequests")
           );
 
           return;
@@ -185,7 +218,9 @@ export default function ForgotPassword() {
         // GENERIC ERROR
         // =================================================
 
-        toast.error(t("auth.forgotPassword.errorGeneric"));
+        toast.error(
+          t("auth.forgotPassword.errorGeneric")
+        );
       },
     });
   };
@@ -197,17 +232,26 @@ export default function ForgotPassword() {
   return (
     <MainAuthForm>
       <div className="forgot-password-card">
+
         {/* =================================================
             TITLE
         ================================================= */}
 
-        <h1 className="title">{t("auth.forgotPassword.title")}</h1>
+        <h1 className="title">
+          {t(`${ns}.title`)}
+        </h1>
 
         {/* =================================================
             SUBTITLE
         ================================================= */}
 
-        <p className="subtitle">{t("auth.forgotPassword.subtitle")}</p>
+        <p className="subtitle">
+          {t(`${ns}.subtitle`)}
+        </p>
+
+        {forgotPasswordMutation.isPending
+          ? t("auth.forgotPassword.sending")
+          : t(`${ns}.sendCode`)}
 
         {/* =================================================
             FORM
@@ -215,20 +259,27 @@ export default function ForgotPassword() {
 
         <form onSubmit={handleSubmit}>
           <div className="form-group">
-            <label htmlFor="email">{t("auth.forgotPassword.workEmail")}</label>
+
+            <label htmlFor="email">
+              {t("auth.forgotPassword.workEmail")}
+            </label>
 
             <div className="input-wrapper">
+
               <FiMail className="input-icon" />
 
               <input
                 id="email"
                 type="email"
                 autoComplete="email"
-                placeholder={t("auth.forgotPassword.emailPlaceholder")}
+                placeholder={t(
+                  "auth.forgotPassword.emailPlaceholder"
+                )}
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 disabled={forgotPasswordMutation.isPending}
               />
+
             </div>
           </div>
 
@@ -251,9 +302,13 @@ export default function ForgotPassword() {
             BACK TO LOGIN
         ================================================= */}
 
-        <Link to="/login" className="back-to-login">
+        <Link
+          to="/login"
+          className="back-to-login"
+        >
           {t("auth.forgotPassword.backToSignIn")}
         </Link>
+
       </div>
     </MainAuthForm>
   );

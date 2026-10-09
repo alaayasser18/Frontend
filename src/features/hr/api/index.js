@@ -409,27 +409,6 @@ export const createFinancialDeduction = async (data, lang = "en") => {
 // FINANCIAL BONUSES
 // =====================================================
 
-export const getFinancialBonuses = async (params = {}, lang = "en") => {
-  const response = await axiosInstance.get("/financial/bonuses", {
-    params,
-    headers: {
-      Accept: "application/json",
-      "Accept-Language": lang,
-    },
-  });
-  return response.data;
-};
-
-export const createFinancialBonus = async (data, lang = "en") => {
-  const response = await axiosInstance.post("/financial/bonuses", data, {
-    headers: {
-      Accept: "application/json",
-      "Accept-Language": lang,
-    },
-  });
-  return response.data;
-};
-
 // =====================================================
 // FINANCIAL PAYROLL
 // =====================================================
@@ -683,16 +662,3 @@ export const createHoliday = async (holidayData) => {
   const response = await axiosInstance.post("/holidays", holidayData);
   return response.data;
 };
-
-export const createFinancialDeduction = async (deductionData, lang = "en") => {
-  const response = await axiosInstance.post("/financial/deductions", deductionData, {
-    params: { lang },
-    headers: {
-      Accept: "application/json",
-      "Accept-Language": lang,
-    },
-  });
-  return response.data;
-};
-
-

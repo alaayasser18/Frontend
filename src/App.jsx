@@ -34,7 +34,8 @@ import AdminAttendance from "./features/admin/pages/Attendance";
 import AdminHolidays from "./features/admin/pages/Holidays";
 import AdminPolicies from "./features/admin/pages/Policies";
 import LandingPage from "./features/admin/pages/LandingPage";
-
+import AdminAIAssistant from "./features/admin/pages/AIAssistant";
+   
 // ==================== Employee Pages ====================
 import EmployeePerformance from "./features/employee/pages/Performance";
 import PoliciesList from "./features/employee/pages/PoliciesList";
@@ -337,7 +338,7 @@ function App() {
               <Route path="/admin/audit" element={<ActivityLog />} />
 
               <Route path="/admin/attendance" element={<AdminAttendance />} />
-
+              <Route path="/admin/ai-assistant" element={<AdminAIAssistant />} />
               <Route
                 path="/admin/departments"
                 element={<HrDepartments role="owner" />}

@@ -178,6 +178,13 @@ export const navConfig = {
       icon: FiAward,
       section: "GROWTH & GOVERNANCE",
     },
+        {
+      titleKey: "portal.aiAssistant",
+      title: "AI Assistant",
+      path: "/admin/ai-assistant",
+      icon: LuSparkles,
+      section: "GROWTH & GOVERNANCE",
+    },
     {
       titleKey: "portal.auditLogs",
       title: "Audit Logs",

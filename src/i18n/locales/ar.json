@@ -36,7 +36,7 @@
       "heroDescription": "ادخل إلى بوابتك بأمان لإدارة مساحة عملك اليومية ومزاياك وأدوات العمل بكفاءة.",
       "securityBadge": "نسخة المؤسسات 2026 — مساحة عمل آمنة"
     },
-        "activateAccount": {
+    "activateAccount": {
       "title": "تفعيل حسابك",
       "subtitle": "أدخل بريدك الإلكتروني للعمل وسنرسل لك رمز التحقق لتفعيل حسابك.",
       "sendCode": "إرسال رمز التفعيل"
@@ -1725,6 +1725,147 @@
     "chatSickLeaveA": "إجابة اللائحة مستندة إلى دليل الموظف وسجل الموظف الحالي الخاص بك.",
     "policyContextQuestion": "احكيلي عن سياسة \"{{policy}}\".",
     "policyContextAnswer": "دي أهم المعلومات اللي محتاج تعرفها عن \"{{policy}}\"، استنادًا إلى دليل الموظف وسياسات الشركة الحالية."
+  },
+  "ai": {
+    "tag": "ذكاء WISEWORK",
+    "title": "المساعد الذكي",
+    "subtitle": "رؤى استشارية مبنية على بيانات الشركة الموثّقة.",
+    "loading": "جارٍ التحميل...",
+    "comingSoon": "هذا القسم قيد التجهيز.",
+    "features": {
+      "careerCoach": "مدرب المسار المهني",
+      "performanceInsight": "رؤية الأداء",
+      "skillGap": "تحليل فجوات المهارات",
+      "policyAssistant": "مساعد السياسات",
+      "evaluationDraft": "مسودة التقييم",
+      "attentionSignal": "إشارة الانتباه",
+      "teamInsight": "رؤية الفريق"
+    },
+    "form": {
+      "period": "الفترة",
+      "noPeriod": "بدون فترة محددة",
+      "generate": "إنشاء",
+      "generating": "جارٍ الإنشاء...",
+      "employee": "كود الموظف",
+      "employeePlaceholder": "EMP-2026-00000",
+      "targetRole": "الدور المستهدف",
+      "targetRolePlaceholder": "مثال: مهندس باك إند أول",
+      "targetSkills": "المهارات المستهدفة",
+      "targetSkillsPlaceholder": "مثال: Python, System Design",
+      "targetSkillsHint": "افصل بين المهارات بفاصلة.",
+      "optional": "اختياري",
+      "selectEmployee": "اختر موظفاً",
+      "loadingEmployees": "جارٍ تحميل الموظفين...",
+      "department": "القسم",
+      "departmentPlaceholder": "مثال: Engineering",
+      "overallScore": "الدرجة الإجمالية",
+      "overallScoreHint": "استخدم نفس مقياس التقييمات لديك.",
+      "managerNotes": "ملاحظات المدير",
+      "managerNotesPlaceholder": "ملاحظات اختيارية لتضمينها في المسودة..."
+    },
+    "errors": {
+      "retry": "حاول مرة أخرى",
+      "forbidden": "غير مسموح لك بالوصول إلى هذه المعلومات.",
+      "server": "خدمة الذكاء الاصطناعي غير متاحة حالياً. يرجى المحاولة لاحقاً.",
+      "timeout": "استغرق الطلب وقتاً طويلاً. يرجى المحاولة مرة أخرى.",
+      "generic": "حدث خطأ ما. يرجى المحاولة مرة أخرى.",
+      "noEmployeeCode": "كود الموظف غير متوفر، لذا لا يمكن إرسال هذا الطلب.",
+      "unavailable": "هذه الخاصية غير متاحة حالياً.",
+      "network": "تعذّر الاتصال بالخادم. تحقق من الاتصال وحاول مرة أخرى."
+    },
+    "careerCoach": {
+      "intro": "أنشئ إرشاداً مهنياً مخصصاً بناءً على بيانات الموظف المعتمدة.",
+      "developmentFocus": "محور التطوير",
+      "strengths": "نقاط القوة",
+      "developmentAreas": "مجالات التطوير",
+      "developmentPlan": "خطة التطوير",
+      "followUp": "المتابعة",
+      "checkpoint": "نقطة المراجعة",
+      "reviewFocus": "محور المراجعة",
+      "generatedAt": "تاريخ الإنشاء",
+      "emptyTitle": "لا يوجد إرشاد متاح",
+      "emptyDescription": "لا توجد بيانات كافية لإنشاء إرشاد مهني حالياً."
+    },
+    "insufficient": {
+      "title": "لا توجد بيانات معتمدة كافية",
+      "description": "لا توجد بيانات معتمدة كافية عن الموظف لإنشاء نتيجة موثوقة حالياً.",
+      "missing": "البيانات الناقصة",
+      "categories": {
+        "performance": "الأداء",
+        "skills": "المهارات",
+        "evaluation_themes": "محاور التقييم"
+      }
+    },
+    "generatedAt": "تاريخ الإنشاء",
+    "performanceInsight": {
+      "intro": "اعرض مؤشرات الأداء المعتمدة واتجاهاتها خلال الفترة المحددة.",
+      "verifiedFacts": "الحقائق الموثّقة",
+      "targetPeriod": "الفترة",
+      "trends": "الاتجاهات المحسوبة",
+      "interpretation": "التفسير",
+      "recommendedActions": "الإجراءات الموصى بها",
+      "emptyTitle": "لا توجد بيانات كافية",
+      "emptyDescription": "لا تتوفر بيانات أداء معتمدة كافية لهذه الفترة.",
+      "statusNote": "حالة النتيجة: {{status}}"
+    },
+    "skillGap": {
+      "intro": "حدّد فجوات المهارات المدعومة بالأدلة واحصل على توصيات للتطوير.",
+      "targetRole": "الدور المستهدف",
+      "skillGaps": "فجوات المهارات",
+      "recommendations": "التوصيات",
+      "emptyTitle": "لا توجد فجوات مهارات",
+      "emptyDescription": "لم يتم رصد فجوات مهارات لهذه المعطيات."
+    },
+    "policyAssistant": {
+      "title": "مساعد السياسات",
+      "subtitle": "إجابات مبنية على سياسات الشركة وبياناتك.",
+      "placeholder": "اسأل عن سياسة من سياسات الشركة...",
+      "send": "إرسال",
+      "empty": "اطرح سؤالاً عن سياسات الشركة لتبدأ.",
+      "policyReferences": "مراجع السياسة",
+      "employeeFacts": "بيانات الموظف المستخدمة",
+      "noAnswer": "لم يتمكن المساعد من الإجابة عن هذا السؤال.",
+      "prefillQuestion": "أخبرني عن سياسة \"{{policy}}\"."
+    },
+    "evaluationDraft": {
+      "intro": "أنشئ مسودة تقييم قابلة للتعديل بناءً على الدرجات والملاحظات التي تدخلها.",
+      "narrative": "السرد التقييمي",
+      "editableHint": "هذه المسودة قابلة للتعديل ولا يتم حفظها تلقائياً.",
+      "strengths": "نقاط القوة",
+      "improvementAreas": "مجالات التحسين",
+      "humanReview": "يلزم مراجعة بشرية قبل استخدام هذه المسودة.",
+      "emptyTitle": "لم يتم إنشاء مسودة",
+      "emptyDescription": "لم يُرجع المساعد مسودة لهذه المعطيات."
+    },
+    "attentionSignal": {
+      "intro": "احصل على إشارة استشارية حول التغيرات الأخيرة في مؤشرات عمل الموظف.",
+      "level": "مستوى الانتباه",
+      "levels": {
+        "low": "انتباه منخفض",
+        "medium": "انتباه متوسط",
+        "high": "انتباه مرتفع"
+      },
+      "targetPeriod": "الفترة",
+      "comparisonPeriod": "مقارنةً بـ",
+      "indicators": "المؤشرات المساهمة",
+      "followUp": "المتابعة الموصى بها",
+      "advisory": "هذه الإشارة استشارية فقط.",
+      "humanReview": "يلزم مراجعة بشرية.",
+      "emptyTitle": "لا توجد إشارة متاحة",
+      "emptyDescription": "لم يتم إرجاع إشارة انتباه لهذا الموظف وهذه الفترة."
+    },
+    "teamInsight": {
+      "intro": "احصل على ملخص على مستوى الفريق للأنماط وحجم العمل في قسم معين.",
+      "department": "القسم",
+      "period": "الفترة",
+      "teamSize": "حجم الفريق",
+      "summary": "الملخص",
+      "topSkills": "أكثر المهارات شيوعاً",
+      "topGaps": "أكثر الفجوات شيوعاً",
+      "actions": "الإجراءات الإدارية الموصى بها",
+      "emptyTitle": "لا توجد رؤية للفريق",
+      "emptyDescription": "لم يتم إرجاع رؤية للفريق لهذا القسم وهذه الفترة."
+    }
   },
   "dummyTasks": {
     "t1": {

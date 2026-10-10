@@ -736,12 +736,12 @@ export default function HomeDashboard() {
                       : "bg-[#3b82f6]";
 
                 const typeLabel = isLeave
-                  ? t("calendar.leave", "Leave")
+                  ? t("employee.home.calendar.leave", "Leave")
                   : isDeadline
-                    ? t("calendar.deadline", "Task Deadline")
+                    ? t("employee.home.calendar.deadline", "Task Deadline")
                     : isHoliday
-                      ? t("calendar.holiday", "Official Holiday")
-                      : t("calendar.companyEvent", "Company Event");
+                      ? t("employee.home.calendar.holiday", "Official Holiday")
+                      : t("employee.home.calendar.companyEvent", "Company Event");
 
                 return (
                   <div key={idx} className="flex items-center gap-3 text-xs">

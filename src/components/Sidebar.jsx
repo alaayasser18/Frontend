@@ -61,7 +61,7 @@ const Sidebar = ({ role = "admin", isOpen = false, onClose }) => {
         : activeUser.name
       : activeUser?.fullName ||
       activeUser?.username ||
-      (isRtl ? "أحمد ناصر" : "Ahmed Nasser");
+      (t("portal.defaultAdminName", "Ahmed Nasser"));
 
     const adminAvatarText = activeUser?.initials
       ? activeUser.initials.toUpperCase()
@@ -81,7 +81,7 @@ const Sidebar = ({ role = "admin", isOpen = false, onClose }) => {
         activeUser?.role_label ||
         activeUser?.jobTitle ||
         activeUser?.roleTitle ||
-        (isRtl ? "مسؤول النظام" : "Administrator"),
+        (t("portal.defaultAdminTitle", "Administrator")),
       avatarText: adminAvatarText,
       avatarBg: "#daf0e3",
       avatarColor: "#1e4b3c",
@@ -92,14 +92,12 @@ const Sidebar = ({ role = "admin", isOpen = false, onClose }) => {
         ? isRtl && activeUser?.nameAr
           ? activeUser.nameAr
           : activeUser.name
-        : isRtl
-          ? "مصطفى خليل"
-          : "Mostafa Khalil",
+        : t("portal.defaultHrName", "Mostafa Khalil"),
 
       displayTitle:
         activeUser?.role_label ||
         activeUser?.job_title ||
-        (isRtl ? "مسؤول موارد بشرية" : "HR Specialist"),
+        (t("portal.defaultHrTitle", "HR Specialist")),
 
       avatarText:
         activeUser?.initials
@@ -115,14 +113,12 @@ const Sidebar = ({ role = "admin", isOpen = false, onClose }) => {
         ? isRtl && activeUser?.nameAr
           ? activeUser.nameAr
           : activeUser.name
-        : isRtl
-          ? "ليلى حسن"
-          : "Layla Hassan",
+        : t("portal.defaultManagerName", "Layla Hassan"),
 
       displayTitle:
         activeUser?.role_label ||
         activeUser?.job_title ||
-        (isRtl ? "مدير الفريق" : "Manager"),
+        (t("portal.defaultManagerTitle", "Manager")),
 
       avatarText:
         activeUser?.initials
@@ -138,14 +134,12 @@ const Sidebar = ({ role = "admin", isOpen = false, onClose }) => {
         ? isRtl && activeUser?.nameAr
           ? activeUser.nameAr
           : activeUser.name
-        : isRtl
-          ? "عمر حداد"
-          : "Omar Haddad",
+        : t("portal.defaultEmployeeName", "Omar Haddad"),
 
       displayTitle:
         activeUser?.role_label ||
         activeUser?.job_title ||
-        (isRtl ? "محلل منتجات أول" : "Senior Product Analyst"),
+        (t("portal.defaultEmployeeTitle", "Senior Product Analyst")),
 
       avatarText:
         activeUser?.initials
@@ -182,6 +176,13 @@ const Sidebar = ({ role = "admin", isOpen = false, onClose }) => {
     "FINANCIAL & REWARDS",
     "GROWTH & GOVERNANCE",
   ];
+
+  const sectionLabelKeys = {
+    GENERAL: "portal.sections.general",
+    OPERATIONS: "portal.sections.operations",
+    "FINANCIAL & REWARDS": "portal.sections.financialRewards",
+    "GROWTH & GOVERNANCE": "portal.sections.growthGovernance",
+  };
   return (
     <>
       {/* =========================
@@ -366,7 +367,7 @@ const Sidebar = ({ role = "admin", isOpen = false, onClose }) => {
                     text-[#a9c5df]
                   "
                 >
-                  {section}
+                  {t(sectionLabelKeys[section], section)}
                 </h3>
 
                 {/* =========================

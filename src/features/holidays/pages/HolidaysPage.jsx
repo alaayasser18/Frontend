@@ -119,6 +119,15 @@ export default function HolidaysPage({ customRole }) {
 
   const currentRole = (customRole || user?.role || "Employee").toLowerCase();
   const isManagement = currentRole === "owner" || currentRole === "admin" || currentRole === "hr";
+  const translateHolidayName = (name) => {
+    const normalized = name?.trim().toLowerCase();
+    const key = normalized === "6 oct" ? "sixOctober" : normalized === "[test] year-end break" ? "yearEndBreak" : null;
+    return key ? t("holidays.items." + key, name) : name;
+  };
+  const translateHolidayDescription = (description) =>
+    description?.trim().toLowerCase() === "test year-end company closure."
+      ? t("holidays.items.yearEndDescription", description)
+      : description;
 
   // Data fetching from GET /api/holidays
   const {
@@ -176,42 +185,42 @@ export default function HolidaysPage({ customRole }) {
 
   const { mutate: doCreateHoliday, isPending: isCreating } = useCreateHoliday({
     onSuccess: (res) => {
-      toast.success(res?.message || "Holiday created successfully.");
+      toast.success(res?.message || t("holidays.messages.created", "Holiday created successfully."));
       closeFormModal();
     },
     onError: (err) => {
-      toast.error(err?.response?.data?.message || err?.message || "Failed to create holiday.");
+      toast.error(err?.response?.data?.message || err?.message || t("holidays.messages.createFailed", "Failed to create holiday."));
     },
   });
 
   const { mutate: doUpdateHoliday, isPending: isUpdating } = useUpdateHoliday({
     onSuccess: (res) => {
-      toast.success(res?.message || "Holiday updated successfully.");
+      toast.success(res?.message || t("holidays.messages.updated", "Holiday updated successfully."));
       closeFormModal();
     },
     onError: (err) => {
-      toast.error(err?.response?.data?.message || err?.message || "Failed to update holiday.");
+      toast.error(err?.response?.data?.message || err?.message || t("holidays.messages.updateFailed", "Failed to update holiday."));
     },
   });
 
   const { mutate: doDeleteHoliday, isPending: isDeleting } = useDeleteHoliday({
     onSuccess: (res) => {
-      toast.success(res?.message || "Holiday deleted successfully.");
+      toast.success(res?.message || t("holidays.messages.deleted", "Holiday deleted successfully."));
       setDeleteConfirmId(null);
       setSelectedHolidayModal(null);
     },
     onError: (err) => {
-      toast.error(err?.response?.data?.message || err?.message || "Failed to delete holiday.");
+      toast.error(err?.response?.data?.message || err?.message || t("holidays.messages.deleteFailed", "Failed to delete holiday."));
       setDeleteConfirmId(null);
     },
   });
 
   const validateForm = () => {
-    if (!formData.name.trim()) { toast.error("Holiday name is required."); return false; }
-    if (!formData.start_date) { toast.error("Start date is required."); return false; }
-    if (!formData.end_date) { toast.error("End date is required."); return false; }
+    if (!formData.name.trim()) { toast.error(t("holidays.messages.nameRequired", "Holiday name is required.")); return false; }
+    if (!formData.start_date) { toast.error(t("holidays.messages.startRequired", "Start date is required.")); return false; }
+    if (!formData.end_date) { toast.error(t("holidays.messages.endRequired", "End date is required.")); return false; }
     if (new Date(formData.end_date) < new Date(formData.start_date)) {
-      toast.error("End date cannot be earlier than start date."); return false;
+      toast.error(t("holidays.messages.invalidDateRange", "End date cannot be earlier than start date.")); return false;
     }
     return true;
   };
@@ -372,11 +381,11 @@ export default function HolidaysPage({ customRole }) {
 
   // Breadcrumb Title based on role
   const portalName = useMemo(() => {
-    if (currentRole === "owner" || currentRole === "admin") return "Admin Portal / Holidays & Seasons";
-    if (currentRole === "hr") return "HR / Holidays & Seasons";
-    if (currentRole === "manager") return "Manager Portal / Official Holidays";
-    return "Employee Portal / Official Holidays";
-  }, [currentRole]);
+    if (currentRole === "owner" || currentRole === "admin") return t("holidays.breadcrumb.admin", "Admin Portal / Holidays & Seasons");
+    if (currentRole === "hr") return t("holidays.breadcrumb.hr", "HR / Holidays & Seasons");
+    if (currentRole === "manager") return t("holidays.breadcrumb.manager", "Manager Portal / Official Holidays");
+    return t("holidays.breadcrumb.employee", "Employee Portal / Official Holidays");
+  }, [currentRole, t]);
 
   return (
     <motion.div
@@ -413,7 +422,7 @@ export default function HolidaysPage({ customRole }) {
               onClick={() => refetch()}
               disabled={isFetching}
               className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-xs font-semibold text-slate-700 shadow-sm transition hover:bg-slate-50 disabled:opacity-50"
-              title="Refresh holidays"
+              title={t("holidays.refreshTitle", "Refresh holidays")}
             >
               <FiRefreshCw className={`h-3.5 w-3.5 ${isFetching ? "animate-spin" : ""}`} />
               <span className="hidden sm:inline">{t("common.refresh", "Refresh")}</span>
@@ -462,14 +471,14 @@ export default function HolidaysPage({ customRole }) {
               {t("holidays.stats.nextUpcoming", "Next Holiday")}
             </p>
             <p className="text-base font-bold text-slate-900 truncate mt-0.5">
-              {stats.nextHoliday ? stats.nextHoliday.name : "—"}
+              {stats.nextHoliday ? translateHolidayName(stats.nextHoliday.name) : "—"}
             </p>
             <p className="text-[11px] text-emerald-700 font-semibold mt-0.5">
               {stats.nextHoliday
                 ? stats.nextHoliday.daysUntil === 0
-                  ? "Today!"
-                  : `In ${stats.nextHoliday.daysUntil} days`
-                : "No upcoming holidays"}
+                  ? t("holidays.today", "Today!")
+                  : t("holidays.inDays", { count: stats.nextHoliday.daysUntil, defaultValue: `In ${stats.nextHoliday.daysUntil} days` })
+                : t("holidays.noUpcoming", "No upcoming holidays")}
             </p>
           </div>
         </div>
@@ -484,9 +493,9 @@ export default function HolidaysPage({ customRole }) {
               {t("holidays.stats.daysOff", "Total Days Off")}
             </p>
             <p className="text-xl font-bold text-slate-900 mt-0.5">
-              {stats.totalDaysOff} <span className="text-xs font-medium text-slate-400">days</span>
+              {stats.totalDaysOff} <span className="text-xs font-medium text-slate-400">{t("holidays.days", "days")}</span>
             </p>
-            <p className="text-[11px] text-slate-500 mt-0.5">Official company leave</p>
+            <p className="text-[11px] text-slate-500 mt-0.5">{t("holidays.officialCompanyLeave", "Official company leave")}</p>
           </div>
         </div>
 
@@ -500,10 +509,10 @@ export default function HolidaysPage({ customRole }) {
               {t("holidays.stats.longest", "Longest Break")}
             </p>
             <p className="text-base font-bold text-slate-900 truncate mt-0.5">
-              {stats.longestHoliday ? stats.longestHoliday.name : "—"}
+              {stats.longestHoliday ? translateHolidayName(stats.longestHoliday.name) : "—"}
             </p>
             <p className="text-[11px] text-purple-700 font-semibold mt-0.5">
-              {stats.maxDays > 0 ? `${stats.maxDays} consecutive days` : "—"}
+              {stats.maxDays > 0 ? t("holidays.consecutiveDays", { count: stats.maxDays, defaultValue: `${stats.maxDays} consecutive days` }) : "—"}
             </p>
           </div>
         </div>
@@ -520,7 +529,7 @@ export default function HolidaysPage({ customRole }) {
           </div>
           <div className="min-w-0">
             <p className="text-xs font-bold text-amber-950">
-              {t("holidays.peakAlert.title", "Upcoming Holiday Notice")}: {stats.nextHoliday.name}
+              {t("holidays.peakAlert.title", "Upcoming Holiday Notice")}: {translateHolidayName(stats.nextHoliday.name)}
             </p>
             <p className="mt-0.5 text-xs text-amber-800 leading-relaxed">
               {t("holidays.peakAlert.dates", "Scheduled from")}{" "}
@@ -726,11 +735,11 @@ export default function HolidaysPage({ customRole }) {
                               </div>
                               <div className="min-w-0">
                                 <p className="font-bold text-slate-900 truncate text-sm">
-                                  {holiday.name}
+                                  {translateHolidayName(holiday.name)}
                                 </p>
                                 {isUpcoming && (
                                   <span className="inline-block text-[10px] font-semibold text-emerald-600">
-                                    ● Upcoming
+                                    {t("holidays.upcoming", "Upcoming")}
                                   </span>
                                 )}
                               </div>
@@ -754,7 +763,7 @@ export default function HolidaysPage({ customRole }) {
                             </span>
                           </td>
                           <td className="py-4 px-4 text-slate-500 max-w-[260px] truncate">
-                            {holiday.description || "—"}
+                            {translateHolidayDescription(holiday.description) || "—"}
                           </td>
                           <td className="py-4 px-4">
                             {holiday.is_active !== false ? (
@@ -833,27 +842,27 @@ export default function HolidaysPage({ customRole }) {
                         {holiday.is_active !== false ? (
                           <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2.5 py-0.5 text-[10px] font-bold text-emerald-700">
                             <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-                            Official
+                            {t("holidays.official", "Official")}
                           </span>
                         ) : (
                           <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-semibold text-slate-500">
-                            Inactive
+                            {t("holidays.status.inactive", "Inactive")}
                           </span>
                         )}
                       </div>
 
                       <h3 className="mt-3 text-base font-bold text-slate-900 tracking-tight">
-                        {holiday.name}
+                        {translateHolidayName(holiday.name)}
                       </h3>
 
                       <p className="mt-1 text-xs text-slate-500 line-clamp-2">
-                        {holiday.description || "Official scheduled company holiday."}
+                        {translateHolidayDescription(holiday.description) || t("holidays.officialScheduledHoliday", "Official scheduled company holiday.")}
                       </p>
                     </div>
 
                     <div className="mt-5 border-t border-slate-100 pt-4 flex items-center justify-between">
                       <div className="text-xs">
-                        <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Date Range</p>
+                        <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">{t("holidays.table.dateRange", "Date Range")}</p>
                         <p className="font-semibold text-slate-800 mt-0.5">
                           {formatDate(holiday.start_date, i18n.language)}
                           {holiday.end_date && holiday.end_date !== holiday.start_date && (
@@ -967,7 +976,7 @@ export default function HolidaysPage({ customRole }) {
                       {hasHoliday && (
                         <div className="mt-1">
                           <p className="text-[10px] font-bold text-amber-900 truncate leading-tight">
-                            {cell.holiday.name}
+                            {translateHolidayName(cell.holiday.name)}
                           </p>
                           <span className="inline-block mt-0.5 rounded bg-amber-200/70 px-1 py-0.2 text-[9px] font-semibold text-amber-800">
                             Holiday
@@ -1010,7 +1019,7 @@ export default function HolidaysPage({ customRole }) {
                     <h3 className="text-base font-bold text-slate-900">
                       {selectedHolidayModal.name}
                     </h3>
-                    <p className="text-xs text-slate-500">Official Company Holiday</p>
+                    <p className="text-xs text-slate-500">{t("holidays.officialCompanyHoliday", "Official Company Holiday")}</p>
                   </div>
                 </div>
                 <button
@@ -1112,12 +1121,12 @@ export default function HolidaysPage({ customRole }) {
               <div className="flex items-center justify-between border-b border-slate-100 pb-4">
                 <div>
                   <h3 className="text-sm font-bold text-[#1c364f]">
-                    {editingHoliday ? "Edit Holiday" : t("holidays.scheduleHoliday", "Schedule Company Holiday")}
+                    {editingHoliday ? t("holidays.modal.editTitle", "Edit Holiday") : t("holidays.scheduleHoliday", "Schedule Company Holiday")}
                   </h3>
                   <p className="text-xs text-slate-500 mt-0.5">
                     {editingHoliday
-                      ? "Update the details for this official holiday."
-                      : "Plan official coverage and company closure dates."}
+                      ? t("holidays.modal.editSubtitle", "Update the details for this official holiday.")
+                      : t("holidays.modal.createSubtitle", "Plan official coverage and company closure dates.")}
                   </p>
                 </div>
                 <button
@@ -1139,7 +1148,7 @@ export default function HolidaysPage({ customRole }) {
                       type="text"
                       value={formData.name}
                       onChange={(e) => setFormData((p) => ({ ...p, name: e.target.value }))}
-                      placeholder="e.g. Eid Al-Adha"
+                      placeholder={t("holidays.modal.namePlaceholder", "e.g. Eid Al-Adha")}
                       className="h-10 w-full rounded-xl border border-slate-200 px-3 text-xs outline-none focus:border-[#1c364f] focus:ring-2 focus:ring-[#1c364f]/10"
                       required
                     />
@@ -1148,7 +1157,7 @@ export default function HolidaysPage({ customRole }) {
                   <div className="grid grid-cols-2 gap-3">
                     <div>
                       <label className="block font-bold text-slate-700 mb-1">
-                        Start Date <span className="text-red-500">*</span>
+                        {t("holidays.modal.startDate", "Start Date")} <span className="text-red-500">*</span>
                       </label>
                       <input
                         type="date"
@@ -1160,7 +1169,7 @@ export default function HolidaysPage({ customRole }) {
                     </div>
                     <div>
                       <label className="block font-bold text-slate-700 mb-1">
-                        End Date <span className="text-red-500">*</span>
+                        {t("holidays.modal.endDate", "End Date")} <span className="text-red-500">*</span>
                       </label>
                       <input
                         type="date"
@@ -1173,12 +1182,12 @@ export default function HolidaysPage({ customRole }) {
                   </div>
 
                   <div>
-                    <label className="block font-bold text-slate-700 mb-1">Description (Optional)</label>
+                    <label className="block font-bold text-slate-700 mb-1">{t("holidays.modal.descriptionOptional", "Description (Optional)")}</label>
                     <textarea
                       rows={3}
                       value={formData.description}
                       onChange={(e) => setFormData((p) => ({ ...p, description: e.target.value }))}
-                      placeholder="Provide details about the official holiday..."
+                      placeholder={t("holidays.modal.descriptionPlaceholder", "Provide details about the official holiday...")}
                       className="w-full resize-none rounded-xl border border-slate-200 p-3 text-xs outline-none focus:border-[#1c364f] focus:ring-2 focus:ring-[#1c364f]/10"
                     />
                   </div>
@@ -1210,7 +1219,7 @@ export default function HolidaysPage({ customRole }) {
                     disabled={isCreating || isUpdating}
                     className="rounded-xl bg-[#1c364f] px-4 py-2.5 text-xs font-bold text-white transition hover:bg-[#24425f] disabled:opacity-60"
                   >
-                    {isCreating || isUpdating ? "Saving..." : editingHoliday ? "Update Holiday" : "Save Holiday"}
+                    {isCreating || isUpdating ? t("common.saving", "Saving...") : editingHoliday ? t("holidays.modal.update", "Update Holiday") : t("holidays.modal.save", "Save Holiday")}
                   </button>
                 </div>
               </form>
@@ -1242,12 +1251,12 @@ export default function HolidaysPage({ customRole }) {
                   <FiTrash2 className="h-5 w-5" />
                 </div>
                 <div>
-                  <h3 className="text-sm font-bold text-slate-900">Delete Holiday</h3>
-                  <p className="text-xs text-slate-500">This action cannot be undone.</p>
+                  <h3 className="text-sm font-bold text-slate-900">{t("holidays.modal.deleteTitle", "Delete Holiday")}</h3>
+                  <p className="text-xs text-slate-500">{t("holidays.modal.deleteWarning", "This action cannot be undone.")}</p>
                 </div>
               </div>
               <p className="text-xs text-slate-600 bg-red-50 rounded-xl p-3 border border-red-100">
-                Are you sure you want to delete this holiday? It will be permanently removed.
+                {t("holidays.modal.deleteConfirm", "Are you sure you want to delete this holiday? It will be permanently removed.")}
               </p>
               <div className="mt-5 flex justify-end gap-2">
                 <button
@@ -1263,7 +1272,7 @@ export default function HolidaysPage({ customRole }) {
                   onClick={() => doDeleteHoliday(deleteConfirmId)}
                   className="rounded-xl bg-red-600 px-4 py-2.5 text-xs font-bold text-white transition hover:bg-red-700 disabled:opacity-60"
                 >
-                  {isDeleting ? "Deleting..." : "Yes, Delete"}
+                  {isDeleting ? t("common.deleting", "Deleting...") : t("holidays.modal.confirmDelete", "Yes, Delete")}
                 </button>
               </div>
             </motion.div>

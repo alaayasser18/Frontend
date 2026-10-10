@@ -377,7 +377,7 @@ export default function AdvancesAndDeductions({ isAdmin = false }) {
           {advancesLoading && advancesList.length === 0 ? (
             <div className="flex items-center justify-center p-12 text-[#64748b]">
               <FiLoader className="h-6 w-6 animate-spin mr-2" />
-              <span className="text-xs font-medium">Loading...</span>
+              <span className="text-xs font-medium">{i18n.t("common.loading")}</span>
             </div>
           ) : advancesList.length === 0 ? (
             <div className="p-8 text-center text-xs text-[#94a3b8]">
@@ -551,7 +551,7 @@ export default function AdvancesAndDeductions({ isAdmin = false }) {
           {deductionsLoading && deductionsList.length === 0 ? (
             <div className="flex items-center justify-center p-12 text-[#64748b]">
               <FiLoader className="h-6 w-6 animate-spin mr-2" />
-              <span className="text-xs font-medium">Loading...</span>
+              <span className="text-xs font-medium">{i18n.t("common.loading")}</span>
             </div>
           ) : deductionsList.length === 0 ? (
             <div className="p-8 text-center text-xs text-[#94a3b8]">

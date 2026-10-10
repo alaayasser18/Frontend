@@ -28,6 +28,10 @@ const STATUS_OPTIONS = ["draft", "active", "archived"];
 const CompanyPolicies = () => {
     const { t, i18n } = useTranslation();
     const lang = i18n.language === "ar" ? "ar" : "en";
+    const translatePolicy = (policy, field) => {
+        const suffix = policy.title === "[TEST] Remote Work Policy" ? "remoteWork" : policy.title === "[TEST] Code of Conduct Policy" ? "codeOfConduct" : null;
+        return suffix ? t(`managerPolicies.samples.${suffix}.${field}`, policy[field]) : policy[field];
+    };
     const [policies, setPolicies] = useState([]);
     const [loading, setLoading] = useState(true);
     const [listError, setListError] = useState(null);
@@ -75,11 +79,11 @@ const CompanyPolicies = () => {
                         value={statusFilter}
                         onChange={(e) => setStatusFilter(e.target.value)}
                         className={selectClass}
-                        aria-label="Filter by status"
+                        aria-label={t("managerPolicies.filterByStatus", "Filter by status")}
                     >
                         <option value="">{t("managerPolicies.allStatuses", "All statuses")}</option>
                         {STATUS_OPTIONS.map((s) => (
-                            <option key={s} value={s}>{s}</option>
+                            <option key={s} value={s}>{t(`managerPolicies.status.${s}`, s)}</option>
                         ))}
                     </select>
                     <button
@@ -123,7 +127,7 @@ const CompanyPolicies = () => {
                                 <div>
                                     <div className="flex items-center gap-2">
                                         <h3 className="text-sm font-bold text-[#1e293b]">
-                                            {policy.title}
+                                            {translatePolicy(policy, "title")}
                                         </h3>
                                         <span
                                             className={`rounded-full border px-2 py-0.5 text-[10px] font-bold uppercase ${
@@ -134,7 +138,7 @@ const CompanyPolicies = () => {
                                         </span>
                                     </div>
                                     <p className="text-xs text-[#64748b] mt-0.5">
-                                        {policy.description}
+                                        {translatePolicy(policy, "description")}
                                     </p>
                                 </div>
                             </div>

@@ -106,22 +106,16 @@ const ActivityLog = ({ role }) => {
         let message;
 
         if (status === 401) {
-          message = isRtl
-            ? "انتهت جلسة تسجيل الدخول. يرجى تسجيل الدخول مرة أخرى."
-            : "Your session has expired. Please login again.";
+          message = t("adminInline.your_session_has_expired_please_login_again", "Your session has expired. Please login again.");
         } else if (status === 403) {
-          message = isRtl
-            ? "ليس لديك صلاحية لعرض سجلات التدقيق."
-            : "You do not have permission to view audit logs.";
+          message = t("adminInline.you_do_not_have_permission_to_view_audit_logs", "You do not have permission to view audit logs.");
         } else if (status === 500) {
-          message = isRtl
-            ? "حدث خطأ داخلي في الخادم."
-            : "Internal server error.";
+          message = t("adminInline.internal_server_error", "Internal server error.");
         } else {
           message =
             err?.response?.data?.message ||
             err?.message ||
-            (isRtl ? "فشل تحميل سجلات التدقيق." : "Failed to load audit logs.");
+            (t("adminInline.failed_to_load_audit_logs", "Failed to load audit logs."));
         }
 
         setError(message);
@@ -258,7 +252,7 @@ const ActivityLog = ({ role }) => {
           text: "text-[#ef4444]",
           dot: "bg-[#ef4444]",
           type: "delete",
-          label: isRtl ? "محذوف" : "Deleted",
+          label: t("adminInline.deleted", "Deleted"),
         };
       }
 
@@ -379,7 +373,7 @@ const ActivityLog = ({ role }) => {
   const handleExport = () => {
     if (filteredLogs.length === 0) {
       toast.error(
-        isRtl ? "لا توجد سجلات للتصدير." : "No logs available to export.",
+        t("adminInline.no_logs_available_to_export", "No logs available to export."),
       );
       return;
     }
@@ -451,7 +445,7 @@ const ActivityLog = ({ role }) => {
     },
     {
       key: "delete",
-      label: isRtl ? "محذوف" : "Deleted",
+      label: t("adminInline.deleted", "Deleted"),
     },
   ];
 
@@ -526,7 +520,7 @@ const ActivityLog = ({ role }) => {
             />
 
             <span className="hidden sm:inline">
-              {isRtl ? "تحديث" : "Refresh"}
+              {t("adminInline.refresh", "Refresh")}
             </span>
           </motion.button>
 
@@ -577,7 +571,7 @@ const ActivityLog = ({ role }) => {
           </div>
 
           <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-[#f1f5f9] text-[#475569]">
-            {filteredLogs.length} {isRtl ? "سجل" : "records"}
+            {filteredLogs.length} {t("adminInline.records", "records")}
           </span>
         </div>
 
@@ -662,7 +656,7 @@ const ActivityLog = ({ role }) => {
               onClick={() => fetchLogs()}
               className="mt-4 px-4 py-2 bg-[#243b53] text-white rounded-lg text-xs font-semibold hover:bg-[#1a2d3f] transition"
             >
-              {isRtl ? "إعادة المحاولة" : "Try Again"}
+              {t("adminInline.try_again", "Try Again")}
             </button>
           </div>
         ) : (
@@ -681,7 +675,7 @@ const ActivityLog = ({ role }) => {
                   </th>
 
                   <th className="pb-3.5 px-3">
-                    {isRtl ? "الكيان المتأثر" : "ENTITY"}
+                    {t("adminInline.entity", "ENTITY")}
                   </th>
 
                   <th className="pb-3.5 px-3">
@@ -693,7 +687,7 @@ const ActivityLog = ({ role }) => {
                   </th>
 
                   <th className="pb-3.5 px-2 text-center">
-                    {isRtl ? "التفاصيل" : "DETAILS"}
+                    {t("adminInline.details", "DETAILS")}
                   </th>
                 </tr>
               </thead>
@@ -773,9 +767,7 @@ const ActivityLog = ({ role }) => {
 
                             {log?.user_id
                               ? `User #${log.user_id}`
-                              : isRtl
-                                ? "النظام"
-                                : "System"}
+                              : t("adminInline.system", "System")}
                           </span>
                         </td>
 
@@ -800,7 +792,7 @@ const ActivityLog = ({ role }) => {
                             >
                               <FiEye className="w-3.5 h-3.5" />
 
-                              <span>{isRtl ? "عرض" : "View"}</span>
+                              <span>{t("adminInline.view", "View")}</span>
                             </button>
                           ) : (
                             <span className="text-xs text-[#cbd5e1]">—</span>
@@ -869,7 +861,7 @@ const ActivityLog = ({ role }) => {
               <div className="flex items-center justify-between pb-3 border-b border-[#f1f5f9]">
                 <div>
                   <h3 className="text-base font-bold text-[#1e293b]">
-                    {isRtl ? "تفاصيل سجل التدقيق" : "Audit Log Record"} #
+                    {t("adminInline.audit_log_record", "Audit Log Record")} #
                     {selectedLog.id}
                   </h3>
 
@@ -893,7 +885,7 @@ const ActivityLog = ({ role }) => {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs bg-[#f8fafc] p-3 rounded-xl">
                 <div>
                   <span className="text-[#94a3b8] block mb-1">
-                    {isRtl ? "الكيان:" : "Entity:"}
+                    {t("adminInline.entity", "Entity:")}
                   </span>
 
                   <span className="font-semibold text-[#1e293b]">
@@ -907,21 +899,19 @@ const ActivityLog = ({ role }) => {
 
                 <div>
                   <span className="text-[#94a3b8] block mb-1">
-                    {isRtl ? "المنفذ:" : "Actor / User:"}
+                    {t("adminInline.actor_user", "Actor / User:")}
                   </span>
 
                   <span className="font-semibold text-[#1e293b]">
                     {selectedLog.user_id
                       ? `User #${selectedLog.user_id}`
-                      : isRtl
-                        ? "النظام"
-                        : "System"}
+                      : t("adminInline.system", "System")}
                   </span>
                 </div>
 
                 <div>
                   <span className="text-[#94a3b8] block mb-1">
-                    {isRtl ? "نوع العملية:" : "Action:"}
+                    {t("adminInline.action", "Action:")}
                   </span>
 
                   <span className="font-semibold text-[#1e293b]">
@@ -931,7 +921,7 @@ const ActivityLog = ({ role }) => {
 
                 <div>
                   <span className="text-[#94a3b8] block mb-1">
-                    {isRtl ? "التاريخ:" : "Date:"}
+                    {t("adminInline.date", "Date:")}
                   </span>
 
                   <span className="font-semibold text-[#1e293b]">
@@ -948,7 +938,7 @@ const ActivityLog = ({ role }) => {
                     <h4 className="text-xs font-bold text-[#059669] mb-1.5 flex items-center gap-1.5">
                       <span className="w-2 h-2 rounded-full bg-[#10b981]" />
 
-                      {isRtl ? "القيم الجديدة" : "New Values"}
+                      {t("adminInline.new_values", "New Values")}
                     </h4>
 
                     <pre className="text-xs bg-[#f8fafc] border border-[#e2e8f0] p-3 rounded-xl overflow-x-auto text-[#1e293b] font-mono leading-relaxed whitespace-pre-wrap">
@@ -965,7 +955,7 @@ const ActivityLog = ({ role }) => {
                     <h4 className="text-xs font-bold text-[#d97706] mb-1.5 flex items-center gap-1.5">
                       <span className="w-2 h-2 rounded-full bg-[#d97706]" />
 
-                      {isRtl ? "القيم السابقة" : "Previous Values"}
+                      {t("adminInline.previous_values", "Previous Values")}
                     </h4>
 
                     <pre className="text-xs bg-[#f8fafc] border border-[#e2e8f0] p-3 rounded-xl overflow-x-auto text-[#1e293b] font-mono leading-relaxed whitespace-pre-wrap">
@@ -982,7 +972,7 @@ const ActivityLog = ({ role }) => {
                   onClick={() => setSelectedLog(null)}
                   className="px-4 py-2 bg-[#243b53] text-white rounded-xl text-xs font-semibold hover:bg-[#1a2d3f] transition cursor-pointer"
                 >
-                  {isRtl ? "إغلاق" : "Close"}
+                  {t("adminInline.close", "Close")}
                 </button>
               </div>
             </motion.div>

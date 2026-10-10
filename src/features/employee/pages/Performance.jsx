@@ -47,13 +47,13 @@ const Performance = () => {
   const goals = useMemo(() => {
     const apiGoals = perfData?.metrics?.goals;
     if (!apiGoals) return [
-      { title: t("employeePerformance.goals.completeFlutterTraining", "Complete Flutter training"), due: isArabic ? "30 سبتمبر" : "Sep 30", progress: 75 },
-      { title: t("employeePerformance.goals.leadCrossTeamWorkshop", "Lead one cross-team workshop"), due: isArabic ? "15 أكتوبر" : "Oct 15", progress: 50 },
-      { title: t("employeePerformance.goals.automateMonthlyReporting", "Automate monthly reporting"), due: isArabic ? "01 نوفمبر" : "Nov 01", progress: 30 },
+      { title: t("employeePerformance.goals.completeFlutterTraining", "Complete Flutter training"), due: t("employeePerformance.goals.dueSep", "Sep 30"), progress: 75 },
+      { title: t("employeePerformance.goals.leadCrossTeamWorkshop", "Lead one cross-team workshop"), due: t("employeePerformance.goals.dueOct", "Oct 15"), progress: 50 },
+      { title: t("employeePerformance.goals.automateMonthlyReporting", "Automate monthly reporting"), due: t("employeePerformance.goals.dueNov", "Nov 01"), progress: 30 },
     ];
     return [
-      { title: isArabic ? "الأهداف المكتملة" : "Goals Completed", due: perfData?.period_name ?? "", progress: Math.round(apiGoals.completion_rate ?? 0) },
-      { title: isArabic ? "متوسط التقدم" : "Average Progress", due: isArabic ? "الفترة الحالية" : "Current period", progress: Math.round(apiGoals.average_progress ?? 0) },
+      { title: t("employeePerformance.goals.completed", "Goals Completed"), due: perfData?.period_name ?? "", progress: Math.round(apiGoals.completion_rate ?? 0) },
+      { title: t("employeePerformance.goals.averageProgress", "Average Progress"), due: t("employeePerformance.goals.currentPeriod", "Current period"), progress: Math.round(apiGoals.average_progress ?? 0) },
     ];
   }, [perfData, isArabic, t]);
 

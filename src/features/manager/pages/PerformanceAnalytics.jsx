@@ -72,13 +72,35 @@ const getInitials = (name) =>
 const getStatusStyle = (label) => {
   const v = String(label ?? "").toLowerCase();
   if (v.includes("high")) return "bg-[#ecfdf5] text-[#15803d]";
-  if (v.includes("attention") || v.includes("low"))
+  if (v.includes("attention") || v.includes("low") || v.includes("يحتاج إلى متابعة"))
     return "bg-[#fef2f2] text-[#dc2626]";
   return "bg-[#eff6ff] text-[#3b82f6]";
 };
 
 const PerformanceAnalytics = () => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const translateMemberStatus = (label) => {
+    const value = String(label ?? "").toLowerCase();
+    if (value.includes("high performer")) return t("managerPerformanceAnalytics.status.highPerformer", label);
+    if (value.includes("attention") || value.includes("low") || value.includes("يحتاج إلى متابعة")) return t("managerPerformanceAnalytics.status.needsAttention", label);
+    if (value.includes("on track")) return t("managerPerformanceAnalytics.status.onTrack", label);
+    return label;
+  };
+  const translateJobTitle = (title) => {
+    const value = String(title ?? "").trim().toLowerCase();
+    const keys = { "flutter developer": "flutterDeveloper", "front": "frontendDeveloper", "sw": "softwareDeveloper", "front-end developer": "frontendDeveloper", "frontend developer": "frontendDeveloper", "software developer": "softwareDeveloper", "software engineer": "softwareEngineer" };
+    const key = keys[value];
+    return key ? t("managerPerformanceAnalytics.jobTitles." + key, title) : title;
+  };
+  const translateMonth = (month) => {
+    const date = new Date(String(month ?? "") + " 1, 2026");
+    return Number.isNaN(date.getTime()) ? month : date.toLocaleDateString(i18n.language?.startsWith("ar") ? "ar-EG" : "en-US", { month: "long" });
+  };
+
+  const translatePeriod = (period) => {
+    const date = new Date(String(period ?? "") + " 1");
+    return Number.isNaN(date.getTime()) ? period : date.toLocaleDateString(i18n.language?.startsWith("ar") ? "ar-EG" : "en-US", { month: "long", year: "numeric" });
+  };
 
   // =========================
   // STATES
@@ -116,7 +138,7 @@ const PerformanceAnalytics = () => {
       value: summary.overall_score != null ? `${fmt(summary.overall_score)}%` : "—",
       icon: FiTrendingUp,
       iconBg: "bg-[#ecfdf5] text-[#10b981]",
-      note: data?.period_name ?? "",
+      note: translatePeriod(data?.period_name) ?? "",
     },
     {
       id: "members",
@@ -191,18 +213,18 @@ const PerformanceAnalytics = () => {
         </p>
         <div className="mt-1 flex flex-wrap items-center gap-3">
           <h1 className="text-lg md:text-[21px] font-bold text-[#1e293b] tracking-tight">
-            {t("portal.performanceAnalytics", "Performance Analytics")}
+            {t("managerPerformanceAnalytics.title", "Performance Analytics")}
           </h1>
 
           {data?.period_name && (
             <span className="rounded-full bg-[#eef5f1] px-3 py-1 text-[11px] font-semibold text-[#2f6f4d]">
-              {data.period_name}
+              {translatePeriod(data.period_name)}
             </span>
           )}
         </div>
         <p className="text-sm text-[#829ab1] mt-1 font-normal">
           {t(
-            "managerDashboard.subtitle",
+            "managerPerformanceAnalytics.subtitle",
             "Keep your team aligned, supported, and moving forward.",
           )}
         </p>
@@ -211,7 +233,7 @@ const PerformanceAnalytics = () => {
       {/* ERROR */}
       {error && (
         <motion.div variants={fadeUp} className="rounded-2xl border border-[#fecaca] bg-[#fef2f2] p-5">
-          <p className="text-sm font-semibold text-[#dc2626]">{error}</p>
+          <p className="text-sm font-semibold text-[#dc2626]">{t("managerPerformanceAnalytics.loadError", "Unable to load team performance.")}</p>
         </motion.div>
       )}
 
@@ -347,7 +369,7 @@ const PerformanceAnalytics = () => {
 
                 <div className="mt-1 flex justify-between px-1 text-[10px] text-[#64748b]">
                   {trendChart.points.map((point, index) => (
-                    <span key={index}>{point.label}</span>
+                    <span key={index}>{translateMonth(point.label)}</span>
                   ))}
                 </div>
               </div>
@@ -425,17 +447,17 @@ const PerformanceAnalytics = () => {
 
                 const memberBars = [
                   {
-                    label: t("managerPerformanceAnalytics.tasksRate", "Tasks"),
+                    label: t("managerPerformanceAnalytics.memberTasks", "Tasks"),
                     value: Number(member.tasks_rate ?? 0),
                     color: "bg-[#5b8c6a]",
                   },
                   {
-                    label: t("managerPerformanceAnalytics.qualityRate", "Quality"),
+                    label: t("managerPerformanceAnalytics.memberQuality", "Quality"),
                     value: Number(member.quality_rate ?? 0),
                     color: "bg-[#70a5c3]",
                   },
                   {
-                    label: t("managerPerformanceAnalytics.attendanceRate", "Attendance"),
+                    label: t("managerPerformanceAnalytics.memberAttendance", "Attendance"),
                     value: Number(member.attendance_rate ?? 0),
                     color: "bg-[#d3a054]",
                   },
@@ -458,7 +480,7 @@ const PerformanceAnalytics = () => {
                         </p>
                         {member.job_title && (
                           <p className="truncate text-[11px] text-[#94a3b8]">
-                            {member.job_title}
+                            {translateJobTitle(member.job_title)}
                           </p>
                         )}
                       </div>
@@ -467,7 +489,7 @@ const PerformanceAnalytics = () => {
                         <span
                           className={`shrink-0 rounded-full px-2.5 py-1 text-[10px] font-bold ${statusStyle}`}
                         >
-                          {member.status_label}
+                          {translateMemberStatus(member.status_label)}
                         </span>
                       )}
 

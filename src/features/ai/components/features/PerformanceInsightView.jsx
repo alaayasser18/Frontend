@@ -13,12 +13,12 @@ import {
   getAiLang,
   getAiErrorMessage,
   getQuarterOptions,
-    AiInsufficientData,
   isInsufficientData,
   formatAiDate,
   hasAiValue,
   humanizeKey,
 } from "../../utils/aiHelpers";
+import AiInsufficientData from "../shared/AiInsufficientData";
 import AiSection from "../shared/AiSection";
 import AiNotice from "../shared/AiNotice";
 import AiValue from "../shared/AiValue";

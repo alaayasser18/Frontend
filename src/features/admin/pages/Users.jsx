@@ -242,13 +242,13 @@ const Users = () => {
     try {
       const res = await deleteEmployeeMutation.mutateAsync(userToDelete.id);
       toast.success(
-        res?.message || (isRtl ? "تم حذف الموظف بنجاح" : "Employee deleted successfully."),
+        res?.message || (t("adminInline.employee_deleted_successfully", "Employee deleted successfully.")),
       );
       setUserToDelete(null);
     } catch (err) {
       toast.error(
         err?.response?.data?.message ||
-        (isRtl ? "فشل حذف الموظف" : "Failed to delete employee."),
+        (t("adminInline.failed_to_delete_employee", "Failed to delete employee.")),
       );
     }
   };
@@ -521,14 +521,14 @@ const Users = () => {
         hrData,
       });
       toast.success(
-        isRtl ? "تم تحديث البيانات بنجاح" : "HR fields updated successfully",
+        t("adminInline.hr_fields_updated_successfully", "HR fields updated successfully"),
       );
       closeEditHrModal();
       refetchEmployees();
     } catch (err) {
       toast.error(
         err?.response?.data?.message ||
-        (isRtl ? "حدث خطأ" : "Failed to update HR fields"),
+        (t("adminInline.failed_to_update_hr_fields", "Failed to update HR fields")),
       );
       console.error(err);
     }
@@ -560,12 +560,8 @@ const Users = () => {
       });
       toast.success(
         nextActive
-          ? isRtl
-            ? "تم تفعيل الحساب بنجاح"
-            : "Account activated successfully"
-          : isRtl
-            ? "تم تعطيل الحساب بنجاح"
-            : "Account deactivated successfully",
+          ? t("adminInline.account_activated_successfully", "Account activated successfully")
+          : t("adminInline.account_deactivated_successfully", "Account deactivated successfully"),
       );
       refetchEmployees();
     } catch (err) {
@@ -576,7 +572,7 @@ const Users = () => {
       }));
       toast.error(
         err?.response?.data?.message ||
-        (isRtl ? "فشل تحديث حالة الحساب" : "Failed to update account status"),
+        (t("adminInline.failed_to_update_account_status", "Failed to update account status")),
       );
     }
   };
@@ -924,14 +920,10 @@ const Users = () => {
                                 onClick={() => openEditHrModal(user)}
                                 className="text-[#64748b] hover:text-[#243B53] transition cursor-pointer"
                                 title={
-                                  isRtl
-                                    ? "تعديل بيانات الموظف"
-                                    : "Edit HR fields"
+                                  t("adminInline.edit_hr_fields", "Edit HR fields")
                                 }
                                 aria-label={
-                                  isRtl
-                                    ? "تعديل بيانات الموظف"
-                                    : "Edit HR fields"
+                                  t("adminInline.edit_hr_fields", "Edit HR fields")
                                 }
                               >
                                 <FiEdit2 size={16} />
@@ -941,8 +933,8 @@ const Users = () => {
     type="button"
     onClick={() => setUserToDelete(user)}
     className="text-[#64748b] hover:text-red-600 transition cursor-pointer"
-    title={isRtl ? "حذف الموظف" : "Delete employee"}
-    aria-label={isRtl ? "حذف الموظف" : "Delete employee"}
+    title={t("adminInline.delete_employee", "Delete employee")}
+    aria-label={t("adminInline.delete_employee", "Delete employee")}
   >
     <FiTrash2 size={16} />
   </button>
@@ -1280,9 +1272,7 @@ const Users = () => {
                     {t("usersPage.permissions", "Permissions")}
                   </label>
                   <p className="text-xs text-[#829ab1] mb-2">
-                    {isRtl
-                      ? "يتم تعيين الصلاحيات الافتراضية تلقائياً للموظف حسب الدور المحدد."
-                      : "Standard permissions are automatically assigned based on the selected role."}
+                    {t("adminInline.standard_permissions_are_automatically_assigned_based_on_the_selected_role", "Standard permissions are automatically assigned based on the selected role.")}
                   </p>
 
                   {isPermissionsLoading ? (
@@ -1385,7 +1375,7 @@ const Users = () => {
             >
               <div className="flex items-center justify-between border-b border-[#e2e8f0] bg-[#f8fafc] px-6 py-5">
                 <h2 className="text-lg font-bold text-[#1e293b]">
-                  {isRtl ? "تحديث بيانات الموارد البشرية" : "Update HR fields"}
+                  {t("adminInline.update_hr_fields", "Update HR fields")}
                 </h2>
 
                 <button
@@ -1401,7 +1391,7 @@ const Users = () => {
               <div className="space-y-4 bg-white p-6">
                 <div>
                   <label className={LABEL_CLASS}>
-                    {isRtl ? "المسمى الوظيفي" : "Job title"}
+                    {t("adminInline.job_title", "Job title")}
                   </label>
                   <input
                     type="text"
@@ -1418,7 +1408,7 @@ const Users = () => {
 
                 <div>
                   <label className={LABEL_CLASS}>
-                    {isRtl ? "نوع التوظيف" : "Employment type"}
+                    {t("adminInline.employment_type", "Employment type")}
                   </label>
                   <select
                     value={editHrForm.employment_type}
@@ -1439,7 +1429,7 @@ const Users = () => {
 
                 <div>
                   <label className={LABEL_CLASS}>
-                    {isRtl ? "الحالة" : "Status"}
+                    {t("adminInline.status", "Status")}
                   </label>
                   <select
                     value={editHrForm.status}
@@ -1456,7 +1446,7 @@ const Users = () => {
 
                 <div>
                   <label className={LABEL_CLASS}>
-                    {isRtl ? "القسم" : "Department"}
+                    {t("adminInline.department", "Department")}
                   </label>
                   <select
                     value={editHrForm.department_id}
@@ -1485,7 +1475,7 @@ const Users = () => {
                   onClick={closeEditHrModal}
                   className="w-full rounded-lg border border-[#d9e2ec] py-2.5 text-sm font-semibold text-[#486581] transition hover:bg-[#f0f4f7] cursor-pointer"
                 >
-                  {isRtl ? "إلغاء" : "Cancel"}
+                  {t("adminInline.cancel", "Cancel")}
                 </button>
 
                 <button
@@ -1497,7 +1487,7 @@ const Users = () => {
                   {updateHrFieldsMutation.isPending && (
                     <FiLoader className="animate-spin" size={15} />
                   )}
-                  {isRtl ? "حفظ التعديلات" : "Save changes"}
+                  {t("adminInline.save_changes", "Save changes")}
                 </button>
               </div>
             </motion.div>
@@ -1526,7 +1516,7 @@ const Users = () => {
         className="w-full max-w-sm rounded-2xl bg-white p-6 shadow-xl"
       >
         <h3 className="text-[18px] font-bold text-[#243B53]">
-          {isRtl ? "حذف الموظف" : "Delete employee"}
+          {t("adminInline.delete_employee", "Delete employee")}
         </h3>
         <p className="mt-2 text-sm text-[#627d98]">
           {isRtl
@@ -1541,7 +1531,7 @@ const Users = () => {
             disabled={deleteEmployeeMutation.isPending}
             className="rounded-lg border border-[#d9e2ec] px-4 py-2.5 text-sm font-semibold text-[#486581] hover:bg-[#f0f4f7] transition cursor-pointer disabled:opacity-50"
           >
-            {isRtl ? "إلغاء" : "Cancel"}
+            {t("adminInline.cancel", "Cancel")}
           </button>
           <button
             type="button"
@@ -1550,7 +1540,7 @@ const Users = () => {
             className="inline-flex items-center gap-2 rounded-lg bg-red-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-red-700 transition cursor-pointer disabled:opacity-60"
           >
             {deleteEmployeeMutation.isPending && <FiLoader className="animate-spin" size={15} />}
-            {isRtl ? "حذف" : "Delete"}
+            {t("adminInline.delete", "Delete")}
           </button>
         </div>
       </motion.div>

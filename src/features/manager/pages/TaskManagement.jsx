@@ -72,6 +72,48 @@ const FILTERS = [
 const PRIORITIES = ["Low", "Medium", "High", "Urgent"];
 const STATUSES = ["Pending", "In Progress", "Completed", "Closed"];
 
+const getTaskStatusTranslationKey = (status) => {
+  const keys = {
+    pending: "statusPending",
+    "in progress": "statusInProgress",
+    completed: "statusCompleted",
+    closed: "statusClosed",
+    "under review": "statusUnderReview",
+    "changes requested": "statusChangesRequested",
+  };
+  return keys[String(status || "").trim().toLowerCase()];
+};
+
+const getTaskPriorityTranslationKey = (priority) => {
+  const keys = {
+    low: "priorityLow",
+    medium: "priorityMedium",
+    high: "priorityHigh",
+    urgent: "priorityUrgent",
+    normal: "priorityNormal",
+  };
+  return keys[String(priority || "").trim().toLowerCase()];
+};
+
+const getEmployeeRoleNames = (employee) => {
+  const roleValues = [
+    employee.role,
+    employee.role_name,
+    employee.role_label,
+    employee.user_role,
+    ...(Array.isArray(employee.roles) ? employee.roles : []),
+  ];
+  return roleValues
+    .flatMap((role) => {
+      if (typeof role === "string") return [role];
+      if (role && typeof role === "object") {
+        return [role.name, role.role_name, role.label].filter(Boolean);
+      }
+      return [];
+    })
+    .map((role) => role.trim().toLowerCase());
+};
+
 const getInitials = (name) => {
   if (!name) return "??";
   return name
@@ -128,6 +170,44 @@ const TaskManagement = ({ role: propRole }) => {
   const location = useLocation();
   const navigate = useNavigate();
   const isRtl = i18n.language?.startsWith("ar");
+  const getTaskStatusLabel = (status) => {
+    const key = getTaskStatusTranslationKey(status);
+    return key ? t(`managerTasks.${key}`, status) : status;
+  };
+  const getTaskPriorityLabel = (priority) => {
+    const key = getTaskPriorityTranslationKey(priority);
+    return key ? t(`managerTasks.${key}`, priority) : priority;
+  };
+  const getTaskTitleLabel = (title) => {
+    if (!isRtl || !title) return title;
+    const titleTranslations = [
+      [
+        /Implement Employee Attendance API/gi,
+        "managerTasks.taskEmployeeAttendanceApiName",
+      ],
+      [/Implement Leave Management/gi, "managerTasks.taskLeaveManagementName"],
+      [/Implement OAuth2 Flow/gi, "managerTasks.taskOauth2FlowName"],
+      [/Refactor billing hooks/gi, "managerTasks.taskBillingHooksName"],
+      [/QA mobile release/gi, "managerTasks.taskQaMobileReleaseName"],
+      [/Update API documentation/gi, "managerTasks.taskUpdateApiDocsName"],
+    ];
+    const translatedTitle = titleTranslations.reduce(
+      (translatedTitle, [pattern, key]) =>
+        translatedTitle.replace(pattern, t(key)),
+      title,
+    );
+    return translatedTitle.replace(/\bahmed\b/gi, "أحمد");
+  };
+  const getAssignmentErrorMessage = (error) => {
+    const message = error.response?.data?.message || error.message || "";
+    if (/selected user must have the employee role/i.test(message)) {
+      return t(
+        "managerTasks.employeeRoleRequired",
+        "Please select a user with the Employee role.",
+      );
+    }
+    return message || t("managerTasks.assignmentFailed", "Assignment failed.");
+  };
 
   // Determine current portal role
   const portalRole = useMemo(() => {
@@ -214,7 +294,7 @@ const TaskManagement = ({ role: propRole }) => {
         // HR & Owner: GET /api/employees is the official route
         try {
           const res = await axiosInstance.get("/employees", {
-            params: { per_page: 100 },
+            params: { per_page: 100, role: "Employee" },
           });
           emps = extractEmployees(res);
         } catch (err) {
@@ -260,9 +340,14 @@ const TaskManagement = ({ role: propRole }) => {
         }
       }
 
-      if (Array.isArray(emps) && emps.length > 0) {
-        setTeamMembers(
-          emps.map((e) => ({
+      const employeeUsers = Array.isArray(emps)
+        ? emps.filter((employee) =>
+            getEmployeeRoleNames(employee).includes("employee"),
+          )
+        : [];
+
+      setTeamMembers(
+        employeeUsers.map((e) => ({
             id: e.id,
             name:
               e.name ||
@@ -272,9 +357,8 @@ const TaskManagement = ({ role: propRole }) => {
             role: e.role_label || e.role,
             job_title: e.job_title,
             employee_code: e.employee_code,
-          }))
-        );
-      }
+          })),
+      );
     } catch (e) {
       console.warn("Could not load employees list:", e);
     }
@@ -449,7 +533,17 @@ const TaskManagement = ({ role: propRole }) => {
             { lang }
           );
         } catch (assignErr) {
-          console.warn("Assignment note:", assignErr);
+          handleCloseCreateModal();
+          showToast(
+            t("managerTasks.createAssignError", {
+              message: getAssignmentErrorMessage(assignErr),
+              defaultValue:
+                "Task created, but assigning it failed: {{message}}",
+            }),
+            true,
+          );
+          fetchTasksList(page);
+          return;
         }
       }
 
@@ -517,7 +611,7 @@ const TaskManagement = ({ role: propRole }) => {
     } catch (err) {
       console.error("Reassign failed:", err);
       showToast(
-        err.response?.data?.message ||
+        getAssignmentErrorMessage(err) ||
           (isRtl ? "فشل إعادة إسناد المهمة" : "Failed to reassign task"),
         true
       );
@@ -787,7 +881,7 @@ const TaskManagement = ({ role: propRole }) => {
                 <th className="py-4 px-6">{t("managerTasks.colAssignee", "ASSIGNEE")}</th>
                 <th className="py-4 px-6">{t("managerTasks.colDueDate", "DUE DATE")}</th>
                 <th className="py-4 px-6">{t("managerTasks.colPriority", "PRIORITY")}</th>
-                <th className="py-4 px-6">{isRtl ? "الحالة" : "STATUS"}</th>
+                <th className="py-4 px-6">{t("managerTasks.colStatus", isRtl ? "الحالة" : "STATUS")}</th>
                 <th className="py-4 px-6">{t("managerTasks.colProgress", "PROGRESS")}</th>
                 <th className="py-4 px-6 w-24 text-center">{isRtl ? "إجراءات" : "ACTIONS"}</th>
               </tr>
@@ -854,7 +948,7 @@ const TaskManagement = ({ role: propRole }) => {
                       {/* Task Name & Description */}
                       <td className="py-4 px-6 max-w-xs">
                         <p className="text-sm font-bold text-[#1e293b] truncate">
-                          {task.title}
+                          {getTaskTitleLabel(task.title)}
                         </p>
                         {task.description && (
                           <p className="text-xs text-[#64748b] truncate mt-0.5 max-w-sm">
@@ -888,7 +982,7 @@ const TaskManagement = ({ role: propRole }) => {
                         <span
                           className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ${priorityClass}`}
                         >
-                          {task.priority || "Normal"}
+                          {getTaskPriorityLabel(task.priority || "Normal")}
                         </span>
                       </td>
 
@@ -900,7 +994,7 @@ const TaskManagement = ({ role: propRole }) => {
                           className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-semibold hover:opacity-80 transition cursor-pointer ${statusClass}`}
                           title={isRtl ? "اضغط لتغيير الحالة" : "Click to change status"}
                         >
-                          <span>{task.status || "Pending"}</span>
+                          <span>{getTaskStatusLabel(task.status || "Pending")}</span>
                           <FiRefreshCw className="w-3 h-3 opacity-60" />
                         </button>
                       </td>
@@ -1180,7 +1274,7 @@ const TaskManagement = ({ role: propRole }) => {
                     >
                       {PRIORITIES.map((p) => (
                         <option key={p} value={p}>
-                          {p}
+                          {getTaskPriorityLabel(p)}
                         </option>
                       ))}
                     </select>
@@ -1343,7 +1437,7 @@ const TaskManagement = ({ role: propRole }) => {
                     >
                       {PRIORITIES.map((p) => (
                         <option key={p} value={p}>
-                          {p}
+                          {getTaskPriorityLabel(p)}
                         </option>
                       ))}
                     </select>
@@ -1440,7 +1534,7 @@ const TaskManagement = ({ role: propRole }) => {
                         : "border-[#e2e8f0] text-[#64748b] hover:bg-[#fafafa]"
                     }`}
                   >
-                    <span>{st}</span>
+                    <span>{getTaskStatusLabel(st)}</span>
                     {selectedStatus === st && (
                       <FiCheckCircle className="w-4 h-4 text-[#102a43]" />
                     )}

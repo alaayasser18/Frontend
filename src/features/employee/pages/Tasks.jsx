@@ -50,8 +50,8 @@ const ENDPOINT_TASKS = "/tasks";
 // GET  /tasks/{id}             → تفاصيل
 // PUT  /tasks/{id}             → تعديل
 // POST /tasks/{id}/assign      → إسناد
-// PUT  /tasks/{id}/progress    → تحديث التقدم
-// PUT  /tasks/{id}/status      → تغيير الحالة
+// PATCH /tasks/{id}/progress   → تحديث التقدم
+// PATCH /tasks/{id}/status     → تغيير الحالة
 // GET  /tasks/{id}/activities  → سجل النشاطات (حسب التوثيق)
 
 const buildUrl = (path) => {
@@ -78,6 +78,13 @@ const getFileUrl = (filePath) => {
 // Statuses
 // =========================
 const STATUSES = ["Pending", "In Progress", "Completed", "Closed"];
+const normalizeTaskStatus = (status) => {
+  const original = String(status || "Pending").trim();
+  const normalized = original
+    .toLowerCase()
+    .replace(/[_-]+/g, " ");
+  return STATUSES.find((value) => value.toLowerCase() === normalized) || original;
+};
 
 const STATUS_BADGES = {
   Pending: "bg-[#fffaf0] text-[#d97706]",
@@ -248,17 +255,6 @@ const saveSubmissionForTask = (taskId, submissionData) => {
   }
 };
 
-const removeSubmissionForTask = (taskId) => {
-  if (!taskId) return;
-  try {
-    const all = getSavedSubmissions();
-    delete all[taskId];
-    localStorage.setItem(SUBMISSION_STORAGE_KEY, JSON.stringify(all));
-  } catch (e) {
-    console.warn("Could not remove submission from storage:", e);
-  }
-};
-
 const getTaskSubmissions = (apiTask) => {
   if (!apiTask) return [];
 
@@ -319,7 +315,7 @@ const mapApiTask = (apiTask, isRtl) => {
     description: apiTask.description || "",
     priority: (apiTask.priority || "low").toLowerCase(),
     priorityLabel: apiTask.priority || "Low",
-    statusLabel: apiTask.status || "Pending",
+    statusLabel: normalizeTaskStatus(apiTask.status),
     rawDeadline: apiTask.deadline || "",
     defaultDueDate: formatDeadline(apiTask.deadline, isRtl),
     status: computedStatus,
@@ -553,6 +549,8 @@ const Tasks = () => {
 
   useEffect(() => {
     const controller = new AbortController();
+    // Fetching is the effect's external synchronization; it updates loading state.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchTasks(controller.signal);
     return () => controller.abort();
   }, [fetchTasks]);
@@ -1250,7 +1248,7 @@ const Tasks = () => {
   };
 
   // =====================================================
-  // CHANGE STATUS — PUT /tasks/{id}/status
+  // CHANGE STATUS — PATCH /tasks/{id}/status
   // =====================================================
   const openStatusModal = (task) => {
     setStatusTask(task);
@@ -1301,65 +1299,93 @@ const Tasks = () => {
       );
 
       const json = await response.json().catch(() => null);
+      const apiMessage =
+        json?.message ||
+        json?.errors?.status?.[0] ||
+        json?.errors?.[Object.keys(json?.errors || {})[0]]?.[0];
 
       if (response.ok) {
         const updated = json?.data;
+        const confirmedStatus = normalizeTaskStatus(
+          updated?.status || newStatus,
+        );
 
-        if (updated && updated.id) {
-          setTasks((prev) =>
-            prev.map((t) =>
-              t.apiId === updated.id ? mapApiTask(updated, isRtl) : t,
-            ),
-          );
-        } else {
-          await fetchTasks(new AbortController().signal);
-        }
+        setTasks((prev) =>
+          prev.map((task) =>
+            String(task.apiId) === String(statusTask.apiId)
+              ? {
+                  ...task,
+                  statusLabel: confirmedStatus,
+                  status: mapApiStatus(confirmedStatus),
+                }
+              : task,
+          ),
+        );
+        setDetailsTask((prev) =>
+          prev && String(prev.apiId) === String(statusTask.apiId)
+            ? {
+                ...prev,
+                statusLabel: confirmedStatus,
+                status: mapApiStatus(confirmedStatus),
+              }
+            : prev,
+        );
 
         setShowStatus(false);
         setStatusTask(null);
 
         showToast(
-          json?.message || "Task status updated successfully",
-          `"${updated?.title || statusTask.defaultTitle}" is now "${newStatus}".`,
+          t("tasks.statusUpdated", "Task status updated"),
+          t("tasks.statusUpdatedMessage", {
+            title: updated?.title || statusTask.defaultTitle,
+            status: getApiStatusLabel(newStatus),
+            defaultValue: "{{title}} is now {{status}}.",
+          }),
         );
         return;
       }
 
       if (response.status === 422) {
-        setStatusError(
-          json?.message ||
-            "Invalid status transition — this status change is not allowed.",
-        );
+        setStatusError(apiMessage || t("tasks.errors.invalidStatus"));
         return;
       }
 
       if (response.status === 403) {
-        setStatusError(
-          json?.message || "You are not authorized to update this task.",
-        );
+        setStatusError(apiMessage || t("tasks.errors.forbidden"));
         return;
       }
 
       if (response.status === 404) {
-        setStatusError(json?.message || "Task not found.");
+        setStatusError(apiMessage || t("tasks.errors.notFound"));
         return;
       }
 
       if (response.status === 401) {
-        setStatusError("Unauthenticated — please login again.");
+        setStatusError(apiMessage || t("tasks.errors.unauthenticated"));
         return;
       }
 
       if (response.status === 500) {
-        setStatusError(json?.message || "Something went wrong.");
+        setStatusError(apiMessage || t("tasks.errors.updateStatus"));
         return;
       }
 
       setStatusError(
-        json?.message || `Failed to update status (${response.status})`,
+        apiMessage ||
+          t("tasks.errors.updateStatusCode", {
+            status: response.status,
+            defaultValue: "Could not update task status ({{status}}).",
+          }),
       );
-    } catch (e) {
-      setStatusError(e.message);
+    } catch (error) {
+      console.error("Failed to update task status:", error);
+      setStatusError(
+        error.message ||
+          t(
+            "tasks.errors.network",
+            "Could not connect to update task status.",
+          ),
+      );
     } finally {
       setChangingStatus(false);
     }
@@ -1696,6 +1722,29 @@ const Tasks = () => {
     }
   };
 
+  const getApiStatusLabel = (status) => {
+    const normalizedStatus = normalizeTaskStatus(status);
+    const statusKey = {
+      Pending: "pending",
+      "In Progress": "inProgress",
+      Completed: "completed",
+      Closed: "closed",
+    }[normalizedStatus];
+    return t(`tasks.status.${statusKey}`, normalizedStatus);
+  };
+
+  const getSubmissionStatusLabel = (status) => {
+    const statusKey = {
+      "pending review": "pendingReview",
+      "changes requested": "changesRequested",
+      approved: "approved",
+      rejected: "rejected",
+    }[String(status || "").toLowerCase()];
+    return statusKey
+      ? t(`tasks.submissionStatus.${statusKey}`)
+      : status || t("tasks.submissionStatus.pendingReview");
+  };
+
   const getStatusLabel = (status) => {
     switch (status) {
       case "in-progress":
@@ -1735,6 +1784,14 @@ const Tasks = () => {
             )}
           </p>
         </div>
+        <button
+          type="button"
+          onClick={openCreateModal}
+          className="inline-flex items-center justify-center gap-2 self-start rounded-xl bg-[#1c364f] px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-[#254360]"
+        >
+          <FiPlus className="h-4 w-4" />
+          {t("tasks.newTask", "New task")}
+        </button>
       </motion.div>
 
       {/* API ERROR */}
@@ -1747,7 +1804,7 @@ const Tasks = () => {
             onClick={() => fetchTasks(new AbortController().signal)}
             className="h-9 px-4 bg-white border border-[#fecaca] rounded-lg text-[#dc2626] text-[13px] font-semibold cursor-pointer transition-colors duration-150 hover:bg-[#fef2f2]"
           >
-            Retry
+            {t("tasks.retry", "Retry")}
           </button>
         </div>
       )}
@@ -1850,10 +1907,10 @@ const Tasks = () => {
                           STATUS_BADGES[task.statusLabel] ||
                           "bg-[#f1f5f9] text-[#64748b]"
                         }`}
-                        title="Change status"
+                        title={t("tasks.changeStatus", "Change status")}
                       >
                         <FiRefreshCw className="h-3 w-3" />
-                        {task.statusLabel}
+                        {getApiStatusLabel(task.statusLabel)}
                       </button>
 
                       <div className="flex items-center gap-1">
@@ -1861,8 +1918,8 @@ const Tasks = () => {
                           type="button"
                           onClick={() => openTaskDetails(task)}
                           className="text-[#94a3b8] hover:text-[#1c364f] p-1.5 rounded-lg hover:bg-[#f1f5f9] transition"
-                          aria-label="View task details"
-                          title="View details"
+                          aria-label={t("tasks.viewDetails", "View task details")}
+                          title={t("tasks.viewDetails", "View details")}
                         >
                           <FiEye className="h-4 w-4" />
                         </button>
@@ -1871,8 +1928,8 @@ const Tasks = () => {
                           type="button"
                           onClick={() => openAssignModal(task)}
                           className="text-[#94a3b8] hover:text-[#2f855a] p-1.5 rounded-lg hover:bg-[#f1f5f9] transition"
-                          aria-label="Assign task to user"
-                          title="Assign to user"
+                          aria-label={t("tasks.assignUser", "Assign task to user")}
+                          title={t("tasks.assignUser", "Assign to user")}
                         >
                           <FiUserPlus className="h-4 w-4" />
                         </button>
@@ -1881,8 +1938,8 @@ const Tasks = () => {
                           type="button"
                           onClick={() => openEditModal(task)}
                           className="text-[#94a3b8] hover:text-[#1c364f] p-1.5 rounded-lg hover:bg-[#f1f5f9] transition"
-                          aria-label="Edit task"
-                          title="Edit task"
+                          aria-label={t("tasks.editTask", "Edit task")}
+                          title={t("tasks.editTask", "Edit task")}
                         >
                           <FiEdit3 className="h-4 w-4" />
                         </button>
@@ -1890,7 +1947,7 @@ const Tasks = () => {
                         <button
                           type="button"
                           className="text-[#94a3b8] hover:text-[#1e293b] p-1 transition"
-                          aria-label="More options"
+                          aria-label={t("tasks.moreOptions", "More options")}
                         >
                           <FiMoreHorizontal className="h-5 w-5" />
                         </button>
@@ -2133,7 +2190,7 @@ const Tasks = () => {
                           className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold ${detailsTask.priorityBadge}`}
                         >
                           <FiFlag className="h-3 w-3 me-1.5" />
-                          {detailsTask.priorityLabel} priority
+                          {getPriorityLabel(detailsTask.priority)}
                         </span>
 
                         <button
@@ -2146,10 +2203,10 @@ const Tasks = () => {
                             STATUS_BADGES[detailsTask.statusLabel] ||
                             "bg-[#f1f5f9] text-[#64748b]"
                           }`}
-                          title="Change status"
+                          title={t("tasks.changeStatus", "Change status")}
                         >
                           <FiRefreshCw className="h-3 w-3" />
-                          {detailsTask.statusLabel}
+                          {getApiStatusLabel(detailsTask.statusLabel)}
                         </button>
                       </div>
 
@@ -2159,7 +2216,10 @@ const Tasks = () => {
                         </p>
                         <p className="text-sm text-[#486581] leading-relaxed m-0">
                           {detailsTask.description ||
-                            "No description provided."}
+                            t(
+                              "tasks.noDescription",
+                              "No description provided.",
+                            )}
                         </p>
                       </div>
 
@@ -2199,7 +2259,10 @@ const Tasks = () => {
                             {t("tasks.detailsCreatedBy", "Created by")}
                           </div>
                           <p className="text-xs font-bold text-[#102a43] m-0">
-                            User #{detailsTask.createdBy || "—"}
+                            {t("tasks.userNumber", {
+                              id: detailsTask.createdBy || "—",
+                              defaultValue: "User #{{id}}",
+                            })}
                           </p>
                         </div>
 
@@ -2296,7 +2359,6 @@ const Tasks = () => {
                   {detailsTask?.submissions &&
                   detailsTask.submissions.length > 0 ? (
                     detailsTask.submissions.map((sub, sIdx) => {
-                      const isPending = sub.status === "Pending Review";
                       const isChangesReq = sub.status === "Changes Requested";
                       const isApproved = sub.status === "Approved";
                       const isRejected = sub.status === "Rejected";
@@ -2319,7 +2381,7 @@ const Tasks = () => {
                                       : "bg-[#fef3c7] text-[#b45309]"
                               }`}
                             >
-                              {sub.status || "Pending Review"}
+                              {getSubmissionStatusLabel(sub.status)}
                             </span>
                             <span className="text-[11px] text-[#94a3b8]">
                               {formatDateTime(
@@ -2504,7 +2566,7 @@ const Tasks = () => {
                             onClick={() => fetchActivities(detailsTask.apiId)}
                             className="mt-2 h-8 px-3 bg-white border border-[#fecaca] rounded-lg text-[#dc2626] text-[12px] font-semibold cursor-pointer transition-colors duration-150 hover:bg-[#fef2f2]"
                           >
-                            Retry
+                            {t("tasks.retry", "Retry")}
                           </button>
                         )}
                       </div>
@@ -2518,10 +2580,13 @@ const Tasks = () => {
                       <div className="flex flex-col items-center justify-center py-10 text-center">
                         <FiActivity className="h-8 w-8 text-[#94a3b8] mb-2" />
                         <p className="text-sm font-semibold text-[#102a43] m-0">
-                          No activity yet
+                          {t("tasks.noActivity", "No activity yet")}
                         </p>
                         <p className="text-xs text-[#829ab1] mt-1">
-                          Actions on this task will appear here.
+                          {t(
+                            "tasks.noActivityDescription",
+                            "Actions on this task will appear here.",
+                          )}
                         </p>
                       </div>
                     )}
@@ -2563,7 +2628,10 @@ const Tasks = () => {
 
                                   <span className="inline-flex items-center gap-1 text-[11px] text-[#94a3b8]">
                                     <FiUser className="h-3 w-3" />
-                                    User #{activity.user_id}
+                                    {t("tasks.userNumber", {
+                                      id: activity.user_id,
+                                      defaultValue: "User #{{id}}",
+                                    })}
                                   </span>
                                 </div>
 
@@ -2640,14 +2708,16 @@ const Tasks = () => {
               </div>
 
               <div className="flex items-center gap-2 mb-4">
-                <span className="text-xs text-[#829ab1]">Current:</span>
+                <span className="text-xs text-[#829ab1]">
+                  {t("tasks.currentStatus", "Current status")}:
+                </span>
                 <span
                   className={`inline-flex items-center rounded-full px-3 py-0.5 text-xs font-semibold ${
                     STATUS_BADGES[statusTask.statusLabel] ||
                     "bg-[#f1f5f9] text-[#64748b]"
                   }`}
                 >
-                  {statusTask.statusLabel}
+                  {getApiStatusLabel(statusTask.statusLabel)}
                 </span>
               </div>
 
@@ -2679,7 +2749,12 @@ const Tasks = () => {
                             : "border-[#e2e8f0] bg-white text-[#486581] hover:border-[#cbd5e1] hover:bg-[#f8fafc]"
                       }`}
                     >
-                      {isCurrent ? `${status} (current)` : status}
+                      {isCurrent
+                        ? `${getApiStatusLabel(status)} (${t(
+                            "tasks.current",
+                            "current",
+                          )})`
+                        : getApiStatusLabel(status)}
                     </button>
                   );
                 })}

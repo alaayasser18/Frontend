@@ -287,7 +287,7 @@ const HrDashboard = () => {
           </p>
         </div>
 
-        <div className="flex shrink-0 items-center gap-3">
+        <div className="flex min-w-0 flex-wrap items-center gap-3">
           <CheckInOutWidget compact />
 
           <motion.button

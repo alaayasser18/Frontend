@@ -55,7 +55,21 @@
       "quickSignInAlert": "Biometric Sign-In clicked!",
       "showPassword": "Show password",
       "hidePassword": "Hide password",
-      "googleSignIn": "Sign in with Google"
+      "googleSignIn": "Sign in with Google",
+      "googleError": "Failed to initiate Google login.",
+      "googleSuccess": "Signed in with Google successfully.",
+      "googleNotAuthorized": "You are not authorized to log in with Google.",
+      "googleAuthFailed": "An error occurred during Google authentication. Please try again.",
+      "googleErrorGeneric": "Google authentication failed. Please try again.",
+      "signingIn": "Signing in...",
+      "loginSuccess": "Logged in successfully.",
+      "invalidCredentials": "These credentials do not match our records.",
+      "accountInactive": "Your account is inactive. Please activate your account first.",
+      "tooManyRequests": "Too many login attempts. Please try again later.",
+      "serverError": "Something went wrong on the server. Please try again later.",
+      "tokenMissing": "Login succeeded, but authentication data was incomplete.",
+      "errorGeneric": "Something went wrong. Please try again.",
+      "portalSubtitle": "Enter your credentials to access your portal"
     },
     "forgotPassword": {
       "title": "Forgot Password?",

@@ -55,7 +55,21 @@
       "quickSignInAlert": "تم النقر على تسجيل الدخول الحيوي!",
       "showPassword": "إظهار كلمة المرور",
       "hidePassword": "إخفاء كلمة المرور",
-      "googleSignIn": "تسجيل الدخول باستخدام Google"
+      "googleSignIn": "تسجيل الدخول باستخدام Google",
+      "googleError": "فشل بدء تسجيل الدخول عبر Google.",
+      "googleSuccess": "تم تسجيل الدخول بنجاح عبر Google.",
+      "googleNotAuthorized": "غير مصرح لك بتسجيل الدخول عبر Google.",
+      "googleAuthFailed": "حدث خطأ أثناء مصادقة Google. يرجى المحاولة مرة أخرى.",
+      "googleErrorGeneric": "فشلت مصادقة Google. يرجى المحاولة مرة أخرى.",
+      "signingIn": "جاري تسجيل الدخول...",
+      "loginSuccess": "تم تسجيل الدخول بنجاح.",
+      "invalidCredentials": "هذه البيانات غير متطابقة مع سجلاتنا.",
+      "accountInactive": "حسابك غير نشط. يرجى تفعيل حسابك أولاً.",
+      "tooManyRequests": "عدد كبير جداً من محاولات تسجيل الدخول. يرجى المحاولة لاحقاً.",
+      "serverError": "حدث خطأ في الخادم. يرجى المحاولة مرة أخرى لاحقاً.",
+      "tokenMissing": "نجح تسجيل الدخول، لكن بيانات المصادقة غير مكتملة.",
+      "errorGeneric": "حدث خطأ ما. يرجى المحاولة مرة أخرى.",
+      "portalSubtitle": "أدخل بياناتك للوصول إلى بوابتك"
     },
     "forgotPassword": {
       "title": "نسيت كلمة المرور؟",

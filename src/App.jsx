@@ -69,6 +69,34 @@ import HrProfileSettings from "./features/hr/pages/ProfileSettings";
 // ==================== Layout ====================
 import DashboardLayout from "./layouts/DashboardLayout";
 
+
+// ==================== Google OAuth hash handler ====================
+(function handleGoogleHash() {
+  const hash = window.location.hash;
+  if (!hash.includes("token=")) return;
+
+  const token = new URLSearchParams(hash.replace(/^#/, "")).get("token");
+  if (!token) return;
+
+  try {
+    const b64 = token.split(".")[1].replace(/-/g, "+").replace(/_/g, "/");
+    const payload = JSON.parse(atob(b64));
+    const user = { id: payload.sub, role: payload.role };
+
+    localStorage.setItem("token", token);
+    localStorage.setItem("user", JSON.stringify(user));
+    localStorage.setItem("currentUser", JSON.stringify(user));
+    localStorage.setItem("role", payload.role);
+    localStorage.setItem("permissions", JSON.stringify([]));
+    localStorage.setItem("rememberMe", "true");
+  } catch (e) {
+    console.error("Google token parse failed", e);
+  }
+
+  window.history.replaceState(null, "", window.location.pathname);
+})();
+
+
 // ==================== Dashboard Placeholder ====================
 function DashboardPlaceholder({ messageKey, defaultMessage }) {
   const { t } = useTranslation();

@@ -152,10 +152,10 @@ export default function ForgotPassword() {
           // نستخدم ترجمة الـ frontend بدل رسالة الـ backend
           toast.error(t("auth.forgotPassword.emailNotFound"));
 
-          // الرجوع إلى Login بعد ظهور الرسالة
-          setTimeout(() => {
-            navigate("/login", { replace: true });
-          }, 1500);
+          // // الرجوع إلى Login بعد ظهور الرسالة
+          // setTimeout(() => {
+          //   navigate("/login", { replace: true });
+          // }, 1500);
 
           return;
         }

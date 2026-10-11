@@ -24,6 +24,7 @@ import {
   FiUser,
   FiBell,
   FiTarget,
+  FiDollarSign,
 } from "react-icons/fi";
 
 import {
@@ -44,47 +45,93 @@ export const navConfig = {
   // ==================================================
 
   admin: [
+    // ================= OPERATIONS =================
     {
       titleKey: "portal.dashboard",
       title: "Dashboard",
       path: "/admin/dashboard",
       icon: MdDashboard,
+      section: "OPERATIONS",
     },
     {
       titleKey: "portal.users",
       title: "Users",
       path: "/admin/users",
       icon: MdPeople,
-    },
-    {
-      titleKey: "portal.performance",
-      title: "Performance & Goals",
-      path: "/admin/performance",
-      icon: MdAssessment,
+      section: "OPERATIONS",
     },
     {
       titleKey: "portal.branches",
       title: "Branches",
       path: "/admin/branches",
       icon: MdLocationCity,
+      section: "OPERATIONS",
+    },
+
+    // ================= FINANCIAL & REWARDS =================
+    {
+      titleKey: "portal.advancesDeductions",
+      title: "Advances & Deductions",
+      path: "/admin/advances-deductions",
+      icon: MdAccountBalanceWallet,
+      section: "FINANCIAL & REWARDS",
+    },
+    {
+      titleKey: "portal.payroll",
+      title: "Payroll",
+      path: "/admin/payroll",
+      icon: MdAttachMoney,
+      section: "FINANCIAL & REWARDS",
+    },
+    {
+      titleKey: "portal.rewardsBonuses",
+      title: "Rewards & Bonuses",
+      path: "/admin/rewards",
+      icon: MdCardGiftcard,
+      section: "FINANCIAL & REWARDS",
+    },
+
+    // ================= GROWTH & GOVERNANCE =================
+    {
+      titleKey: "portal.performance",
+      title: "Performance",
+      path: "/admin/performance",
+      icon: MdAssessment,
+      section: "GROWTH & GOVERNANCE",
+    },
+    {
+      titleKey: "portal.goals",
+      title: "Goals",
+      path: "/admin/goals",
+      icon: MdAssessment,
+      section: "GROWTH & GOVERNANCE",
+    },
+    {
+      titleKey: "portal.attendance",
+      title: "Attendance",
+      path: "/admin/attendance",
+      icon: MdCalendarMonth,
     },
     {
       titleKey: "portal.auditLogs",
       title: "Audit Logs",
       path: "/admin/audit",
       icon: MdHistory,
+      section: "GROWTH & GOVERNANCE",
     },
     {
       titleKey: "portal.notifications",
       title: "Notifications",
       path: "/admin/notifications",
       icon: MdNotifications,
+      section: "GROWTH & GOVERNANCE",
     },
     {
       titleKey: "portal.profileSettings",
       title: "Profile & Settings",
       path: "/admin/settings",
       icon: FiUser,
+      section: "GROWTH & GOVERNANCE",
     },
   ],
 
@@ -316,6 +363,12 @@ export const navConfig = {
       title: "My Goals",
       path: "/employee/goals",
       icon: FiTarget,
+    },
+    {
+      titleKey: "portal.myFinancials",
+      title: "My Financials",
+      path: "/employee/financial",
+      icon: FiDollarSign,
     },
     {
       titleKey: "portal.aiAssistant",

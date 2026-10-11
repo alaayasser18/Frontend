@@ -874,7 +874,8 @@
     "myLeaves": "إجازاتي",
     "myTeam": "فريقي",
     "teamLeaves": "إجازات الفريق",
-    "performance": "الأداء والأهداف",
+    "performance": "الأداء ",
+    "goals": "الأهداف",
     "myPerformance": "أدائي",
     "branches": "الفروع",
     "auditLogs": "سجلات التدقيق",
@@ -1347,7 +1348,7 @@
     "subtitle": "خطط لأوقات إجازتك وتابع رصيدك المتبقي بكل سهولة.",
     "viewCalendar": "عرض التقويم",
     "calendarModalTitle": "تقويم الإجازات وفريق العمل",
-    "calendarModalSubtitle": "استعراض الإجازات المجدولة والعطلات الرسمية القادمة.",
+    "calendarModalSubtitle": "استعراض طلبات إجازاتك المعلّقة والمقبولة.",
     "annualLeave": "الإجازة السنوية",
     "casualLeave": "الإجازة العارضة",
     "sickLeave": "الإجازة المرضية",
@@ -1362,6 +1363,8 @@
     "casual": "إجازة عارضة",
     "sick": "إجازة مرضية",
     "unpaid": "إجازة بدون راتب",
+    "emergency": "إجازة طارئة",
+    "newTypeSuffix": "جديدة",
     "duration": "المدة",
     "fullDay": "يوم كامل",
     "halfDayMorning": "نصف يوم (صباحي)",
@@ -1386,6 +1389,31 @@
     "toastInvalidDates": "تاريخ الانتهاء لا يمكن أن يسبق تاريخ البدء.",
     "toastInsufficientBalance": "رصيدك المتبقي غير كافٍ لتقديم هذا الطلب.",
     "toastSubmitted": "تم تقديم طلب الإجازة بنجاح!",
+    "toastSubmitError": "تعذر تقديم طلب الإجازة.",
+    "attachmentUploadError": "تم إنشاء الطلب، لكن تعذر رفع المرفق.",
+    "attachmentLinkError": "تم إنشاء الطلب، لكن تعذر ربط المرفق به.",
+    "uploadingAttachment": "جارٍ رفع المرفق...",
+    "submitting": "جارٍ الإرسال...",
+    "loadingTypes": "جارٍ تحميل أنواع الإجازات...",
+    "loadingBalances": "جارٍ تحميل أرصدة الإجازات...",
+    "loadingRequests": "جارٍ تحميل طلبات الإجازات...",
+    "typeLoadError": "تعذر تحميل أنواع الإجازات.",
+    "balanceLoadError": "تعذر تحميل أرصدة الإجازات.",
+    "requestHistoryError": "تعذر تحميل طلباتك.",
+    "noLeaveTypes": "لا توجد أنواع إجازات متاحة.",
+    "noBalances": "لا توجد أرصدة إجازات متاحة.",
+    "retry": "إعادة المحاولة",
+    "statusCancelled": "ملغي",
+    "validation": {
+      "leaveType": "اختر نوع الإجازة.",
+      "startDate": "اختر تاريخ البدء.",
+      "endDate": "اختر تاريخ الانتهاء.",
+      "reason": "اكتب سبب طلب الإجازة.",
+      "attachment": "يتطلب نوع الإجازة هذا إرفاق مستند داعم.",
+      "balanceLoading": "انتظر حتى نتحقق من رصيد الإجازة.",
+      "balanceUnavailable": "تعذر التحقق من رصيد إجازتك. أعد تحميل الأرصدة.",
+      "balanceMissing": "لا يوجد رصيد مخصص لنوع الإجازة هذا. تواصل مع الموارد البشرية لإضافته."
+    },
     "calendarLegendUpcoming": "إجازة قادمة",
     "calendarLegendHoliday": "عطلة رسمية",
     "calendarLegendToday": "اليوم",
@@ -1579,52 +1607,20 @@
     "title": "طلبات الإجازات",
     "subtitle": "مراجعة طلبات إجازات الموظفين والموافقة عليها وتوثيق القرارات.",
     "export": "تصدير قائمة الطلبات",
-    "stats": {
-      "pending": "4 طلبات قيد المراجعة",
-      "approved": "12 تمت الموافقة عليها هذا الشهر",
-      "rejected": "2 مرفوضة"
-    },
     "queue": "طلبات الموافقة",
     "table": {
       "employee": "الموظف",
       "roleDepartment": "الوظيفة / القسم",
       "category": "نوع الإجازة",
       "duration": "المدة",
-      "balance": "الرصيد",
-      "reason": "السبب والمرفق",
+      "days": "الأيام المطلوبة",
+      "reason": "السبب",
       "actions": "الإجراءات"
     },
-    "categories": {
-      "annual": "سنوية",
-      "emergency": "طارئة",
-      "medical": "مرضية"
-    },
-    "viewReason": "عرض السبب.pdf",
     "approve": "موافقة",
     "reject": "رفض مع ملاحظة",
-    "requestsEmployees": {
-      "mariam": {
-        "name": "مريم حسن",
-        "role": "مدير هندسة",
-        "department": "الهندسة",
-        "dates": "18 سبتمبر – 20 سبتمبر · 3 أيام",
-        "balance": "متبقي 14 يومًا"
-      },
-      "omar": {
-        "name": "عمر خالد",
-        "role": "تنفيذي مبيعات",
-        "department": "المبيعات",
-        "dates": "22 سبتمبر · يوم واحد",
-        "balance": "متبقي 8 أيام"
-      },
-      "nour": {
-        "name": "نور عادل",
-        "role": "أخصائي عمليات الأفراد",
-        "department": "الأفراد والثقافة",
-        "dates": "25 سبتمبر – 26 سبتمبر · يومان",
-        "balance": "متبقي 11 يومًا"
-      }
-    }
+    "approveSuccess": "تمت الموافقة على طلب الإجازة بنجاح.",
+    "rejectSuccess": "تم رفض طلب الإجازة بنجاح."
   },
   "departments": {
     "title": "الأقسام والفرق",
@@ -1958,6 +1954,88 @@
       "rating": "التقييم"
     }
   },
+  "hrGoals": {
+    "eyebrow": "الأهداف والتطوير",
+    "title": "أهداف الموظفين",
+    "subtitle": "إدارة ومتابعة أهداف الموظفين في جميع أنحاء الشركة.",
+    "createGoal": "إنشاء هدف",
+    "editGoal": "تعديل الهدف",
+    "createSubtitle": "أنشئ هدفًا وعيّنه لأحد الموظفين.",
+    "editSubtitle": "قم بتحديث تفاصيل الهدف أدناه.",
+    "updateGoal": "تحديث الهدف",
+    "cancel": "إلغاء",
+    "edit": "تعديل الهدف",
+    "notEditable": "غير قابل للتعديل",
+    "retry": "حاول مرة أخرى",
+    "loading": "جارٍ تحميل الأهداف...",
+    "companyOverview": "نظرة عامة على الشركة",
+    "goalsProgress": "تقدم الأهداف",
+    "goalsProgressSubtitle": "تابع نسبة إنجاز أهداف الموظفين في الشركة.",
+    "completion": "نسبة الإنجاز",
+    "completed": "مكتملة",
+    "active": "نشطة",
+    "cancelled": "ملغاة",
+    "employees": "الموظفون",
+    "companyGoals": "أهداف الشركة",
+    "goalsFound": "هدف",
+    "status": {
+      "active": "نشط",
+      "completed": "مكتمل",
+      "cancelled": "ملغى"
+    },
+    "filters": {
+      "title": "التصفية",
+      "subtitle": "صفِّ أهداف الشركة حسب الحالة أو القسم أو الموظف.",
+      "reset": "إعادة ضبط",
+      "allStatuses": "جميع الحالات",
+      "allDepartments": "جميع الأقسام",
+      "allEmployees": "جميع الموظفين",
+      "loadingEmployees": "جارٍ تحميل الموظفين..."
+    },
+    "table": {
+      "employee": "الموظف",
+      "goal": "الهدف",
+      "targetDate": "الموعد المستهدف",
+      "status": "الحالة",
+      "created": "تاريخ الإنشاء",
+      "actions": "الإجراءات"
+    },
+    "empty": {
+      "title": "لا توجد أهداف",
+      "subtitle": "لا توجد أهداف تطابق عوامل التصفية الحالية."
+    },
+    "pagination": {
+      "page": "صفحة",
+      "of": "من"
+    },
+    "form": {
+      "employee": "الموظف",
+      "selectEmployee": "اختر موظفًا",
+      "loadingEmployees": "جارٍ تحميل الموظفين...",
+      "employeeFallback": "موظف رقم {{id}}",
+      "title": "عنوان الهدف",
+      "titlePlaceholder": "مثال: إكمال دورة React",
+      "description": "الوصف",
+      "descriptionPlaceholder": "اوصف ما يحتاج الموظف إلى تحقيقه...",
+      "targetDate": "الموعد المستهدف",
+      "status": "الحالة"
+    },
+    "validation": {
+      "employee": "يرجى اختيار موظف.",
+      "title": "عنوان الهدف مطلوب.",
+      "date": "الموعد المستهدف مطلوب."
+    },
+    "success": {
+      "created": "تم إنشاء الهدف بنجاح.",
+      "updated": "تم تحديث الهدف بنجاح."
+    },
+    "errors": {
+      "employees": "تعذر تحميل الموظفين.",
+      "completedCancelled": "لا يمكن تعديل الأهداف المكتملة أو الملغاة.",
+      "generic": "حدث خطأ ما. يرجى المحاولة مرة أخرى.",
+      "load": "تعذر تحميل الأهداف."
+    }
+  },
   "hrEvaluationsGoals": {
     "eyebrow": "إدارة الأداء",
     "title": "التقييمات والأهداف",
@@ -1999,6 +2077,7 @@
     "omarKhaled": "عمر خالد",
     "karimAshraf": "كريم أشرف"
   },
+
   "hrCommandCenter": {
     "title": "مركز قيادة الموارد البشرية",
     "subtitle": "عرض تشغيلي مباشر لحالة الموظفين والموافقات والاستعداد للرواتب.",
@@ -2209,6 +2288,119 @@
       "created": "تاريخ الإنشاء",
       "editGoalTitle": "تعديل هذا الهدف",
       "unknownStatus": "غير معروف"
+    }
+  },
+  "portal": {
+    "dashboard": "لوحة التحكم",
+    "users": "المستخدمين",
+    "performance": "الأداء",
+    "goals": "الأهداف",
+    "branches": "الفروع",
+    "auditLogs": "سجلات التدقيق",
+    "notifications": "الإشعارات",
+    "profileSettings": "الملف الشخصي والإعدادات",
+    "employees": "الموظفين",
+    "departmentsTeams": "الأقسام والفرق",
+    "attendance": "الحضور والانصراف",
+    "leaveRequests": "طلبات الإجازة",
+    "advancesDeductions": "السُلف والخصومات",
+    "payroll": "مسير الرواتب",
+    "rewardsBonuses": "المكافآت والحوافز",
+    "evaluationsGoals": "التقييمات والأهداف",
+    "performanceMetrics": "مؤشرات الأداء",
+    "aiInsights": "تحليلات الذكاء الاصطناعي",
+    "companyPolicies": "سياسات الشركة",
+    "holidays": "العطلات والمواسم",
+    "reports": "التقارير",
+    "teamDashboard": "لوحة تحكم الفريق",
+    "taskManagement": "إدارة المهام",
+    "submissionReviews": "مراجعة التسليمات",
+    "teamEvaluations": "تقييمات الفريق",
+    "teamGoalsOkrs": "أهداف الفريق والنتائج الرئيسية",
+    "performanceAnalytics": "تحليلات الأداء",
+    "teamAttendance": "حضور الفريق",
+    "teamLeaveApprovals": "موافقات إجازات الفريق",
+    "aiTeamInsights": "رؤى الفريق بالذكاء الاصطناعي",
+    "homeDashboard": "الرئيسية",
+    "myAttendance": "حضوري",
+    "myTasks": "مهامي",
+    "leaveBalances": "الإجازات والأرصدة",
+    "myPerformance": "أدائي",
+    "myGoals": "أهدافي",
+    "myFinancials": "ماليّاتي",
+    "aiAssistant": "المساعد الذكي"
+  },
+  "employeeFinancial": {
+    "eyebrow": "الإدارة المالية",
+    "title": "ماليّاتي",
+    "subtitle": "تابع راتبك والسُلف والخصومات والمكافآت.",
+    "requestAdvance": "طلب سلفة",
+    "loading": "جارٍ التحميل...",
+    "retry": "حاول مرة أخرى",
+    "showing": "عرض",
+    "of": "من",
+    "records": "سجلات",
+    "currency": "ج.م",
+    "tabs": {
+      "salaries": "رواتبي",
+      "advances": "السُلف",
+      "deductions": "الخصومات",
+      "bonuses": "المكافآت"
+    },
+    "status": {
+      "approved": "مُعتمد",
+      "rejected": "مرفوض",
+      "pending": "قيد الانتظار",
+      "finalized": "نهائي",
+      "queued": "في الانتظار",
+      "cancelled": "ملغى",
+      "manual": "يدوي"
+    },
+    "salary": {
+      "basic": "الراتب الأساسي",
+      "bonuses": "المكافآت",
+      "deductions": "الخصومات",
+      "loan": "القرض",
+      "net": "صافي الراتب"
+    },
+    "advance": {
+      "amount": "المبلغ",
+      "months": "الأشهر",
+      "monthly": "شهرياً",
+      "newRequest": "طلب جديد",
+      "title": "طلب سلفة من الراتب",
+      "amountLabel": "المبلغ المطلوب",
+      "amountPlaceholder": "مثال: 5000",
+      "repaymentLabel": "أشهر السداد",
+      "monthsPlaceholder": "مثال: 5",
+      "monthlyDeduction": "الخصم الشهري",
+      "reasonLabel": "السبب",
+      "reasonPlaceholder": "اوصف سبب حاجتك لهذه السلفة...",
+      "submit": "إرسال الطلب",
+      "submitting": "جارٍ الإرسال...",
+      "success": "تم تقديم طلب السلفة بنجاح.",
+      "error": "فشل تقديم طلب السلفة.",
+      "requiredFields": "جميع الحقول مطلوبة."
+    },
+    "bonus": {
+      "amount": "المبلغ",
+      "type": "النوع",
+      "month": "الشهر",
+      "approvedBy": "معتمد من",
+      "totalPool": "إجمالي المكافآت الموزعة"
+    },
+    "empty": {
+      "salaries": "لا توجد سجلات رواتب",
+      "salariesDesc": "سيظهر سجل رواتبك هنا بمجرد معالجة كشوف المرتبات.",
+      "advances": "لا توجد طلبات سُلف",
+      "advancesDesc": "لم تقدم أي طلبات سلفة من الراتب حتى الآن.",
+      "deductions": "لا توجد خصومات",
+      "deductionsDesc": "لا توجد خصومات أو عقوبات مسجلة لديك.",
+      "bonuses": "لا توجد مكافآت",
+      "bonusesDesc": "لم يتم تسجيل أي مكافآت أو حوافز بعد."
+    },
+    "errors": {
+      "fetchFailed": "فشل استرجاع البيانات."
     }
   }
 }

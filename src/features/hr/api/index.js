@@ -109,10 +109,99 @@ export const getEmployeeById = async (id, lang = "en") => {
 export const updateEmployeeHrFields = updateEmployeeHRFields;
 
 // =====================================================
+// DEPARTMENTS
+// =====================================================
+
+// GET DEPARTMENTS
+// Supports Arabic / English
+export const getDepartments = async (lang = "en", params = {}) => {
+  const response = await axiosInstance.get("/departments", {
+    params,
+    headers: {
+      "Accept-Language": lang,
+    },
+  });
+
+  return response.data;
+};
+
+// CREATE DEPARTMENT
+export const createDepartment = async (departmentData, lang = "en") => {
+  const response = await axiosInstance.post("/departments", departmentData, {
+    headers: {
+      "Accept-Language": lang,
+    },
+  });
+
+  return response.data;
+};
+
+// GET DEPARTMENT MANAGERS
+export const getDepartmentManagers = async (lang = "en") => {
+  const response = await axiosInstance.get("/departments/managers-dropdown", {
+    headers: {
+      "Accept-Language": lang,
+    },
+  });
+
+  return response.data;
+};
+
+// =====================================================
+// LEAVE REQUESTS
+// =====================================================
+
+// GET HR PENDING LEAVE REQUESTS
+export const getHrPendingLeaveRequests = async (lang = "en") => {
+  const response = await axiosInstance.get("/leaves/leave-requests/hr/pending", {
+    params: { lang },
+    headers: {
+      "Accept-Language": lang,
+    },
+  });
+
+  return response.data;
+};
+
+// APPROVE LEAVE REQUEST
+export const approveLeaveRequest = async (id, lang = "en") => {
+  const response = await axiosInstance.patch(
+    `/leaves/leave-requests/${id}/approve`,
+    undefined,
+    {
+      params: { lang },
+      headers: {
+        "Accept-Language": lang,
+      },
+    },
+  );
+
+  return response.data;
+};
+
+// REJECT LEAVE REQUEST
+export const rejectLeaveRequest = async (id, rejectionReason, lang = "en") => {
+  const response = await axiosInstance.patch(
+    `/leaves/leave-requests/${id}/reject`,
+    { rejection_reason: rejectionReason },
+    {
+      params: { lang },
+      headers: {
+        "Accept-Language": lang,
+      },
+    },
+  );
+
+  return response.data;
+};
+
+// =====================================================
+// ATTENDANCE
+// =====================================================
+
 // GET HR DAILY ATTENDANCE
 // GET /hr/attendance/daily
 // HR / Owner only
-// =====================================================
 export const getHrDailyAttendance = async ({
   date,
   departmentId,
@@ -137,37 +226,30 @@ export const getHrDailyAttendance = async ({
   return response.data;
 };
 
-// =====================================================
 // GET HR ATTENDANCE EXCEPTIONS
 // GET /hr/attendance/exceptions
 // HR / Owner only
-// =====================================================
 export const getHrAttendanceExceptions = async ({
   date,
   departmentId,
   perPage = 15,
   page = 1,
 }) => {
-  const response = await axiosInstance.get(
-    "/hr/attendance/exceptions",
-    {
-      params: {
-        date,
-        department_id: departmentId,
-        per_page: perPage,
-        page,
-      },
+  const response = await axiosInstance.get("/hr/attendance/exceptions", {
+    params: {
+      date,
+      department_id: departmentId,
+      per_page: perPage,
+      page,
     },
-  );
+  });
 
   return response.data;
 };
 
-// =====================================================
 // GET HR MONTHLY ATTENDANCE SUMMARY
 // GET /hr/attendance/monthly-summary
 // HR / Owner only
-// =====================================================
 export const getHrMonthlySummary = async ({
   month,
   year,
@@ -176,29 +258,24 @@ export const getHrMonthlySummary = async ({
   perPage = 15,
   page = 1,
 }) => {
-  const response = await axiosInstance.get(
-    "/hr/attendance/monthly-summary",
-    {
-      params: {
-        month,
-        year,
-        department_id: departmentId || undefined,
-        search: search || undefined,
-        per_page: perPage,
-        page,
-      },
+  const response = await axiosInstance.get("/hr/attendance/monthly-summary", {
+    params: {
+      month,
+      year,
+      department_id: departmentId || undefined,
+      search: search || undefined,
+      per_page: perPage,
+      page,
     },
-  );
+  });
 
   return response.data;
 };
 
-// =====================================================
 // EXPORT HR MONTHLY ATTENDANCE SUMMARY (Excel)
 // GET /hr/attendance/export
 // HR / Owner only
 // Returns a binary Excel file — triggers download
-// =====================================================
 export const exportHrMonthlySummary = async ({
   month,
   year,
@@ -206,19 +283,16 @@ export const exportHrMonthlySummary = async ({
   search,
   perPage,
 }) => {
-  const response = await axiosInstance.get(
-    "/hr/attendance/export",
-    {
-      params: {
-        month,
-        year,
-        department_id: departmentId || undefined,
-        search: search || undefined,
-        per_page: perPage || undefined,
-      },
-      responseType: "blob",
+  const response = await axiosInstance.get("/hr/attendance/export", {
+    params: {
+      month,
+      year,
+      department_id: departmentId || undefined,
+      search: search || undefined,
+      per_page: perPage || undefined,
     },
-  );
+    responseType: "blob",
+  });
 
   // Build a filename from Content-Disposition or a default
   const disposition = response.headers?.["content-disposition"] || "";
@@ -242,12 +316,10 @@ export const exportHrMonthlySummary = async ({
   return { success: true, filename };
 };
 
-// =====================================================
 // UPDATE ATTENDANCE EXCEPTION STATUS
 // PATCH /hr/attendance/exceptions/{attendanceId}
 // HR / Owner only
 // Body: { status: "approved" | "rejected", admin_note?: string }
-// =====================================================
 export const updateAttendanceExceptionStatus = async ({
   attendanceId,
   status,
@@ -258,49 +330,6 @@ export const updateAttendanceExceptionStatus = async ({
     {
       status,
       ...(adminNote ? { admin_note: adminNote } : {}),
-// GET HR PENDING LEAVE REQUESTS
-// =====================================================
-export const getHrPendingLeaveRequests = async (lang = "en") => {
-  const response = await axiosInstance.get("/leaves/leave-requests/hr/pending", {
-    params: { lang },
-    headers: {
-      "Accept-Language": lang,
-    },
-  });
-
-  return response.data;
-};
-
-// =====================================================
-// APPROVE LEAVE REQUEST
-// =====================================================
-export const approveLeaveRequest = async (id, lang = "en") => {
-  const response = await axiosInstance.patch(
-    `/leaves/leave-requests/${id}/approve`,
-    undefined,
-    {
-      params: { lang },
-      headers: {
-        "Accept-Language": lang,
-      },
-    },
-  );
-
-  return response.data;
-};
-
-// =====================================================
-// REJECT LEAVE REQUEST
-// =====================================================
-export const rejectLeaveRequest = async (id, rejectionReason, lang = "en") => {
-  const response = await axiosInstance.patch(
-    `/leaves/leave-requests/${id}/reject`,
-    { rejection_reason: rejectionReason },
-    {
-      params: { lang },
-      headers: {
-        "Accept-Language": lang,
-      },
     },
   );
 

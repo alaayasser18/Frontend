@@ -26,6 +26,7 @@ import Users from "./features/admin/pages/Users";
 import AdminPerformance from "./features/admin/pages/PerformancePage";
 import AdminProfileSettings from "./features/admin/pages/ProfileSettings";
 import AdminAttendance from "./features/admin/pages/Attendance";
+import AdminHolidays from "./features/admin/pages/Holidays";
 
 // ==================== Employee Pages ====================
 import EmployeePerformance from "./features/employee/pages/Performance";
@@ -49,6 +50,7 @@ import TeamAttendance from "./features/manager/pages/TeamAttendance";
 import TeamLeaveApprovals from "./features/manager/pages/TeamLeaveApprovals";
 import AITeamInsights from "./features/manager/pages/AITeamInsights";
 import ProfileSetting from "./features/manager/pages/ProfileSetting";
+import ManagerHolidays from "./features/manager/pages/Holidays";
 
 // ==================== HR Pages ====================
 import HrDashboard from "./features/hr/pages/hrDashboard";
@@ -63,7 +65,8 @@ import HrEvaluationsGoals from "./features/hr/pages/evaluations&goals";
 import PerformanceMetrics from "./features/hr/pages/performanceMatrics";
 import AIInsights from "./features/hr/pages/aiInsights";
 import HrCompanyPolicies from "./features/hr/pages/companyPolicies";
-import Holidays from "./features/hr/pages/holidays";
+import HrHolidays from "./features/hr/pages/holidays";
+import EmployeeHolidays from "./features/employee/pages/Holidays";
 import Reports from "./features/hr/pages/reports";
 import HrProfileSettings from "./features/hr/pages/ProfileSettings";
 
@@ -217,6 +220,7 @@ function App() {
               <Route path="/admin/notifications" element={<Notification />} />
               <Route path="/admin/audit" element={<ActivityLog />} />
               <Route path="/admin/attendance" element={<AdminAttendance />} />
+              <Route path="/admin/holidays" element={<AdminHolidays />} />
               <Route path="/admin/profile" element={<AdminProfileSettings />} />
               <Route
                 path="/admin/settings"
@@ -252,7 +256,7 @@ function App() {
                   path="company-policies"
                   element={<HrCompanyPolicies />}
                 />
-                <Route path="holidays" element={<Holidays />} />
+                <Route path="holidays" element={<HrHolidays />} />
                 <Route path="reports" element={<Reports />} />
                 <Route path="notifications" element={<Notification />} />
                 <Route path="profile" element={<HrProfileSettings />} />
@@ -292,6 +296,7 @@ function App() {
                 path="/manager/leave-approvals"
                 element={<TeamLeaveApprovals />}
               />
+              <Route path="/manager/holidays" element={<ManagerHolidays />} />
               <Route path="/manager/ai-insights" element={<AITeamInsights />} />
               <Route path="/manager/notifications" element={<Notification />} />
               <Route path="/manager/profile" element={<ProfileSetting />} />
@@ -318,6 +323,7 @@ function App() {
                 path="/employee/leave-balances"
                 element={<Navigate to="/employee/leaves" replace />}
               />
+              <Route path="/employee/holidays" element={<EmployeeHolidays />} />
               <Route path="/employee/ai-assistant" element={<AIAssistant />} />
               <Route
                 path="/employee/assistant"

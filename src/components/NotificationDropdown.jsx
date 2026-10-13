@@ -164,10 +164,10 @@ const NotificationDropdown = ({ isOpen, onClose, role }) => {
                     {/* Text */}
                     <div className="flex-1 min-w-0">
                       <p className={`text-[13px] mb-0.5 truncate pe-4 ${notif.isRead ? "font-medium text-slate-700" : "font-bold text-slate-800"}`}>
-                        {t(notif.titleKey, notif.defaultTitle)}
+                        {notif.titleKey ? t(notif.titleKey, notif.defaultTitle) : notif.defaultTitle}
                       </p>
                       <p className="text-[12px] text-slate-500 line-clamp-2 mb-1">
-                        {t(notif.descKey, notif.defaultDesc)}
+                        {notif.descKey ? t(notif.descKey, notif.defaultDesc) : notif.defaultDesc}
                       </p>
                       <span className="text-[11px] text-slate-400">{notif.timestamp}</span>
                     </div>

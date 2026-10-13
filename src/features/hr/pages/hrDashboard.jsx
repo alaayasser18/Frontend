@@ -9,6 +9,7 @@ import {
   FiStar,
 } from "react-icons/fi";
 import { motion } from "framer-motion";
+import CheckInOutWidget from "../../../components/CheckInOutWidget";
 
 const HrDashboard = () => {
   const { t, i18n } = useTranslation();
@@ -200,17 +201,21 @@ const HrDashboard = () => {
           </p>
         </div>
 
-        {/* تم تعديل الزر ليطابق الزر الكحلي في التصميم الأساسي */}
-        <motion.button
-          type="button"
-          whileHover={{ y: -2, scale: 1.02 }}
-          whileTap={{ scale: 0.97 }}
-          transition={{ duration: 0.2 }}
-          className="flex shrink-0 items-center justify-center gap-2 rounded-lg bg-[#243B53] px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-[#1c2f42]"
-        >
-          <FiStar className="h-4 w-4" />
-          <span>{t("hrDashboard.explainToday", "Explain today")}</span>
-        </motion.button>
+        <div className="flex shrink-0 items-center gap-3">
+          {/* Check-in / Check-out */}
+          <CheckInOutWidget compact />
+
+          <motion.button
+            type="button"
+            whileHover={{ y: -2, scale: 1.02 }}
+            whileTap={{ scale: 0.97 }}
+            transition={{ duration: 0.2 }}
+            className="flex shrink-0 items-center justify-center gap-2 rounded-lg bg-[#243B53] px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-[#1c2f42]"
+          >
+            <FiStar className="h-4 w-4" />
+            <span>{t("hrDashboard.explainToday", "Explain today")}</span>
+          </motion.button>
+        </div>
       </motion.div>
 
       {/* ==================== 4 Stat Cards ==================== */}

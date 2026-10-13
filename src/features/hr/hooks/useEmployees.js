@@ -38,9 +38,10 @@ export const useCreateEmployee = (lang = "en") => {
   return useMutation({
     mutationFn: (employeeData) => createEmployee(employeeData, lang),
 
-    onSuccess: () => {
-      queryClient.invalidateQueries({
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({
         queryKey: ["employees"],
+        refetchType: "active",
       });
     },
   });
@@ -85,9 +86,12 @@ export const useChangeEmployeeAccountStatus = (lang = "en") => {
   return useMutation({
     mutationFn: (id) => changeEmployeeAccountStatus(id, lang),
 
-    onSuccess: () => {
+    onSuccess: (_data, id) => {
       queryClient.invalidateQueries({
         queryKey: ["employees"],
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["employee", id],
       });
     },
   });
@@ -105,5 +109,3 @@ export const useEmployee = (id, lang = "en") => {
     staleTime: 30 * 1000,
   });
 };
-
-

@@ -316,7 +316,7 @@ export const useNotifications = (currentUserId) => {
 
   // ── Real-time Laravel Echo Subscription ───────────────────
   useEffect(() => {
-    if (isAuthenticated && currentUserId) {
+    if (isAuthenticated && currentUserId && echo) {
       const channelName = `notifications.${currentUserId}`;
       const channel = echo.private(channelName);
 
